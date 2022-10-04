@@ -5,19 +5,24 @@ from pycroft.model._all import PropertyGroup
 from .assertions import TestClient
 
 
+@pytest.fixture(scope="module")
+def client(module_test_client: TestClient) -> TestClient:
+    return module_test_client
+
+
 @pytest.mark.usefixtures("admin_logged_in")
 class TestPropertiesFrontend:
-    def test_property_gets_added(self, test_client: TestClient):
+    def test_property_gets_added(self, client: TestClient):
         group_name = "This is my first property group"
         # first time: a redirect
-        response = test_client.assert_response_code(
+        response = client.assert_response_code(
             "properties.property_group_create",
             code=302,
             method="post",
             data={"name": group_name},
         )
         assert response.location == url_for('properties.property_groups', _external=True)
-        response = test_client.assert_url_response_code(response.location, code=200)
+        response = client.assert_url_response_code(response.location, code=200)
 
         content = response.data.decode('utf-8')
         # This actually should be `assert_flashed`

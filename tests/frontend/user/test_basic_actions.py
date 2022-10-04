@@ -29,20 +29,20 @@ def room(module_session: Session) -> Room:
 
 
 @pytest.fixture(scope="module")
-def test_client(module_test_client: TestClient) -> TestClient:
+def client(module_test_client: TestClient) -> TestClient:
     return module_test_client
 
 
 @pytest.mark.usefixtures("session")
 class TestUserViewingPages:
-    def test_user_overview_access(self, test_client: TestClient):
-        test_client.assert_ok("user.overview")
+    def test_user_overview_access(self, client: TestClient):
+        client.assert_ok("user.overview")
 
-    def test_user_viewing_himself(self, test_client: TestClient, admin):
-        test_client.assert_url_ok(url_for("user.user_show", user_id=admin.id))
+    def test_user_viewing_himself(self, client: TestClient, admin):
+        client.assert_url_ok(url_for("user.user_show", user_id=admin.id))
 
-    def test_user_search_access(self, test_client: TestClient):
-        test_client.assert_ok("user.search")
+    def test_user_search_access(self, client: TestClient):
+        client.assert_ok("user.search")
 
 
 @pytest.mark.usefixtures("session")
@@ -58,31 +58,31 @@ class TestInhabitingUser:
         class_session.flush()
         return user
 
-    def test_blocking_and_unblocking_works(self, test_client: TestClient, user: User):
+    def test_blocking_and_unblocking_works(self, client: TestClient, user: User):
         user_show_endpoint = url_for("user.user_show", user_id=user.id)
-        test_client.assert_url_ok(user_show_endpoint)
+        client.assert_url_ok(user_show_endpoint)
 
-        with test_client.flashes_message("Nutzer gesperrt", "success"):
-            test_client.assert_url_redirects(
+        with client.flashes_message("Nutzer gesperrt", "success"):
+            client.assert_url_redirects(
                 url_for("user.block", user_id=user.id),
                 expected_location=user_show_endpoint,
                 method="post",
                 data={"ends_at-unlimited": "y", "reason": "Ist doof"},
             )
 
-        with test_client.flashes_message("Nutzer entsperrt", "success"):
-            test_client.assert_url_redirects(
+        with client.flashes_message("Nutzer entsperrt", "success"):
+            client.assert_url_redirects(
                 url_for("user.unblock", user_id=user.id),
                 expected_location=user_show_endpoint,
                 method="post",
             )
 
-    def test_user_cannot_be_moved_back_in(self, test_client: TestClient, user: User):
+    def test_user_cannot_be_moved_back_in(self, client: TestClient, user: User):
         # attempt to move the user back in
-        with test_client.flashes_message(
+        with client.flashes_message(
             f"Nutzer {user.id} ist nicht ausgezogen!", category="error"
         ):
-            test_client.assert_url_response_code(
+            client.assert_url_response_code(
                 url_for("user.move_in", user_id=user.id),
                 code=404,
                 method="post",
@@ -97,9 +97,9 @@ class TestInhabitingUser:
                 },
             )
 
-    def test_user_moved_out_correctly(self, test_client: TestClient, user: User):
-        with test_client.flashes_message("Benutzer ausgezogen.", "success"):
-            test_client.assert_url_redirects(
+    def test_user_moved_out_correctly(self, client: TestClient, user: User):
+        with client.flashes_message("Benutzer ausgezogen.", "success"):
+            client.assert_url_redirects(
                 url_for("user.move_out", user_id=user.id),
                 method="post",
                 data={
@@ -122,20 +122,20 @@ class TestUserMovedOut:
         class_session.flush()
         return user
 
-    def test_user_cannot_be_moved_out(self, test_client: TestClient, user: User):
+    def test_user_cannot_be_moved_out(self, client: TestClient, user: User):
         # user.room = None  # ???
-        with test_client.flashes_message(
+        with client.flashes_message(
             f"Nutzer {user.id} ist aktuell nirgends eingezogen!", category="error"
         ):
-            test_client.assert_url_response_code(
+            client.assert_url_response_code(
                 url_for("user.move_out", user_id=user.id),
                 method="post",
                 data={"now": True, "comment": "Ist doof"},
                 code=404,
             )
 
-    def test_static_datasheet(self, test_client: TestClient, user: User):
-        response = test_client.assert_url_ok(
+    def test_static_datasheet(self, client: TestClient, user: User):
+        response = client.assert_url_ok(
             url_for("user.static_datasheet", user_id=user.id)
         )
         assert response.data.startswith(b"%PDF")
@@ -146,14 +146,14 @@ class TestUserMovedOut:
             == f"inline; filename=user_sheet_plain_{user.id}.pdf"
         )
 
-    def test_password_reset(self, test_client: TestClient, user: User):
-        with test_client.flashes_message(
+    def test_password_reset(self, client: TestClient, user: User):
+        with client.flashes_message(
             "Passwort erfolgreich zurückgesetzt.", category="success"
         ):
-            test_client.post(url_for("user.reset_password", user_id=user.id))
+            client.post(url_for("user.reset_password", user_id=user.id))
 
         # access user_sheet
-        response = test_client.assert_ok("user.user_sheet")
+        response = client.assert_ok("user.user_sheet")
         assert WebStorage.q.count() == 1
         assert response.headers.get('Content-Type') == "application/pdf"
         assert response.headers.get('Content-Disposition') == "inline; filename=user_sheet.pdf"
@@ -163,15 +163,15 @@ class TestUserMovedOut:
 @pytest.mark.usefixtures("session")
 class TestNewUserDatasheet:
     @contextlib.contextmanager
-    def assert_create_confirmed(self, test_client: TestClient):
-        with test_client.flashes_message("Benutzer angelegt.", category="success"):
+    def assert_create_confirmed(self, client: TestClient):
+        with client.flashes_message("Benutzer angelegt.", category="success"):
             yield
 
     def test_user_create_data_sheet(
-        self, test_client: TestClient, room: Room, config: Config
+        self, client: TestClient, room: Room, config: Config
     ):
-        with self.assert_create_confirmed(test_client):
-            test_client.assert_redirects(
+        with self.assert_create_confirmed(client):
+            client.assert_redirects(
                 "user.create",
                 method="post",
                 data={
@@ -187,7 +187,7 @@ class TestNewUserDatasheet:
                     "property_group": config.member_group.id,
                 },
             )
-        response = test_client.assert_ok("user.user_sheet")
+        response = client.assert_ok("user.user_sheet")
         assert WebStorage.q.count() == 1
         assert response.headers.get('Content-Type') == "application/pdf"
         assert response.headers.get('Content-Disposition') == "inline; filename=user_sheet.pdf"
@@ -205,7 +205,7 @@ class TestNewUserDatasheet:
         return other_user
 
     def test_user_host_annexation(
-        self, test_client: TestClient, room: Room, other_user: User, mac, config: Config
+        self, client: TestClient, room: Room, other_user: User, mac, config: Config
     ):
         move_in_formdata = {
             "now": True,
@@ -219,13 +219,11 @@ class TestNewUserDatasheet:
             "birthdate": "1990-01-01",
             "property_group": config.member_group.id,
         }
-        response = test_client.assert_response_code(
+        response = client.assert_response_code(
             "user.create", method="post", data=move_in_formdata, code=400
         )
         assert response.location is None
 
         move_in_formdata.update(annex="y")
-        with self.assert_create_confirmed(test_client):
-            test_client.assert_redirects(
-                "user.create", method="post", data=move_in_formdata
-            )
+        with self.assert_create_confirmed(client):
+            client.assert_redirects("user.create", method="post", data=move_in_formdata)

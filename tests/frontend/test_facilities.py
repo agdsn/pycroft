@@ -11,7 +11,7 @@ from .assertions import TestClient
 
 
 @pytest.fixture(scope="module")
-def test_client(module_test_client: TestClient) -> TestClient:
+def client(module_test_client: TestClient) -> TestClient:
     return module_test_client
 
 
@@ -27,35 +27,35 @@ class TestBuilding:
     def building(self, class_session: Session, room: Room) -> Building:
         return room.building
 
-    def test_list_buildings(self, test_client: TestClient):
-        with test_client.renders_template("facilities/site_overview.html"):
-            test_client.assert_url_ok("/facilities/sites/")
+    def test_list_buildings(self, client: TestClient):
+        with client.renders_template("facilities/site_overview.html"):
+            client.assert_url_ok("/facilities/sites/")
 
-    def test_show_building(self, test_client: TestClient, building: Building):
-        with test_client.renders_template("facilities/building_show.html"):
-            test_client.assert_url_ok(f"/facilities/building/{building.id}/")
+    def test_show_building(self, client: TestClient, building: Building):
+        with client.renders_template("facilities/building_show.html"):
+            client.assert_url_ok(f"/facilities/building/{building.id}/")
 
-    def test_show_room(self, test_client: TestClient, room: Room):
-        with test_client.renders_template("facilities/room_show.html"):
-            test_client.assert_url_ok(f"/facilities/room/{room.id}")
+    def test_show_room(self, client: TestClient, room: Room):
+        with client.renders_template("facilities/room_show.html"):
+            client.assert_url_ok(f"/facilities/room/{room.id}")
 
-    def test_building_levels(self, test_client: TestClient, building: Building):
-        with test_client.renders_template("facilities/levels.html"):
-            test_client.assert_url_ok(f"/facilities/building/{building.id}/levels/")
+    def test_building_levels(self, client: TestClient, building: Building):
+        with client.renders_template("facilities/levels.html"):
+            client.assert_url_ok(f"/facilities/building/{building.id}/levels/")
 
     def test_building_level_rooms(
-        self, test_client: TestClient, building: Building, room: Room
+        self, client: TestClient, building: Building, room: Room
     ):
-        with test_client.renders_template("facilities/rooms.html"):
-            test_client.assert_url_ok(
+        with client.renders_template("facilities/rooms.html"):
+            client.assert_url_ok(
                 f"/facilities/building/{building.id}/level/{room.level}/rooms/")
 
-    def test_overcrowded_rooms(self, test_client: TestClient, building: Building):
-        with test_client.renders_template("facilities/room_overcrowded.html"):
-            test_client.assert_url_ok("/facilities/overcrowded")
+    def test_overcrowded_rooms(self, client: TestClient, building: Building):
+        with client.renders_template("facilities/room_overcrowded.html"):
+            client.assert_url_ok("/facilities/overcrowded")
 
     def test_per_building_overcrowded_rooms(
-        self, test_client: TestClient, building: Building
+        self, client: TestClient, building: Building
     ):
-        with test_client.renders_template("facilities/room_overcrowded.html"):
-            test_client.assert_url_ok(f"/facilities/overcrowded/{building.id}")
+        with client.renders_template("facilities/room_overcrowded.html"):
+            client.assert_url_ok(f"/facilities/overcrowded/{building.id}")
