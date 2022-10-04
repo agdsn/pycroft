@@ -21,6 +21,11 @@ def admin_group(module_session: Session):
     return AdminPropertyGroupFactory.create()
 
 
+@pytest.fixture(scope="module")
+def test_client(module_test_client: TestClient) -> TestClient:
+    return module_test_client
+
+
 class TestAnonymous:
     """First test as anonymous user.
     Anonymous users should be able to access the login page and the /static/

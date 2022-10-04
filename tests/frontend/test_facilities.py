@@ -10,6 +10,11 @@ from tests.factories import RoomFactory
 from .assertions import TestClient
 
 
+@pytest.fixture(scope="module")
+def test_client(module_test_client: TestClient) -> TestClient:
+    return module_test_client
+
+
 @pytest.mark.usefixtures("admin_logged_in")
 class TestBuilding:
     @pytest.fixture(scope="class")

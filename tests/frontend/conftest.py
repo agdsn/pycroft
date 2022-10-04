@@ -1,3 +1,4 @@
+import contextlib
 import typing as t
 
 import pytest
@@ -26,10 +27,45 @@ def flask_app() -> PycroftFlask:
     return prepare_app_for_testing(make_app())
 
 
-@pytest.fixture(scope="session")
-def test_client(flask_app: PycroftFlask) -> t.Iterator[TestClient]:
-    flask_app.test_client_class = TestClient
-    with flask_app.app_context(), flask_app.test_client() as c:
+@contextlib.contextmanager
+def _test_client(app: PycroftFlask) -> t.Iterator[TestClient]:
+    app.test_client_class = TestClient
+    with app.app_context(), app.test_client() as c:
+        yield c
+
+
+@pytest.fixture(scope="module")
+def module_test_client(flask_app: PycroftFlask) -> t.Iterator[TestClient]:
+    """An activated test client with app context.
+
+    depends on `flask_app`, which can be overridden.
+
+    .. tip:: it might be helpful to “rename” this fixture like this:
+        >>> @pytest.fixture
+        >>> def client(module_test_client: TestClient) -> TestClient:
+        ...     return module_test_client
+    """
+    with _test_client(flask_app) as c:
+        yield c
+
+
+@pytest.fixture(scope="class")
+def class_test_client(flask_app: PycroftFlask) -> t.Iterator[TestClient]:
+    """Like :func:`module_test_client`.
+
+    This fixture exists, so you can override `flask_app` with something `class`-scoped:
+
+    >>> from flask import Flask
+    >>> class TestWithCustomApp:
+    ...     @pytest.fixture(scope="class")
+    ...     def flask_app(self) -> Flask:
+    ...        return Flask("naked_test_app")
+    ...
+    >>>     @pytest.fixture(scope="class")
+    >>>     def client(self, class_test_client: TestClient) -> TestClient:
+    ...         return class_test_client
+    """
+    with _test_client(flask_app) as c:
         yield c
 
 
@@ -82,6 +118,7 @@ def treasurer(module_session: Session, admin_group: PropertyGroup) -> User:
 
 
 @pytest.fixture(scope="module")
-def admin_logged_in(admin: User, test_client: TestClient) -> None:
-    with login_context(test_client, admin.login, "password"):
+def admin_logged_in(admin: User, module_test_client: TestClient) -> None:
+    """A module-scoped convenience fixture to log in an admin"""
+    with login_context(module_test_client, admin.login, "password"):
         yield

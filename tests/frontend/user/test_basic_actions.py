@@ -28,6 +28,11 @@ def room(module_session: Session) -> Room:
     return room
 
 
+@pytest.fixture(scope="module")
+def test_client(module_test_client: TestClient) -> TestClient:
+    return module_test_client
+
+
 @pytest.mark.usefixtures("session")
 class TestUserViewingPages:
     def test_user_overview_access(self, test_client: TestClient):
