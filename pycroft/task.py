@@ -239,7 +239,7 @@ app.conf.update(
         },
         'mail-negative-members': {
             'task': 'pycroft.task.mail_negative_members',
-            'schedule': crontab(0, 0, day_of_month=5)
+            'schedule': crontab(0, 0, day_of_month=6)
         }
     },
     enable_utc=True,
