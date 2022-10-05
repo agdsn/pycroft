@@ -182,6 +182,12 @@ class HandlePaymentsInDefaultForm(Form):
                                                              get_label=get_user_name_with_id_and_balance,
                                                              render_kw={'size': 20})
 
+
 class FixMT940Form(Form):
     mt940 = TextAreaField('MT940')
     do_import = BooleanField("Import durchführen", default=False)
+
+
+class ConfirmPaymentReminderMail(Form):
+    confirm = BooleanField("E-Mail an alle Mitglieder mit negativem Guthaben versenden",
+                           default=False, validators=[DataRequired()])

@@ -35,12 +35,13 @@ from pycroft.helpers.i18n import localized
 from pycroft.lib import finance
 from pycroft.lib.finance import end_payment_in_default_memberships, \
     post_transactions_for_membership_fee, build_transactions_query, \
-    match_activities, take_actions_for_payment_in_default_users, get_pid_csv
-from pycroft.lib.user import encode_type2_user_id
+    match_activities, take_actions_for_payment_in_default_users, get_pid_csv, get_negative_members
+from pycroft.lib.mail import MemberNegativeBalance
+from pycroft.lib.user import encode_type2_user_id, user_send_mails
 from pycroft.model.finance import Account, Transaction
 from pycroft.model.finance import (
     BankAccount, BankAccountActivity, Split, MembershipFee, MT940Error)
-from pycroft.model.session import session
+from pycroft.model.session import session, utcnow
 from pycroft.model.user import User
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.finance.forms import (
@@ -48,7 +49,7 @@ from web.blueprints.finance.forms import (
     BankAccountActivitiesImportForm, TransactionCreateForm,
     MembershipFeeCreateForm, MembershipFeeEditForm, FeeApplyForm,
     HandlePaymentsInDefaultForm, FixMT940Form, BankAccountActivityReadForm,
-    BankAccountActivitiesImportManualForm)
+    BankAccountActivitiesImportManualForm, ConfirmPaymentReminderMail)
 from web.blueprints.finance.tables import FinanceTable, FinanceTableSplitted, \
     MembershipFeeTable, UsersDueTable, BankAccountTable, \
     BankAccountActivityTable, TransactionTable, ImportErrorTable, \
@@ -1261,3 +1262,35 @@ def csv_payments_in_default():
     output.headers["Content-type"] = "text/csv"
 
     return output
+
+
+@bp.route('/membership_fees/payment_reminder_mail', methods=("GET", "POST"))
+@access.require('finance_change')
+def payment_reminder_mail():
+    form = ConfirmPaymentReminderMail()
+
+    if form.validate_on_submit() and form.confirm.data:
+        activity = BankAccountActivity.q.order_by(BankAccountActivity.imported_at.desc()).first()
+        if activity.imported_at.date() >= utcnow().date() - timedelta(days=3):
+            negative_users = get_negative_members()
+            user_send_mails(negative_users, MemberNegativeBalance())
+
+            flash("Zahlungserinnerungen gesendet.", "success")
+        else:
+            flash("Letzter Bankimport darf nicht älter als 3 Tage sein.", "error")
+
+        return redirect(url_for(".membership_fees"))
+
+    form_args = {
+        'form': form,
+        'cancel_to': url_for('.membership_fees'),
+        'submit_text': 'Mails versenden',
+        'actions_offset': 0,
+        'form_render_mode': 'basic',
+        'field_render_mode': 'basic',
+    }
+
+    return render_template('generic_form.html',
+                           page_title="Zahlungserinnerungen per E-Mail versenden",
+                           form_args=form_args,
+                           form=form)
