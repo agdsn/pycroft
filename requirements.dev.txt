@@ -5,7 +5,6 @@ pytest~=7.0.0
 pytest-timeout~=2.1.0
 pytest-cov~=3.0.0
 git+https://github.com/lukasjuhrich/sqlalchemy_schemadisplay.git@master#egg=sqlalchemy-schemadisplay
-pytest-flask~=1.2.0
 sphinx~=5.1.1
 sphinx-autobuild~=2021.3.14
 guzzle-sphinx-theme~=0.7.11
