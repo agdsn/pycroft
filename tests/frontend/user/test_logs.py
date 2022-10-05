@@ -42,7 +42,7 @@ GetLogs: t.TypeAlias = t.Callable[..., list[t.Any]]
 
 class TestAppWithoutHadesLogs:
     @pytest.fixture(scope="class")
-    def flask_app(self) -> PycroftFlask:
+    def app(self) -> PycroftFlask:
         return prepare_app_for_testing(make_app(hades_logs=False))
 
     @pytest.fixture(scope="class")
@@ -159,7 +159,7 @@ class TestDummyHadesLogs:
         class_session.flush()
 
     @pytest.fixture(scope="class")
-    def flask_app(self) -> PycroftFlask:
+    def app(self) -> PycroftFlask:
         """Overridden flask app with `HadesLogs` pointing at stub RPC instance"""
         app = prepare_app_for_testing(make_app(hades_logs=False))
         dummy_config = get_hades_logs_config()

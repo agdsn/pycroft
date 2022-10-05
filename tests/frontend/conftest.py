@@ -14,14 +14,8 @@ from .fixture_helpers import login_context, BlueprintUrls, _build_rule, prepare_
 from ..factories.property import FinancePropertyGroupFactory, MembershipFactory
 
 
-@pytest.fixture(scope='session')
-def app():
-    """A minimal app for when you just need an app context"""
-    return make_app()
-
-
 @pytest.fixture(scope="session")
-def flask_app() -> PycroftFlask:
+def app() -> PycroftFlask:
     """A fully configured flask app for frontend tests"""
     from web import make_app
     return prepare_app_for_testing(make_app())
@@ -35,37 +29,37 @@ def _test_client(app: PycroftFlask) -> t.Iterator[TestClient]:
 
 
 @pytest.fixture(scope="module")
-def module_test_client(flask_app: PycroftFlask) -> t.Iterator[TestClient]:
+def module_test_client(app: PycroftFlask) -> t.Iterator[TestClient]:
     """An activated test client with app context.
 
-    depends on `flask_app`, which can be overridden.
+    depends on `app`, which can be overridden.
 
     .. tip:: it might be helpful to “rename” this fixture like this:
         >>> @pytest.fixture
         >>> def client(module_test_client: TestClient) -> TestClient:
         ...     return module_test_client
     """
-    with _test_client(flask_app) as c:
+    with _test_client(app) as c:
         yield c
 
 
 @pytest.fixture(scope="class")
-def class_test_client(flask_app: PycroftFlask) -> t.Iterator[TestClient]:
+def class_test_client(app: PycroftFlask) -> t.Iterator[TestClient]:
     """Like :func:`module_test_client`.
 
-    This fixture exists, so you can override `flask_app` with something `class`-scoped:
+    This fixture exists, so you can override `app` with something `class`-scoped:
 
     >>> from flask import Flask
     >>> class TestWithCustomApp:
     ...     @pytest.fixture(scope="class")
-    ...     def flask_app(self) -> Flask:
+    ...     def app(self) -> Flask:
     ...        return Flask("naked_test_app")
     ...
     >>>     @pytest.fixture(scope="class")
     >>>     def client(self, class_test_client: TestClient) -> TestClient:
     ...         return class_test_client
     """
-    with _test_client(flask_app) as c:
+    with _test_client(app) as c:
         yield c
 
 
@@ -77,11 +71,11 @@ def config(module_session: Session) -> Config:
 
 
 @pytest.fixture(scope="session")
-def blueprint_urls(flask_app: PycroftFlask) -> BlueprintUrls:
+def blueprint_urls(app: PycroftFlask) -> BlueprintUrls:
     def _blueprint_urls(blueprint_name: str) -> list[str]:
         return [
             _build_rule(_request_ctx_stack.top.url_adapter, rule)
-            for rule in flask_app.url_map.iter_rules()
+            for rule in app.url_map.iter_rules()
             if rule.endpoint.startswith(f"{blueprint_name}.")
         ]
     return _blueprint_urls

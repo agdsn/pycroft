@@ -32,8 +32,8 @@ class TestAnonymous:
     content, nothing else.
     """
     @pytest.fixture(scope='class')
-    def jinja_context(self, flask_app: PycroftFlask) -> Context:
-        return Context(flask_app.jinja_env, parent=None, name="pseudo", blocks={})
+    def jinja_context(self, app: PycroftFlask) -> Context:
+        return Context(app.jinja_env, parent=None, name="pseudo", blocks={})
 
     def test_login_page_visible(self, client: TestClient):
         client.assert_ok("login.login")
