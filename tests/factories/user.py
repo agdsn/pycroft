@@ -14,9 +14,10 @@ from .finance import AccountFactory
 
 
 
-# `password`
-PASSWORD = "{CRYPT}$6$rounds=656000$aeo5Ma91eY3B0DMm$HS7WtvbNAOVO.uBiBC66" \
-           "/r0zgIQP5fkjAfVsHhIeqzMUTgpLi1ToK9IwsBYWCzlS20dGrBN7hsickMsFg7Kkg/"
+# Using SHA1 password hash for performance.
+#: >>> from pycroft.helpers.user import crypt_context
+#: >>> crypt_context.hash("password", scheme="ldap_sha1")
+PASSWORD = "{SHA}W6ph5Mm5Pz8GgiULbPgzG37mj9g="
 
 class UserFactory(BaseFactory):
     class Meta:

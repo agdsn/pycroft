@@ -8,6 +8,7 @@ from passlib.hash import ldap_des_crypt, ldap_sha512_crypt, ldap_md5, \
 
 from pycroft.helpers.user import generate_password, hash_password, \
     verify_password
+from tests.factories.user import PASSWORD
 
 
 class TestPasswordGeneration:
@@ -52,3 +53,8 @@ class TestHashing:
         encrypted = hash_password(random_pw)
         assert expected_hash_method.identify(encrypted), \
             f"Expected hashes for method {expected_hash_method.name}, got: {encrypted}"
+
+
+@pytest.mark.meta
+def test_factory_password_hash():
+    assert verify_password("password", PASSWORD)
