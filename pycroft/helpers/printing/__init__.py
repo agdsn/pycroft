@@ -2,7 +2,9 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import datetime
+import functools
 import typing as t
+import warnings
 from io import BytesIO
 from os.path import dirname, join
 
@@ -65,6 +67,33 @@ class User(t.Protocol):
     hosts: t.Iterable[Host]
 
 
+_TRet = t.TypeVar("_TRet")
+_P = t.ParamSpec("_P")
+def suppress_resource_warning(f: t.Callable[_P, _TRet]) -> t.Callable[_P, _TRet]:
+    """Suppress warnings related to incomplete :class:`reportlab.platypus.flowables.Image <Image>`
+    cleanup
+
+    The file descriptor opened by an `Image` instance ``image`` is accessible by:
+
+    * ``image._img.fp``
+    * ``image._img._image.fp``
+    * ``image._img._image.png.fp``
+
+    Ownership and thus cleanup responsibility is not obvious, and combined with some optional
+    lazy opening strategies it's completely unclear how a workaround to „properly“ close the file
+    descriptor should look like.
+
+    tl;dr: We get `ResourceWarning`\\s and don't have a good way to fix them, so we're suppressing.
+    """
+    @functools.wraps(f)
+    def _f(*a: _P.args, **kw: _P.kwargs) -> _TRet:
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=ResourceWarning, message="unclosed file .*")
+            return f(*a, **kw)
+    return _f
+
+
+@suppress_resource_warning
 def generate_user_sheet(
     *,
     new_user: bool,
