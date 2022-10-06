@@ -30,8 +30,7 @@ simplejson~=3.11.1
 #usersheet generation
 pillow~=8.4.0
 reportlab~=3.6.2
-#fints~=3.0.0
-git+https://github.com/raphaelm/python-fints.git@846c25f5f6ae578cde5151fc30b5f7a3601a95ac#egg=fints
+fints~=3.1.0
 mt-940~=4.19.0
 #uwsgi~=2.0.14
 git+https://github.com/lukasjuhrich/uwsgi.git@uwsgi-2.0#egg=uwsgi
