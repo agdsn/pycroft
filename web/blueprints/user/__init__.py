@@ -807,7 +807,7 @@ def edit_user_address(user_id: int):
     if user.room and not user.has_custom_address:
         flash(gettext("Nutzer wohnt bereits im Raum {}."
                       " Über dieses Formular wird die offizielle Adresse des Nutzers geändert,"
-                      " ohne ihn um- oder Auszuziehen.")
+                      " ohne ihn um- oder auszuziehen.")
               .format(user.room.short_name),
               'warning')
 
@@ -880,7 +880,7 @@ def reset_wifi_password(user_id):
         session.session.commit()
 
         flask_session['user_sheet'] = sheet.id
-        flash(Markup('WIFI-Passwort erfolgreich zurückgesetzt.'),
+        flash(Markup('WiFi-Passwort erfolgreich zurückgesetzt.'),
               'success')
         return redirect(url_for('.user_show', user_id=user_id))
     return render_template('user/user_reset_wifi_password.html', form=form, user_id=user_id)
@@ -1157,7 +1157,7 @@ def member_request_finish(pre_member_id: int):
     except PycroftException:
         return redirect(url_for(".member_request_edit", pre_member_id=prm.id))
 
-    flash("Nutzer efrfolgreich erstellt.", 'success')
+    flash("Nutzer erfolgreich erstellt.", 'success')
     return redirect(url_for(".user_show", user_id=user.id))
 
 
@@ -1275,7 +1275,7 @@ def resend_confirmation_mail():
         return_url = url_for(".user_show", user_id=user.id)
 
     if user.email_confirmed:
-        flash("E-Mail Adresse bereits bestätigt!", "error")
+        flash("E-Mail-Adresse bereits bestätigt!", "error")
         return redirect(return_url)
     else:
         send_confirmation_email(user)
