@@ -48,7 +48,7 @@ class UserMoveSchema(Schema):
     room_number = fields.Str()
     level = fields.Int()
     building_id = fields.Int()
-    comment = fields.Str(allow_none=True, missing=None)
+    comment = fields.Str(allow_none=True, load_default=None)
 
     @post_load
     @handle_validation_error
@@ -68,10 +68,10 @@ class UserMoveInSchema(Schema):
     room_number = fields.Str()
     level = fields.Int()
     building_id = fields.Int()
-    mac = fields.Str(allow_none=True, missing=None)
-    birthdate = fields.Date(allow_none=True, missing=None)
-    begin_membership = fields.Bool(missing=True)
-    host_annex = fields.Bool(missing=False)
+    mac = fields.Str(allow_none=True, load_default=None)
+    birthdate = fields.Date(allow_none=True, load_default=None)
+    begin_membership = fields.Bool(load_default=True)
+    host_annex = fields.Bool(load_default=False)
 
     @post_load
     @handle_validation_error
