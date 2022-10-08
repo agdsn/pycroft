@@ -1,21 +1,24 @@
-from sqlalchemy import inspect
+import pytest
+from sqlalchemy import inspect, func
+from sqlalchemy.future import select
+from sqlalchemy.orm import Session
 
 from pycroft.lib import address
 from pycroft.model.address import Address
-from tests.legacy_base import FactoryDataTestBase
 from tests.factories.address import AddressFactory
 
 
-class AddressTest(FactoryDataTestBase):
-    def create_factories(self):
-        super().create_factories()
-        self.known_address = AddressFactory()
+class TestAddress:
+    @pytest.fixture(scope="class")
+    def known_address(self, class_session: Session) -> Address:
+        return AddressFactory.create()
 
-    def count_addrs(self):
-        return self.session.query(Address).count()
+    @staticmethod
+    def count_addrs(session: Session) -> int:
+        return session.scalar(select(func.count(Address.id)))
 
-    def test_new_address_gets_created(self):
-        old_count = self.count_addrs()
+    def test_new_address_gets_created(self, session: Session):
+        old_count = self.count_addrs(session)
         new_addr = address.get_or_create_address(
             street='Wundtstraße',
             number='3',
@@ -23,25 +26,21 @@ class AddressTest(FactoryDataTestBase):
             zip_code='01217',
             city='Dresden',
         )
-        self.session.commit()
-
+        session.flush()
         assert inspect(new_addr).has_identity, "Created address has no db identity"
+        assert self.count_addrs(session) == old_count + 1
 
-        assert self.count_addrs() == old_count + 1
-
-    def test_existing_address_gets_returned(self):
-        old_count = self.count_addrs()
+    def test_existing_address_gets_returned(self, known_address: Address, session: Session):
+        old_count = self.count_addrs(session)
         new_addr = address.get_or_create_address(
-            **{key: val for key, val in self.known_address.__dict__.items()
+            **{key: val for key, val in known_address.__dict__.items()
                if key in {'street', 'number', 'addition', 'zip_code', 'city', 'state', 'country'}}
         )
-        self.session.commit()
-
+        session.flush()
         assert inspect(new_addr).has_identity, "Created address has no db identity"
+        assert self.count_addrs(session) == old_count
 
-        assert self.count_addrs() == old_count
-
-    def test_new_address_gets_server_defaults(self):
+    def test_new_address_gets_server_defaults(self, session: Session):
         """Test that missing entries get the server default and not the empty string."""
         new_addr = address.get_or_create_address(
             street='Wundtstraße',
@@ -52,9 +51,8 @@ class AddressTest(FactoryDataTestBase):
             state=None,
             country=None,
         )
-        self.session.commit()
-        self.session.refresh(new_addr)
-
+        session.flush()
+        session.refresh(new_addr)
         assert new_addr.city == 'Dresden', "City not set"
         # state's default actually _is_ ''
         assert new_addr.country == 'Germany', "Country not set"
