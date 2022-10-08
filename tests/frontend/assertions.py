@@ -23,11 +23,26 @@ class TestClient(flask.testing.FlaskClient):
         self.test_client = self
 
     def assert_url_response_code(
-        self, url: str, code: int, method: str = "GET", **kw
+        self, url: str, code: int, method: str = "GET", autoclose: bool = True, **kw
     ) -> Response:
+        """assert that a URL returned a certain response code.
+
+        :param url:
+        :param code:
+        :param method:
+        :param autoclose: Whether the response object should be closed after the assertion.
+            If set to ``False``, make sure to use it in a context manager like so:
+
+            with self.assert_url_response_code("/test", code=200, autoclose=False) as resp:
+                assert "foo" in resp.data
+        :param kw:
+        :return:
+        """
         resp = self.open(url, method=method, **kw)
         assert resp.status_code == code, \
             f"Expected url {url} to return {code}, got {resp.status_code}"
+        if autoclose:
+            resp.close()
         return resp
 
     def assert_response_code(self, endpoint: str, code: int, **kw) -> Response:
