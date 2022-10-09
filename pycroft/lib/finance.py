@@ -1039,7 +1039,7 @@ def fee_from_valid_date(session: Session, valid_on: date, account: Account) -> S
     return fee
 
 
-def estimate_balance(session: Session, user: User, end_date: date) -> int:
+def estimate_balance(session: Session, user: User, end_date: date) -> Decimal:
     """Estimate the balance a user account will have at :paramref:`end_date`.
 
     :param session:
