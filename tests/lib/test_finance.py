@@ -9,6 +9,7 @@ from io import StringIO
 
 import pytest
 from factory import Iterator
+from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
 
 from pycroft import config
@@ -639,14 +640,13 @@ class TestMatching:
         assert result == expected
 
 
-class TestLastImportedAt(FactoryDataTestBase):
-    def create_factories(self):
-        super().create_factories()
+class TestLastImportedAt:
+    def test_last_imported_at(self, session: Session):
         BankAccountActivityFactory.create(
             reference="Test transaction",
             imported_at=datetime(2020, 1, 1),
         )
-
-    def test_last_imported_at(self):
-        assert finance.get_last_import_date(self.session) \
-               == datetime(2020, 1, 1, tzinfo=timezone.utc)
+        session.flush()
+        assert finance.get_last_import_date(session) == datetime(
+            2020, 1, 1, tzinfo=timezone.utc
+        )
