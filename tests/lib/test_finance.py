@@ -12,7 +12,7 @@ from factory import Iterator
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
 
-from pycroft import config
+from pycroft import config, Config
 from pycroft.helpers.date import last_day_of_month
 from pycroft.helpers.interval import closedopen, openclosed, single
 from pycroft.lib import finance
@@ -25,15 +25,20 @@ from pycroft.lib.finance import (
     end_payment_in_default_memberships,
     take_actions_for_payment_in_default_users)
 from pycroft.model import session
-from pycroft.model.finance import BankAccountActivity, Transaction, Split, Account
-from tests.legacy_base import FactoryDataTestBase
+from pycroft.model.finance import (
+    BankAccountActivity,
+    Transaction,
+    Split,
+    Account,
+    MembershipFee,
+)
+from pycroft.model.user import Membership, User
 from tests.factories import MembershipFactory, ConfigFactory
 from tests.factories.address import AddressFactory
 from tests.factories.finance import MembershipFeeFactory, TransactionFactory, \
     AccountFactory, BankAccountFactory, BankAccountActivityFactory
 from tests.factories.user import UserFactory
 from tests.legacy_base import FactoryDataTestBase
-
 
 class Test_010_BankAccount(FactoryDataTestBase):
     def create_factories(self):
@@ -537,88 +542,140 @@ class TestSplitTypes:
         assert finance.get_transaction_type(t) is None
 
 
-class BalanceEstimationTestCase(FactoryDataTestBase):
-    def create_factories(self):
-        ConfigFactory.create()
+@pytest.fixture(scope="module")
+def config(module_session: Session):
+    return ConfigFactory.create()
 
-        self.user = UserFactory.create()
 
-        self.user_membership = MembershipFactory.create(
-            active_during=closedopen(session.utcnow() - timedelta(weeks=52), None),
-            user=self.user,
+@pytest.mark.usefixtures("session")
+class TestBalanceEstimation:
+    @pytest.fixture(scope="class", autouse=True)
+    def user(self, class_session: Session, config: Config) -> User:
+        return UserFactory.create()
+
+    @pytest.fixture(scope="class", autouse=True)
+    def user_membership(
+        self, user: User, class_session: Session, utcnow, config: Config
+    ) -> Membership:
+        return MembershipFactory.create(
+            active_during=closedopen(utcnow - timedelta(weeks=52), None),
+            user=user,
             group=config.member_group
         )
 
-        last_month_last = session.utcnow().date().replace(day=1) - timedelta(1)
+    @pytest.fixture(scope="class", autouse=True)
+    def membership_fee_current(self, class_session: Session) -> MembershipFee:
+        return MembershipFeeFactory.create()
 
-        self.membership_fee_current = MembershipFeeFactory.create()
-        self.membership_fee_last = MembershipFeeFactory.create(
+    @pytest.fixture(scope="class", autouse=True)
+    def membership_fee_last(self, class_session: Session, utcnow):
+        last_month_last = utcnow.date().replace(day=1) - timedelta(1)
+        return MembershipFeeFactory.create(
             begins_on=last_month_last.replace(day=1),
-            ends_on=last_month_last
+            ends_on=last_month_last,
         )
 
-    def create_transaction_current(self):
-        # Membership fee booking for current month
-        TransactionFactory.create(
-            valid_on=self.membership_fee_current.ends_on,
-            splits__account=Iterator(
-                [self.user.account, AccountFactory.create()])
+    @pytest.fixture
+    def transaction_current(self, session, membership_fee_current, user):
+        t = TransactionFactory.create(
+            valid_on=membership_fee_current.ends_on,
+            splits__account=Iterator([user.account, AccountFactory.create()]),
         )
+        session.flush()
+        return t
 
-    def create_transaction_last(self):
+    @pytest.fixture
+    def transaction_last(self, session, membership_fee_last, user):
         # Membership fee booking for last month
-        TransactionFactory.create(
-            valid_on=self.membership_fee_last.ends_on,
-            splits__account=Iterator(
-                [self.user.account, AccountFactory.create()])
+        t = TransactionFactory.create(
+            valid_on=membership_fee_last.ends_on,
+            splits__account=Iterator([user.account, AccountFactory.create()]),
         )
+        session.flush()
+        return t
 
-    def check_current_and_next_month(self, base):
-        # End in grace-period in current month
-        end_date = session.utcnow().date().replace(day=self.membership_fee_current.booking_begin.days - 1)
-        assert base == estimate_balance(self.session, self.user, end_date)
+    @pytest.fixture
+    def check_current_and_next_month(
+        self,
+        utcnow,
+        session: Session,
+        user: User,
+        membership_fee_current: MembershipFee,
+    ):
+        def _check_current_and_next_month(base: Decimal):
+            session.refresh(user)
+            # `estimate_balance` needs an up-to-date `account.balance`, which relies on the
+            # account's `splits`
+            session.refresh(user.account)
 
-        # End after grace-period in current month
-        end_date = self.membership_fee_current.ends_on
-        assert base - 5.00 == estimate_balance(self.session, self.user, end_date)
+            # End in grace-period in current month
+            in_grace_current_month = utcnow.date().replace(
+                day=membership_fee_current.booking_begin.days - 1
+            )
+            assert base == estimate_balance(session, user, in_grace_current_month)
 
-        # End in the middle of next month
-        end_date = session.utcnow().date().replace(day=14) + timedelta(weeks=4)
-        assert base - 10.00 == estimate_balance(self.session, self.user, end_date)
+            # End after grace-period in current month
+            after_grace_current_month = membership_fee_current.ends_on
+            assert base - Decimal(5) == estimate_balance(
+                session, user, after_grace_current_month
+            )
 
-        # End in grace-period of next month
-        end_date = end_date.replace(day=self.membership_fee_current.booking_begin.days - 1)
-        assert base - 5.00 == estimate_balance(self.session, self.user, end_date)
+            # End in the middle of next month
+            middle_next_month = utcnow.date().replace(day=14) + timedelta(weeks=4)
+            assert base - Decimal(10) == estimate_balance(
+                session, user, middle_next_month
+            )
 
-    def test_last_booked__current_not_booked(self):
-        assert self.user.has_property('member')
-        self.create_transaction_last()
-        self.check_current_and_next_month(-5.00)
+            # End in grace-period of next month
+            in_grace_next_month = middle_next_month.replace(
+                day=membership_fee_current.booking_begin.days - 1
+            )
+            assert base - Decimal(5) == estimate_balance(
+                session, user, in_grace_next_month
+            )
 
-    def test_last_booked__current_booked(self):
-        assert self.user.has_property('member')
+        return _check_current_and_next_month
 
-        self.create_transaction_last()
-        self.create_transaction_current()
+    @pytest.mark.meta
+    def test_user_is_member(self, user: User):
+        assert user.has_property("member")
 
-        self.check_current_and_next_month(-5.00)
+    def test_last_booked__current_not_booked(
+        self, transaction_last, check_current_and_next_month
+    ):
+        check_current_and_next_month(Decimal(-5))
 
-    def test_last_not_booked__current_not_booked(self):
-        assert self.user.has_property('member')
+    def test_last_booked__current_booked(
+        self,
+        transaction_last,
+        transaction_current,
+        check_current_and_next_month,
+    ):
+        check_current_and_next_month(Decimal(-5))
 
-        self.check_current_and_next_month(-5.00)
+    def test_last_not_booked__current_not_booked(self, check_current_and_next_month):
+        check_current_and_next_month(Decimal(-5))
 
-    def test_last_not_due__current_not_booked(self):
-        self.user_membership.active_during \
-            = closedopen(self.membership_fee_current.begins_on, None)
-        assert self.user.has_property('member')
-        self.check_current_and_next_month(0.00)
+    def test_last_not_due__current_not_booked(
+        self, user_membership, membership_fee_current, check_current_and_next_month
+    ):
+        user_membership.active_during = closedopen(
+            membership_fee_current.begins_on, None
+        )
+        check_current_and_next_month(Decimal(0))
 
-    def test_free_membership(self):
-        new_start = session.utcnow().replace(day=self.membership_fee_current.booking_end.days + 1)
-        self.user_membership.active_during = closedopen(new_start, None)
-        end_date = last_day_of_month(session.utcnow().date())
-        assert estimate_balance(self.session, self.user, end_date) == 0.00
+    def test_free_membership(
+        self,
+        session,
+        utcnow,
+        user,
+        user_membership,
+        membership_fee_current,
+    ):
+        new_start = utcnow.replace(day=membership_fee_current.booking_end.days + 1)
+        user_membership.active_during = closedopen(new_start, None)
+        end_date = last_day_of_month(utcnow.date())
+        assert estimate_balance(session, user, end_date) == Decimal(0)
 
 
 class TestMatching:

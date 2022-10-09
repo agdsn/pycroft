@@ -5,7 +5,7 @@ from typing import cast
 
 import pytest
 from coverage.annotate import os
-from sqlalchemy import event
+from sqlalchemy import event, select, func
 from sqlalchemy.ext.declarative import DeferredReflection
 from sqlalchemy.future import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker, Session
@@ -116,3 +116,8 @@ def session(class_session) -> Session:
     nested = session.begin_nested()
     yield session
     _rollback_if_active(nested)
+
+
+@pytest.fixture(scope="module")
+def utcnow(module_session):
+    return module_session.scalar(select(func.current_timestamp()))

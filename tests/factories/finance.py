@@ -2,6 +2,7 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import timedelta
+from decimal import Decimal
 
 from factory import SubFactory, LazyAttribute, Iterator, \
     RelatedFactoryList, Sequence
@@ -64,7 +65,7 @@ class MembershipFeeFactory(BaseFactory):
         model = MembershipFee
 
     name = Faker('word')
-    regular_fee = 5.00
+    regular_fee = Decimal("5.00")
     booking_begin = timedelta(3)
     booking_end = timedelta(14)
     payment_deadline = timedelta(14)
