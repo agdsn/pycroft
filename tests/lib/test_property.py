@@ -84,15 +84,14 @@ class TestMembership:
         mf.assert_membership_intervals(IntervalSet())
 
     def test_removing_memberships(self, mf, utcnow):
-        t0 = utcnow
-        t1 = t0 + timedelta(hours=1)
-        t2 = t0 + timedelta(hours=2)
-        t3 = t0 + timedelta(hours=3)
-        t4 = t0 + timedelta(hours=4)
-        t5 = t0 + timedelta(hours=5)
+        t0, t1, t2, t3, t4, t5 = (utcnow + timedelta(hours=h) for h in range(6))
+        # + t0 -- t1 -- t2
         mf.add_membership(closed(t0, t2))
+        # +                   t3 -- t4 -- t5
         mf.add_membership(closed(t3, t5))
+        # -       t1 -- t2 -- t3 -- t4
         mf.remove_membership(closed(t1, t4))
+        # = t0 -- t1 -- t2    t3 -- t4 -- t5
         mf.assert_membership_intervals(IntervalSet((closed(t0, t1), closed(t4, t5))))
 
 
