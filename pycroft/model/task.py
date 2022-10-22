@@ -4,6 +4,7 @@ pycroft.model.task
 """
 import builtins
 import enum
+import operator
 from collections.abc import Mapping
 
 from marshmallow import Schema
@@ -83,6 +84,12 @@ class Task(IntegerIdModel, Generic[TSchema, TParams]):
         data = parameters_schema.dump(_parameters)
 
         self.parameters_json = data
+
+    @property
+    def latest_log_entry(self) -> "TaskLogEntry | None":
+        if not (le := self.log_entries):
+            return None
+        return max(le, key=operator.attrgetter("created_at"))
 
 
 class UserTask(Task):
