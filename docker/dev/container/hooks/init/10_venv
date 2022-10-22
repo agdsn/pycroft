@@ -21,5 +21,7 @@ $PIP install wheel
 echo "No pip packages found, installing requirements"
 cd /opt/pycroft/app
 $PIP install --upgrade pip
+$PIP cache info
+$PIP cache list
 $PIP install -r requirements.txt -r requirements.dev.txt
 $PIP install -e .
