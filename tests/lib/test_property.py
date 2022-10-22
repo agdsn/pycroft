@@ -3,6 +3,9 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import timedelta
 
+import pytest
+from sqlalchemy.orm import Session
+
 from pycroft.helpers.interval import IntervalSet, UnboundedInterval, closed
 from pycroft.lib.membership import grant_property, deny_property, \
     remove_property, make_member_of, remove_member_of, known_properties
@@ -128,11 +131,14 @@ class Test_040_Property(FactoryDataTestBase):
                           "non_existent_property")
 
 
-class TestPropertyFetch(FactoryDataTestBase):
-    def create_factories(self):
-        super().create_factories()
-        PropertyGroupFactory.create(granted={'member', 'must_pay', 'network_access'})
-        PropertyGroupFactory.create(granted={'violation'}, denied={'network_access'})
+@pytest.fixture
+def property_groups(session: Session):
+    return [
+        PropertyGroupFactory.create(granted={'member', 'must_pay', 'network_access'}),
+        PropertyGroupFactory.create(granted={'violation'}, denied={'network_access'}),
+    ]
 
-    def test_known_properties(self):
-        assert known_properties() == {'member', 'must_pay', 'network_access', 'violation'}
+
+@pytest.mark.usefixtures("property_groups")
+def test_known_properties():
+    assert known_properties() == {'member', 'must_pay', 'network_access', 'violation'}
