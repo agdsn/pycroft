@@ -1,88 +1,99 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+import dataclasses
 from datetime import timedelta
 
 import pytest
-from sqlalchemy import inspect
+from sqlalchemy import inspect, select
 from sqlalchemy.orm import Session
 
 from pycroft.helpers.interval import IntervalSet, UnboundedInterval, closed
 from pycroft.lib.membership import grant_property, deny_property, \
     remove_property, make_member_of, remove_member_of, known_properties
-from pycroft.model import session
-from pycroft.model.user import Membership, PropertyGroup
-from tests.legacy_base import FactoryDataTestBase
+from pycroft.model.user import Membership, PropertyGroup, User
 from tests.factories import PropertyGroupFactory, UserFactory
 
 
-class Test_030_Membership(FactoryDataTestBase):
-    def create_factories(self):
-        super().create_factories()
-        self.group = PropertyGroupFactory.create()
-        self.user, self.processor = UserFactory.create_batch(2)
-
-    def assertMembershipIntervalsEqual(self, expected):
-        memberships = session.session.query(Membership).filter_by(
-            user=self.user, group=self.group)
-        got = IntervalSet(m.active_during.closure for m in memberships)
-        assert expected == got, "IntervalSets differ: " \
-                                "expected {!r}" \
-                                "got      {!r}".format(expected, got)
+@dataclasses.dataclass
+class MembershipFixture:
+    session: Session
+    user: User
+    group: PropertyGroup
+    processor: User
 
     def add_membership(self, during):
         make_member_of(self.user, self.group, self.processor, during)
-        session.session.commit()
 
     def remove_membership(self, during=UnboundedInterval):
         remove_member_of(self.user, self.group, self.processor, during)
-        session.session.commit()
 
-    def test_adding_single_membership(self):
-        begins_at = session.utcnow()
+    def assert_membership_intervals(self, expected):
+        memberships = self.session.scalars(
+            select(Membership).filter_by(user=self.user, group=self.group)
+        )
+        got = IntervalSet(m.active_during.closure for m in memberships)
+        assert expected == got
+
+
+@pytest.mark.usefixtures("session")
+class TestMembership:
+    @pytest.fixture(scope="class")
+    def group(self, class_session: Session) -> PropertyGroup:
+        return PropertyGroupFactory.create()
+
+    @pytest.fixture(scope="class")
+    def user(self, class_session: Session) -> User:
+        return UserFactory.create()
+
+    @pytest.fixture(name="mf")
+    def membership_fixture(self, session, user, group, processor) -> MembershipFixture:
+        return MembershipFixture(session, user, group, processor)
+
+    def test_adding_single_membership(self, mf, utcnow):
+        begins_at = utcnow
         ends_at = begins_at + timedelta(hours=1)
         during = closed(begins_at, ends_at)
 
-        self.add_membership(during)
-        self.assertMembershipIntervalsEqual(IntervalSet(during))
+        mf.add_membership(during)
+        mf.assert_membership_intervals(IntervalSet(during))
 
-    def test_join_overlapping_memberships(self):
-        begins_at1 = session.utcnow()
+    def test_join_overlapping_memberships(self, mf, utcnow):
+        begins_at1 = utcnow
         ends_at1 = begins_at1 + timedelta(hours=2)
         during1 = closed(begins_at1, ends_at1)
         begins_at2 = begins_at1 + timedelta(hours=1)
         ends_at2 = begins_at1 + timedelta(hours=3)
         during2 = closed(begins_at2, ends_at2)
 
-        self.add_membership(during1)
-        self.add_membership(during2)
-        self.assertMembershipIntervalsEqual(IntervalSet(closed(begins_at1, ends_at2)))
+        mf.add_membership(during1)
+        mf.add_membership(during2)
+        mf.assert_membership_intervals(IntervalSet(closed(begins_at1, ends_at2)))
 
-    def test_removing_all_memberships(self):
-        begins_at1 = session.utcnow()
+    def test_removing_all_memberships(self, mf, utcnow):
+        begins_at1 = utcnow
         ends_at1 = begins_at1 + timedelta(hours=1)
         during1 = closed(begins_at1, ends_at1)
         begins_at2 = begins_at1 + timedelta(hours=2)
         ends_at2 = begins_at1 + timedelta(hours=3)
         during2 = closed(begins_at2, ends_at2)
 
-        self.add_membership(during1)
-        self.add_membership(during2)
-        self.remove_membership()
-        self.assertMembershipIntervalsEqual(IntervalSet())
+        mf.add_membership(during1)
+        mf.add_membership(during2)
+        mf.remove_membership()
+        mf.assert_membership_intervals(IntervalSet())
 
-    def test_removing_memberships(self):
-        t0 = session.utcnow()
+    def test_removing_memberships(self, mf, utcnow):
+        t0 = utcnow
         t1 = t0 + timedelta(hours=1)
         t2 = t0 + timedelta(hours=2)
         t3 = t0 + timedelta(hours=3)
         t4 = t0 + timedelta(hours=4)
         t5 = t0 + timedelta(hours=5)
-        self.add_membership(closed(t0, t2))
-        self.add_membership(closed(t3, t5))
-        self.remove_membership(closed(t1, t4))
-        self.assertMembershipIntervalsEqual(IntervalSet(
-            (closed(t0, t1), closed(t4, t5))))
+        mf.add_membership(closed(t0, t2))
+        mf.add_membership(closed(t3, t5))
+        mf.remove_membership(closed(t1, t4))
+        mf.assert_membership_intervals(IntervalSet((closed(t0, t1), closed(t4, t5))))
 
 
 @pytest.mark.usefixtures("session")
