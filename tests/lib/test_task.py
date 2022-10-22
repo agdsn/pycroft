@@ -3,59 +3,66 @@
 #  the Apache License, Version 2.0. See the LICENSE file for details
 import datetime
 
+import pytest
+
 from pycroft.lib.task import cancel_task, manually_execute_task, reschedule_task
-from pycroft.model import session
 from pycroft.model.task import TaskType, TaskStatus
 from pycroft.model.task_serialization import UserMoveParams
-from tests.legacy_base import FactoryDataTestBase
 from tests.factories import UserFactory, UserTaskFactory, RoomFactory
 
 
-class TestTaskExecution(FactoryDataTestBase):
-    def create_factories(self):
-        self.admin = UserFactory()
-        self.old_room = RoomFactory()
-        self.new_room = RoomFactory()
-        self.user = UserFactory(room=self.old_room)
-        self.task = UserTaskFactory(
-            user=self.user, type=TaskType.USER_MOVE,
+class TestTaskExecution:
+    @pytest.fixture(scope="class")
+    def old_room(self, class_session):
+        return RoomFactory()
+
+    @pytest.fixture(scope="class")
+    def new_room(self, class_session):
+        return RoomFactory()
+
+    @pytest.fixture(scope="class")
+    def user(self, class_session, old_room):
+        return UserFactory(room=old_room)
+
+    # not `class` scoped because it changes its `Task.status`
+    @pytest.fixture
+    def task(self, class_session, user, new_room, processor):
+        return UserTaskFactory(
+            user=user, type=TaskType.USER_MOVE,
             created=datetime.datetime.now() - datetime.timedelta(days=1),
             due=datetime.datetime.now() + datetime.timedelta(days=7),
-            parameters=UserMoveParams(room_number=self.new_room.number,
-                                      level=self.new_room.level,
-                                      building_id=self.new_room.building_id),
-            creator=self.admin,
+            parameters=UserMoveParams(room_number=new_room.number,
+                                      level=new_room.level,
+                                      building_id=new_room.building_id),
+            creator=processor,
         )
 
-    def test_task_defaults(self):
-        assert self.task.status == TaskStatus.OPEN
-        assert self.task.errors is None
+    def test_task_defaults(self, task):
+        assert task.status == TaskStatus.OPEN
+        assert task.errors is None
 
-    def test_task_cancel(self):
-        cancel_task(self.task, self.admin)
-        self.session.commit()
+    def test_task_cancel(self, task, processor, old_room, user):
+        cancel_task(task, processor)
 
-        assert self.user.room == self.old_room
-        assert self.task.status == TaskStatus.CANCELLED
-        assert self.task.latest_log_entry.author == self.admin
+        assert user.room == old_room
+        assert task.status == TaskStatus.CANCELLED
+        assert task.latest_log_entry.author == processor
 
-    def test_task_manually_execute(self):
-        manually_execute_task(self.task, self.admin)
-        now = session.utcnow()
-        self.session.commit()
+    def test_task_manually_execute(self, session, utcnow, task, processor, new_room, user):
+        manually_execute_task(task, processor)
+        now = utcnow
 
-        assert self.user.room == self.new_room
-        assert self.task.status == TaskStatus.EXECUTED
-        assert self.task.due == now
-        assert len(logs := self.task.log_entries) == 1
-        assert logs[0].author == self.admin
+        assert user.room == new_room
+        assert task.status == TaskStatus.EXECUTED
+        assert task.due == now
+        assert len(logs := task.log_entries) == 1
+        assert logs[0].author == processor
 
-    def test_task_reschedule(self):
+    def test_task_reschedule(self, task, processor, old_room, user):
         new_due_date = datetime.datetime.now() + datetime.timedelta(days=5)
-        reschedule_task(self.task, new_due_date,
-                        processor=self.admin)
-        assert self.user.room == self.old_room
-        assert self.task.status == TaskStatus.OPEN
-        assert self.task.due == new_due_date
-        assert self.task.latest_log_entry.author == self.admin
+        reschedule_task(task, new_due_date, processor=processor)
+        assert user.room == old_room
+        assert task.status == TaskStatus.OPEN
+        assert task.due == new_due_date
+        assert task.latest_log_entry.author == processor
 
