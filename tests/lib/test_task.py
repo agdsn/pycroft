@@ -37,8 +37,7 @@ class TestTaskExecution(FactoryDataTestBase):
 
         assert self.user.room == self.old_room
         assert self.task.status == TaskStatus.CANCELLED
-        assert len(logs := self.task.log_entries) == 1
-        assert logs[0].author == self.admin
+        assert self.task.latest_log_entry.author == self.admin
 
     def test_task_manually_execute(self):
         manually_execute_task(self.task, self.admin)
@@ -58,6 +57,5 @@ class TestTaskExecution(FactoryDataTestBase):
         assert self.user.room == self.old_room
         assert self.task.status == TaskStatus.OPEN
         assert self.task.due == new_due_date
-        assert len(logs := self.task.log_entries) == 1
-        assert logs[0].author == self.admin
+        assert self.task.latest_log_entry.author == self.admin
 

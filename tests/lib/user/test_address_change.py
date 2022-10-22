@@ -37,9 +37,7 @@ class TestUserChangeAddressTestCase(FactoryDataTestBase):
                 assert user.address.country == val or 'Germany'
                 continue
             assert getattr(user.address, key) == (val or '')
-        assert len(user.log_entries) > 0
-        log_entry = user.log_entries[-1]
-        assert log_entry.author == self.admin
+        assert user.latest_log_entry.author == self.admin
 
     def test_plain_user_address_add(self):
         self.assert_user_address_change(UserFactory(without_room=True), self.address_args)
