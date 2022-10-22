@@ -4,13 +4,14 @@
 from datetime import timedelta
 
 import pytest
+from sqlalchemy import inspect
 from sqlalchemy.orm import Session
 
 from pycroft.helpers.interval import IntervalSet, UnboundedInterval, closed
 from pycroft.lib.membership import grant_property, deny_property, \
     remove_property, make_member_of, remove_member_of, known_properties
 from pycroft.model import session
-from pycroft.model.user import Membership, Property
+from pycroft.model.user import Membership, PropertyGroup
 from tests.legacy_base import FactoryDataTestBase
 from tests.factories import PropertyGroupFactory, UserFactory
 
@@ -84,51 +85,41 @@ class Test_030_Membership(FactoryDataTestBase):
             (closed(t0, t1), closed(t4, t5))))
 
 
-class Test_040_Property(FactoryDataTestBase):
-    def create_factories(self):
-        super().create_factories()
-        self.property_name = 'granted_property'
-        self.group = PropertyGroupFactory(granted={self.property_name},
-                                          denied={'denied_property'})
+@pytest.mark.usefixtures("session")
+class TestProperty:
+    @pytest.fixture(scope="class")
+    def property_name(self):
+        return "granted_property"
 
-    def test_0010_grant_property(self):
-        prop = grant_property(self.group, self.property_name)
+    @pytest.fixture(scope="class")
+    def group(self, property_name: str, class_session: Session) -> PropertyGroup:
+        return PropertyGroupFactory(granted={property_name}, denied={'denied_property'})
 
-        assert Property.get(prop.id) is not None
+    def test_grant_property(self, group, property_name):
+        prop = grant_property(group, property_name)
+        assert inspect(prop).persistent
+        assert prop.name == property_name
+        assert prop.property_group == group
+        assert prop.granted
+        assert group.property_grants[property_name]
 
-        db_property = Property.get(prop.id)
+    def test_deny_property(self, group, property_name):
+        prop = deny_property(group, property_name)
+        assert inspect(prop).persistent
+        assert prop.name == property_name
+        assert prop.property_group == group
+        assert not prop.granted
+        assert not group.property_grants[property_name]
 
-        assert db_property.name == self.property_name
-        assert db_property.property_group == self.group
-        assert db_property.granted
-        assert self.group.property_grants[self.property_name]
-
-        session.session.delete(db_property)
-        session.session.commit()
-
-    def test_0020_deny_property(self):
-        prop = deny_property(self.group, self.property_name)
-        assert Property.get(prop.id) is not None
-
-        db_property = Property.get(prop.id)
-
-        assert db_property.name == self.property_name
-        assert db_property.property_group == self.group
-        assert not db_property.granted
-        assert not self.group.property_grants[self.property_name]
-
-        session.session.delete(db_property)
-        session.session.commit()
-
-    def test_0030_remove_property(self):
+    def test_remove_property(self, group, property_name):
         try:
-            remove_property(self.group, self.property_name)
+            remove_property(group, property_name)
         except ValueError as e:
-            self.fail(str(e))
+            pytest.fail(str(e))
 
-    def test_0035_remove_wrong_property(self):
-        self.assertRaises(ValueError, remove_property, self.group,
-                          "non_existent_property")
+    def test_remove_wrong_property(self, group, property_name):
+        with pytest.raises(ValueError):
+            remove_property(group, "non_existent_property")
 
 
 @pytest.fixture
