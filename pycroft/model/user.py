@@ -11,6 +11,7 @@
 """
 from __future__ import annotations
 
+import operator
 import re
 import typing
 from datetime import timedelta, date, datetime
@@ -259,6 +260,12 @@ class User(ModelBase, BaseUser, UserMixin):
         Utilized in the web component's access control mechanism.
         """
         return {p.property_name for p in self.current_properties}
+
+    @property
+    def latest_log_entry(self) -> UserLogEntry | None:
+        if not (le := self.log_entries):
+            return None
+        return max(le, key=operator.attrgetter("created_at"))
 
     @property
     def wifi_password(self):
