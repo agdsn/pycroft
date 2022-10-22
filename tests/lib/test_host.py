@@ -9,7 +9,6 @@ from sqlalchemy.orm import Session
 from pycroft.helpers.i18n import localized
 from pycroft.lib.host import change_mac
 from pycroft.model.host import Interface
-from pycroft.model.logging import UserLogEntry
 from pycroft.model.user import User
 from tests.factories import InterfaceFactory, UserFactory
 
@@ -38,6 +37,4 @@ CHANGED_MAC_REGEX = re.compile(r"changed mac", re.IGNORECASE)
 def test_change_mac_with_owner(session, owner, interface, processor):
     interface = change_mac(interface, NEW_MAC, processor)
     assert interface.mac == NEW_MAC
-    assert len(owner.log_entries) == 1
-    l: UserLogEntry = owner.log_entries[0]
-    assert CHANGED_MAC_REGEX.search(localized(l.message))
+    assert CHANGED_MAC_REGEX.search(localized(owner.latest_log_entry.message))

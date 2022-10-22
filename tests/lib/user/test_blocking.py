@@ -45,7 +45,7 @@ class UserWithNetworkAccessTestCase(FactoryWithConfigDataTestBase):
         session.session.commit()
 
         blocked_during = closedopen(blockage, unblockage)
-        assert u.log_entries[0].author == blocked_user
+        assert u.latest_log_entry.author == blocked_user
         self.assert_violation_membership(blocked_user, subinterval=blocked_during)
 
         unblocked_user = UserHelper.unblock(blocked_user, processor=u, when=unblockage)
