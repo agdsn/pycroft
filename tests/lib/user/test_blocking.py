@@ -1,9 +1,11 @@
+import typing as t
 from datetime import timedelta
 
 import pytest
 from sqlalchemy.orm import Session
 
-from pycroft.helpers.interval import closedopen
+from pycroft.helpers.interval import closedopen, Interval
+from pycroft.helpers.utc import DateTimeTz
 from pycroft.lib.user import block, unblock
 from pycroft.model.config import Config
 from pycroft.model.user import User
@@ -27,20 +29,30 @@ class TestUserBlockingAndUnblocking:
     def _sanity(self, user_to_block, config):
         assert config.violation_group not in user_to_block.active_property_groups()
 
-    def test_deferred_blocking_and_unblocking_works(self, session, utcnow, user_to_block, config):
+    @pytest.fixture
+    def is_violator(self, session, user_to_block, config):
+        def is_violator(when: Interval[DateTimeTz]) -> bool:
+            return user_to_block.member_of(config.violation_group, when=when)
+
+        return is_violator
+
+    def test_deferred_blocking_and_unblocking_works(
+        self, session, utcnow, user_to_block, config, is_violator
+    ):
         u = user_to_block
         blockage, unblockage = (utcnow + timedelta(days=d) for d in (1, 3))
+        assert not is_violator(when=closedopen(blockage, unblockage))
 
         # deferred blocking
         blocked_user = block(u, reason="test", processor=u, during=closedopen(blockage, None))
 
         blocked_during = closedopen(blockage, unblockage)
         assert u.latest_log_entry.author == blocked_user
-        assert blocked_user.member_of(config.violation_group, when=blocked_during)
+        assert is_violator(when=blocked_during)
 
         # deferred unblocking
         unblocked_user = unblock(blocked_user, processor=u, when=unblockage)
 
         assert unblocked_user.log_entries[0].author == unblocked_user
         assert unblocked_user.member_of(config.violation_group, when=blocked_during)
-
+        assert not is_violator(when=closedopen(unblockage, t.cast(DateTimeTz, None)))
