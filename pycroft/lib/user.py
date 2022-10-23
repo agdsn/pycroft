@@ -778,10 +778,10 @@ def unblock(user: User, processor: User, when: DateTimeTz | None = None) -> User
     if when is None:
         when = session.utcnow()
 
+    during = closedopen(when, None)
     for group in get_blocked_groups():
-        if user.member_of(group):
-            remove_member_of(user=user, group=group,
-                             processor=processor, during=closedopen(when, None))
+        if user.member_of(group, when=during):
+            remove_member_of(user=user, group=group, processor=processor, during=during)
 
     return user
 
