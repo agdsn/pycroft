@@ -249,7 +249,7 @@ def generate_wifi_password() -> str:
 
 def create_user(
     name: str, login: str, email: str, birthdate: date,
-    groups: list[PropertyGroup], processor: User | None, address: Address,
+    groups: t.Iterable[PropertyGroup], processor: User | None, address: Address,
     passwd_hash: str = None,
     send_confirm_mail: bool = False
 ) -> tuple[User, str]:
@@ -1010,7 +1010,7 @@ def format_user_mail(user: User, text: str) -> str:
 
 
 def user_send_mails(
-    users: list[BaseUser],
+    users: t.Iterable[BaseUser],
     template: MailTemplate | None = None,
     soft_fail: bool = False,
     use_internal: bool = True,
