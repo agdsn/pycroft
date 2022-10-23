@@ -1,7 +1,15 @@
 import pytest
 
-from pycroft.helpers.interval import IntervalSet, closed, empty, closedopen, \
-    open, openclosed, Interval
+from pycroft.helpers.interval import (
+    IntervalSet,
+    closed,
+    empty,
+    closedopen,
+    open,
+    openclosed,
+    Interval,
+    starting_from,
+)
 
 
 @pytest.mark.parametrize('one, other', [
@@ -15,41 +23,67 @@ def test_constructor(one: list[Interval], other: list[Interval]):
     assert IntervalSet(one) == IntervalSet(other)
 
 
-@pytest.mark.parametrize('intervals, expected', [
-    ([], open(None, None)),
-    ([closed(0, 1), open(2, 3)], [open(None, 0), openclosed(1, 2), closedopen(3, None)]),
-    ([closed(None, 0), closed(1, None)], [open(0, 1)]),
-])
+@pytest.mark.parametrize(
+    "intervals, expected",
+    [
+        ([], open(None, None)),
+        (
+            [closed(0, 1), open(2, 3)],
+            [open(None, 0), openclosed(1, 2), starting_from(3)],
+        ),
+        ([closed(None, 0), closed(1, None)], [open(0, 1)]),
+    ],
+)
 def test_complement(intervals: list[Interval], expected: IntervalSet):
     assert IntervalSet(intervals).complement() == IntervalSet(expected)
 
 
-@pytest.mark.parametrize('one, other, expected', [
-    ([], [closed(0, 1), open(1, 2)],
-     [closed(0, 1), open(1, 2)]),
-    ([closed(0, 1), open(1, 2)], [],
-     [closed(0, 1), open(1, 2)]),
-    ([closed(None, 1), closed(3, 4), open(7, 8)], [open(0, 5), closed(6, 7), closedopen(8, None)],
-     [open(None, 5), closed(6, None)]),
-])
+@pytest.mark.parametrize(
+    "one, other, expected",
+    [
+        ([], [closed(0, 1), open(1, 2)], [closed(0, 1), open(1, 2)]),
+        ([closed(0, 1), open(1, 2)], [], [closed(0, 1), open(1, 2)]),
+        (
+            [closed(None, 1), closed(3, 4), open(7, 8)],
+            [open(0, 5), closed(6, 7), starting_from(8)],
+            [open(None, 5), closed(6, None)],
+        ),
+    ],
+)
 def test_union(one: list[Interval], other: list[Interval], expected: IntervalSet):
     assert IntervalSet(one).union(IntervalSet(other)) == IntervalSet(expected)
 
 
-@pytest.mark.parametrize('one, other, expected', [
-    ([open(None, None)],
-     [openclosed(None, 0), closed(1, 2), closedopen(3, None)],
-     [openclosed(None, 0), closed(1, 2), closedopen(3, None)],)
-])
+@pytest.mark.parametrize(
+    "one, other, expected",
+    [
+        (
+            [open(None, None)],
+            [openclosed(None, 0), closed(1, 2), starting_from(3)],
+            [openclosed(None, 0), closed(1, 2), starting_from(3)],
+        )
+    ],
+)
 def test_intersect(one: list[Interval], other: list[Interval], expected: IntervalSet):
     assert IntervalSet(one).intersect(IntervalSet(other)) == IntervalSet(expected)
 
 
-@pytest.mark.parametrize('one, other, expected', [
-    ([open(None, None)],
-     [closed(0, 1), closedopen(2, 3), openclosed(4, 5), open(6, 7)],
-     [open(None, 0), open(1, 2), closed(3, 4), openclosed(5, 6), closedopen(7, None)])
-])
+@pytest.mark.parametrize(
+    "one, other, expected",
+    [
+        (
+            [open(None, None)],
+            [closed(0, 1), closedopen(2, 3), openclosed(4, 5), open(6, 7)],
+            [
+                open(None, 0),
+                open(1, 2),
+                closed(3, 4),
+                openclosed(5, 6),
+                starting_from(7),
+            ],
+        )
+    ],
+)
 def test_difference(one: list[Interval], other: list[Interval], expected: IntervalSet):
     assert IntervalSet(one).difference(IntervalSet(other)) == IntervalSet(expected)
 
