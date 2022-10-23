@@ -1,7 +1,7 @@
 import pytest
 from sqlalchemy import func
 
-from pycroft.helpers.interval import closedopen
+from pycroft.helpers.interval import starting_from
 from pycroft.lib import user as UserHelper
 from pycroft.model.user import RoomHistoryEntry
 from tests import factories
@@ -34,7 +34,7 @@ class SimilarUserTestCase(FactoryDataTestBase):
     def create_factories(self):
         super().create_factories()
         utcnow = self.session.query(func.current_timestamp()).scalar()
-        interval = closedopen(utcnow, None)
+        interval = starting_from(utcnow)
         # We need a user in the same room
         self.room = factories.RoomFactory()
         self.similar_user_this_room = factories.UserFactory(room=self.room, name="Tobias Fuenke")

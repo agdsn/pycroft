@@ -28,8 +28,7 @@ from sqlalchemy.sql import Select
 from pycroft import config
 from pycroft.helpers.date import diff_month, last_day_of_month
 from pycroft.helpers.i18n import deferred_gettext, gettext
-from pycroft.helpers.interval import (
-    closed, Interval, IntervalSet, UnboundedInterval, closedopen)
+from pycroft.helpers.interval import closed, Interval, UnboundedInterval, starting_from
 from pycroft.helpers.utc import with_min_time, with_max_time, DateTimeTz
 from pycroft.lib.exc import PycroftLibException
 from pycroft.lib.logging import log_user_event, log_event
@@ -664,8 +663,12 @@ def end_payment_in_default_memberships(processor: User) -> list[User]:
 
     for user in users:
         if user.member_of(config.payment_in_default_group):
-            remove_member_of(user, config.payment_in_default_group, processor,
-                             closedopen(session.utcnow() - timedelta(seconds=1), None))
+            remove_member_of(
+                user,
+                config.payment_in_default_group,
+                processor,
+                starting_from(session.utcnow() - timedelta(seconds=1)),
+            )
 
     return users
 

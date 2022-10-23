@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 
 from pycroft import Config
 from pycroft.helpers.date import last_day_of_month
-from pycroft.helpers.interval import closedopen, openclosed, single
+from pycroft.helpers.interval import closedopen, openclosed, single, starting_from
 from pycroft.lib import finance
 from pycroft.lib.finance import (
     cleanup_description,
@@ -124,7 +124,7 @@ class TestBankAccount:
 
         assert transferred_amount(fee_account, user_account, single(today)) == amount
         assert (
-            transferred_amount(fee_account, user_account, closedopen(today, None))
+            transferred_amount(fee_account, user_account, starting_from(today))
             == 2 * amount
         )
         assert (
@@ -208,7 +208,7 @@ class TestMembershipFeePosting:
         return UserFactory(
             registered_at=reg_date,
             with_membership=True,
-            membership__active_during=closedopen(reg_date, None),
+            membership__active_during=starting_from(reg_date),
             membership__group=config.member_group,
         )
 
@@ -233,7 +233,7 @@ class TestMembershipFeePosting:
         return UserFactory(
             registered_at=reg_date,
             with_membership=True,
-            membership__active_during=closedopen(reg_date, None),
+            membership__active_during=starting_from(reg_date),
             membership__group=config.member_group
         )
 
@@ -245,7 +245,7 @@ class TestMembershipFeePosting:
         return UserFactory(
             registered_at=reg_date,
             with_membership=True,
-            membership__active_during=closedopen(reg_date, None),
+            membership__active_during=starting_from(reg_date),
             membership__group=config.member_group
         )
 
@@ -609,7 +609,7 @@ class TestBalanceEstimation:
         self, user: User, class_session: Session, utcnow, config: Config
     ) -> Membership:
         return MembershipFactory.create(
-            active_during=closedopen(utcnow - timedelta(weeks=52), None),
+            active_during=starting_from(utcnow - timedelta(weeks=52)),
             user=user,
             group=config.member_group
         )
@@ -710,9 +710,7 @@ class TestBalanceEstimation:
     def test_last_not_due__current_not_booked(
         self, user_membership, membership_fee_current, check_current_and_next_month
     ):
-        user_membership.active_during = closedopen(
-            membership_fee_current.begins_on, None
-        )
+        user_membership.active_during = starting_from(membership_fee_current.begins_on)
         check_current_and_next_month(Decimal(0))
 
     def test_free_membership(
@@ -724,7 +722,7 @@ class TestBalanceEstimation:
         membership_fee_current,
     ):
         new_start = utcnow.replace(day=membership_fee_current.booking_end.days + 1)
-        user_membership.active_during = closedopen(new_start, None)
+        user_membership.active_during = starting_from(new_start)
         end_date = last_day_of_month(utcnow.date())
         assert estimate_balance(session, user, end_date) == Decimal(0)
 

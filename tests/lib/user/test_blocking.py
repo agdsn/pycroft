@@ -1,10 +1,9 @@
-import typing as t
 from datetime import timedelta
 
 import pytest
 from sqlalchemy.orm import Session
 
-from pycroft.helpers.interval import closedopen, Interval
+from pycroft.helpers.interval import closedopen, Interval, starting_from
 from pycroft.helpers.utc import DateTimeTz
 from pycroft.lib.user import block, unblock
 from pycroft.model.config import Config
@@ -44,7 +43,9 @@ class TestUserBlockingAndUnblocking:
         assert not is_violator(when=closedopen(blockage, unblockage))
 
         # deferred blocking
-        blocked_user = block(u, reason="test", processor=u, during=closedopen(blockage, None))
+        blocked_user = block(
+            u, reason="test", processor=u, during=starting_from(blockage)
+        )
 
         blocked_during = closedopen(blockage, unblockage)
         assert u.latest_log_entry.author == blocked_user
@@ -55,4 +56,4 @@ class TestUserBlockingAndUnblocking:
 
         assert unblocked_user.log_entries[0].author == unblocked_user
         assert unblocked_user.member_of(config.violation_group, when=blocked_during)
-        assert not is_violator(when=closedopen(unblockage, t.cast(DateTimeTz, None)))
+        assert not is_violator(when=starting_from(unblockage))

@@ -5,7 +5,7 @@ from datetime import timedelta
 
 import pytest
 
-from pycroft.helpers.interval import single, closedopen
+from pycroft.helpers.interval import single, starting_from
 from pycroft.helpers.user import generate_password, hash_password
 from pycroft.model.user import IllegalLoginError, Membership, User, UnixAccount
 from tests import factories
@@ -163,7 +163,9 @@ class TestActiveHybridMethods:
     def add_membership(self, session, utcnow, user):
         def _add_membership(group):
             with session.begin_nested():
-                m = Membership(user=user, group=group, active_during=closedopen(utcnow, None))
+                m = Membership(
+                    user=user, group=group, active_during=starting_from(utcnow)
+                )
                 session.add(m)
             return m
         return _add_membership
