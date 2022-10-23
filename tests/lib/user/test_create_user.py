@@ -57,21 +57,32 @@ class TestUserCreation:
         )
         return new_user
 
-    def test_user_create(self, new_user, user_data, member_group, user_mail_capture):
-        # needs: new_user, self.user (the initiating data),
-        # self.config.member_group
+    def test_user_base_data(self, new_user, user_data, room):
         assert new_user.name == user_data.name
         assert new_user.login == user_data.login
         assert new_user.email == user_data.email
-        # TODO fix signature and check for explicitly supplied address.
-        # assert new_user.address == config.dummy_address
-        assert_account_name(new_user.account, f"User {new_user.id}")
+
+    def test_user_address(self, new_user, user_data, room):
+        # TODO fix signature of `create_user` and also check for explicitly supplied address.
+        assert new_user.address == room.address
+        assert not new_user.has_custom_address
+
+    def test_user_memberships(self, new_user, member_group):
         assert_membership_groups(new_user.active_memberships(), [member_group])
+
+    def test_unix_account(self, new_user):
         assert new_user.unix_account.home_directory == f"/home/{new_user.login}"
+
+    def test_log_entries(self, new_user):
         assert len(new_user.log_entries) == 2
         first, second = new_user.log_entries
         assert_logmessage_startswith(first, "Added to group Mitglied")
         assert_logmessage_startswith(second, "User created")
+
+    def test_finance_account(self, new_user):
+        assert_account_name(new_user.account, f"User {new_user.id}")
         assert new_user.account is not None
         assert new_user.account.balance == 0
+
+    def test_one_mail_sent(self, user_mail_capture):
         user_mail_capture.assert_called()
