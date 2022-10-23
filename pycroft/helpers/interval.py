@@ -530,6 +530,14 @@ def closedopen(begin: T | None, end: T | None) -> Interval[T]:
     return Interval(Bound(begin_, True), Bound(end_, False))
 
 
+def starting_from(when: T) -> Interval[T]:
+    """Alias for :func:`closedopen(when, None) <closedopen>`
+
+    :return: ``[when, ∞)``
+    """
+    return closedopen(when, None)
+
+
 def openclosed(begin: T | None, end: T | None) -> Interval[T]:
     """
     Create a left-open/right-closed interval.
