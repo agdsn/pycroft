@@ -40,6 +40,7 @@ extensions = [
     "guzzle_sphinx_theme",
     "sphinx_paramlinks",
     "sphinxcontrib.fulltoc",
+    "sphinxcontrib.autohttp.flask",
 ]
 
 # Add any paths that contain templates here, relative to this directory.

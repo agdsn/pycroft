@@ -44,6 +44,7 @@ Reference Documentation
    :maxdepth: 2
 
    api/pycroft
+   api/web
    api/ldap_sync
 
 
