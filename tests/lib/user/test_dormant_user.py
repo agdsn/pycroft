@@ -1,65 +1,94 @@
+import typing as t
 from datetime import datetime, timezone, timedelta
 
-from pycroft.helpers.interval import single, open
+import pytest
+from sqlalchemy.orm import Session
+
+from pycroft.helpers.interval import open
 from pycroft.lib import user as UserHelper
 from pycroft.model import session
+from pycroft.model.address import Address
+from pycroft.model.facilities import Room
 from pycroft.model.task import Task, TaskType, TaskStatus
 from pycroft.model.task_serialization import UserMoveOutParams
+from pycroft.model.user import User
 from tests.legacy_base import FactoryWithConfigDataTestBase
-from tests.factories import RoomFactory, AddressFactory, UserFactory, \
-    MembershipFactory
+from tests.factories import RoomFactory, AddressFactory, UserFactory
 from tests.lib.user.task_helpers import create_task_and_execute
 
 
-class MovedInUserTestCase(FactoryWithConfigDataTestBase):
-    def create_factories(self):
-        # We want a user who lives somewhere with a membership!
-        super().create_factories()
-        self.processor = UserFactory.create()
-        self.user = UserFactory.create(with_host=True)
-        self.membership = MembershipFactory.create(user=self.user,
-                                                   group=self.config.member_group)
-        self.other_room = RoomFactory.create()
+class TestMovedInUser:
+    @pytest.fixture(scope="class")
+    def user(self, class_session, config):
+        return UserFactory.create(
+            with_host=True,
+            with_membership=True,
+            membership__group=config.member_group,
+        )
 
-    def move_out(self, user, comment=None):
-        UserHelper.move_out(user, comment=comment or "", processor=self.processor,
-                            when=session.utcnow())
-        session.session.refresh(user)
+    @pytest.fixture(scope="class")
+    def other_room(self, class_session) -> Room:
+        return RoomFactory.create()
 
-    def customize_address(self, user):
-        self.user.address = address = AddressFactory.create(city="Bielefeld")
-        session.session.add(user)
-        session.session.commit()
-        assert user.has_custom_address
-        return address
+    @pytest.fixture
+    def move_out(
+        self, session, processor, utcnow
+    ) -> t.Callable[[User, str | None], None]:
+        def move_out(user: User, comment: str | None = None) -> None:
+            UserHelper.move_out(
+                user, comment=comment or "", processor=processor, when=utcnow
+            )
+            session.refresh(user)
 
-    def test_move_out_keeps_address(self):
-        assert not self.user.has_custom_address
-        old_address = self.user.address
+        return move_out
 
-        self.move_out(self.user)
-        assert self.user.active_memberships(when=single(datetime.now(timezone.utc))) == []
-        assert self.user.room is None
-        assert self.user.address == old_address
+    @pytest.fixture
+    def customize_address(self, session: Session) -> t.Callable[[User], Address]:
+        def customize_address(user: User) -> Address:
+            user.address = address = AddressFactory.create(city="Bielefeld")
+            session.add(user)
+            session.flush()
+            assert user.has_custom_address
+            return address
 
-    def test_move_out_keeps_custom_address(self):
-        address = self.customize_address(self.user)
-        self.move_out(self.user)
-        assert self.user.address == address
+        return customize_address
 
-    def move(self, user, room):
-        UserHelper.move(user, processor=self.processor,
-                        building_id=room.building_id, level=room.level, room_number=room.number)
-        session.session.refresh(user)
+    def test_move_out_keeps_address(self, session, user, utcnow, move_out):
+        assert not user.has_custom_address
+        old_address = user.address
 
-    def test_move_changes_address(self):
-        self.move(self.user, self.other_room)
-        assert self.user.address == self.other_room.address
+        move_out(user, "")
+        assert user.active_memberships(when=open(utcnow, None)) == []
+        assert user.room is None
+        assert user.address == old_address
 
-    def test_move_keeps_custom_address(self):
-        address = self.customize_address(self.user)
-        self.move(self.user, self.other_room)
-        assert self.user.address == address
+    def test_move_out_keeps_custom_address(self, user, customize_address, move_out):
+        address = customize_address(user)
+        move_out(user, "")
+        assert user.address == address
+
+    @pytest.fixture
+    def move(self, session, processor) -> t.Callable[[User, Room], None]:
+        def move(user, room):
+            UserHelper.move(
+                user,
+                processor=processor,
+                building_id=room.building_id,
+                level=room.level,
+                room_number=room.number,
+            )
+            session.refresh(user)
+
+        return move
+
+    def test_move_changes_address(self, move, user, other_room):
+        move(user, other_room)
+        assert user.address == other_room.address
+
+    def test_move_keeps_custom_address(self, customize_address, move, user, other_room):
+        address = customize_address(user)
+        move(user, other_room)
+        assert user.address == address
 
 
 class MoveOutSchedulingTestCase(FactoryWithConfigDataTestBase):

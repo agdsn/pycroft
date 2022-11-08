@@ -13,6 +13,12 @@ from tests import factories
 def utcnow(module_session):
     return module_session.scalar(select(func.current_timestamp()))
 
+
 @pytest.fixture(scope="module")
 def processor(module_session) -> m.User:
     return factories.UserFactory.create()
+
+
+@pytest.fixture(scope="module")
+def config(module_session) -> m.Config:
+    return factories.ConfigFactory.create()
