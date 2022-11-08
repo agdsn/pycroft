@@ -1,3 +1,4 @@
+import typing as t
 from datetime import timedelta
 
 import pytest
@@ -84,7 +85,6 @@ class TestUserMove:
 
 
 class TestMoveImpl:
-    # TODO move into own module and then use module-scoped fixtures and class inheritance
     @pytest.fixture(scope="class")
     def user(self, class_session, config) -> User:
         return UserFactory.create(
@@ -99,47 +99,43 @@ class TestMoveImpl:
 
     @pytest.fixture(scope="class")
     def new_room(self, class_session) -> Room:
-        return RoomFactory.create()
+        room = RoomFactory.create()
+        class_session.flush()
+        return room
 
-    def test_successful_move_execution(self, session, user, new_room):
-        params = {
+    @pytest.fixture(scope="class")
+    def full_params(self, new_room) -> dict[str]:
+        return {
             "level": new_room.level,
             "building_id": new_room.building_id,
             "room_number": new_room.number,
         }
-        task = create_task_and_execute(TaskType.USER_MOVE, user, params)
+
+    def test_successful_move_execution(self, session, user, new_room, full_params):
+        task = create_task_and_execute(TaskType.USER_MOVE, user, full_params)
         assert task.status == TaskStatus.EXECUTED
         assert user.room == new_room
 
-    def test_move_execution_without_level_fails(self, session, user, new_room):
-        params = {
-            "building_id": new_room.building_id,
-            "room_number": new_room.number,
-        }
+    @pytest.mark.parametrize(
+        "param_keys, error_needle",
+        (
+            (("building_id", "room_number"), "level"),
+            (("level", "room_number"), "building_id"),
+            (("level", "building_id"), "room_number"),
+        ),
+    )
+    def test_all_params_required(
+        self,
+        session,
+        user,
+        new_room,
+        full_params,
+        param_keys: t.Iterable[str],
+        error_needle: str,
+    ):
+        params = {k: v for k, v in full_params.items() if k in param_keys}
         with assert_unchanged(lambda: user.room):
             task = create_task_and_execute(TaskType.USER_MOVE, user, params)
-        self.assert_failing_move_execution(task, error_needle="level")
-
-    def test_move_execution_without_building_id_fails(self, session, user, new_room):
-        param = {
-            "level": new_room.level,
-            "room_number": new_room.number,
-        }
-        with assert_unchanged(lambda: user.room):
-            task = create_task_and_execute(TaskType.USER_MOVE, user, param)
-        self.assert_failing_move_execution(task, error_needle="building_id")
-
-    def test_move_execution_without_room_number_fails(self, session, user, new_room):
-        params = {
-            "level": new_room.level,
-            "building_id": new_room.building_id,
-        }
-        with assert_unchanged(lambda: user.room):
-            task = create_task_and_execute(TaskType.USER_MOVE, user, params)
-        self.assert_failing_move_execution(task, error_needle="room_number")
-
-    @staticmethod
-    def assert_failing_move_execution(task: Task, error_needle: str):
         assert task.status == TaskStatus.FAILED
         assert len(task.errors) == 1
         [error] = task.errors
