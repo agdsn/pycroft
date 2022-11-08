@@ -1,5 +1,5 @@
 import typing as t
-from datetime import datetime, timezone, timedelta
+from datetime import timedelta
 
 import pytest
 from sqlalchemy.orm import Session
@@ -12,20 +12,19 @@ from pycroft.model.task import Task, TaskType, TaskStatus
 from pycroft.model.task_serialization import UserMoveOutParams
 from pycroft.model.user import User
 from tests.assertions import assert_unchanged
-from tests.legacy_base import FactoryWithConfigDataTestBase
 from tests.factories import RoomFactory, AddressFactory, UserFactory
 from tests.lib.user.task_helpers import create_task_and_execute
 
+@pytest.fixture(scope="module")
+def user(module_session, config):
+    return UserFactory.create(
+        with_host=True,
+        with_membership=True,
+        membership__group=config.member_group,
+    )
+
 
 class TestMovedInUser:
-    @pytest.fixture(scope="class")
-    def user(self, class_session, config):
-        return UserFactory.create(
-            with_host=True,
-            with_membership=True,
-            membership__group=config.member_group,
-        )
-
     @pytest.fixture(scope="class")
     def other_room(self, class_session) -> Room:
         return RoomFactory.create()
@@ -110,52 +109,38 @@ class TestMovedInUser:
         )
 
 
-class MoveOutImplTestCase(FactoryWithConfigDataTestBase):
-    def create_factories(self):
-        # We want a user who lives somewhere with a membership!
-        super().create_factories()
-        self.user = UserFactory.create(
-            with_membership=True,
-            membership__group=self.config.member_group,
-            with_host=True
-        )
+class TestMoveOutImpl:
+    @pytest.mark.parametrize(
+        "params",
+        (
+            {"comment": "Kommentar", "end_membership": True},
+            {"comment": "", "end_membership": True},
+        ),
+    )
+    def test_move_out_success(self, session, user, utcnow, params: dict):
+        task = create_task_and_execute(TaskType.USER_MOVE_OUT, user, params)
+        session.refresh(user)
 
-    def test_move_out_implementation(self):
-        self.assert_successful_move_out_execution(self.create_task_and_execute(
-            {"comment": "Dieser Kommentarbereich nun Eigentum der Bundesrepublik Deutschlands.",
-             "end_membership": True}
-        ))
-
-    def test_move_out_impl_with_empty_comment(self):
-        self.assert_successful_move_out_execution(
-            self.create_task_and_execute({"comment": "", "end_membership": True})
-        )
-
-    def test_move_out_without_end_membership_fails(self):
-        self.assert_failing_move_out_execution(
-            self.create_task_and_execute({"comment": ""}),
-            error_needle='end_membership',
-        )
-
-    def test_move_out_impl_without_comment_fails(self):
-        self.assert_failing_move_out_execution(
-            self.create_task_and_execute({"end_membership": True}),
-            error_needle='comment',
-        )
-
-    def assert_successful_move_out_execution(self, task: Task):
         assert task.status == TaskStatus.EXECUTED
-        assert self.user.room is None
+        assert user.room is None
+        relevant_interval = open(utcnow + timedelta(seconds=1), None)
+        assert user.active_memberships(when=relevant_interval) == []
 
-        relevant_interval = open(datetime.now(timezone.utc) + timedelta(minutes=1), None)
-        assert self.user.active_memberships(when=relevant_interval) == []
+    @pytest.mark.parametrize(
+        "params, error_needle",
+        (
+            ({"comment": ""}, "end_membership"),
+            ({"end_membership": True}, "comment"),
+        ),
+    )
+    def test_move_out_bad_params(
+        self, session, user, utcnow, params: dict, error_needle: str
+    ):
+        task = create_task_and_execute(TaskType.USER_MOVE_OUT, user, params)
+        session.refresh(user)
 
-    def assert_failing_move_out_execution(self, task: Task, error_needle: str):
         assert task.status == TaskStatus.FAILED
         assert len(task.errors) == 1
         [error] = task.errors
         assert error_needle in error.lower()
-        assert self.user.room is not None
-
-    def create_task_and_execute(self, params):
-        return create_task_and_execute(TaskType.USER_MOVE_OUT, self.user, params)
+        assert user.room is not None
