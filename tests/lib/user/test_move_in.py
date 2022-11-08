@@ -1,138 +1,131 @@
 from datetime import datetime, timedelta
 
-from pycroft.lib import user as UserHelper
-from pycroft.model import session
-from pycroft.model.task import Task, TaskStatus, TaskType
+import pytest
+
+from pycroft.lib import user as lib_user
+from pycroft.model.facilities import Room
+from pycroft.model.task import Task, TaskStatus, TaskType, UserTask
 from pycroft.model.task_serialization import UserMoveInParams
+from pycroft.model.user import User
 from tests import factories
-from tests.factories import UserFactory
-from ...legacy_base import FactoryDataTestBase, FactoryWithConfigDataTestBase
 from . import ExampleUserData
 from .task_helpers import create_task_and_execute
 
 
-class Test_User_Move_In(FactoryDataTestBase):
-    def create_factories(self):
-        super().create_factories()
-        self.config = factories.ConfigFactory()
-        self.room = factories.RoomFactory(level=1, number="1", patched_with_subnet=True)
-        self.processing_user = UserFactory()
-        self.user = UserFactory(
-            with_membership=True,
-            membership__group=self.config.member_group,
-            room=None,
-            address=self.room.address,
-            birthdate=datetime.fromisoformat('2000-01-01')
-        )
+@pytest.fixture(scope="module")
+def room(module_session) -> Room:
+    return factories.RoomFactory(level=1, number="1", patched_with_subnet=True)
 
-    user = ExampleUserData
 
-    def create_some_user(self):
-        new_user, _ = UserHelper.create_user(
-            self.user.name,
-            self.user.login,
-            self.user.email,
-            self.user.birthdate,
-            processor=self.processing_user,
-            groups=[self.config.member_group],
-            address=self.room.address,
-        )
-        return new_user
+@pytest.fixture(scope="module")
+def user(module_session, config, room) -> User:
+    return factories.UserFactory(
+        with_membership=True,
+        membership__group=config.member_group,
+        room=None,
+        address=room.address,
+        birthdate=datetime.fromisoformat("2000-01-01"),
+    )
 
-    def test_0010_move_in(self):
-        test_mac = "12:11:11:11:11:11"
 
-        UserHelper.move_in(
-            self.user,
-            building_id=self.room.building.id,
+@pytest.fixture(scope="session")
+def mac() -> str:
+    return "12:11:11:11:11:11"
+
+
+class TestUserMoveIn:
+    @pytest.fixture(scope="class")
+    def user_data(self):
+        return ExampleUserData
+
+    def test_move_in(self, session, user, room, processor, config, mac):
+        lib_user.move_in(
+            user,
+            building_id=room.building.id,
             level=1,
             room_number="1",
-            mac=test_mac,
-            processor=self.processing_user,
+            mac=mac,
+            processor=processor,
         )
 
-        assert self.user.room == self.room
-        assert self.user.address == self.user.room.address
+        assert user.room == room
+        assert user.address == user.room.address
 
-        assert len(self.user.hosts) == 1
-        [user_host] = self.user.hosts
-        assert len(user_host.interfaces) == 1
-        user_interface = user_host.interfaces[0]
+        assert len(hosts := user.hosts) == 1
+        assert len(interfaces := hosts[0].interfaces) == 1
+        user_interface = interfaces[0]
         assert len(user_interface.ips) == 1
-        assert user_interface.mac == test_mac
+        assert user_interface.mac == mac
 
         # checks the initial group memberships
-        active_user_groups = self.user.active_property_groups()
-        for group in {self.config.member_group, self.config.network_access_group}:
+        active_user_groups = user.active_property_groups()
+        for group in {config.member_group, config.network_access_group}:
             assert group in active_user_groups
 
-        assert not self.user.has_property("reduced_membership_fee")
+        assert not user.has_property("reduced_membership_fee")
 
-    def test_move_in_scheduling(self):
+    def test_move_in_scheduling(self, session, utcnow, user, room, processor, config):
+        processing_user = processor
         test_mac = '00:de:ad:be:ef:00'
-        UserHelper.move_in(
-            self.user,
-            building_id=self.room.building.id,
+        lib_user.move_in(
+            user,
+            building_id=room.building.id,
             level=1,
             room_number="1",
             mac=test_mac,
-            processor=self.processing_user,
-            when=session.utcnow() + timedelta(days=1),
+            processor=processing_user,
+            when=utcnow + timedelta(days=1),
         )
         assert (task := Task.q.first()) is not None
         assert task.parameters == UserMoveInParams(
-            building_id=self.room.building.id,
+            building_id=room.building.id,
             level=1,
             room_number="1",
             mac=test_mac,
         )
 
 
-class TestMoveInImpl(FactoryWithConfigDataTestBase):
-    def create_factories(self):
-        super().create_factories()
-        self.room = factories.RoomFactory(level=1, number="1", patched_with_subnet=True)
-        self.processing_user = UserFactory()
-        self.user = UserFactory(
-            with_membership=True,
-            membership__group=self.config.member_group,
-            room=None,
-            address=self.room.address,
-            birthdate=datetime.fromisoformat('2000-01-01')
+class TestMoveInImpl:
+    def test_successful_move_in_execution_without_mac(self, session, user, room):
+        task = create_task_and_execute(
+            TaskType.USER_MOVE_IN,
+            user,
+            {
+                "level": room.level,
+                "building_id": room.building_id,
+                "room_number": room.number,
+            },
         )
-        self.mac = '00:de:ad:be:ef:00'
+        assert isinstance(task, UserTask)
+        assert_successful_move_in_execution(task, room)
+        assert not user.hosts
 
-    def test_successful_move_in_execution_without_mac(self):
-        self.assert_successful_move_in_execution(self.create_task_and_execute({
-            'level': self.room.level,
-            'building_id': self.room.building_id,
-            'room_number': self.room.number,
-        }))
-        assert not self.user.hosts
+    def test_successful_move_in_execution_minimal(self, session, user, room, mac):
+        task = create_task_and_execute(
+            TaskType.USER_MOVE_IN,
+            user,
+            {
+                "mac": mac,
+                "level": room.level,
+                "building_id": room.building_id,
+                "room_number": room.number,
+            },
+        )
+        assert isinstance(task, UserTask)
+        assert_successful_move_in_execution(task, room)
+        assert len(hosts := user.hosts) == 1
+        assert len(interfaces := hosts[0].interfaces) == 1
+        assert interfaces[0].mac == mac
 
-    def test_successful_move_in_execution_minimal(self):
-        self.assert_successful_move_in_execution(self.create_task_and_execute({
-            'mac': self.mac,
-            'level': self.room.level,
-            'building_id': self.room.building_id,
-            'room_number': self.room.number,
-        }))
-        assert len(self.user.hosts) == 1
-        [host] = self.user.hosts
-        assert len(host.interfaces) == 1
-        [interface] = host.interfaces
-        assert interface.mac == self.mac
 
-    def assert_successful_move_in_execution(self, task: Task):
-        assert task.status == TaskStatus.EXECUTED
-        assert self.user.room == self.room
+def assert_successful_move_in_execution(task: UserTask, room: Room):
+    assert task.status == TaskStatus.EXECUTED
+    assert task.user.room == room
 
-    def assert_failing_move_execution(self, task: Task, error_needle: str):
-        assert task.status == TaskStatus.FAILED
-        assert len(task.errors) == 1
-        [error] = task.errors
-        assert error_needle in error.lower()
-        assert self.user.room is None
 
-    def create_task_and_execute(self, params):
-        return create_task_and_execute(TaskType.USER_MOVE_IN, self.user, params)
+def assert_failing_move_execution(task: UserTask, error_needle: str):
+    assert task.status == TaskStatus.FAILED
+    assert len(task.errors) == 1
+    [error] = task.errors
+    assert error_needle in error.lower()
+    assert task.user.room is None
