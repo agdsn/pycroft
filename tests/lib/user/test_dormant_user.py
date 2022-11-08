@@ -5,7 +5,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from pycroft.helpers.interval import open
-from pycroft.lib import user as UserHelper
+from pycroft.lib import user as lib_user
 from pycroft.model.address import Address
 from pycroft.model.facilities import Room
 from pycroft.model.task import Task, TaskType, TaskStatus
@@ -34,7 +34,7 @@ class TestMovedInUser:
         self, session, processor, utcnow
     ) -> t.Callable[[User, str | None], None]:
         def move_out(user: User, comment: str | None = None) -> None:
-            UserHelper.move_out(
+            lib_user.move_out(
                 user, comment=comment or "", processor=processor, when=utcnow
             )
             session.refresh(user)
@@ -67,7 +67,7 @@ class TestMovedInUser:
     @pytest.fixture
     def move(self, session, processor) -> t.Callable[[User, Room], None]:
         def move(user, room):
-            UserHelper.move(
+            lib_user.move(
                 user,
                 processor=processor,
                 building_id=room.building_id,
@@ -92,7 +92,7 @@ class TestMovedInUser:
         self, end_membership, user, processor, session, utcnow
     ):
         old_room = user.room
-        UserHelper.move_out(
+        lib_user.move_out(
             user,
             comment="",
             processor=processor,
