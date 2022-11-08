@@ -6,7 +6,6 @@ from sqlalchemy.orm import Session
 
 from pycroft.helpers.interval import open
 from pycroft.lib import user as UserHelper
-from pycroft.model import session
 from pycroft.model.address import Address
 from pycroft.model.facilities import Room
 from pycroft.model.task import Task, TaskType, TaskStatus
@@ -89,32 +88,26 @@ class TestMovedInUser:
         move(user, other_room)
         assert user.address == address
 
-
-class MoveOutSchedulingTestCase(FactoryWithConfigDataTestBase):
-    def create_factories(self):
-        # We want a user who lives somewhere with a membership!
-        super().create_factories()
-        self.processor = UserFactory.create()
-        self.user = UserFactory.create(
-            with_membership=True,
-            membership__group=self.config.member_group,
-            with_host=True,
+    @pytest.mark.parametrize("end_membership", (True, False))
+    def test_move_out_gets_scheduled(
+        self, end_membership, user, processor, session, utcnow
+    ):
+        old_room = user.room
+        UserHelper.move_out(
+            user,
+            comment="",
+            processor=processor,
+            when=utcnow + timedelta(days=1),
+            end_membership=end_membership,
         )
-
-    def test_move_out_gets_scheduled(self, end_membership=None):
-        for end_membership in (True, False):
-            with self.subTest(end_membership=end_membership):
-                old_room = self.user.room
-                UserHelper.move_out(self.user, comment="", processor=self.processor,
-                                    when=session.utcnow() + timedelta(days=1),
-                                    end_membership=end_membership)
-                assert self.user.room == old_room
-                tasks = self.session.query(Task).all()
-                assert len(tasks) == 1
-                [task] = tasks
-                assert task.type == TaskType.USER_MOVE_OUT
-                assert task.parameters == UserMoveOutParams(comment="", end_membership=end_membership)
-                session.session.delete(task)
+        assert user.room == old_room
+        tasks = session.query(Task).all()
+        assert len(tasks) == 1
+        [task] = tasks
+        assert task.type == TaskType.USER_MOVE_OUT
+        assert task.parameters == UserMoveOutParams(
+            comment="", end_membership=end_membership
+        )
 
 
 class MoveOutImplTestCase(FactoryWithConfigDataTestBase):
