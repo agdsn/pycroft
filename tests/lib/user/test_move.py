@@ -10,7 +10,6 @@ from pycroft.model.task_serialization import UserMoveParams
 from pycroft.model.user import User
 from tests import factories
 from tests.assertions import assert_unchanged
-from tests.factories import UserFactory, RoomFactory
 from tests.lib.user.task_helpers import create_task_and_execute
 
 
@@ -87,7 +86,7 @@ class TestUserMove:
 class TestMoveImpl:
     @pytest.fixture(scope="class")
     def user(self, class_session, config) -> User:
-        return UserFactory.create(
+        return factories.UserFactory.create(
             with_membership=True,
             membership__group=config.member_group,
             with_host=True,
@@ -99,7 +98,7 @@ class TestMoveImpl:
 
     @pytest.fixture(scope="class")
     def new_room(self, class_session) -> Room:
-        room = RoomFactory.create()
+        room = factories.RoomFactory.create()
         class_session.flush()
         return room
 
