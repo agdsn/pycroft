@@ -57,6 +57,14 @@ class ModelBase:
                       if 'passwd' not in key and 'password' not in key)
         )
 
+    def __str__(self):
+        return "{}({})".format(
+            self.__class__.__name__,
+            ", ".join("{}={}".format(key, getattr(self, key, "<unknown>"))
+                      for key in self.__mapper__.columns.keys()
+                      if 'passwd' not in key and 'password' not in key)
+        )
+
     # __table__: Table
 
     import typing
