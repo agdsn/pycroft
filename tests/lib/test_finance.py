@@ -39,7 +39,7 @@ from tests.factories.finance import MembershipFeeFactory, TransactionFactory, \
 from tests.factories.user import UserFactory
 
 
-@pytest.mark.usefixtures("session")
+@pytest.mark.usefixtures("session", "processor")
 class TestBankAccount:
     @pytest.fixture(scope="class")
     def bank_account(self, class_session) -> BankAccount:
