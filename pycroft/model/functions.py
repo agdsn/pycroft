@@ -17,16 +17,19 @@ from sqlalchemy.types import Numeric, Integer
 
 
 class greatest(expression.FunctionElement):
+    inherit_cache = True
     type = Numeric()
     name = 'greatest'
 
 
 class least(expression.FunctionElement):
+    inherit_cache = True
     type = Numeric()
     name = 'least'
 
 
 class sign(expression.FunctionElement):
+    inherit_cache = True
     type = Integer()
     name = 'sign'
 
