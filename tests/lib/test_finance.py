@@ -10,7 +10,6 @@ from io import StringIO
 import pytest
 from factory import Iterator
 from sqlalchemy.orm import Session
-from sqlalchemy.orm.exc import NoResultFound
 
 from pycroft import config, Config
 from pycroft.helpers.date import last_day_of_month
@@ -20,7 +19,7 @@ from pycroft.lib.finance import (
     cleanup_description,
     import_bank_account_activities_csv, simple_transaction,
     transferred_amount,
-    is_ordered, get_last_applied_membership_fee, estimate_balance,
+    is_ordered, estimate_balance,
     post_transactions_for_membership_fee, get_users_with_payment_in_default,
     end_payment_in_default_memberships,
     take_actions_for_payment_in_default_users)
@@ -31,6 +30,7 @@ from pycroft.model.finance import (
     Split,
     Account,
     MembershipFee,
+    BankAccount,
 )
 from pycroft.model.user import Membership, User
 from tests.factories import MembershipFactory, ConfigFactory
@@ -40,37 +40,42 @@ from tests.factories.finance import MembershipFeeFactory, TransactionFactory, \
 from tests.factories.user import UserFactory
 from tests.legacy_base import FactoryDataTestBase
 
-class Test_010_BankAccount(FactoryDataTestBase):
-    def create_factories(self):
-        super().create_factories()
-        self.bank_account = BankAccountFactory.create(
+
+@pytest.mark.usefixtures("session")
+class TestBankAccount:
+    @pytest.fixture(scope="class")
+    def bank_account(self, class_session) -> BankAccount:
+        return BankAccountFactory.create(
             name="Hauptkonto",
             bank="Spaßkasse",
             account__name="Bankkonto 3120219540",
             account_number='3120219540',
         )
-        self.fee_account = AccountFactory.create(name="Membership Fees", type='REVENUE')
-        self.user = UserFactory.create(name="Dummy User", account__name="Dummy User")
-        self.author = UserFactory.create()
 
-    @property
-    def user_account(self):
-        return self.user.account
+    @pytest.fixture(scope="class")
+    def fee_account(self, class_session) -> Account:
+        return AccountFactory.create(name="Membership Fees", type="REVENUE")
 
-    def test_0010_import_bank_account_csv(self):
+    @pytest.fixture(scope="class")
+    def user(self, class_session):
+        return UserFactory.create(name="Dummy User", account__name="Dummy User")
+
+    @pytest.fixture(scope="class")
+    def user_account(self, user):
+        return user.account
+
+    def test_import_bank_account_csv(self, bank_account):
         """
         This test should verify that the csv import works as expected.
         """
         data = pkgutil.get_data(__package__, "data_test_finance.csv")
-        f = StringIO(data.decode('utf-8'))
-
-        import_bank_account_activities_csv(f, Decimal('43.42'),
-                                           date(2015, 1, 1))
+        f = StringIO(data.decode("utf-8"))
+        import_bank_account_activities_csv(f, Decimal("43.42"), date(2015, 1, 1))
 
         # test for correct dataimport
         activity = BankAccountActivity.q.filter_by(
-            bank_account=self.bank_account,
-            reference="0000-3, SCH, AAA, ZW41D/01 99 1, SS 13"
+            bank_account=bank_account,
+            reference="0000-3, SCH, AAA, ZW41D/01 99 1, SS 13",
         ).first()
         assert activity.other_account_number == "12345678"
         assert activity.other_routing_number == "80040400"
@@ -81,8 +86,7 @@ class Test_010_BankAccount(FactoryDataTestBase):
 
         # verify that the right year gets chosen for the transaction
         activity = BankAccountActivity.q.filter_by(
-            bank_account=self.bank_account,
-            reference="Pauschalen"
+            bank_account=bank_account, reference="Pauschalen"
         ).first()
         assert activity.posted_on == date(2012, 12, 24)
         assert activity.valid_on == date(2012, 12, 24)
@@ -93,87 +97,60 @@ class Test_010_BankAccount(FactoryDataTestBase):
         # verify that the correct transaction year gets chosen for a valuta date
         # which is in the next year
         activity = BankAccountActivity.q.filter_by(
-            bank_account=self.bank_account,
-            reference="BESTELLUNG SUPERMEGATOLLER SERVER"
+            bank_account=bank_account, reference="BESTELLUNG SUPERMEGATOLLER SERVER"
         ).first()
         assert activity.posted_on == date(2013, 12, 29)
         assert activity.valid_on == date(2013, 1, 10)
 
-        BankAccountActivity.q.delete()
-        session.session.commit()
+    # TODO move && expand.
+    #  this has nothing to do with a bank account.
+    def test_simple_transaction(self, fee_account, user_account, processor):
+        t = simple_transaction(
+            "transaction", fee_account, user_account, Decimal(90), processor
+        )
+        assert t is not None
 
-    def test_0020_get_last_applied_membership_fee(self):
-        try:
-            get_last_applied_membership_fee()
-        except NoResultFound:
-            self.fail("No fee found")
-
-    def test_0030_simple_transaction(self):
-        try:
-            simple_transaction(
-                "transaction", self.fee_account, self.user_account,
-                Decimal(90), self.author
-            )
-        except Exception:
-            self.fail()
-        Transaction.q.delete()
-        session.session.commit()
-
-    def test_0030_transferred_value(self):
+    def test_transferred_value(self, utcnow, fee_account, user_account, processor):
+        author = processor
         amount = Decimal(90)
-        today = session.utcnow().date()
-        simple_transaction(
-            "transaction", self.fee_account, self.user_account,
-            amount, self.author, today - timedelta(1)
-        )
-        simple_transaction(
-            "transaction", self.fee_account, self.user_account,
-            amount, self.author, today
-        )
-        simple_transaction(
-            "transaction", self.fee_account, self.user_account,
-            amount, self.author, today + timedelta(1)
-        )
-        assert (
-            transferred_amount(
-                self.fee_account, self.user_account, single(today)
+        today = utcnow.date()
+        for valid_on in (today - timedelta(1), today, today + timedelta(1)):
+            simple_transaction(
+                description="transaction",
+                debit_account=fee_account,
+                credit_account=user_account,
+                amount=amount,
+                author=author,
+                valid_on=valid_on,
             )
-            == amount
-        )
+
+        assert transferred_amount(fee_account, user_account, single(today)) == amount
         assert (
-            transferred_amount(
-                self.fee_account, self.user_account, closedopen(today, None)
-            )
+            transferred_amount(fee_account, user_account, closedopen(today, None))
             == 2 * amount
         )
         assert (
-            transferred_amount(
-                self.fee_account, self.user_account, openclosed(None, today)
-            )
+            transferred_amount(fee_account, user_account, openclosed(None, today))
             == 2 * amount
         )
-        assert (
-            transferred_amount(
-                self.fee_account, self.user_account
-            )
-            == 3 * amount
-        )
-        Transaction.q.delete()
-        session.session.commit()
+        assert transferred_amount(fee_account, user_account) == 3 * amount
 
-    def test_0050_cleanup_non_sepa_description(self):
-        non_sepa_description = "1234-0 Dummy, User, with " \
-                               "a- space at postition 28"
-        assert cleanup_description(non_sepa_description) == non_sepa_description
 
-    def test_0060_cleanup_sepa_description(self):
-        clean_sepa_description = "EREF+Long EREF 1234567890 with a parasitic " \
-                                 "space SVWZ+A reference with parasitic " \
-                                 "spaces at multiples of 28"
-        sepa_description = "EREF+Long EREF 1234567890 w ith a parasitic space " \
-                           "SVWZ+A reference with paras itic spaces at " \
-                           "multiples of  28"
-        assert cleanup_description(sepa_description) == clean_sepa_description
+# noinspection SpellCheckingInspection
+@pytest.mark.parametrize(
+    "description, clean_description",
+    (
+        ["1234-0 Dummy, User, with a- space at position 28"] * 2,
+        (
+            "EREF+Long EREF 1234567890 w ith a parasitic space "
+            "SVWZ+A reference with paras itic spaces at multiples of  28",
+            "EREF+Long EREF 1234567890 with a parasitic space "
+            "SVWZ+A reference with parasitic spaces at multiples of 28",
+        ),
+    ),
+)
+def test_description_cleanup(description, clean_description):
+    assert cleanup_description(description) == clean_description
 
 
 class MembershipFeeTestCase(FactoryDataTestBase):

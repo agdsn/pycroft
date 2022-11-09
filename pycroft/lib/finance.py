@@ -67,7 +67,7 @@ def get_membership_fee_for_date(target_date: date) -> MembershipFee:
     )
 
 
-def get_last_applied_membership_fee() -> MembershipFee:
+def get_last_applied_membership_fee() -> MembershipFee | None:
     """Get the last applied membership fee."""
     # TODO use `select` API
     return typing.cast(
