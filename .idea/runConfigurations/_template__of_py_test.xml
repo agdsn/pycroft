@@ -3,19 +3,12 @@
     <module name="pycroft" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
-    <option name="SDK_HOME" value="docker-compose://[$PROJECT_DIR$/docker-compose.test.yml, $PROJECT_DIR$/docker-compose.dev.yml]:test-app//opt/pycroft/venv/bin/python" />
-    <option name="WORKING_DIRECTORY" value="" />
-    <option name="IS_MODULE_SDK" value="false" />
+    <option name="SDK_HOME" value="" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+    <option name="IS_MODULE_SDK" value="true" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-    <PathMappingSettings>
-      <option name="pathMappings">
-        <list>
-          <mapping local-root="." remote-root="/opt/pycroft/app" />
-        </list>
-      </option>
-    </PathMappingSettings>
     <option name="_new_keywords" value="&quot;&quot;" />
     <option name="_new_parameters" value="&quot;&quot;" />
     <option name="_new_additionalArguments" value="&quot;&quot;" />
