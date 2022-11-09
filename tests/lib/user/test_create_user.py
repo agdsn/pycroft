@@ -1,4 +1,5 @@
 import dataclasses
+import operator
 from datetime import date
 
 import pytest
@@ -75,7 +76,7 @@ class TestUserCreation:
 
     def test_log_entries(self, new_user):
         assert len(new_user.log_entries) == 2
-        first, second = new_user.log_entries
+        first, second = sorted(new_user.log_entries, key=operator.attrgetter("created_at"))
         assert_logmessage_startswith(first, "Added to group Mitglied")
         assert_logmessage_startswith(second, "User created")
 
