@@ -1098,7 +1098,7 @@ def estimate_balance(session: Session, user: User, end_date: date) -> Decimal:
     if not this_month_fee_outstanding:
         months_to_pay -= 1
 
-    return t.cast(int, (-user.account.balance) - (months_to_pay * last_fee.regular_fee))
+    return t.cast(Decimal, (-user.account.balance) - (months_to_pay * last_fee.regular_fee))
 
 
 def get_pid_csv() -> str:
