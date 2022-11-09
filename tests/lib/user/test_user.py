@@ -67,28 +67,3 @@ class Test_User_Move_Out_And_Back_In(FactoryDataTestBase):
 
         # check if users finance account still exists
         assert new_user.account is not None
-
-        UserHelper.move_in(
-            user=new_user,
-            building_id=test_building.id,
-            level=1,
-            room_number="1",
-            mac=test_mac,
-            birthdate=test_birthdate,
-            processor=self.processing_user,
-        )
-
-        self.session.refresh(new_user)
-        assert new_user.room.building == test_building
-        assert new_user.room.level == 1
-        assert new_user.room.number == "1"
-        assert new_user.address == new_user.room.address
-
-        assert len(new_user.hosts) == 1
-        user_host = new_user.hosts[0]
-        assert len(user_host.interfaces) == 1
-        assert user_host.interfaces[0].mac == test_mac
-        assert len(user_host.ips) == 1
-
-        assert new_user.member_of(config.member_group)
-        assert new_user.member_of(config.network_access_group)
