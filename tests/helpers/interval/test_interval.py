@@ -1,16 +1,27 @@
 import pytest
 
-from pycroft.helpers.interval import closed, openclosed, closedopen, open, \
-    empty, Interval, single
+from pycroft.helpers.interval import (
+    closed,
+    openclosed,
+    closedopen,
+    open,
+    empty,
+    Interval,
+    single,
+    starting_from,
+)
 
 
-@pytest.mark.parametrize('one, other', [
-    (closed(0, 0), 0),
-    (closed(0, 2), 1),
-    (openclosed(None, 0), 0),
-    (closedopen(0, None), 0),
-    (open(None, None), 0),
-])
+@pytest.mark.parametrize(
+    "one, other",
+    [
+        (closed(0, 0), 0),
+        (closed(0, 2), 1),
+        (openclosed(None, 0), 0),
+        (starting_from(0), 0),
+        (open(None, None), 0),
+    ],
+)
 def test_contained(one, other):
     assert other in one
     assert not (other not in one)

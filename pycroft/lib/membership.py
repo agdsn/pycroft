@@ -125,7 +125,7 @@ def remove_member_of(
     all memberships** in this group retroactively.
 
     However, a common use case is terminating a membership by setting
-    ``during=closedopen(now, None)``.
+    ``during=starting_from(now)``.
 
     :param user: the user
     :param group: the group

@@ -24,7 +24,7 @@ from pycroft import config, property
 from pycroft.helpers import user as user_helper, utc
 from pycroft.helpers.errorcode import Type1Code, Type2Code
 from pycroft.helpers.i18n import deferred_gettext
-from pycroft.helpers.interval import closed, closedopen, Interval
+from pycroft.helpers.interval import closed, Interval, starting_from
 from pycroft.helpers.printing import generate_user_sheet as generate_pdf
 from pycroft.helpers.user import generate_random_str
 from pycroft.helpers.utc import DateTimeTz
@@ -249,7 +249,7 @@ def generate_wifi_password() -> str:
 
 def create_user(
     name: str, login: str, email: str, birthdate: date,
-    groups: list[PropertyGroup], processor: User | None, address: Address,
+    groups: t.Iterable[PropertyGroup], processor: User | None, address: Address,
     passwd_hash: str = None,
     send_confirm_mail: bool = False
 ) -> tuple[User, str]:
@@ -369,7 +369,9 @@ def move_in(
     if begin_membership:
         for group in {config.external_group, config.pre_member_group}:
             if user.member_of(group):
-                remove_member_of(user, group, processor, closedopen(session.utcnow(), None))
+                remove_member_of(
+                    user, group, processor, starting_from(session.utcnow())
+                )
 
         for group in {config.member_group, config.network_access_group}:
             if not user.member_of(group):
@@ -743,7 +745,7 @@ def block(
     :return: The suspended user.
     """
     if during is None:
-        during = closedopen(session.utcnow(), None)
+        during = starting_from(session.utcnow())
 
     if violation:
         make_member_of(user, config.violation_group, processor, during)
@@ -771,17 +773,17 @@ def unblock(user: User, processor: User, when: DateTimeTz | None = None) -> User
     :param when: The time of membership termination.  Note
         that in comparison to :py:func:`suspend`, you don't provide an
         _interval_, but a point in time, defaulting to the current
-        time.  Will be converted to ``closedopen(when, None)``.
+        time.  Will be converted to ``starting_from(when)``.
 
     :return: The unblocked user.
     """
     if when is None:
         when = session.utcnow()
 
+    during = starting_from(when)
     for group in get_blocked_groups():
-        if user.member_of(group):
-            remove_member_of(user=user, group=group,
-                             processor=processor, during=closedopen(when, None))
+        if user.member_of(group, when=during):
+            remove_member_of(user=user, group=group, processor=processor, during=during)
 
     return user
 
@@ -822,7 +824,7 @@ def move_out(
                       config.external_group,
                       config.network_access_group}:
             if user.member_of(group):
-                remove_member_of(user, group, processor, closedopen(when, None))
+                remove_member_of(user, group, processor, starting_from(when))
 
     deleted_interfaces = list()
     num_hosts = 0
@@ -1008,7 +1010,7 @@ def format_user_mail(user: User, text: str) -> str:
 
 
 def user_send_mails(
-    users: list[BaseUser],
+    users: t.Iterable[BaseUser],
     template: MailTemplate | None = None,
     soft_fail: bool = False,
     use_internal: bool = True,

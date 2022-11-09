@@ -7,7 +7,7 @@ import pytest
 from sqlalchemy import func
 from sqlalchemy.future import select
 
-from pycroft.helpers.interval import closedopen
+from pycroft.helpers.interval import closedopen, starting_from
 from pycroft.model.property import current_property, evaluate_properties
 from pycroft.model.user import Group, Membership, PropertyGroup, User
 from tests import factories
@@ -51,22 +51,26 @@ class Test_PropertyResolving:
     def test_add_membership(self, session, utcnow, user, property_group1, property_group2):
         # add membership to group1
         with session.begin_nested():
-            session.add(Membership(
-                active_during=closedopen(utcnow, None),
-                user=user,
-                group=property_group1
-            ))
+            session.add(
+                Membership(
+                    active_during=starting_from(utcnow),
+                    user=user,
+                    group=property_group1,
+                )
+            )
         session.refresh(user)
         assert user.has_property(PROP1)
         assert not user.has_property(PROP2)
 
         # add membership to group2
         with session.begin_nested():
-            session.add(Membership(
-                active_during=closedopen(utcnow, None),
-                user=user,
-                group=property_group2
-            ))
+            session.add(
+                Membership(
+                    active_during=starting_from(utcnow),
+                    user=user,
+                    group=property_group2,
+                )
+            )
         session.refresh(user)
         assert user.has_property(PROP1)
         assert user.has_property(PROP2)
@@ -96,7 +100,7 @@ class Test_PropertyResolving:
     def test_disable_membership(self, session, utcnow, user, property_group1, property_group2):
         # add membership to group1
         membership = Membership(
-            active_during=closedopen(utcnow - timedelta(hours=2), None),
+            active_during=starting_from(utcnow - timedelta(hours=2)),
             user=user,
             group=property_group1
         )
@@ -113,17 +117,19 @@ class Test_PropertyResolving:
 
         with session.begin_nested():
             # add membership to group1
-            session.add(Membership(
-                active_during=closedopen(utcnow, None),
-                user=user,
-                group=property_group1
-            ))
+            session.add(
+                Membership(
+                    active_during=starting_from(utcnow),
+                    user=user,
+                    group=property_group1,
+                )
+            )
         session.refresh(user)
         assert user.has_property(PROP1)
 
         # add membership to group2
         membership = Membership(
-            active_during=closedopen(utcnow - timedelta(hours=2), None),
+            active_during=starting_from(utcnow - timedelta(hours=2)),
             user=user,
             group=property_group2
         )
@@ -147,8 +153,11 @@ class Test_View_Only_Shortcut_Properties:
         assert len(property_group1.active_users()) == 0
 
         # add membership to group1
-        p1 = Membership(active_during=closedopen(utcnow - timedelta(hours=2), None),
-                        user=user, group=property_group1)
+        p1 = Membership(
+            active_during=starting_from(utcnow - timedelta(hours=2)),
+            user=user,
+            group=property_group1,
+        )
         with session.begin_nested():
             session.add(p1)
         session.refresh(property_group1)
@@ -167,8 +176,11 @@ class Test_View_Only_Shortcut_Properties:
         assert len(user.active_property_groups()) == 0
 
         # add one active property group
-        p1 = Membership(active_during=closedopen(utcnow - timedelta(hours=2), None),
-                        user=user, group=property_group1)
+        p1 = Membership(
+            active_during=starting_from(utcnow - timedelta(hours=2)),
+            user=user,
+            group=property_group1,
+        )
         with session.begin_nested():
             session.add(p1)
         session.refresh(user)
@@ -178,8 +190,11 @@ class Test_View_Only_Shortcut_Properties:
         assert len(user.active_property_groups()) == 1
 
         # add a second active property group - count should be 2
-        p1 = Membership(active_during=closedopen(utcnow - timedelta(hours=2), None),
-                        user=user, group=property_group2)
+        p1 = Membership(
+            active_during=starting_from(utcnow - timedelta(hours=2)),
+            user=user,
+            group=property_group2,
+        )
         with session.begin_nested():
             session.add(p1)
         session.refresh(user)
@@ -244,8 +259,11 @@ class Test_Membership:
         assert (utcnow in mem.active_during) == active_expected
 
     def test_active_disable(self, session, utcnow, user, property_group1):
-        mem = Membership(active_during=closedopen(utcnow - timedelta(hours=2), None),
-                         user=user, group=property_group1)
+        mem = Membership(
+            active_during=starting_from(utcnow - timedelta(hours=2)),
+            user=user,
+            group=property_group1,
+        )
         with session.begin_nested():
             session.add(mem)
         assert utcnow in mem.active_during
@@ -263,7 +281,7 @@ class TestGroup:
         return Membership(
             user=user,
             group=property_group1,
-            active_during=closedopen(utcnow, None),
+            active_during=starting_from(utcnow),
         )
 
     @pytest.fixture

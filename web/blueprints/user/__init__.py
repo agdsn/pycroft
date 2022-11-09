@@ -27,7 +27,7 @@ from pycroft import lib, config
 from pycroft.exc import PycroftException
 from pycroft.helpers import utc
 from pycroft.helpers.i18n import gettext, deferred_gettext
-from pycroft.helpers.interval import closed, closedopen
+from pycroft.helpers.interval import closed, closedopen, starting_from
 from pycroft.helpers.net import ip_regex, mac_regex
 from pycroft.lib.facilities import get_room
 from pycroft.lib.logging import log_user_event
@@ -472,7 +472,7 @@ def end_membership(user_id, membership_id):
         return abort(404)
 
     try:
-        remove_member_of(user, membership.group, current_user, closedopen(session.utcnow(), None))
+        remove_member_of(user, membership.group, current_user, starting_from(session.utcnow()))
     except PermissionError:
         session.session.rollback()
         flash("Du hast keine Berechtigung, diese Mitgliedschaft zu beenden.", 'error')

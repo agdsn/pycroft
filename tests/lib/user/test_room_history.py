@@ -1,73 +1,76 @@
+import pytest
+
 from pycroft.lib.user import move, move_out, move_in
-from pycroft.model import session
-from pycroft.model.user import RoomHistoryEntry
-from tests.legacy_base import FactoryDataTestBase
-from tests.factories import AddressFactory, RoomFactory, ConfigFactory, UserFactory
+from pycroft.model.facilities import Room
+from pycroft.model.user import RoomHistoryEntry, User
+from tests.factories import AddressFactory, RoomFactory, UserFactory
 
 
-class UserRoomHistoryTestCase(FactoryDataTestBase):
-    def create_factories(self):
-        ConfigFactory.create()
+@pytest.fixture(scope="module")
+def user(module_session) -> User:
+    return UserFactory()
 
-        self.processor = UserFactory.create()
 
-        self.user = UserFactory()
-        self.user_no_room = UserFactory(room=None, address=AddressFactory())
-        self.room = RoomFactory()
+@pytest.fixture(scope="module")
+def user_no_room(module_session) -> User:
+    return UserFactory.create(room=None, address=AddressFactory())
 
-    def test_room_history_create(self):
-        assert 1 == len(self.user.room_history_entries), "more than one room history entry"
 
-        rhe: RoomHistoryEntry = self.user.room_history_entries[0]
+@pytest.fixture(scope="module")
+def room(module_session) -> Room:
+    return RoomFactory()
 
-        assert self.user.room == rhe.room
+
+@pytest.mark.usefixtures("config", "session")
+class TestUserRoomHistory:
+    def test_room_history_create(self, session, user):
+        assert len(rhes := user.room_history_entries) == 1, "more than one room history entry"
+        rhe: RoomHistoryEntry = rhes[0]
+        assert user.room == rhe.room
         assert rhe.active_during.begin is not None
         assert rhe.active_during.end is None
 
-    def test_room_history_move(self):
-        session.session.refresh(self.room)
+    def test_room_history_move(self, session, user, processor, room):
+        old_room = user.room
+        assert old_room != room
+        move(user, room.building_id, room.level, room.number, processor)
+        session.refresh(user)
 
-        old_room = self.user.room
-
-        move(self.user, self.room.building_id, self.room.level, self.room.number, self.processor)
-
-        found_old = False
-        found_new = False
-
-        for rhe in self.user.room_history_entries:
+        rhes = user.room_history_entries
+        old = [rhe for rhe in rhes if rhe.room == old_room]
+        assert old, "Did not find old history entry"
+        for rhe in old:
             assert rhe.active_during.begin is not None
+            assert rhe.active_during.end is not None
 
-            if rhe.room == old_room:
-                assert rhe.active_during.end is not None
-                found_old = True
-            elif rhe.room == self.room:
-                assert rhe.active_during.end is None
-                found_new = True
+        new = [rhe for rhe in rhes if rhe.room == room]
+        assert new, "Did not find new history entry"
+        for rhe in new:
+            assert rhe.active_during.begin is not None
+            assert rhe.active_during.end is None
 
-        assert found_new, "Did not find new history entry"
-        assert found_old, "Did not find old history entry"
+    def test_room_history_move_out(self, session, user, processor, utcnow):
+        move_out(user, comment="test", processor=processor, when=utcnow)
+        session.refresh(user)
 
-    def test_room_history_move_out(self):
-        move_out(self.user, comment="test", processor=self.processor, when=session.utcnow())
-
-        session.session.commit()
-
-        rhe = self.user.room_history_entries[0]
-
-        assert rhe.active_during.begin  is not None
+        rhe = user.room_history_entries[0]
+        assert rhe.active_during.begin is not None
         assert rhe.active_during.end is not None
 
-    def test_room_history_move_in(self):
-        assert 0 == len(self.user_no_room.room_history_entries)
+    def test_room_history_move_in(self, session, user_no_room, processor, room):
+        assert user_no_room.room_history_entries == []
 
-        move_in(self.user_no_room, self.room.building.id, self.room.level, self.room.number,
-                mac=None, processor=self.processor)
+        move_in(
+            user_no_room,
+            room.building.id,
+            room.level,
+            room.number,
+            mac=None,
+            processor=processor,
+        )
+        session.refresh(user_no_room)
 
-        session.session.commit()
-
-        rhe = self.user_no_room.room_history_entries[0]
-
-        assert rhe.room == self.room
-
+        rhe = user_no_room.room_history_entries[0]
+        assert rhe.room == room
         assert rhe.active_during.begin is not None
         assert rhe.active_during.end is None
