@@ -5,6 +5,7 @@ from datetime import date
 import pytest
 
 from pycroft.lib.user import create_user
+from pycroft.model.logging import LogEntry
 from tests import factories
 from .assertions import assert_account_name, assert_membership_groups, assert_logmessage_startswith
 
@@ -76,9 +77,16 @@ class TestUserCreation:
 
     def test_log_entries(self, new_user):
         assert len(new_user.log_entries) == 2
-        first, second = sorted(new_user.log_entries, key=operator.attrgetter("created_at"))
-        assert_logmessage_startswith(first, "Added to group Mitglied")
-        assert_logmessage_startswith(second, "User created")
+        first, second = new_user.log_entries  # possibly created the exact same time
+
+        def _assert(first: LogEntry, second: LogEntry):
+            assert_logmessage_startswith(first, "Added to group Mitglied")
+            assert_logmessage_startswith(second, "User created")
+
+        try:
+            _assert(first, second)
+        except AssertionError:
+            _assert(second, first)
 
     def test_finance_account(self, new_user):
         assert_account_name(new_user.account, f"User {new_user.id}")
