@@ -1,5 +1,5 @@
 [run]
-source =
+source_pkgs =
     pycroft
     ldap_sync
     hades_logs
