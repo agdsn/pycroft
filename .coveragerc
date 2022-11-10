@@ -4,8 +4,8 @@ source_pkgs =
     ldap_sync
     hades_logs
     web
-omit =
     tests
+omit =
     **/alembic/**
     .pycharm_helpers
 
