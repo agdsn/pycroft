@@ -1,16 +1,14 @@
 [run]
+source =
+    pycroft
+    ldap_sync
+    hades_logs
+    web
 omit =
-    */lib/python2.6/*
-    */pyshared/*
-    tests/*
-    */alembic/versions/*
-    web/*
+    tests
+    **/alembic/**
+    .pycharm_helpers
 
 [report]
 omit =
-    */lib/python2.6/*
-    */pyshared/*
-    tests/*
-    */alembic/versions/*
-    web/*
-
+    **/alembic/**
