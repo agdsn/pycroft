@@ -9,11 +9,6 @@ from tests import factories
 
 
 @pytest.fixture(scope="module")
-def processor(module_session) -> m.User:
-    return factories.UserFactory.create()
-
-
-@pytest.fixture(scope="module")
 def switch_room(module_session) -> m.Room:
     return factories.RoomFactory.create(inhabitable=False)
 

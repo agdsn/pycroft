@@ -5,6 +5,7 @@ import ipaddr
 import pytest
 
 from pycroft.lib import infrastructure as infra
+from pycroft.model.logging import RoomLogEntry
 from tests import factories
 
 
@@ -18,13 +19,7 @@ def test_create_switch(session, switch_room, processor):
     )
     session.flush()
     assert switch.host.name == "Switch"
-    match switch_room.log_entries:
-        case [RoomLogEntry]:
-            pass
-        case _:
-            pytest.fail(
-                f"Expected log entry for switch creation, got {switch_room.log_entries}"
-            )
+    assert switch_room.latest_log_entry
 
 
 def test_edit_switch_name(session, switch, processor):

@@ -1,16 +1,14 @@
 [run]
+source_pkgs =
+    pycroft
+    ldap_sync
+    hades_logs
+    web
+    tests
 omit =
-    */lib/python2.6/*
-    */pyshared/*
-    tests/*
-    */alembic/versions/*
-    web/*
+    **/alembic/**
+    .pycharm_helpers
 
 [report]
 omit =
-    */lib/python2.6/*
-    */pyshared/*
-    tests/*
-    */alembic/versions/*
-    web/*
-
+    **/alembic/**

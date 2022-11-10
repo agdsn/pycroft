@@ -5,6 +5,8 @@
 pycroft.model.facilities
 ~~~~~~~~~~~~~~~~~~~~~~~~
 """
+import operator
+
 from sqlalchemy import Column, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import backref, relationship
 from sqlalchemy.types import Boolean, Integer, String
@@ -91,6 +93,12 @@ class Room(IntegerIdModel):
         from pycroft.model.host import Switch
 
         return Host.q.join(Switch, Host.id == Switch.host_id).filter(Host.room_id==self.id).first() is not None
+
+    @property
+    def latest_log_entry(self) -> "RoomLogEntry | None":
+        if not (le := self.log_entries):
+            return None
+        return max(le, key=operator.attrgetter("created_at"))
 
     __table_args__ = (UniqueConstraint('swdd_vo_suchname'),)
 

@@ -28,8 +28,7 @@ from sqlalchemy.sql import Select
 from pycroft import config
 from pycroft.helpers.date import diff_month, last_day_of_month
 from pycroft.helpers.i18n import deferred_gettext, gettext
-from pycroft.helpers.interval import (
-    closed, Interval, IntervalSet, UnboundedInterval, closedopen)
+from pycroft.helpers.interval import closed, Interval, UnboundedInterval, starting_from
 from pycroft.helpers.utc import with_min_time, with_max_time, DateTimeTz
 from pycroft.lib.exc import PycroftLibException
 from pycroft.lib.logging import log_user_event, log_event
@@ -67,7 +66,7 @@ def get_membership_fee_for_date(target_date: date) -> MembershipFee:
     )
 
 
-def get_last_applied_membership_fee() -> MembershipFee:
+def get_last_applied_membership_fee() -> MembershipFee | None:
     """Get the last applied membership fee."""
     # TODO use `select` API
     return typing.cast(
@@ -664,8 +663,12 @@ def end_payment_in_default_memberships(processor: User) -> list[User]:
 
     for user in users:
         if user.member_of(config.payment_in_default_group):
-            remove_member_of(user, config.payment_in_default_group, processor,
-                             closedopen(session.utcnow() - timedelta(seconds=1), None))
+            remove_member_of(
+                user,
+                config.payment_in_default_group,
+                processor,
+                starting_from(session.utcnow() - timedelta(seconds=1)),
+            )
 
     return users
 
@@ -1039,7 +1042,7 @@ def fee_from_valid_date(session: Session, valid_on: date, account: Account) -> S
     return fee
 
 
-def estimate_balance(session: Session, user: User, end_date: date) -> int:
+def estimate_balance(session: Session, user: User, end_date: date) -> Decimal:
     """Estimate the balance a user account will have at :paramref:`end_date`.
 
     :param session:
@@ -1095,7 +1098,7 @@ def estimate_balance(session: Session, user: User, end_date: date) -> int:
     if not this_month_fee_outstanding:
         months_to_pay -= 1
 
-    return t.cast(int, (-user.account.balance) - (months_to_pay * last_fee.regular_fee))
+    return t.cast(Decimal, (-user.account.balance) - (months_to_pay * last_fee.regular_fee))
 
 
 def get_pid_csv() -> str:

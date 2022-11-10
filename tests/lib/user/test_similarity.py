@@ -1,9 +1,12 @@
 import pytest
 from sqlalchemy import func
 
-from pycroft.helpers.interval import closedopen
+from pycroft.helpers.interval import starting_from
+from pycroft.helpers.interval import closedopen, Interval
+from pycroft.helpers.utc import DateTimeTz
 from pycroft.lib import user as UserHelper
-from pycroft.model.user import RoomHistoryEntry
+from pycroft.model.facilities import Room
+from pycroft.model.user import RoomHistoryEntry, User
 from tests import factories
 from tests.legacy_base import FactoryDataTestBase
 
@@ -30,25 +33,40 @@ def test_nonsimilar_names(one, other):
     assert not UserHelper.are_names_similar(one, other, THRESHOLD)
 
 
-class SimilarUserTestCase(FactoryDataTestBase):
-    def create_factories(self):
-        super().create_factories()
-        utcnow = self.session.query(func.current_timestamp()).scalar()
-        interval = closedopen(utcnow, None)
-        # We need a user in the same room
-        self.room = factories.RoomFactory()
-        self.similar_user_this_room = factories.UserFactory(room=self.room, name="Tobias Fuenke")
+class TestSimilarUsers:
+    @pytest.fixture(scope="class")
+    def room(self, class_session) -> Room:
+        return factories.RoomFactory()
 
-        self.similar_user_room_history = factories.UserFactory(name="Tobias")
-        self.session.add(RoomHistoryEntry(room=self.room, user=self.similar_user_room_history,
-                                          active_during=interval))
+    @pytest.fixture(scope="class")
+    def inhabitant(self, class_session, room) -> User:
+        return factories.UserFactory(room=room, name="Tobias Fuenke")
 
-        # nonsimilar users (same room / room history)
-        factories.UserFactory(room=self.room, name="Other dude")
-        self.session.add(RoomHistoryEntry(room=self.room,
-                                          user=factories.UserFactory(name="Other dude"),
-                                          active_during=interval))
+    @pytest.fixture(scope="class")
+    def interval(self, utcnow) -> Interval[DateTimeTz]:
+        return starting_from(utcnow)
 
-    def test_similar_users_found(self):
-        assert UserHelper.find_similar_users("Tobias Fünke", self.room, THRESHOLD) \
-               == [self.similar_user_this_room, self.similar_user_room_history]
+    @pytest.fixture(scope="class", autouse=True)
+    def similar_former_inhabitant(self, class_session, room, interval) -> User:
+        user = factories.UserFactory(name="Tobias")
+        class_session.add(
+            RoomHistoryEntry(room=room, user=user, active_during=interval)
+        )
+        return user
+
+    @pytest.fixture(scope="class", autouse=True)
+    def nonsimilar_former_inhabitants(self, class_session, room, interval) -> None:
+        factories.UserFactory(room=room, name="Other dude")
+        class_session.add(
+            RoomHistoryEntry(
+                room=room,
+                user=factories.UserFactory(name="Yet someone else"),
+                active_during=interval,
+            )
+        )
+
+    def test_similar_users_found(self, room, inhabitant, similar_former_inhabitant):
+        assert set(UserHelper.find_similar_users("Tobias Fünke", room, THRESHOLD)) == {
+            inhabitant,
+            similar_former_inhabitant,
+        }

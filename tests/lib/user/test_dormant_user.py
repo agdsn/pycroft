@@ -1,140 +1,146 @@
-from datetime import datetime, timezone, timedelta
+import typing as t
+from datetime import timedelta
 
-from pycroft.helpers.interval import single, open
-from pycroft.lib import user as UserHelper
-from pycroft.model import session
+import pytest
+from sqlalchemy.orm import Session
+
+from pycroft.helpers.interval import open
+from pycroft.lib import user as lib_user
+from pycroft.model.address import Address
+from pycroft.model.facilities import Room
 from pycroft.model.task import Task, TaskType, TaskStatus
 from pycroft.model.task_serialization import UserMoveOutParams
-from tests.legacy_base import FactoryWithConfigDataTestBase
-from tests.factories import RoomFactory, AddressFactory, UserFactory, \
-    MembershipFactory
+from pycroft.model.user import User
+from tests.assertions import assert_unchanged
+from tests.factories import RoomFactory, AddressFactory, UserFactory
 from tests.lib.user.task_helpers import create_task_and_execute
 
-
-class MovedInUserTestCase(FactoryWithConfigDataTestBase):
-    def create_factories(self):
-        # We want a user who lives somewhere with a membership!
-        super().create_factories()
-        self.processor = UserFactory.create()
-        self.user = UserFactory.create(with_host=True)
-        self.membership = MembershipFactory.create(user=self.user,
-                                                   group=self.config.member_group)
-        self.other_room = RoomFactory.create()
-
-    def move_out(self, user, comment=None):
-        UserHelper.move_out(user, comment=comment or "", processor=self.processor,
-                            when=session.utcnow())
-        session.session.refresh(user)
-
-    def customize_address(self, user):
-        self.user.address = address = AddressFactory.create(city="Bielefeld")
-        session.session.add(user)
-        session.session.commit()
-        assert user.has_custom_address
-        return address
-
-    def test_move_out_keeps_address(self):
-        assert not self.user.has_custom_address
-        old_address = self.user.address
-
-        self.move_out(self.user)
-        assert self.user.active_memberships(when=single(datetime.now(timezone.utc))) == []
-        assert self.user.room is None
-        assert self.user.address == old_address
-
-    def test_move_out_keeps_custom_address(self):
-        address = self.customize_address(self.user)
-        self.move_out(self.user)
-        assert self.user.address == address
-
-    def move(self, user, room):
-        UserHelper.move(user, processor=self.processor,
-                        building_id=room.building_id, level=room.level, room_number=room.number)
-        session.session.refresh(user)
-
-    def test_move_changes_address(self):
-        self.move(self.user, self.other_room)
-        assert self.user.address == self.other_room.address
-
-    def test_move_keeps_custom_address(self):
-        address = self.customize_address(self.user)
-        self.move(self.user, self.other_room)
-        assert self.user.address == address
+@pytest.fixture(scope="module")
+def user(module_session, config):
+    return UserFactory.create(
+        with_host=True,
+        with_membership=True,
+        membership__group=config.member_group,
+    )
 
 
-class MoveOutSchedulingTestCase(FactoryWithConfigDataTestBase):
-    def create_factories(self):
-        # We want a user who lives somewhere with a membership!
-        super().create_factories()
-        self.processor = UserFactory.create()
-        self.user = UserFactory.create(
-            with_membership=True,
-            membership__group=self.config.member_group,
-            with_host=True,
+class TestMovedInUser:
+    @pytest.fixture(scope="class")
+    def other_room(self, class_session) -> Room:
+        return RoomFactory.create()
+
+    @pytest.fixture
+    def move_out(
+        self, session, processor, utcnow
+    ) -> t.Callable[[User, str | None], None]:
+        def move_out(user: User, comment: str | None = None) -> None:
+            lib_user.move_out(
+                user, comment=comment or "", processor=processor, when=utcnow
+            )
+            session.refresh(user)
+
+        return move_out
+
+    @pytest.fixture
+    def customize_address(self, session: Session) -> t.Callable[[User], Address]:
+        def customize_address(user: User) -> Address:
+            user.address = address = AddressFactory.create(city="Bielefeld")
+            session.add(user)
+            session.flush()
+            assert user.has_custom_address
+            return address
+
+        return customize_address
+
+    def test_move_out_keeps_address(self, session, user, utcnow, move_out):
+        assert not user.has_custom_address
+        with assert_unchanged(lambda: user.address):
+            move_out(user, "")
+        assert user.active_memberships(when=open(utcnow, None)) == []
+        assert user.room is None
+
+    def test_move_out_keeps_custom_address(self, user, customize_address, move_out):
+        address = customize_address(user)
+        move_out(user, "")
+        assert user.address == address
+
+    @pytest.fixture
+    def move(self, session, processor) -> t.Callable[[User, Room], None]:
+        def move(user, room):
+            lib_user.move(
+                user,
+                processor=processor,
+                building_id=room.building_id,
+                level=room.level,
+                room_number=room.number,
+            )
+            session.refresh(user)
+
+        return move
+
+    def test_move_changes_address(self, move, user, other_room):
+        move(user, other_room)
+        assert user.address == other_room.address
+
+    def test_move_keeps_custom_address(self, customize_address, move, user, other_room):
+        address = customize_address(user)
+        move(user, other_room)
+        assert user.address == address
+
+    @pytest.mark.parametrize("end_membership", (True, False))
+    def test_move_out_gets_scheduled(
+        self, end_membership, user, processor, session, utcnow
+    ):
+        old_room = user.room
+        lib_user.move_out(
+            user,
+            comment="",
+            processor=processor,
+            when=utcnow + timedelta(days=1),
+            end_membership=end_membership,
+        )
+        assert user.room == old_room
+        tasks = session.query(Task).all()
+        assert len(tasks) == 1
+        [task] = tasks
+        assert task.type == TaskType.USER_MOVE_OUT
+        assert task.parameters == UserMoveOutParams(
+            comment="", end_membership=end_membership
         )
 
-    def test_move_out_gets_scheduled(self, end_membership=None):
-        for end_membership in (True, False):
-            with self.subTest(end_membership=end_membership):
-                old_room = self.user.room
-                UserHelper.move_out(self.user, comment="", processor=self.processor,
-                                    when=session.utcnow() + timedelta(days=1),
-                                    end_membership=end_membership)
-                assert self.user.room == old_room
-                tasks = self.session.query(Task).all()
-                assert len(tasks) == 1
-                [task] = tasks
-                assert task.type == TaskType.USER_MOVE_OUT
-                assert task.parameters == UserMoveOutParams(comment="", end_membership=end_membership)
-                session.session.delete(task)
 
+class TestMoveOutImpl:
+    @pytest.mark.parametrize(
+        "params",
+        (
+            {"comment": "Kommentar", "end_membership": True},
+            {"comment": "", "end_membership": True},
+        ),
+    )
+    def test_move_out_success(self, session, user, utcnow, params: dict):
+        task = create_task_and_execute(TaskType.USER_MOVE_OUT, user, params)
+        session.refresh(user)
 
-class MoveOutImplTestCase(FactoryWithConfigDataTestBase):
-    def create_factories(self):
-        # We want a user who lives somewhere with a membership!
-        super().create_factories()
-        self.user = UserFactory.create(
-            with_membership=True,
-            membership__group=self.config.member_group,
-            with_host=True
-        )
-
-    def test_move_out_implementation(self):
-        self.assert_successful_move_out_execution(self.create_task_and_execute(
-            {"comment": "Dieser Kommentarbereich nun Eigentum der Bundesrepublik Deutschlands.",
-             "end_membership": True}
-        ))
-
-    def test_move_out_impl_with_empty_comment(self):
-        self.assert_successful_move_out_execution(
-            self.create_task_and_execute({"comment": "", "end_membership": True})
-        )
-
-    def test_move_out_without_end_membership_fails(self):
-        self.assert_failing_move_out_execution(
-            self.create_task_and_execute({"comment": ""}),
-            error_needle='end_membership',
-        )
-
-    def test_move_out_impl_without_comment_fails(self):
-        self.assert_failing_move_out_execution(
-            self.create_task_and_execute({"end_membership": True}),
-            error_needle='comment',
-        )
-
-    def assert_successful_move_out_execution(self, task: Task):
         assert task.status == TaskStatus.EXECUTED
-        assert self.user.room is None
+        assert user.room is None
+        relevant_interval = open(utcnow + timedelta(seconds=1), None)
+        assert user.active_memberships(when=relevant_interval) == []
 
-        relevant_interval = open(datetime.now(timezone.utc) + timedelta(minutes=1), None)
-        assert self.user.active_memberships(when=relevant_interval) == []
+    @pytest.mark.parametrize(
+        "params, error_needle",
+        (
+            ({"comment": ""}, "end_membership"),
+            ({"end_membership": True}, "comment"),
+        ),
+    )
+    def test_move_out_bad_params(
+        self, session, user, utcnow, params: dict, error_needle: str
+    ):
+        task = create_task_and_execute(TaskType.USER_MOVE_OUT, user, params)
+        session.refresh(user)
 
-    def assert_failing_move_out_execution(self, task: Task, error_needle: str):
         assert task.status == TaskStatus.FAILED
         assert len(task.errors) == 1
         [error] = task.errors
         assert error_needle in error.lower()
-        assert self.user.room is not None
-
-    def create_task_and_execute(self, params):
-        return create_task_and_execute(TaskType.USER_MOVE_OUT, self.user, params)
+        assert user.room is not None

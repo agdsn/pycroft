@@ -1,17 +1,21 @@
+import abc
+import re
+
+import pytest
+from sqlalchemy.orm import Session
+
+from pycroft.helpers.i18n import localized
 from pycroft.lib.user import edit_address
+from pycroft.model.logging import UserLogEntry
 from pycroft.model.user import User
 from ...factories import UserFactory
-from ...legacy_base import FactoryDataTestBase
 
 
-class TestUserChangeAddressTestCase(FactoryDataTestBase):
+class TestUserAddressChange(abc.ABC):
+    __test__ = False
 
-    def create_factories(self):
-        super().create_factories()
-        self.admin = UserFactory()
-
-    @property
-    def address_args(self) -> dict[str]:
+    @pytest.fixture(scope="class")
+    def address_args(self) -> dict[str, str | None]:
         return {
             'street': "Blahstraße",
             'number': "5",
@@ -22,27 +26,56 @@ class TestUserChangeAddressTestCase(FactoryDataTestBase):
             'country': None,
         }
 
-    # TODO with pytest, make this a parametrized test
-    def assert_user_address_change(self, user: User, address_args: dict[str]):
-        assert not user.has_custom_address
+    @abc.abstractmethod
+    def user(self, class_session: Session) -> User:
+        ...
 
-        edit_address(user, self.admin, **address_args)
-        self.session.commit()
+    @pytest.fixture(scope="class", autouse=True)
+    def edited_address(self, class_session, user, processor, address_args):
+        assert not user.has_custom_address  # fixture sanity assertion
+        edit_address(user, processor, **address_args)
 
-        self.session.refresh(user)
+    def test_address_values_correct(
+        self, user: User, address_args: dict[str, str | None]
+    ):
+        address = user.address
+        for key, val in address_args.items():
+            if key == "country":
+                assert address.country == val or "Germany"
+                continue
+            assert getattr(address, key) == (val or "")
+
+    RE_MESSAGE = re.compile("changed address", re.I)
+
+    def test_log_entry(self, user, processor):
+        le: UserLogEntry = user.latest_log_entry
+        assert le and le.author == processor
+        assert self.RE_MESSAGE.search(localized(le.message))
+
+    def test_user_address_change(
+        self, user: User, address_args: dict[str], processor: User, session: Session
+    ):
         if user.room:
             assert user.has_custom_address
-        for key, val in self.address_args.items():
-            if key == 'country':
-                assert user.address.country == val or 'Germany'
-                continue
-            assert getattr(user.address, key) == (val or '')
-        assert len(user.log_entries) > 0
-        log_entry = user.log_entries[-1]
-        assert log_entry.author == self.admin
 
-    def test_plain_user_address_add(self):
-        self.assert_user_address_change(UserFactory(without_room=True), self.address_args)
 
-    def test_user_with_room_different_address(self):
-        self.assert_user_address_change(UserFactory(), self.address_args)
+class TestUserWithRoomAddressChange(TestUserAddressChange):
+    __test__ = True
+
+    @pytest.fixture(scope="class")
+    def user(self, class_session: Session) -> User:
+        return UserFactory()
+
+    def test_user_has_custom_address(self, user):
+        assert user.has_custom_address
+
+
+class TestUserWithoutRoomAddressChange(TestUserAddressChange):
+    __test__ = True
+
+    @pytest.fixture(scope="class")
+    def user(self, class_session: Session) -> User:
+        return UserFactory.create(without_room=True)
+
+    def test_user_has_no_custom_address(self, user):
+        assert not user.has_custom_address

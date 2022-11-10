@@ -1,9 +1,10 @@
-coverage~=5.3.1
 factory-boy~=3.2.0
 pydot~=1.4.1
 pytest~=7.0.0
 pytest-timeout~=2.1.0
-pytest-cov~=3.0.0
+pytest-cov~=4.0.0
+# required for pycharm „run with coverage“ reporting
+coverage~=6.5.0
 git+https://github.com/lukasjuhrich/sqlalchemy_schemadisplay.git@master#egg=sqlalchemy-schemadisplay
 sphinx~=5.1.1
 sphinx-autobuild~=2021.3.14

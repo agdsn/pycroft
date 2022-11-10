@@ -471,9 +471,9 @@ class Interval(tuple, Generic[T]):
         :class:`date` interval by mapping ``dt↦dt.date()``:
 
         >>> from datetime import datetime, date
-        >>> i = closedopen(datetime.fromisoformat("2020-01-01T00:00:00Z"), None)
+        >>> i = starting_from(datetime.fromisoformat("2020-01-01T00:00:00Z"))
         >>> i_dates = i.map(lambda dt: dt.date())
-        >>> assert i_dates == closedopen(date(2020, 1, 1), None)
+        >>> assert i_dates == starting_from(date(2020, 1, 1))
 
         .. note:: This turns :class:`Interval` into a functor from the category of
             linearly ordered types (i.e., ``SupportsAllComparisons``) to the category of types.
@@ -528,6 +528,14 @@ def closedopen(begin: T | None, end: T | None) -> Interval[T]:
     begin_ = _convert_begin(begin)
     end_ = _convert_end(end)
     return Interval(Bound(begin_, True), Bound(end_, False))
+
+
+def starting_from(when: T) -> Interval[T]:
+    """Alias for :func:`closedopen(when, None) <closedopen>`
+
+    :return: ``[when, ∞)``
+    """
+    return closedopen(when, None)
 
 
 def openclosed(begin: T | None, end: T | None) -> Interval[T]:

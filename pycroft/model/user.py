@@ -11,6 +11,7 @@
 """
 from __future__ import annotations
 
+import operator
 import re
 import typing
 from datetime import timedelta, date, datetime
@@ -30,7 +31,7 @@ from sqlalchemy.orm.collections import attribute_mapped_collection
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.util import has_identity
 
-from pycroft.helpers.interval import single, Interval, closedopen
+from pycroft.helpers.interval import single, Interval, starting_from
 from pycroft.helpers.user import hash_password, verify_password, \
     cleartext_password, \
     clear_password_prefix
@@ -261,6 +262,12 @@ class User(ModelBase, BaseUser, UserMixin):
         return {p.property_name for p in self.current_properties}
 
     @property
+    def latest_log_entry(self) -> UserLogEntry | None:
+        if not (le := self.log_entries):
+            return None
+        return max(le, key=operator.attrgetter("created_at"))
+
+    @property
     def wifi_password(self):
         """Store a hash of a given plaintext passwd for the user.
 
@@ -459,7 +466,7 @@ class Membership(IntegerIdModel):
         if at is None:
             at = object_session(self).scalar(select(func.current_timestamp()))
 
-        self.active_during = self.active_during - closedopen(at, None)
+        self.active_during = self.active_during - starting_from(at)
         flag_modified(self, 'active_during')
 
     # many to one from Membership to Group
@@ -541,7 +548,7 @@ class RoomHistoryEntry(IntegerIdModel):
         if at is None:
             at = object_session(self).scalar(select(func.current_timestamp()))
 
-        self.active_during = self.active_during - closedopen(at, None)
+        self.active_during = self.active_during - starting_from(at)
         flag_modified(self, 'active_during')
 
     room_id = Column(Integer, ForeignKey("room.id", ondelete="CASCADE"),

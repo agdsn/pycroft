@@ -1,25 +1,34 @@
+import pytest
+from sqlalchemy.orm import Session
+
 from pycroft.lib.finance import match_activities
-from pycroft.model.finance import AccountPattern
-from tests.legacy_base import FactoryDataTestBase
+from pycroft.model.finance import AccountPattern, Account, BankAccountActivity
 from tests.factories import AccountFactory
 from tests.factories.finance import BankAccountFactory, BankAccountActivityFactory
 
 
-class TestTeamActivityMatching(FactoryDataTestBase):
-    def create_factories(self):
-        super().create_factories()
-        self.team_account = AccountFactory.create(type='ASSET', name='Team Network')
-        self.team_account.patterns = [AccountPattern(pattern=r"2[0-9]{3}-N\d\d")]
-        self.bank_account = BankAccountFactory.create()
-        self.activity, *rest = (
-            BankAccountActivityFactory.create(bank_account=self.bank_account,
-                                              reference=reference)
-            for reference in [
-                'Erstattung 2020-N15 (Pizza)',
-                'Erstattung 2020-NN',
-                'Other reference, which should not match our regex',
-            ]
-        )
+@pytest.fixture(scope="module")
+def team_account(module_session: Session) -> Account:
+    team_account = AccountFactory.create(type="ASSET", name="Team Network")
+    team_account.patterns = [AccountPattern(pattern=r"2[0-9]{3}-N\d\d")]
+    return team_account
 
-    def test_team_matching(self):
-        assert match_activities() == ({}, {self.activity: self.team_account})
+
+@pytest.fixture(scope="module")
+def activity(module_session: Session) -> BankAccountActivity:
+    bank_account = BankAccountFactory.create()
+    activity, *rest = (
+        BankAccountActivityFactory.create(
+            bank_account=bank_account, reference=reference
+        )
+        for reference in [
+            "Erstattung 2020-N15 (Pizza)",  # this activity should match
+            "Erstattung 2020-NN",
+            "Other reference, which should not match our regex",
+        ]
+    )
+    return activity
+
+
+def test_team_matching(activity, team_account):
+    assert match_activities() == ({}, {activity: team_account})

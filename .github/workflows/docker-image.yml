@@ -23,6 +23,8 @@ jobs:
         with:
           python-version: '3.10'
           cache: 'pip'
+      - name: print information about pip cache
+        run: pip cache info && pip cache list
       - name: ensure presence of `wheel`
         run: pip install wheel
       - name: install pip dependencies

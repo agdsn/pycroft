@@ -11,4 +11,7 @@ def assert_membership_groups(memberships, expected_groups):
 
 
 def assert_logmessage_startswith(logentry, expected_start: str):
-    assert localized(logentry.message).startswith(expected_start)
+    localized_message = localized(logentry.message)
+    assert localized_message.startswith(
+        expected_start
+    ), f"Message {localized_message!r} does not start with {expected_start!r}"
