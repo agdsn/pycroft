@@ -56,11 +56,6 @@ class LdapSyncLoggerMutedMixin:
         logging.getLogger('ldap_sync').addHandler(logging.NullHandler())
 
 
-@pytest.fixture(scope="class")
-def muted_ldap_logger():
-    logging.getLogger('ldap_sync').addHandler(logging.NullHandler())
-
-
 @pytest.mark.usefixtures("muted_ldap_logger")
 class TestEmptyDatabase:
     @pytest.fixture(scope="class", autouse=True)
@@ -179,8 +174,13 @@ class LdapTestBase(LdapSyncLoggerMutedMixin, TestCase):
         """Delete and recreate the base and set up a default ppolicy."""
         self._recursive_delete(self.base_dn)
 
-        for base_dn in (self.base_dn, self.user_base_dn, self.group_base_dn, self.property_base_dn):
-            result = self.conn.add(base_dn, 'organizationalUnit')
+        for base_dn in (
+            self.base_dn,
+            self.user_base_dn,
+            self.group_base_dn,
+            self.property_base_dn,
+        ):
+            result = self.conn.add(base_dn, "organizationalUnit")
             if not result:
                 raise RuntimeError(f"Couldn't create base_dn {base_dn} as organizationalUnit",
                                    self.conn.result)
@@ -221,24 +221,25 @@ class LdapTestBase(LdapSyncLoggerMutedMixin, TestCase):
         self.conn.unbind()
 
 
-class LdapFunctionalityTestCase(LdapTestBase):
-    def test_ldap_base_exists(self):
-        success = self.conn.search(self.base_dn, '(objectclass=*)', ldap3.BASE)
-        if not success:
-            self.fail(f"Base DN search failed: {self.conn.result}")
+def test_ldap_base_exists(conn, clean_ldap_base, sync_config):
+    success = conn.search(sync_config.base_dn, "(objectclass=*)", ldap3.BASE)
+    assert success, f"Base DN search failed: {conn.result}"
 
-    def test_adding_an_entry_works(self):
-        self.conn.add(f'uid=bar,{self.base_dn}', ['inetOrgPerson'],
-                      {'sn': 'test', 'cn': 'test'})
-        success = self.conn.search(self.base_dn, '(objectclass=inetOrgPerson)')
-        if not success:
-            self.fail(f"Base DN subtree search failed: {self.conn.result}")
-        relevant_entries = [r for r in self.conn.response if r['dn'] != self.base_dn]
-        assert len(relevant_entries) == 1
+
+def test_adding_an_entry_works(conn, clean_ldap_base, sync_config):
+    base_dn = sync_config.base_dn
+    conn.add(f"uid=bar,{base_dn}", ["inetOrgPerson"], {"sn": "test", "cn": "test"})
+    assert conn.search(
+        base_dn, "(objectclass=inetOrgPerson)"
+    ), f"Base DN subtree search failed: {conn.result}"
+    relevant_entries = [r for r in conn.response if r["dn"] != base_dn]
+    assert len(relevant_entries) == 1
+
 
 def try_unbind(conn):
     if conn:
         conn.unbind()
+
 
 class LdapSyncerTestBase(LdapTestBase, FactoryDataTestBase):
     def create_factories(self):
@@ -331,6 +332,7 @@ class LdapSyncerTestBase(LdapTestBase, FactoryDataTestBase):
     def get_by_dn(cls, ldap_records, dn):
         return next(u for u in ldap_records if u.dn == dn)
 
+
 class LdapTestCase(LdapSyncerTestBase):
     def test_connection_works(self):
         conn = self.establish_and_return_ldap_connection(config=self.config)
@@ -415,8 +417,9 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
             for key, val in expected.attrs.items()
             if val != []
         }
-        assert effective_attributes_in_db \
-            == {k: v for k, v in actual.attrs.items() if k in effective_attributes_in_db}
+        assert effective_attributes_in_db == {
+            k: v for k, v in actual.attrs.items() if k in effective_attributes_in_db
+        }
 
     def test_user_attributes_synced_correctly(self):
         records = {r.dn: r for r in self.user_records_to_sync}
@@ -448,7 +451,6 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
         }
         for ldap_record in self.new_ldap_property_records:
             self.assert_attributes_equal(records[ldap_record.dn], ldap_record)
-
 
     def test_mail_deletion(self):
         users_with_mail = [
