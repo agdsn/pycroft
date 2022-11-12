@@ -163,10 +163,6 @@ class GroupRecord(Record):
     SYNCED_ATTRIBUTES = frozenset(["objectClass", "cn", "member"])
     LDAP_OBJECTCLASSES = ["groupOfMembers"]
 
-    @classmethod
-    def get_synced_attributes(cls) -> typing.AbstractSet[str]:
-        return cls.SYNCED_ATTRIBUTES
-
 
 @dataclasses.dataclass
 class RecordState:
