@@ -1,13 +1,11 @@
 import os
 import re
-import subprocess
 from functools import partial
-from tempfile import mkdtemp
+from io import StringIO
 
-from sqlalchemy import text
+import pytest
 
 from scripts.schema import AlembicHelper, SchemaStrategist
-from tests.legacy_base import get_engine_and_connection, SQLAlchemyTestCase
 
 
 class MockedStrategist(SchemaStrategist):
@@ -24,65 +22,48 @@ class EmptyDBStrategist(MockedStrategist):
         return False
 
 
-class AlembicTest(SQLAlchemyTestCase):
-    def setUp(self):
-        super().setUp()
-        _, self.connection = get_engine_and_connection()
-        self.connection.execute(text("DROP TABLE IF EXISTS alembic_version"))
-        self.helper = AlembicHelper(self.connection)
+@pytest.fixture
+def helper(connection) -> AlembicHelper:
+    return AlembicHelper(connection)
 
 
-class TestSchemaStrategy(AlembicTest):
-    def test_we_have_a_revision(self):
-        assert self.helper.desired_version
+@pytest.mark.usefixtures("session")
+class TestSchemaStrategy:
+    def test_we_have_a_revision(self, helper):
+        assert helper.desired_version
 
-    def test_default_wants_intervention(self):
-        strategist = MockedStrategist(self.helper)
-        assert strategist.determine_schema_strategy() \
+    def test_default_wants_intervention(self, helper):
+        strategist = MockedStrategist(helper)
+        assert (
+            strategist.determine_schema_strategy()
             == MockedStrategist.manual_intervention
+        )
 
-    def test_empty_database_will_create(self):
-        strategist = EmptyDBStrategist(self.helper)
-        assert strategist.determine_schema_strategy() \
-            == MockedStrategist.create_then_stamp
+    def test_empty_database_will_create(self, helper):
+        strategist = EmptyDBStrategist(helper)
+        assert (
+            strategist.determine_schema_strategy() == MockedStrategist.create_then_stamp
+        )
 
-    def test_stamped_schema_is_ok(self):
-        self.helper.stamp()
+    def test_stamped_schema_is_ok(self, helper, connection, session):
+        helper.stamp()
         # self.helper sticks to the old versions
-        helper = AlembicHelper(self.connection)
+        helper = AlembicHelper(connection)
         assert helper.running_version
         assert helper.running_version == helper.desired_version
         strategist = MockedStrategist(helper)
         assert strategist.determine_schema_strategy() == strategist.run
 
-    def old_schema_needs_upgrade(self):
-        self.helper.stamp(revision='aaaaaa')  # something != the head revision
-        helper = AlembicHelper(self.connection)
+    def test_old_schema_needs_upgrade(self, helper, connection):
+        helper.stamp(revision="4784a128a6dd")  # something != the head revision
+        helper = AlembicHelper(connection)
         strategist = MockedStrategist(helper)
         assert strategist.determine_schema_strategy() == strategist.upgrade
 
 
-class TestUpgrade(SQLAlchemyTestCase):
-    def setUp(self):
-        super().setUp()
-        _, self.connection = get_engine_and_connection()
-
-        # Patch AlembicHelper so it will use another location directory
-        self.tmpdir = mkdtemp()
-
-    def tearDown(self):
-        os.rmdir(self.tmpdir)
-
-    @property
-    def helper(self):
-        """Building a fresh helper every time
-
-        This is convenient because every time e.g. a revision is added
-        to our version directory, `helper.scr` does not know that.
-        """
-        return AlembicHelper(self.connection)
-
-    def create_revision(self, msg):
+class TestUpgrade:
+    @staticmethod
+    def create_revision(msg, request) -> str:
         """Create an empty alembic revision with a given message
 
         The created revision files will be removed afterwards.
@@ -90,30 +71,37 @@ class TestUpgrade(SQLAlchemyTestCase):
         the version locations, the `alembic` CLI requires a separate
         config file for that, so this is the more pragmatic approach.
         """
-        try:
-            out = subprocess.check_output(["alembic", "revision", "-m", msg],
-                                          cwd="pycroft/model")
-        except subprocess.CalledProcessError:
-            self.fail("`alembic revision` returned a nonzero exit code.", )
+        from alembic.config import main as alembic_main
+        from contextlib import redirect_stdout
 
-        created_files = re.findall(r"Generating (.*?\.py)", out.decode('utf-8'))
+        f = StringIO()
+        os.chdir("pycroft/model")
+        with redirect_stdout(f):
+            res = alembic_main(argv=("revision", "-m", msg), prog="alembic")
+        out = f.getvalue()
+        os.chdir("../..")
+
+        if res:
+            pytest.fail(f"`alembic revision` returned a nonzero exit code:{res=}")
+
+        created_files = re.findall(r"Generating (.*?\.py)", out)
         for created_file in created_files:
-            self.addCleanup(partial(os.remove, created_file))
+            pass
+            request.addfinalizer(partial(os.remove, created_file))
         return out
 
+    def test_schema_upgrade(self, request, helper, connection):
+        self.create_revision("Initial Testrevision", request)
+        helper.stamp()
+        initial_version = helper.running_version
 
-    def test_schema_upgrade(self):
-        self.create_revision("Initial Testrevision")
-        self.helper.stamp()
-        initial_version = self.helper.running_version
+        out = self.create_revision("Testrevision", request)
+        assert "Generating /" in out
+        assert "_testrevision.py" in out
 
-        out = self.create_revision("Testrevision")
-        assert b"Generating /" in out
-        assert b"_testrevision.py" in out
-
-        new_created_version = self.helper.desired_version
+        new_created_version = helper.desired_version
         assert new_created_version != initial_version
 
-        self.helper.upgrade()
-        new_running_version = self.helper.running_version
+        helper.upgrade()
+        new_running_version = helper._get_running_version()
         assert new_running_version == new_created_version
