@@ -39,6 +39,7 @@ from ldap_sync.sources.ldap import (
     fetch_ldap_users,
 )
 from pycroft.model.session import session
+from pycroft.model.user import PropertyGroup, User
 from tests.factories import PropertyGroupFactory, UserFactory, MembershipFactory
 from tests.legacy_base import FactoryDataTestBase
 
@@ -55,75 +56,84 @@ class LdapSyncLoggerMutedMixin:
         logging.getLogger('ldap_sync').addHandler(logging.NullHandler())
 
 
-class EmptyDatabaseTestCase(LdapSyncLoggerMutedMixin, FactoryDataTestBase):
-    def create_factories(self):
-        super().create_factories()
-        UserFactory.create_batch(5)
-
-    def setUp(self):
-        super().setUp()
-        self.session = session
-
-    def test_no_users_fetched(self):
-        assert _fetch_db_users(self.session) == []
+@pytest.fixture(scope="class")
+def muted_ldap_logger():
+    logging.getLogger('ldap_sync').addHandler(logging.NullHandler())
 
 
-class OneUserFetchTestCase(LdapSyncLoggerMutedMixin, FactoryDataTestBase):
+@pytest.mark.usefixtures("muted_ldap_logger")
+class TestEmptyDatabase:
+    @pytest.fixture(scope="class", autouse=True)
+    def users(self, class_session):
+        return UserFactory.create_batch(5)
+
+    def test_no_users_fetched(self, session):
+        assert _fetch_db_users(session) == []
+
+
+class TestOneUserFetch:
     PROPNAME = 'mail'
 
-    def create_factories(self):
-        super().create_factories()
-        self.propgroup = PropertyGroupFactory.create(
+    @pytest.fixture(scope="class")
+    def propgroup(self, class_session) -> PropertyGroup:
+        return PropertyGroupFactory.create(
             name="my propgroup",
             granted={self.PROPNAME, 'ldap_login_enabled'}
         )
-        self.user = UserFactory.create(
+
+    @pytest.fixture(scope="class", autouse=True)
+    def user(self, class_session, propgroup) -> User:
+        return UserFactory.create(
             name="Hans Wurst", login="hans",
             with_membership=True,
-            membership__group=self.propgroup,
+            membership__group=propgroup,
             membership__includes_today=True,
             with_unix_account=True,
         )
 
-    def test_one_user_fetched(self):
+    def test_one_user_fetched(self, session):
         users = _fetch_db_users(session, required_property=self.PROPNAME)
         assert len(users) == 1, f"Not a list of length one: {users}"
 
-    def test_one_group_fetched(self):
+    def test_one_group_fetched(self, session, propgroup, user):
         groups = [
             group
             for group in _fetch_db_groups(session)
-            if group.Group.name == self.propgroup.name
+            if group.Group.name == propgroup.name
         ]
         assert len(groups) == 1
-        assert set(groups[0].members) == {self.user.login}
+        assert set(groups[0].members) == {user.login}
 
-    def test_one_property_fetched(self):
+    def test_one_property_fetched(self, session, user):
         properties = [
             prop for prop in _fetch_db_properties(session) if prop.name == self.PROPNAME
         ]
         assert len(properties) == 1
-        assert set(properties[0].members) == {self.user.login}
+        assert set(properties[0].members) == {user.login}
 
 
-class MultipleUsersFilterTestCase(FactoryDataTestBase):
-    def create_factories(self):
-        super().create_factories()
-        self.propgroup = PropertyGroupFactory.create(
+class TestMultipleUsersFilter:
+    @pytest.fixture(scope="class")
+    def propgroup(self, class_session) -> PropertyGroup:
+        return PropertyGroupFactory.create(
             name="my property group",
             granted={'mail', 'ldap_login_enabled'},
         )
-        self.user1, self.user2 = UserFactory.create_batch(
+
+    @pytest.fixture(scope="class")
+    def users(self, class_session, propgroup) -> tuple[User, User]:
+        return UserFactory.create_batch(
             2,
             with_membership=True,
-            membership__group=self.propgroup,
+            membership__group=propgroup,
             membership__includes_today=True,
             with_unix_account=True,
         )
 
-    def test_correct_users_fetched(self):
+    def test_correct_users_fetched(self, session, users):
+        user1, user2 = users
         users = _fetch_db_users(session, required_property="mail")
-        expected_logins = {self.user1.login, self.user2.login}
+        expected_logins = {user1.login, user2.login}
         assert {u.User.login for u in users} == expected_logins
 
 
