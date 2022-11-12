@@ -7,7 +7,7 @@ import pytest
 
 from ldap_sync.concepts import types
 from ldap_sync.concepts.action import AddAction, DeleteAction, IdleAction, ModifyAction
-from ldap_sync.concepts.record import UserRecord, escape_and_normalize_attrs
+from ldap_sync.concepts.record import UserRecord, escape_and_normalize_attrs, GroupRecord, Record
 from ldap_sync.record_diff import diff_records, diff_attributes, iter_zip_dicts
 from ldap_sync.concepts.types import DN
 
@@ -20,6 +20,26 @@ def dn() -> DN:
 @pytest.fixture(scope="module")
 def record(dn) -> UserRecord:
     return UserRecord(dn=dn, attrs={'mail': 'shizzle'})
+
+
+@pytest.fixture(scope="module")
+def group_record(dn) -> GroupRecord:
+    return GroupRecord(dn=dn, attrs={})
+
+
+def test_none_diff_raises():
+    with pytest.raises(ValueError, match="cannot diff.*nonexistent"):
+        diff_records(None, None)
+
+
+def test_diff_other_dn_raises(record, dn):
+    with pytest.raises(TypeError, match="diff.*different dn"):
+        diff_records(record, UserRecord(dn=types.DN(f"_{dn}"), attrs={}))
+
+
+def test_heterogeneous_diff_raises(record, group_record):
+    with pytest.raises(TypeError, match="Cannot diff.*Record"):
+        diff_records(record, group_record)  # type: ignore
 
 
 def test_record_subtraction_with_none_adds(record):
@@ -50,9 +70,18 @@ def test_same_record_subtraction_idles(record):
     assert isinstance(difference, IdleAction)
 
 
-def test_correctly_different_record_modifies(record, dn):
-    difference = diff_records(UserRecord(dn=dn, attrs={'mail': ''}), record)
-    assert isinstance(difference, ModifyAction)
+@pytest.mark.parametrize("record_class", (UserRecord, GroupRecord))
+@pytest.mark.parametrize("attrs_one, attrs_other, expected_diff", (
+    ({}, {"cn": "foo"}, {"cn": "foo"}),
+    ({"cn": "notfoo"}, {"cn": "foo"}, {"cn": "foo"}),
+))
+def test_modification(dn, record_class: type[Record], attrs_one, attrs_other, expected_diff):
+    one = record_class(dn=dn, attrs=attrs_one)
+    other = record_class(dn=dn, attrs=attrs_other)
+
+    action = diff_records(one, other)
+    assert isinstance(action, ModifyAction)
+    assert one.attrs | action.modifications == other.attrs
 
 
 class TestAttributeDiff:

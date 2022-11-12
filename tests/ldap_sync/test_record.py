@@ -18,6 +18,7 @@ def assertSubDict(subdict, container):
     if subdict != container_subdict:
         pytest.fail(f"{subdict} not a subdict of {container}")
 
+
 class TestRecordSubclassing:
     def test_subclassing_without_attributes_fails(self):
         with pytest.raises(TypeError, match="SYNCED_ATTRIBUTES"):
@@ -61,6 +62,9 @@ class TestRecord:
 
     def test_record_noncanonical_equality(self, record):
         assert record == UserRecord(dn=DN("test"), attrs={'mail': ['shizzle']})
+
+    def test_record_attribute_access(self, record):
+        assert record["mail"] == ["shizzle"]
 
     def test_record_from_ldap_record(self):
         ldapsearch_record: LdapRecord = {
