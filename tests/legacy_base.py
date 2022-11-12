@@ -158,17 +158,4 @@ class SQLAlchemyTestCase(unittest.TestCase):
         assert inspect(object).persistent
 
 
-class FactoryDataTestBase(SQLAlchemyTestCase):
-    def setUp(self):
-        super().setUp()
-        logging.getLogger('factory').setLevel(logging.INFO)
-        self.create_factories()
-        self.session.flush()
 
-    def create_factories(self):
-        pass
-
-
-class FactoryWithConfigDataTestBase(FactoryDataTestBase):
-    def create_factories(self):
-        self.config: Config = ConfigFactory.create()

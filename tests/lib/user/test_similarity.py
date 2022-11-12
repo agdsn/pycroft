@@ -1,14 +1,12 @@
 import pytest
-from sqlalchemy import func
 
 from pycroft.helpers.interval import starting_from
-from pycroft.helpers.interval import closedopen, Interval
+from pycroft.helpers.interval import Interval
 from pycroft.helpers.utc import DateTimeTz
 from pycroft.lib import user as UserHelper
 from pycroft.model.facilities import Room
 from pycroft.model.user import RoomHistoryEntry, User
 from tests import factories
-from tests.legacy_base import FactoryDataTestBase
 
 THRESHOLD = 0.6
 
