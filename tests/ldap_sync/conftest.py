@@ -86,7 +86,7 @@ def clean_ldap_base(get_connection, sync_config):
         _recursive_delete(conn, sync_config.base_dn)
         for base in sync_config.iter_bases_to_create():
             result = conn.add(base, "organizationalUnit")
-            if not result:
+            if not result:  # pragma: no cover
                 raise RuntimeError(
                     f"Couldn't create dn {base} as organizationalUnit", result
                 )
@@ -111,7 +111,7 @@ def clean_ldap_base(get_connection, sync_config):
                 "pwdMustChange": True,
             },
         )
-        if not result:
+        if not result:  # pragma: no cover
             raise RuntimeError(f"Could not create default password policy", result)
     _cleanup_conn(conn)
 

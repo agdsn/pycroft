@@ -441,7 +441,7 @@ class TestLdapSyncerOnceSynced(LdapSyncerTestBase):
         modified_user = next(
             r
             for r in _fetch_ldap_users(conn, base_dn=sync_config.user_base_dn)
-            if r["dn"] == mod_dn
+            if r["dn"] == mod_dn  # pragma: no cover
         )
         assert "mail" not in modified_user
 

@@ -16,7 +16,7 @@ from ldap_sync.concepts.types import DN, LdapRecord
 def assertSubDict(subdict, container):
     container_subdict = {k: v for k, v in container.items() if k in subdict}
     if subdict != container_subdict:
-        pytest.fail(f"{subdict} not a subdict of {container}")
+        pytest.fail(f"{subdict} not a subdict of {container}")  # pragma: no cover
 
 
 class TestRecordSubclassing:
@@ -30,7 +30,7 @@ class TestRecordSubclassing:
             class _(Record):
                 SYNCED_ATTRIBUTES = frozenset({})
         except TypeError:
-            pytest.fail("Subclassing failed")
+            pytest.fail("Subclassing failed")  # pragma: no cover
 
 
 class TestRecordDirectInit:
