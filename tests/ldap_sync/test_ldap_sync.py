@@ -36,6 +36,7 @@ from ldap_sync.sources.ldap import (
 )
 from pycroft.model.user import PropertyGroup, User
 from tests.factories import PropertyGroupFactory, UserFactory, MembershipFactory
+from tests.ldap_sync import _cleanup_conn
 
 
 class TestEmptyLdap:
@@ -162,6 +163,7 @@ class LdapSyncerTestBase:
     def class_conn(self, get_connection) -> ldap3.Connection:
         with get_connection() as conn:
             yield conn
+        _cleanup_conn(conn)
 
     @pytest.fixture(scope="class")
     def user_records_to_sync(

@@ -9,6 +9,7 @@ import pytest
 
 from ldap_sync.concepts import types
 from ldap_sync.config import get_config, SyncConfig
+from tests.ldap_sync import _cleanup_conn
 
 
 @pytest.fixture(scope="class")
@@ -112,9 +113,11 @@ def clean_ldap_base(get_connection, sync_config):
         )
         if not result:
             raise RuntimeError(f"Could not create default password policy", result)
+    _cleanup_conn(conn)
 
 
 @pytest.fixture
 def conn(get_connection) -> ldap3.Connection:
     with get_connection() as conn:
         yield conn
+    _cleanup_conn(conn)
