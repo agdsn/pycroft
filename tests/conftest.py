@@ -5,7 +5,7 @@ from typing import cast
 
 import pytest
 from coverage.annotate import os
-from sqlalchemy import event, select, func
+from sqlalchemy import event, select, func, text
 from sqlalchemy.ext.declarative import DeferredReflection
 from sqlalchemy.future import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker, Session
@@ -29,6 +29,7 @@ def engine():
 def clean_engine(engine):
     connection = engine.connect()
     drop_db_model(connection)
+    connection.execute(text("drop table if exists alembic_version"))
     create_db_model(connection)
     connection.commit()
     return engine
