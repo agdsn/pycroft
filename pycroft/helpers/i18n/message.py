@@ -112,7 +112,7 @@ class ErroneousMessage(Message):
         self.text = text
 
     def _base_dict(self):
-        raise AssertionError()
+        raise AssertionError("ErroneousMessage should never be serialized")
 
     def _gettext(self):
         return self.text
