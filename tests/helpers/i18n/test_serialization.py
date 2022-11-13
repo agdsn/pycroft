@@ -4,8 +4,9 @@ from decimal import Decimal
 
 import pytest
 
-from pycroft.helpers.i18n import Money, serialize_param, deserialize_param, \
-    Message, ErroneousMessage
+from pycroft.helpers.i18n.types import Money
+from pycroft.helpers.i18n.serde import serialize_param, deserialize_param
+from pycroft.helpers.i18n.message import Message, ErroneousMessage
 from pycroft.helpers.interval import UnboundedInterval, closed, closedopen, \
     openclosed, open
 
