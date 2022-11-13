@@ -56,7 +56,6 @@ def test_no_json(json: str):
 @pytest.mark.parametrize(
     "json",
     (
-        "5",
         "{}",
         '{"message": "", "args": "foo"}',
         '{"message": "", "unknown_field": "bar"}',
@@ -85,3 +84,7 @@ def test_invalid_parameter(json):
     assert isinstance(m, ErroneousMessage)
     for t in (m.text.lower(), l.lower()):
         assert "parameter deserialization error" in t
+
+@pytest.mark.parametrize("serialized", ("5", "42", "42.0", "7"))
+def test_numerical_strings_get_deserialized(serialized: str):
+    assert localized(serialized) == serialized
