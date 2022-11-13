@@ -27,6 +27,12 @@ class Message(abc.ABC):
     @classmethod
     def from_json(cls, json_string: str) -> Message:
         try:
+            float(json_string)
+        except ValueError:
+            pass
+        else:
+            return SimpleMessage(json_string, domain=None)
+        try:
             obj = json.loads(json_string)
         except ValueError:
             return ErroneousMessage(json_string)
