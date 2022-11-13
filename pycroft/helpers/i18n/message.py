@@ -3,6 +3,7 @@
 #  the Apache License, Version 2.0. See the LICENSE file for details
 from __future__ import annotations
 
+import abc
 import json
 import traceback
 import typing
@@ -20,8 +21,7 @@ from .serde import Serializable, serialize_param, deserialize_param
 TMessage = typing.TypeVar("TMessage", bound="Message")
 
 
-# TODO turn into ABC && properly type subclasses
-class Message:
+class Message(abc.ABC):
     __slots__ = ("domain", "args", "kwargs")
 
     @classmethod
@@ -63,11 +63,13 @@ class Message:
         self.args: typing.Iterable[Serializable] = ()
         self.kwargs: dict[str, Serializable] = {}
 
+    @abc.abstractmethod
     def _base_dict(self) -> dict[str, typing.Any]:
-        raise NotImplementedError()
+        ...
 
+    @abc.abstractmethod
     def _gettext(self) -> str:
-        raise NotImplementedError()
+        ...
 
     def to_json(self) -> str:
         obj = self._base_dict()
