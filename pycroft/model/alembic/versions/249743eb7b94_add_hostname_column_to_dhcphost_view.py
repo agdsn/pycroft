@@ -18,28 +18,28 @@ depends_on = None
 
 def upgrade():
     op.execute("""
-		CREATE OR REPLACE VIEW pycroft.dhcphost AS
+		CREATE OR REPLACE VIEW dhcphost AS
 		 SELECT interface.mac AS "Mac",
 			host(ip.address) AS "IpAddress",
 			host.name AS "Hostname"
-		   FROM pycroft."user"
-			 JOIN pycroft.current_property ON "user".id = current_property.user_id AND NOT current_property.denied
-			 JOIN pycroft.host ON "user".id = host.owner_id
-			 JOIN pycroft.interface ON host.id = interface.host_id
-			 JOIN pycroft.ip ON interface.id = ip.interface_id
+		   FROM "user"
+			 JOIN current_property ON "user".id = current_property.user_id AND NOT current_property.denied
+			 JOIN host ON "user".id = host.owner_id
+			 JOIN interface ON host.id = interface.host_id
+			 JOIN ip ON interface.id = ip.interface_id
 		  WHERE current_property.property_name::text = 'network_access'::text
     """)
 
 
 def downgrade():
     op.execute("""
-		CREATE OR REPLACE VIEW pycroft.dhcphost AS
+		CREATE OR REPLACE VIEW dhcphost AS
 		 SELECT interface.mac AS "Mac",
 			host(ip.address) AS "IpAddress"
-		   FROM pycroft."user"
-			 JOIN pycroft.current_property ON "user".id = current_property.user_id AND NOT current_property.denied
-			 JOIN pycroft.host ON "user".id = host.owner_id
-			 JOIN pycroft.interface ON host.id = interface.host_id
-			 JOIN pycroft.ip ON interface.id = ip.interface_id
+		   FROM "user"
+			 JOIN current_property ON "user".id = current_property.user_id AND NOT current_property.denied
+			 JOIN host ON "user".id = host.owner_id
+			 JOIN interface ON host.id = interface.host_id
+			 JOIN ip ON interface.id = ip.interface_id
 		  WHERE current_property.property_name::text = 'network_access'::text
     """)
