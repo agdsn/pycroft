@@ -3,7 +3,7 @@ import json
 import jsonschema
 import pytest
 
-from pycroft.helpers.i18n import schema, SimpleMessage, Message, NumericalMessage
+from pycroft.helpers.i18n.message import schema, SimpleMessage, Message, NumericalMessage
 
 
 def assertMessageEquals(m, domain, args, kwargs, expected_result):

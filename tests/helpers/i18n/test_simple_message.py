@@ -1,7 +1,7 @@
 import datetime
 
-from pycroft.helpers.i18n import deferred_gettext, deferred_dgettext, \
-    format_datetime
+from pycroft.helpers.i18n.deferred import deferred_gettext, deferred_dgettext
+from pycroft.helpers.i18n.formatting import format_datetime
 from .assertions import assertSimpleMessageCorrect
 
 
