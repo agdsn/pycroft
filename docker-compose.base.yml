@@ -17,7 +17,6 @@ services:
     image: agdsn/pycroft-dev:${TAG:-latest}
     environment:
       PYTHONDEVMODE: 1
-      FLASK_APP: web.app
       PYCROFT_DB_URI: postgresql://postgres:password@db:5432/pycroft
       PYCROFT_API_KEY: secret
       PYCROFT_LDAP_HOST: ldap
