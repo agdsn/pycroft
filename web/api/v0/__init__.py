@@ -468,12 +468,17 @@ class RegistrationResource(Resource):
         """
         Get the newest tenancy for the supplied user data, or an error 404 if not found.
 
-        Error codes:
-        no_tenancies: No tenancies could be found for the supplied data
-        no_relevant_tenancies: No active or future tenancies could be found
-        no_room_for_tenancies: There are tenancies but none of them are connected to a pycroft room
-        user_exists: A user with this person_id already exists
-        similar_user_exists: A similar user already lives in the room
+        Error codes
+            no_tenancies
+                No tenancies could be found for the supplied data
+            no_relevant_tenancies
+                 active or future tenancies could be found
+            no_room_for_tenancies
+                ere are tenancies but none of them are connected to a pycroft room
+            user_exists
+                user with this person_id already exists
+            similar_user_exists
+                similar user already lives in the room
         """
 
         parser = reqparse.RequestParser()
