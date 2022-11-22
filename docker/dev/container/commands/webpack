@@ -16,10 +16,17 @@ run() {
 	npm --version
 	echo "## I am $(id)"
 	echo "## webpack is: $(which webpack)"
-	echo "## $(ls -l $(which webpack))"
-	echo "## ./node_modules/webpack/bin:"
-	echo "## $(ls -l ./node_modules/webpack/bin)"
+	echo "## ls -l \$(which webpack):"
+	ls -l $(which webpack)
+	echo "## node_modules/webpack/bin:"
+	file node_modules
+	file node_modules/webpack
+	file node_modules/webpack/bin
+	file node_modules/webpack/bin/webpack.js
 	chmod +x ./node_modules/webpack/bin/*
+	echo "## npm ll:"
+	npm ll
+
 	exec npm run -- webpack --config webpack.config.babel.js "$@"
 }
 
