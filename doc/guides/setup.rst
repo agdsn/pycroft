@@ -2,7 +2,7 @@ Minimal setup
 =============
 
 Using Docker
-------
+------------
 The full dev-setup requires docker.
 
 Follow the following guides:
