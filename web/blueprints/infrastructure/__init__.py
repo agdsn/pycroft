@@ -211,7 +211,7 @@ def switch_edit(switch_id):
         room = Room.q.filter_by(number=form.room_number.data,
                                 level=form.level.data, building=form.building.data).one()
 
-        edit_switch(sess, switch, form.name.data, form.management_ip.data, room)
+        edit_switch(sess, switch, form.name.data, form.management_ip.data, room, current_user)
         sess.commit()
         flash("Die Switch wurde erfolgreich bearbeitet.", "success")
 
