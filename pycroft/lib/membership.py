@@ -11,12 +11,16 @@ management.
 """
 import typing as t
 
+from datetime import datetime
+from typing import Optional
+
 from sqlalchemy import and_, func, distinct
 from sqlalchemy.future import select
 from sqlalchemy.orm import aliased, Query
 
+from pycroft.helpers import utc
 from pycroft.helpers.i18n import deferred_gettext
-from pycroft.helpers.interval import UnboundedInterval, IntervalSet, Interval
+from pycroft.helpers.interval import UnboundedInterval, IntervalSet, Interval, closedopen
 from pycroft.helpers.utc import DateTimeTz
 from pycroft.lib.logging import log_user_event, log_event
 from pycroft.model import session
@@ -200,3 +204,25 @@ def user_memberships_query(user_id: int, active_groups_only: bool = False) -> Qu
             .group_by(Membership.id)
     )
     return memberships
+
+
+def change_membership_active_during(
+        membership_id: int,
+        begins_at: datetime,
+        ends_at: Optional[datetime],
+        processor: User
+    ):
+    """
+    modify the active_during field of a user
+    """
+
+    membership: Membership = Membership.get(membership_id)
+    membership.active_during = closedopen(
+        utc.with_min_time(begins_at),
+        ends_at
+    )
+
+    message = deferred_gettext("Edited the membership of group '{group}'. During: {during}")\
+        .format(group=membership.group.name, during=membership.active_during)\
+        .to_json()
+    log_user_event(message, processor, membership.user)
