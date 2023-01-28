@@ -30,7 +30,7 @@ swdd_vo = View(
 swdd_view_ddl.add_view(ModelBase.metadata, swdd_vo)
 
 
-class RentalObject(DeferredReflection, ModelBase):
+class RentalObject(ModelBase):
     __tablename__ = 'swdd_vo'
     __table_args__ = {'info': dict(is_view=True)}
 
@@ -60,7 +60,7 @@ swdd_vv = View(
 swdd_view_ddl.add_view(ModelBase.metadata, swdd_vv)
 
 
-class Tenancy(DeferredReflection, ModelBase):
+class Tenancy(ModelBase):
     __tablename__ = 'swdd_vv'
     __table_args__ = {'info': dict(is_view=True)}
 
