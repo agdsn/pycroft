@@ -11,14 +11,14 @@
 """
 import re
 
-from sqlalchemy import Column, Table
-from sqlalchemy.orm import DeclarativeMeta, as_declarative, declared_attr, Query
+from sqlalchemy import Column
+from sqlalchemy.orm import declared_attr, Query, DeclarativeBase
 from sqlalchemy.types import Integer
 
 from pycroft.model.session import session
 
 
-class _ModelMeta(DeclarativeMeta):
+class _ModelMeta(type(DeclarativeBase)):
     """Metaclass for all mapped Database objects."""
     @property
     def q(cls):
@@ -29,14 +29,18 @@ class _ModelMeta(DeclarativeMeta):
         """
         return session.query(cls)
 
+
+class ModelBase(DeclarativeBase, metaclass=_ModelMeta):
+    """Base class for all database models."""
+
+    @classmethod
     def get(cls, *a, **kw):
         """This is a shortcut for `session.get(cls, –)`"""
         return session.get(cls, *a, **kw)
 
-
-@as_declarative(metaclass=_ModelMeta)
-class ModelBase:
-    """Base class for all database models."""
+    def __init__(self, **kwargs):
+        # workaround, see https://github.com/sqlalchemy/sqlalchemy/issues/9171
+        self.registry.constructor(self, **kwargs)
 
     @declared_attr
     def __tablename__(cls) -> str:

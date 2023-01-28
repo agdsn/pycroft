@@ -54,8 +54,9 @@ class IllegalEmailError(PycroftModelException, ValueError):
     pass
 
 
-class BaseUser:
-    id = Column(Integer, primary_key=True)
+class BaseUser(IntegerIdModel):
+    __abstract__ = True
+
     login = Column(String(40), nullable=False, unique=True)
     name = Column(String(255), nullable=False)
     registered_at = Column(DateTimeTz, nullable=False)
@@ -108,6 +109,12 @@ class BaseUser:
 
     login_character_limit = 22
 
+    def __init__(self, *args, **kwargs):
+        password = kwargs.pop("password", None)
+        super().__init__(**kwargs)
+        if password is not None:
+            self.password = password
+
     @validates('login')
     def validate_login(self, _, value):
         if not self.login_regex.match(value):
@@ -149,7 +156,7 @@ class BaseUser:
         """
         return verify_password(plaintext_password, self.passwd_hash)
 
-    @hybrid_property
+    @property
     def password(self):
         """Store a hash of a given plaintext passwd for the user.
 
@@ -161,7 +168,7 @@ class BaseUser:
         self.passwd_hash = hash_password(value)
 
 
-class User(ModelBase, BaseUser, UserMixin):
+class User(BaseUser, UserMixin):
     wifi_passwd_hash = deferred(Column(String))
 
     # one to one from User to Account
@@ -181,11 +188,9 @@ class User(ModelBase, BaseUser, UserMixin):
     password_reset_token = Column(String, nullable=True)
 
     def __init__(self, **kwargs: typing.Any) -> None:
-        password = kwargs.pop('password', None)
+        # TODO this should never have worked because it popped `password` twice
         wifi_password = kwargs.pop('password', None)
-        super().__init__(**kwargs)
-        if password is not None:
-            self.password = password
+        super().__init__(self, **kwargs)
         if wifi_password is not None:
             self.wifi_password = wifi_password
 
@@ -574,7 +579,7 @@ class RoomHistoryEntry(IntegerIdModel):
     )
 
 
-class PreMember(ModelBase, BaseUser):
+class PreMember(BaseUser):
     login = Column(String(40), nullable=False, unique=False)
     move_in_date = Column(Date, nullable=True)
     previous_dorm = Column(String, nullable=True)
