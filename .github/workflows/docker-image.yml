@@ -105,6 +105,8 @@ jobs:
         run: sudo chmod -R a+rw .
       - name: Build
         run: docker-compose -f docker-compose.test.yml build
+      - name: Run test-app entrypoints
+        run: docker-compose -f docker-compose.test.yml run --rm test-app /bin/true
       - name: Start
         # since test-apps entrypoint is `/bin/true`, this is blocking as long as
         # hooks are running (e.g. pip and npm setup).
