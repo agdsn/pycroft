@@ -49,7 +49,7 @@ disallow_untyped_calls = true
 disallow_untyped_decorators = true
 disallow_untyped_globals = true
 
-[tool.pytest]
+[tool.pytest.ini_options]
 addopts = "--tb=short --no-header"
 markers = [
     "slow: slow test (e.g. testing a timeout)",
