@@ -2,16 +2,16 @@
 
 set -euo pipefail
 
+PIP="/opt/pycroft/venv/bin/pip"
+PY="/opt/pycroft/venv/bin/python"
+
 if [[ ! -f /opt/pycroft/venv/bin/activate ]]; then
     echo "Creating virtual environment"
     python3 -m venv /opt/pycroft/venv
+    /opt/pycroft/venv/bin/python -m ensurepip
 fi;
 
-/opt/pycroft/venv/bin/python -m ensurepip
-
-PIP="/opt/pycroft/venv/bin/pip"
-
-if [[ -n $($PIP freeze) ]]; then
+if $PY -c 'import importlib.util as u; exit(0 if u.find_spec("pycroft") is not None else 1)'; then
     echo "Pip packages present, nothing to do"
     exit
 fi;
