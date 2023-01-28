@@ -38,10 +38,9 @@ class Host(IntegerIdModel):
     )
     # We don't want to `ONDELETE CASCADE` because deleting a room
     # should not delete a host being there
-    room_id = Column(Integer, ForeignKey(Room.id, ondelete="SET NULL"),
-                     index=True)
-    interfaces: list[Interface]  # added by backref
-    ips: list[IP]  # added by backref
+    room_id = Column(Integer, ForeignKey(Room.id, ondelete="SET NULL"), index=True)
+    # interfaces: Mapped[list[Interface]]  # added by backref
+    # ips: Mapped[list[IP]]  # added by backref
 
 
 class Switch(ModelBase):
@@ -102,7 +101,7 @@ class Interface(IntegerIdModel):
     host = relationship(Host,
                         backref=backref("interfaces",
                                         cascade="all, delete-orphan", cascade_backrefs=False))
-    ips: list[IP]  # added by backref
+    # ips: list[IP]  # added by backref
 
 
 # See the `SwitchPort.default_vlans` relationship

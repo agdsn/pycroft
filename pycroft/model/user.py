@@ -24,8 +24,15 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import ExcludeConstraint
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
-from sqlalchemy.orm import backref, object_session, relationship, validates, \
-    declared_attr, deferred
+from sqlalchemy.orm import (
+    backref,
+    object_session,
+    relationship,
+    validates,
+    declared_attr,
+    deferred,
+    Mapped,
+)
 from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy.orm.collections import attribute_mapped_collection
 from sqlalchemy.orm.exc import NoResultFound
@@ -175,8 +182,12 @@ class User(BaseUser, UserMixin):
     account_id = Column(Integer, ForeignKey("account.id"), nullable=False, index=True)
     account = relationship("Account", backref=backref("user", uselist=False, viewonly=True))
 
-    unix_account_id = Column(Integer, ForeignKey('unix_account.id'), nullable=True, unique=True)
-    unix_account: UnixAccount = relationship('UnixAccount')  # backref not really needed.
+    unix_account_id = Column(
+        Integer, ForeignKey("unix_account.id"), nullable=True, unique=True
+    )
+    unix_account: Mapped[UnixAccount] = relationship(
+        "UnixAccount"
+    )  # backref not really needed.
 
     address_id = Column(Integer, ForeignKey(Address.id), index=True, nullable=False)
     address = relationship(Address, backref=backref("inhabitants", viewonly=True))
@@ -514,7 +525,8 @@ class PropertyGroup(Group):
         "properties", "granted",
         creator=lambda k, v: Property(name=k, granted=v)
     )
-    properties: dict[str, Property]
+    # TODO figure out how this works with custom collection classes
+    # properties: Mapped[dict[str, Property]]
 
 
 class Property(IntegerIdModel):
