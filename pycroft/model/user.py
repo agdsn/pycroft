@@ -34,7 +34,7 @@ from sqlalchemy.orm import (
     Mapped,
 )
 from sqlalchemy.orm.attributes import flag_modified
-from sqlalchemy.orm.collections import attribute_mapped_collection
+from sqlalchemy.orm.collections import attribute_keyed_dict
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.util import has_identity
 
@@ -542,7 +542,7 @@ class Property(IntegerIdModel):
     property_group = relationship(
         PropertyGroup,
         backref=backref("properties", cascade="all, delete-orphan",
-                        collection_class=attribute_mapped_collection("name"))
+                        collection_class=attribute_keyed_dict("name"))
     )
 
 
