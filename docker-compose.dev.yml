@@ -75,6 +75,8 @@ services:
       file: docker-compose.base.yml
       service: dev
     command: "dummy-worker worker --loglevel=debug"
+    healthcheck:
+      test: "/opt/pycroft/venv/bin/celery -A helpers.dummy_celery_worker inspect ping"
     environment:
       - TEST_HADES_BROKER_URI=amqp://celery:celery@mq:5672/
       - TEST_HADES_RESULT_BACKEND_URI=rpc://celery:celery@mq:5672/
