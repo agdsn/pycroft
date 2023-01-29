@@ -14,13 +14,27 @@ from __future__ import annotations
 import operator
 import re
 import typing
+import typing as t
 from datetime import timedelta, date, datetime
 
 from flask_login import UserMixin
 from sqlalchemy import (
-    Boolean, Column, ForeignKey, Integer,
-    String, and_, exists, join, null, select, Sequence,
-    Date, func, UniqueConstraint, Index, text, event)
+    Column,
+    ForeignKey,
+    Integer,
+    String,
+    and_,
+    exists,
+    join,
+    null,
+    select,
+    Sequence,
+    func,
+    UniqueConstraint,
+    Index,
+    text,
+    event,
+)
 from sqlalchemy.dialects.postgresql import ExcludeConstraint
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
@@ -32,6 +46,7 @@ from sqlalchemy.orm import (
     declared_attr,
     deferred,
     Mapped,
+    mapped_column,
 )
 from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy.orm.collections import attribute_keyed_dict
@@ -49,6 +64,18 @@ from pycroft.model.base import ModelBase, IntegerIdModel
 from pycroft.model.exc import PycroftModelException
 from pycroft.model.facilities import Room
 from pycroft.model.types import DateTimeTz, TsTzRange
+from .type_aliases import str255, str40
+
+if t.TYPE_CHECKING:
+    # Pycharm likes it when we import these things instead of having implicitly stringified
+    # annotations.
+    # FKeys
+    from .finance import Account
+    from .property import CurrentProperty
+
+    # Backrefs
+    from .logging import UserLogEntry
+
 
 manager = ddl.DDLManager()
 
@@ -64,27 +91,36 @@ class IllegalEmailError(PycroftModelException, ValueError):
 class BaseUser(IntegerIdModel):
     __abstract__ = True
 
-    login = Column(String(40), nullable=False, unique=True)
-    name = Column(String(255), nullable=False)
-    registered_at = Column(DateTimeTz, nullable=False)
+    login: Mapped[str40] = mapped_column(unique=True)
+    name: Mapped[str255]
+    registered_at: Mapped[utc.DateTimeTz] = mapped_column(DateTimeTz)
+
     @declared_attr
     def passwd_hash(self):
+        # TODO do we need `declared_attr` for this?
         return deferred(Column(String))
-    email = Column(String(255), nullable=True)
-    email_confirmed = Column(Boolean, server_default="False", nullable=False)
-    email_confirmation_key = Column(String, nullable=True)
-    birthdate = Column(Date, nullable=True)
+
+    email: Mapped[str255 | None]
+    email_confirmed: Mapped[bool] = mapped_column(server_default="False")
+    email_confirmation_key: Mapped[str | None]
+    birthdate: Mapped[date | None]
 
     # ForeignKey to Tenancy.person_id / swdd_vv.person_id, but cannot reference view
-    swdd_person_id = Column(Integer, nullable=True)
+    swdd_person_id: Mapped[int | None]
 
     # many to one from User to Room
+    # TODO remove `declared_attr`
     @declared_attr
     def room_id(self):
-        return Column(Integer, ForeignKey("room.id", ondelete="SET NULL"),
-                      nullable=True, index=True)
+        return Column(
+            Integer,
+            ForeignKey("room.id", ondelete="SET NULL"),
+            nullable=True,
+            index=True,
+        )
 
-    login_regex = re.compile(r"""
+    login_regex = re.compile(
+        r"""
             ^
             # Must begin with a lowercase character
             [a-z]
@@ -165,9 +201,7 @@ class BaseUser(IntegerIdModel):
 
     @property
     def password(self):
-        """Store a hash of a given plaintext passwd for the user.
-
-        """
+        """Store a hash of a given plaintext passwd for the user."""
         raise RuntimeError("Password can not be read, only set")
 
     @password.setter
@@ -176,31 +210,37 @@ class BaseUser(IntegerIdModel):
 
 
 class User(BaseUser, UserMixin):
-    wifi_passwd_hash = deferred(Column(String))
+    wifi_passwd_hash: Mapped[str | None] = mapped_column(deferred=True)
 
     # one to one from User to Account
-    account_id = Column(Integer, ForeignKey("account.id"), nullable=False, index=True)
-    account = relationship("Account", backref=backref("user", uselist=False, viewonly=True))
+    account_id: Mapped[int] = mapped_column(ForeignKey("account.id"), index=True)
+    account: Mapped[list[Account]] = relationship(
+        "Account", backref=backref("user", uselist=False, viewonly=True)
+    )
 
-    unix_account_id = Column(
-        Integer, ForeignKey("unix_account.id"), nullable=True, unique=True
+    unix_account_id: Mapped[int | None] = mapped_column(
+        ForeignKey("unix_account.id"), unique=True
     )
     unix_account: Mapped[UnixAccount] = relationship(
         "UnixAccount"
     )  # backref not really needed.
 
-    address_id = Column(Integer, ForeignKey(Address.id), index=True, nullable=False)
-    address = relationship(Address, backref=backref("inhabitants", viewonly=True))
+    address_id: Mapped[int] = mapped_column(ForeignKey(Address.id), index=True)
+    address: Mapped[Address] = relationship(
+        Address, backref=backref("inhabitants", viewonly=True)
+    )
 
-    room = relationship("Room", backref=backref("users", viewonly=True), sync_backref=False)
+    room: Mapped[Room | None] = relationship(
+        "Room", backref=backref("users", viewonly=True), sync_backref=False
+    )
 
-    email_forwarded = Column(Boolean, server_default='True', nullable=False)
+    email_forwarded: Mapped[bool] = mapped_column(server_default="True")
 
-    password_reset_token = Column(String, nullable=True)
+    password_reset_token: Mapped[str | None]
 
     def __init__(self, **kwargs: typing.Any) -> None:
         # TODO this should never have worked because it popped `password` twice
-        wifi_password = kwargs.pop('password', None)
+        wifi_password = kwargs.pop("password", None)
         super().__init__(self, **kwargs)
         if wifi_password is not None:
             self.wifi_password = wifi_password
@@ -246,27 +286,28 @@ class User(BaseUser, UserMixin):
     def traffic_for_days(self, days):
         from pycroft.model.traffic import TrafficVolume
 
-        return select(func.sum(TrafficVolume.amount).label('amount')) \
-            .where(
-            TrafficVolume.timestamp >= (session.utcnow() - timedelta(days-1)).date()
-            .where(TrafficVolume.user_id == self.id))
-
+        return select(func.sum(TrafficVolume.amount).label("amount")).where(
+            TrafficVolume.timestamp
+            >= (session.utcnow() - timedelta(days - 1))
+            .date()
+            .where(TrafficVolume.user_id == self.id)
+        )
     #: This is a relationship to the `current_property` view filtering out
     #: the entries with `denied=True`.
-    current_properties = relationship(
-        'CurrentProperty',
-        primaryjoin='and_(User.id == foreign(CurrentProperty.user_id),'
-                    '~CurrentProperty.denied)',
-        order_by='CurrentProperty.property_name',
-        viewonly=True
+    current_properties: Mapped[list[CurrentProperty]] = relationship(
+        "CurrentProperty",
+        primaryjoin="and_(User.id == foreign(CurrentProperty.user_id),"
+        "~CurrentProperty.denied)",
+        order_by="CurrentProperty.property_name",
+        viewonly=True,
     )
     #: This is a relationship to the `current_property` view ignoring the
     #: `denied` attribute.
-    current_properties_maybe_denied = relationship(
-        'CurrentProperty',
-        primaryjoin='User.id == foreign(CurrentProperty.user_id)',
-        order_by='CurrentProperty.property_name',
-        viewonly=True
+    current_properties_maybe_denied: Mapped[list[CurrentProperty]] = relationship(
+        "CurrentProperty",
+        primaryjoin="User.id == foreign(CurrentProperty.user_id)",
+        order_by="CurrentProperty.property_name",
+        viewonly=True,
     )
 
     @property
@@ -443,13 +484,15 @@ manager.add_trigger(User.__table__, ddl.Trigger(
 
 
 class Group(IntegerIdModel):
-    name = Column(String(255), nullable=False)
-    discriminator = Column('type', String(17), nullable=False)
-    __mapper_args__ = {'polymorphic_on': discriminator}
+    name: Mapped[str255]
+    discriminator: Mapped[str] = mapped_column("type", String(17))
+    __mapper_args__ = {"polymorphic_on": discriminator}
 
-    users = relationship(User,
-                         secondary=lambda: Membership.__table__,
-                         viewonly=True)
+    users: Mapped[list[User]] = relationship(
+        User,
+        secondary=lambda: Membership.__table__,
+        viewonly=True,
+    )
 
     @hybrid_method
     def active_users(self, when=None):
@@ -476,7 +519,9 @@ class Group(IntegerIdModel):
 
 
 class Membership(IntegerIdModel):
-    active_during: Interval[utc.DateTimeTz] = Column(TsTzRange, nullable=False)
+    active_during: Mapped[Interval[utc.DateTimeTz]] = mapped_column(
+        TsTzRange, nullable=False
+    )
 
     def disable(self, at=None):
         if at is None:
@@ -486,19 +531,29 @@ class Membership(IntegerIdModel):
         flag_modified(self, 'active_during')
 
     # many to one from Membership to Group
-    group_id = Column(Integer, ForeignKey(Group.id, ondelete="CASCADE"),
-                      nullable=False, index=True)
-    group = relationship(Group, backref=backref("memberships",
-                                                cascade="all, delete-orphan",
-                                                order_by='Membership.id',
-                                                cascade_backrefs=False))
+    group_id: Mapped[int] = mapped_column(
+        ForeignKey(Group.id, ondelete="CASCADE"), index=True
+    )
+    group: Mapped[Group] = relationship(
+        Group,
+        backref=backref(
+            "memberships",
+            cascade="all, delete-orphan",
+            order_by="Membership.id",
+            cascade_backrefs=False,
+        ),
+    )
 
     # many to one from Membership to User
-    user_id = Column(Integer, ForeignKey(User.id, ondelete="CASCADE"),
-                     nullable=False, index=True)
-    user = relationship(User, backref=backref("memberships",
-                                              cascade="all, delete-orphan",
-                                              cascade_backrefs=False))
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey(User.id, ondelete="CASCADE"), index=True
+    )
+    user: Mapped[User] = relationship(
+        User,
+        backref=backref(
+            "memberships", cascade="all, delete-orphan", cascade_backrefs=False
+        ),
+    )
 
     __table_args__ = (
         Index('ix_membership_active_during', 'active_during', postgresql_using='gist'),
@@ -516,11 +571,11 @@ def create_btree_gist(target, connection, **kw):
 
 
 class PropertyGroup(Group):
-    __mapper_args__ = {'polymorphic_identity': 'property_group'}
-    id = Column(Integer, ForeignKey(Group.id), primary_key=True,
-                nullable=False)
-    permission_level = Column(Integer, nullable=False, default=0)
+    __mapper_args__ = {"polymorphic_identity": "property_group"}
+    id: Mapped[int] = mapped_column(ForeignKey(Group.id), primary_key=True)
+    permission_level: Mapped[int] = mapped_column(default=0)
 
+    # TODO type
     property_grants = association_proxy(
         "properties", "granted",
         creator=lambda k, v: Property(name=k, granted=v)
@@ -531,15 +586,16 @@ class PropertyGroup(Group):
 
 class Property(IntegerIdModel):
     # TODO add unique key
-    name = Column(String(255), nullable=False)
-    granted = Column(Boolean, nullable=False)
+    name: Mapped[str255]
+    granted: Mapped[bool]
 
     # many to one from Property to PropertyGroup
     # nullable=True
-    property_group_id = Column(Integer, ForeignKey(PropertyGroup.id),
-                               nullable=False, index=True)
-    #TODO prüfen, ob cascade Properties löscht, wenn zugehörige PGroup deleted
-    property_group = relationship(
+    property_group_id: Mapped[int] = mapped_column(
+        ForeignKey(PropertyGroup.id), index=True
+    )
+    # TODO prüfen, ob cascade Properties löscht, wenn zugehörige PGroup deleted
+    property_group: Mapped[PropertyGroup] = relationship(
         PropertyGroup,
         backref=backref("properties", cascade="all, delete-orphan",
                         collection_class=attribute_keyed_dict("name"))
@@ -551,15 +607,16 @@ unix_account_uid_seq = Sequence('unix_account_uid_seq', start=1000,
 
 
 class UnixAccount(IntegerIdModel):
-    uid = Column(Integer, nullable=False, unique=True,
-                 server_default=unix_account_uid_seq.next_value())
-    gid = Column(Integer, nullable=False, default=100)
-    login_shell = Column(String, nullable=False, default="/bin/bash")
-    home_directory = Column(String, nullable=False, unique=True)
+    uid: Mapped[int] = mapped_column(
+        unique=True, server_default=unix_account_uid_seq.next_value()
+    )
+    gid: Mapped[int] = mapped_column(default=100)
+    login_shell: Mapped[str] = mapped_column(default="/bin/bash")
+    home_directory: Mapped[str] = mapped_column(unique=True)
 
 
 class RoomHistoryEntry(IntegerIdModel):
-    active_during: Interval = Column(TsTzRange, nullable=False)
+    active_during: Mapped[Interval[utc.DateTimeTz]] = mapped_column(TsTzRange)
 
     def disable(self, at=None):
         if at is None:
@@ -568,17 +625,25 @@ class RoomHistoryEntry(IntegerIdModel):
         self.active_during = self.active_during - starting_from(at)
         flag_modified(self, 'active_during')
 
-    room_id = Column(Integer, ForeignKey("room.id", ondelete="CASCADE"),
-                     nullable=False, index=True)
-    room = relationship(Room, backref=backref(name="room_history_entries",
-                                              order_by='RoomHistoryEntry.id',
-                                              viewonly=True))
+    room_id: Mapped[int] = mapped_column(
+        ForeignKey("room.id", ondelete="CASCADE"), index=True
+    )
+    room: Mapped[room] = relationship(
+        Room,
+        backref=backref(
+            name="room_history_entries", order_by="RoomHistoryEntry.id", viewonly=True
+        ),
+    )
 
-    user_id = Column(Integer, ForeignKey(User.id, ondelete="CASCADE"),
-                     nullable=False, index=True)
-    user = relationship(User, backref=backref("room_history_entries",
-                                              order_by='RoomHistoryEntry.id',
-                                              viewonly=True))
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey(User.id, ondelete="CASCADE"), index=True
+    )
+    user: Mapped[User] = relationship(
+        User,
+        backref=backref(
+            "room_history_entries", order_by="RoomHistoryEntry.id", viewonly=True
+        ),
+    )
 
     __table_args__ = (
         Index('ix_room_history_entry_active_during', 'active_during', postgresql_using='gist'),
@@ -592,13 +657,13 @@ class RoomHistoryEntry(IntegerIdModel):
 
 
 class PreMember(BaseUser):
-    login = Column(String(40), nullable=False, unique=False)
-    move_in_date = Column(Date, nullable=True)
-    previous_dorm = Column(String, nullable=True)
-    birthdate = Column(Date, nullable=False)
-    passwd_hash = Column(String, nullable=False)
+    login: Mapped[str40] = mapped_column(unique=False)
+    move_in_date: Mapped[date | None]
+    previous_dorm: Mapped[str | None]
+    birthdate: Mapped[date]
+    passwd_hash: Mapped[str]
 
-    room = relationship("Room")
+    room: Mapped[Room] = relationship("Room")
 
     def __init__(self, **kwargs: typing.Any) -> None:
         password = kwargs.pop('password', None)

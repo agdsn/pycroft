@@ -11,11 +11,11 @@
 """
 import re
 
-from sqlalchemy import Column
-from sqlalchemy.orm import declared_attr, Query, DeclarativeBase
-from sqlalchemy.types import Integer
+from sqlalchemy import String
+from sqlalchemy.orm import declared_attr, Query, DeclarativeBase, Mapped, mapped_column
 
 from pycroft.model.session import session
+from pycroft.model.type_aliases import str50, str255, str40
 
 
 class _ModelMeta(type(DeclarativeBase)):
@@ -32,6 +32,14 @@ class _ModelMeta(type(DeclarativeBase)):
 
 class ModelBase(DeclarativeBase, metaclass=_ModelMeta):
     """Base class for all database models."""
+
+    type_annotation_map = {
+        str40: String(40),
+        str50: String(50),
+        str255: String(255),
+        # does not work yet: see https://github.com/sqlalchemy/sqlalchemy/issues/9175
+        # utc.DateTimeTz: pycroft_sqla_types.DateTimeTz,
+    }
 
     @classmethod
     def get(cls, *a, **kw):
@@ -97,4 +105,4 @@ class IntegerIdModel(ModelBase):
 
     __abstract__ = True
 
-    id = Column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
