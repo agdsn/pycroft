@@ -18,7 +18,7 @@ from io import StringIO
 from itertools import chain, islice, tee, zip_longest
 from typing import Callable, TypeVar, NamedTuple
 
-from sqlalchemy import func, between, cast
+from sqlalchemy import func, between, cast, CTE
 from sqlalchemy import or_, and_, literal, select, exists, not_, \
     text, future
 from sqlalchemy.orm import aliased, contains_eager, joinedload, Session, Query
@@ -215,7 +215,7 @@ membership_fee_description = deferred_gettext("Mitgliedsbeitrag {fee_name}")
 #  See https://docs.sqlalchemy.org/en/14/orm/extensions/mypy.html#mypy-pep-484-support-for-orm-mappings
 # See also #562
 @typing.no_type_check
-def users_eligible_for_fee_query(membership_fee: MembershipFee) -> Select:
+def users_eligible_for_fee_query(membership_fee: MembershipFee) -> CTE:
     split_user_account = Split.__table__.alias()
     split_fee_account = Split.__table__.alias()
 
