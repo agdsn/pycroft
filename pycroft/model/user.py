@@ -19,9 +19,7 @@ from datetime import timedelta, date, datetime
 
 from flask_login import UserMixin
 from sqlalchemy import (
-    Column,
     ForeignKey,
-    Integer,
     String,
     and_,
     exists,
@@ -43,8 +41,6 @@ from sqlalchemy.orm import (
     object_session,
     relationship,
     validates,
-    declared_attr,
-    deferred,
     Mapped,
     mapped_column,
 )
@@ -88,17 +84,18 @@ class IllegalEmailError(PycroftModelException, ValueError):
     pass
 
 
+str_deferred = t.Annotated[str, mapped_column(deferred=True)]
+room_fk = t.Annotated[
+    int,
+    mapped_column(ForeignKey("room.id", ondelete="SET NULL"), index=True)
+]
 class BaseUser(IntegerIdModel):
     __abstract__ = True
 
     login: Mapped[str40] = mapped_column(unique=True)
     name: Mapped[str255]
     registered_at: Mapped[utc.DateTimeTz] = mapped_column(DateTimeTz)
-
-    @declared_attr
-    def passwd_hash(self):
-        # TODO do we need `declared_attr` for this?
-        return deferred(Column(String))
+    passwd_hash: Mapped[str_deferred | None]
 
     email: Mapped[str255 | None]
     email_confirmed: Mapped[bool] = mapped_column(server_default="False")
@@ -109,15 +106,7 @@ class BaseUser(IntegerIdModel):
     swdd_person_id: Mapped[int | None]
 
     # many to one from User to Room
-    # TODO remove `declared_attr`
-    @declared_attr
-    def room_id(self):
-        return Column(
-            Integer,
-            ForeignKey("room.id", ondelete="SET NULL"),
-            nullable=True,
-            index=True,
-        )
+    room_id: Mapped[room_fk | None]
 
     login_regex = re.compile(
         r"""
