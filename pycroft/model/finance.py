@@ -5,6 +5,7 @@
 pycroft.model.finance
 ~~~~~~~~~~~~~~~~~~~~~
 """
+from __future__ import annotations
 import datetime
 import typing as t
 from math import fabs
@@ -25,6 +26,11 @@ from .base import IntegerIdModel
 from .exc import PycroftModelException
 
 manager = ddl.DDLManager()
+
+if t.TYPE_CHECKING:
+    # FKeys
+    # backrefs
+    from .facilities import Building
 
 
 class MembershipFee(IntegerIdModel):
@@ -111,6 +117,9 @@ class Account(IntegerIdModel):
     )
     legacy = Column(Boolean, default=False, nullable=False)
     splits = relationship('Split', viewonly=True, back_populates='account')
+    building: Mapped[Building | None] = relationship(
+        back_populates="fee_account", uselist=False
+    )
 
     @hybrid_property
     def balance(self):

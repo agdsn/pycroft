@@ -2,10 +2,17 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 
+from __future__ import annotations
+import typing as t
+
 from sqlalchemy import Column, String, UniqueConstraint
+from sqlalchemy.orm import Mapped, relationship
 
 from pycroft.model import ddl
 from pycroft.model.base import IntegerIdModel
+
+if t.TYPE_CHECKING:
+    from .facilities import Room
 
 DEFAULT_CITY = "Dresden"
 DEFAULT_COUNTRY = "Germany"
@@ -39,6 +46,10 @@ class Address(IntegerIdModel):
     __table_args__ = (
         UniqueConstraint('street', 'number', 'addition', 'zip_code', 'city', 'state', 'country'),
     )
+
+    # backrefs
+    rooms: Mapped[list[Room]] = relationship(back_populates="address")
+    # /backrefs
 
     def __str__(self):
         return f"{self:short}"
