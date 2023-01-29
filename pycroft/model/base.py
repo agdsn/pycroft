@@ -11,11 +11,13 @@
 """
 import re
 
+import ipaddr
 from sqlalchemy import String
 from sqlalchemy.orm import declared_attr, Query, DeclarativeBase, Mapped, mapped_column
 
 from pycroft.model.session import session
-from pycroft.model.type_aliases import str50, str255, str40
+from pycroft.model.type_aliases import str50, str255, str40, mac_address
+from pycroft.model.types import IPAddress, MACAddress
 
 
 class _ModelMeta(type(DeclarativeBase)):
@@ -39,6 +41,8 @@ class ModelBase(DeclarativeBase, metaclass=_ModelMeta):
         str255: String(255),
         # does not work yet: see https://github.com/sqlalchemy/sqlalchemy/issues/9175
         # utc.DateTimeTz: pycroft_sqla_types.DateTimeTz,
+        ipaddr._BaseIP: IPAddress,
+        mac_address: MACAddress,
     }
 
     @classmethod

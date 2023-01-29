@@ -70,6 +70,7 @@ if t.TYPE_CHECKING:
 
     # Backrefs
     from .logging import UserLogEntry
+    from .host import Host
 
 
 manager = ddl.DDLManager()
@@ -230,6 +231,9 @@ class User(BaseUser, UserMixin):
         back_populates="user",
         order_by="RoomHistoryEntry.id",
         viewonly=True
+    )
+    hosts: Mapped[list[Host]] = relationship(
+        back_populates="owner", cascade="all, delete-orphan"
     )
     # /backrefs
 

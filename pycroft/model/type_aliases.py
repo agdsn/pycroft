@@ -31,3 +31,5 @@ datetime_tz_onupdate = t.Annotated[
         onupdate=func.current_timestamp(),
     ),
 ]
+
+mac_address = t.Annotated[str, 10]
