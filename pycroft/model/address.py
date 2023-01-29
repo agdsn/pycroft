@@ -5,8 +5,8 @@
 from __future__ import annotations
 import typing as t
 
-from sqlalchemy import Column, String, UniqueConstraint
-from sqlalchemy.orm import Mapped, relationship
+from sqlalchemy import UniqueConstraint
+from sqlalchemy.orm import Mapped, relationship, mapped_column
 
 from pycroft.model import ddl
 from pycroft.model.base import IntegerIdModel
@@ -34,15 +34,15 @@ class Address(IntegerIdModel):
 
     Establishing these consistencies requires triggers.
     """
-    street = Column(String(), nullable=False)
-    number = Column(String(), nullable=False)
-    addition = Column(String(), nullable=False, server_default="")
+    street: Mapped[str]
+    number: Mapped[str]
+    addition: Mapped[str] = mapped_column(server_default="")
     # Sometimes, zipcodes can contain things like dashes, so rather take String().
     # we could probably impose some format by a check but that would be over engineering
-    zip_code = Column(String(), nullable=False)
-    city = Column(String(), nullable=False, server_default=DEFAULT_CITY)
-    state = Column(String(), nullable=False, server_default="")
-    country = Column(String(), nullable=False, server_default=DEFAULT_COUNTRY)
+    zip_code: Mapped[str]
+    city: Mapped[str] = mapped_column(server_default=DEFAULT_CITY)
+    state: Mapped[str] = mapped_column(server_default="")
+    country: Mapped[str] = mapped_column(server_default=DEFAULT_COUNTRY)
 
     __table_args__ = (
         UniqueConstraint('street', 'number', 'addition', 'zip_code', 'city', 'state', 'country'),
