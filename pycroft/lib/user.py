@@ -685,10 +685,11 @@ def edit_address(
 def traffic_history(
     user_id: int, start: DateTimeTz, end: DateTimeTz
 ) -> list[TrafficHistoryEntry]:
-    result: list[Row] = session.session.execute(
-        select('*').select_from(
-            func_traffic_history(user_id, start, end))).fetchall()
-    return [TrafficHistoryEntry(**dict(row)) for row in result]
+    result = session.session.execute(
+        select("*")
+        .select_from(func_traffic_history(user_id, start, end))
+    ).fetchall()
+    return [TrafficHistoryEntry(**row._asdict()) for row in result]
 
 
 def has_balance_of_at_least(user: User, amount: int) -> bool:
