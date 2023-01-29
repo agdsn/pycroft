@@ -37,7 +37,6 @@ from sqlalchemy.dialects.postgresql import ExcludeConstraint
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
 from sqlalchemy.orm import (
-    backref,
     object_session,
     relationship,
     validates,
@@ -203,9 +202,7 @@ class User(BaseUser, UserMixin):
 
     # one to one from User to Account
     account_id: Mapped[int] = mapped_column(ForeignKey("account.id"), index=True)
-    account: Mapped[list[Account]] = relationship(
-        "Account", backref=backref("user", uselist=False, viewonly=True)
-    )
+    account: Mapped[list[Account]] = relationship(back_populates="user")
 
     unix_account_id: Mapped[int | None] = mapped_column(
         ForeignKey("unix_account.id"), unique=True
@@ -215,17 +212,26 @@ class User(BaseUser, UserMixin):
     )  # backref not really needed.
 
     address_id: Mapped[int] = mapped_column(ForeignKey(Address.id), index=True)
-    address: Mapped[Address] = relationship(
-        Address, backref=backref("inhabitants", viewonly=True)
-    )
+    address: Mapped[Address] = relationship(back_populates="inhabitants")
 
-    room: Mapped[Room | None] = relationship(
-        "Room", backref=backref("users", viewonly=True), sync_backref=False
-    )
+    # room_id defined in `BaseUser`
+    room: Mapped[Room | None] = relationship(back_populates="users", sync_backref=False)
 
     email_forwarded: Mapped[bool] = mapped_column(server_default="True")
 
     password_reset_token: Mapped[str | None]
+
+    # backrefs
+    memberships: Mapped[list[Membership]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    room_history_entries: Mapped[list[RoomHistoryEntry]] = relationship(
+        back_populates="user",
+        order_by="RoomHistoryEntry.id",
+        viewonly=True
+    )
+    # /backrefs
 
     def __init__(self, **kwargs: typing.Any) -> None:
         # TODO this should never have worked because it popped `password` twice
@@ -483,6 +489,13 @@ class Group(IntegerIdModel):
         viewonly=True,
     )
 
+    # backrefs
+    memberships: Mapped[list[Membership]] = relationship(
+        cascade="all, delete-orphan",
+        order_by="Membership.id",
+    )
+    # /backrefs
+
     @hybrid_method
     def active_users(self, when=None):
         """
@@ -523,26 +536,13 @@ class Membership(IntegerIdModel):
     group_id: Mapped[int] = mapped_column(
         ForeignKey(Group.id, ondelete="CASCADE"), index=True
     )
-    group: Mapped[Group] = relationship(
-        Group,
-        backref=backref(
-            "memberships",
-            cascade="all, delete-orphan",
-            order_by="Membership.id",
-            cascade_backrefs=False,
-        ),
-    )
+    group: Mapped[Group] = relationship(back_populates="memberships")
 
     # many to one from Membership to User
     user_id: Mapped[int] = mapped_column(
         ForeignKey(User.id, ondelete="CASCADE"), index=True
     )
-    user: Mapped[User] = relationship(
-        User,
-        backref=backref(
-            "memberships", cascade="all, delete-orphan", cascade_backrefs=False
-        ),
-    )
+    user: Mapped[User] = relationship(back_populates="memberships")
 
     __table_args__ = (
         Index('ix_membership_active_during', 'active_during', postgresql_using='gist'),
@@ -569,8 +569,15 @@ class PropertyGroup(Group):
         "properties", "granted",
         creator=lambda k, v: Property(name=k, granted=v)
     )
+    # backrefs
     # TODO figure out how this works with custom collection classes
     # properties: Mapped[dict[str, Property]]
+    properties: Mapped[list[Property]] = relationship(
+        back_populates="property_group",
+        cascade="all, delete-orphan",
+        collection_class=attribute_keyed_dict("name"),
+    )
+    # /backrefs
 
 
 class Property(IntegerIdModel):
@@ -584,11 +591,7 @@ class Property(IntegerIdModel):
         ForeignKey(PropertyGroup.id), index=True
     )
     # TODO prüfen, ob cascade Properties löscht, wenn zugehörige PGroup deleted
-    property_group: Mapped[PropertyGroup] = relationship(
-        PropertyGroup,
-        backref=backref("properties", cascade="all, delete-orphan",
-                        collection_class=attribute_keyed_dict("name"))
-    )
+    property_group: Mapped[PropertyGroup] = relationship(back_populates="properties")
 
 
 unix_account_uid_seq = Sequence('unix_account_uid_seq', start=1000,
@@ -617,22 +620,12 @@ class RoomHistoryEntry(IntegerIdModel):
     room_id: Mapped[int] = mapped_column(
         ForeignKey("room.id", ondelete="CASCADE"), index=True
     )
-    room: Mapped[room] = relationship(
-        Room,
-        backref=backref(
-            name="room_history_entries", order_by="RoomHistoryEntry.id", viewonly=True
-        ),
-    )
+    room: Mapped[Room] = relationship(back_populates="room_history_entries")
 
     user_id: Mapped[int] = mapped_column(
         ForeignKey(User.id, ondelete="CASCADE"), index=True
     )
-    user: Mapped[User] = relationship(
-        User,
-        backref=backref(
-            "room_history_entries", order_by="RoomHistoryEntry.id", viewonly=True
-        ),
-    )
+    user: Mapped[User] = relationship(back_populates="room_history_entries")
 
     __table_args__ = (
         Index('ix_room_history_entry_active_during', 'active_during', postgresql_using='gist'),

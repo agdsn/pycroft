@@ -19,7 +19,7 @@ from .finance import Account
 
 if t.TYPE_CHECKING:
     # backrefs:
-    from .user import User
+    from .user import User, RoomHistoryEntry
     from .port import PatchPort
 
 
@@ -84,6 +84,15 @@ class Room(IntegerIdModel):
         primaryjoin='and_(User.room_id == Room.id, User.address_id == Room.address_id)',
         viewonly=True,
     )
+
+    # backrefs
+    users: Mapped[list[User]] = relationship(back_populates="room", viewonly=True)
+    room_history_entries: Mapped[list[RoomHistoryEntry]] = relationship(
+        back_populates="room",
+        order_by="RoomHistoryEntry.id",
+        viewonly=True
+    )
+    # /backrefs
 
     def __str__(self):
         return self.short_name

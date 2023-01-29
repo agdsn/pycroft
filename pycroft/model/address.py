@@ -13,6 +13,7 @@ from pycroft.model.base import IntegerIdModel
 
 if t.TYPE_CHECKING:
     from .facilities import Room
+    from .user import User
 
 DEFAULT_CITY = "Dresden"
 DEFAULT_COUNTRY = "Germany"
@@ -49,6 +50,7 @@ class Address(IntegerIdModel):
 
     # backrefs
     rooms: Mapped[list[Room]] = relationship(back_populates="address")
+    inhabitants: Mapped[list[User]] = relationship(back_populates="address")
     # /backrefs
 
     def __str__(self):

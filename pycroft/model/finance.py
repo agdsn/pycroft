@@ -31,6 +31,7 @@ if t.TYPE_CHECKING:
     # FKeys
     # backrefs
     from .facilities import Building
+    from .user import User
 
 
 class MembershipFee(IntegerIdModel):
@@ -117,6 +118,7 @@ class Account(IntegerIdModel):
     )
     legacy = Column(Boolean, default=False, nullable=False)
     splits = relationship('Split', viewonly=True, back_populates='account')
+    user: Mapped[User | None] = relationship(viewonly=True, back_populates="account")
     building: Mapped[Building | None] = relationship(
         back_populates="fee_account", uselist=False
     )
