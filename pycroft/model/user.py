@@ -71,6 +71,7 @@ if t.TYPE_CHECKING:
     # Backrefs
     from .logging import LogEntry, UserLogEntry, TaskLogEntry
     from .host import Host
+    from .swdd import Tenancy
 
 
 manager = ddl.DDLManager()
@@ -244,6 +245,11 @@ class User(BaseUser, UserMixin):
     )
     task_log_entries: Mapped[list[TaskLogEntry]] = relationship(
         back_populates="user", viewonly=True
+    )
+    tenancies: Mapped[list[Tenancy]] = relationship(
+        primaryjoin="foreign(Tenancy.person_id) == User.swdd_person_id",
+        back_populates="user",
+        viewonly=True,
     )
     # /backrefs
 
@@ -660,6 +666,14 @@ class PreMember(BaseUser):
     passwd_hash: Mapped[str]
 
     room: Mapped[Room] = relationship("Room")
+
+    # backrefs
+    tenancies: Mapped[list[Tenancy]] = relationship(
+        primaryjoin="foreign(Tenancy.person_id) == PreMember.swdd_person_id",
+        back_populates="pre_member",
+        viewonly=True,
+    )
+    # /backrefs
 
     def __init__(self, **kwargs: typing.Any) -> None:
         password = kwargs.pop('password', None)

@@ -22,6 +22,7 @@ if t.TYPE_CHECKING:
     from .user import User, RoomHistoryEntry
     from .port import PatchPort
     from .logging import RoomLogEntry
+    from .swdd import Tenancy
 
 
 class Site(IntegerIdModel):
@@ -100,6 +101,10 @@ class Room(IntegerIdModel):
         foreign_keys="PatchPort.room_id",
         back_populates="room",
         cascade="all, delete-orphan",
+    )
+    tenancies: Mapped[list[Tenancy]] = relationship(
+        back_populates="room",
+        viewonly=True,
     )
     # /backrefs
 
