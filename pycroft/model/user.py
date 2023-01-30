@@ -73,6 +73,7 @@ if t.TYPE_CHECKING:
     from .host import Host
     from .swdd import Tenancy
     from .task import UserTask
+    from .traffic import TrafficVolume
 
 
 manager = ddl.DDLManager()
@@ -258,6 +259,11 @@ class User(BaseUser, UserMixin):
         # to one join path over another, so we have to specify the foreign key explicitly.
         foreign_keys="UserTask.user_id",
         viewonly=True,
+    )
+    traffic_volumes: Mapped[list[TrafficVolume]] = relationship(
+        back_populates="user",
+        viewonly=True,
+        cascade="all, delete-orphan",
     )
     # /backrefs
 

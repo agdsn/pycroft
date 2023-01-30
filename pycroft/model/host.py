@@ -29,6 +29,7 @@ if t.TYPE_CHECKING:
     # backref imports
     from .net import VLAN
     from .port import PatchPort
+    from .traffic import TrafficVolume
 
 
 class Host(IntegerIdModel):
@@ -187,6 +188,12 @@ class IP(IntegerIdModel):
     )
     subnet: Mapped[Subnet] = relationship(Subnet, back_populates="ips", lazy="joined")
 
+    # backrefs
+    traffic_volumes: Mapped[list[TrafficVolume]] = relationship(
+        back_populates="ip",
+        cascade="all, delete-orphan",
+    )
+    # /backrefs
     # associations
     host: Mapped[Host] = relationship(
         secondary=Interface.__table__,

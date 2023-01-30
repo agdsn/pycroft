@@ -5,48 +5,59 @@
 pycroft.model.traffic
 ~~~~~~~~~~~~~~~~~~~~~
 """
+import enum
 
-from sqlalchemy import Column, ForeignKey, CheckConstraint, \
-    PrimaryKeyConstraint, func, or_, and_, true, literal_column, \
-    select, cast, TEXT
-from sqlalchemy.orm import relationship, backref, Query
+from sqlalchemy import (
+    ForeignKey,
+    CheckConstraint,
+    PrimaryKeyConstraint,
+    func,
+    or_,
+    and_,
+    true,
+    literal_column,
+    select,
+    cast,
+    TEXT,
+)
+from sqlalchemy.orm import relationship, Query, Mapped, mapped_column
 from sqlalchemy.sql.selectable import TableValuedAlias
-from sqlalchemy.types import BigInteger, Enum, Integer
+from sqlalchemy.types import BigInteger, Enum
 
 from pycroft.helpers import utc
 from pycroft.model.base import ModelBase
 from pycroft.model.ddl import DDLManager, Function, Trigger, View
-from pycroft.model.types import DateTimeTz
+from pycroft.model.type_aliases import datetime_tz
 from pycroft.model.user import User
 from pycroft.model.host import IP, Host, Interface
 
 ddl = DDLManager()
 
 
+class TrafficDirection(enum.Enum):
+    Ingress = "Ingress"
+    Egress = "Egress"
+
+
 class TrafficVolume(ModelBase):
     __table_args__ = (
         PrimaryKeyConstraint('ip_id', 'type', 'timestamp'),
     )
-    timestamp = Column(DateTimeTz, server_default=func.current_timestamp(), nullable=False)
-    amount = Column(BigInteger, CheckConstraint('amount >= 0'),
-                    nullable=False)
+    timestamp: Mapped[datetime_tz]
+    amount: Mapped[int] = mapped_column(BigInteger, CheckConstraint("amount >= 0"))
 
-    type = Column(Enum("Ingress", "Egress", name="traffic_direction"),
-                  nullable=False)
-    ip_id = Column(Integer, ForeignKey(IP.id, ondelete="CASCADE"),
-                   nullable=False, index=True)
-    ip = relationship(IP, backref=backref("traffic_volumes",
-                                          cascade="all, delete-orphan",
-                                          cascade_backrefs=False))
-    user_id = Column(Integer, ForeignKey(User.id, ondelete='CASCADE'),
-                     nullable=True, index=True)
-    user = relationship(User,
-                        backref=backref("traffic_volumes",
-                                        cascade="all, delete-orphan",
-                                        cascade_backrefs=False),
-                        uselist=False)
-    packets = Column(Integer, CheckConstraint('packets >= 0'),
-                     nullable=False)
+    type: Mapped[TrafficDirection] = mapped_column(
+        Enum(TrafficDirection, name="traffic_direction")
+    )
+    ip_id: Mapped[int] = mapped_column(
+        ForeignKey(IP.id, ondelete="CASCADE"), index=True
+    )
+    ip: Mapped[IP] = relationship(back_populates="traffic_volumes")
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey(User.id, ondelete="CASCADE"), index=True
+    )
+    user: Mapped[User] = relationship(back_populates="traffic_volumes")
+    packets: Mapped[int] = mapped_column(CheckConstraint("packets >= 0"))
 
 
 TrafficVolume.__table__.add_is_dependent_on(IP.__table__)
