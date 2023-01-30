@@ -15,7 +15,6 @@ from .address import *
 from .config import *
 from .facilities import *
 from .finance import *
-from .hades import *
 from .host import *
 from .logging import *
 from .net import *
@@ -26,3 +25,9 @@ from .task import *
 from .traffic import *
 from .user import *
 from .webstorage import *
+
+# hades is special: it calls `configure_mappers()` at import time.
+# Therefore, importing it should happen as late as possible.
+# Better would be not to do the query building at import time,
+# but rather on-demand.
+from .hades import *
