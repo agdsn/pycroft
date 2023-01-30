@@ -17,7 +17,7 @@ from sqlalchemy.orm import declared_attr, Query, DeclarativeBase, Mapped, mapped
 
 from pycroft.model.session import session
 from pycroft.model.type_aliases import str50, str255, str40, mac_address
-from pycroft.model.types import IPAddress, MACAddress
+from pycroft.model.types import IPAddress, MACAddress, IPNetwork
 
 
 class _ModelMeta(type(DeclarativeBase)):
@@ -42,6 +42,7 @@ class ModelBase(DeclarativeBase, metaclass=_ModelMeta):
         # does not work yet: see https://github.com/sqlalchemy/sqlalchemy/issues/9175
         # utc.DateTimeTz: pycroft_sqla_types.DateTimeTz,
         ipaddr._BaseIP: IPAddress,
+        ipaddr._BaseNet: IPNetwork,
         mac_address: MACAddress,
     }
 
