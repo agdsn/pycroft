@@ -8,10 +8,10 @@ from __future__ import annotations
 from datetime import timedelta, datetime
 from typing import Protocol, Sequence
 
-from sqlalchemy import func, nulls_last
+from sqlalchemy import func, nulls_last, and_, not_
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload, Session
-from sqlalchemy.sql.elements import and_, not_, ClauseElement
+from sqlalchemy.sql.elements import ClauseElement
 from sqlalchemy.sql.functions import current_timestamp
 
 from pycroft import Config
