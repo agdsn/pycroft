@@ -96,6 +96,11 @@ class Room(IntegerIdModel):
     log_entries: Mapped[list[RoomLogEntry]] = relationship(
         back_populates="room", viewonly=True, cascade="all, delete-orphan"
     )
+    patch_ports: Mapped[list[PatchPort]] = relationship(
+        foreign_keys="PatchPort.room_id",
+        back_populates="room",
+        cascade="all, delete-orphan",
+    )
     # /backrefs
 
     def __str__(self):

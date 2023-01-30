@@ -28,6 +28,7 @@ from pycroft.model.user import User
 if t.TYPE_CHECKING:
     # backref imports
     from .net import VLAN
+    from .port import PatchPort
 
 
 class Host(IntegerIdModel):
@@ -161,6 +162,12 @@ class SwitchPort(IntegerIdModel):
         secondary="switch_port_default_vlans",
         back_populates="switch_ports",
     )
+
+    # backrefs
+    patch_port: Mapped[PatchPort | None] = relationship(
+        back_populates="switch_port", uselist=False
+    )
+    # /backrefs
 
     def __str__(self):
         return f"{self.switch.host.name} {self.name}"
