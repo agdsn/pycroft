@@ -21,6 +21,7 @@ if t.TYPE_CHECKING:
     # backrefs:
     from .user import User, RoomHistoryEntry
     from .port import PatchPort
+    from .logging import RoomLogEntry
 
 
 class Site(IntegerIdModel):
@@ -91,6 +92,9 @@ class Room(IntegerIdModel):
         back_populates="room",
         order_by="RoomHistoryEntry.id",
         viewonly=True
+    )
+    log_entries: Mapped[list[RoomLogEntry]] = relationship(
+        back_populates="room", viewonly=True, cascade="all, delete-orphan"
     )
     # /backrefs
 

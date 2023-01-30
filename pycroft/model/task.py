@@ -2,21 +2,25 @@
 pycroft.model.task
 ~~~~~~~~~~~~~~~~~~
 """
+from __future__ import annotations
 import builtins
 import enum
 import operator
+import typing as t
 from collections.abc import Mapping
 
 from marshmallow import Schema
 from sqlalchemy import Column, Enum, Integer, ForeignKey, String
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm import relationship, backref, Mapped
 from typing import TypeVar, Generic
 
 from pycroft.model.base import IntegerIdModel
 from pycroft.model.types import DateTimeTz
 from .task_serialization import UserMoveOutSchema, UserMoveSchema, UserMoveInSchema, TaskParams
 
+if t.TYPE_CHECKING:
+    from .logging import TaskLogEntry
 
 class TaskType(enum.Enum):
     USER_MOVE_OUT = enum.auto()
@@ -60,6 +64,12 @@ class Task(IntegerIdModel, Generic[TSchema, TParams]):
     status = Column(Enum(TaskStatus), nullable=False, default=TaskStatus.OPEN)
     errors = Column(JSONB, nullable=True)
 
+    # backrefs
+    log_entries: Mapped[list[TaskLogEntry]] = relationship(
+        back_populates="task", viewonly=True
+    )
+    # /backrefs
+
     @property
     def schema(self) -> builtins.type[Schema]:
         if not task_type_to_schema[self.type]:
@@ -86,7 +96,7 @@ class Task(IntegerIdModel, Generic[TSchema, TParams]):
         self.parameters_json = data
 
     @property
-    def latest_log_entry(self) -> "TaskLogEntry | None":
+    def latest_log_entry(self) -> TaskLogEntry | None:
         if not (le := self.log_entries):
             return None
         return max(le, key=operator.attrgetter("created_at"))

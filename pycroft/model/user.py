@@ -69,7 +69,7 @@ if t.TYPE_CHECKING:
     from .property import CurrentProperty
 
     # Backrefs
-    from .logging import UserLogEntry
+    from .logging import LogEntry, UserLogEntry, TaskLogEntry
     from .host import Host
 
 
@@ -234,6 +234,16 @@ class User(BaseUser, UserMixin):
     )
     hosts: Mapped[list[Host]] = relationship(
         back_populates="owner", cascade="all, delete-orphan"
+    )
+    authored_log_entries: Mapped[list[LogEntry]] = relationship(
+        back_populates="author", viewonly=True
+    )
+    log_entries: Mapped[list[UserLogEntry]] = relationship(
+        back_populates="user", foreign_keys="UserLogEntry.user_id",
+        viewonly=True, cascade="all, delete-orphan"
+    )
+    task_log_entries: Mapped[list[TaskLogEntry]] = relationship(
+        back_populates="user", viewonly=True
     )
     # /backrefs
 
