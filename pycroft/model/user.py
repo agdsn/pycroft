@@ -72,6 +72,7 @@ if t.TYPE_CHECKING:
     from .logging import LogEntry, UserLogEntry, TaskLogEntry
     from .host import Host
     from .swdd import Tenancy
+    from .task import UserTask
 
 
 manager = ddl.DDLManager()
@@ -249,6 +250,13 @@ class User(BaseUser, UserMixin):
     tenancies: Mapped[list[Tenancy]] = relationship(
         primaryjoin="foreign(Tenancy.person_id) == User.swdd_person_id",
         back_populates="user",
+        viewonly=True,
+    )
+    tasks: Mapped[list[UserTask]] = relationship(
+        back_populates="user",
+        # unfortunately the `back_populates` is not used to give precedence
+        # to one join path over another, so we have to specify the foreign key explicitly.
+        foreign_keys="UserTask.user_id",
         viewonly=True,
     )
     # /backrefs
