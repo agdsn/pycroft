@@ -65,9 +65,9 @@ def get_overcrowded_rooms(building_id: int = None) -> dict[int, list[User]]:
             .options(joinedload(user.current_properties))
     )
 
-    rooms = defaultdict(list)
-    for user in query.all():
-        rooms[user.room.id].append(user)
+    rooms: dict[int, list[User]] = defaultdict(list)
+    for u in query.all():
+        rooms[u.room.id].append(u)
 
     return rooms
 
