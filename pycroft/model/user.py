@@ -604,9 +604,7 @@ class PropertyGroup(Group):
         creator=lambda k, v: Property(name=k, granted=v)
     )
     # backrefs
-    # TODO figure out how this works with custom collection classes
-    # properties: Mapped[dict[str, Property]]
-    properties: Mapped[list[Property]] = relationship(
+    properties: Mapped[dict[str, Property]] = relationship(
         back_populates="property_group",
         cascade="all, delete-orphan",
         collection_class=attribute_keyed_dict("name"),
