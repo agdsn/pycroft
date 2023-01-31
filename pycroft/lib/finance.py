@@ -909,7 +909,7 @@ def match_activities() -> tuple[
            .filter(BankAccountActivity.transaction_id.is_(None)))
 
     def _fetch_normal(uid: int) -> User | None:
-        return User.get(uid)
+        return session.session.get(User, uid)
 
     for activity in session.session.scalars(stmt).all():
         user = match_reference(activity.reference, fetch_normal=_fetch_normal)

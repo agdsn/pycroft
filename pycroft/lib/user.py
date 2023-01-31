@@ -183,7 +183,7 @@ def get_user_sheet(sheet_id: int) -> bytes | None:
 
     if sheet_id is None:
         return None
-    if (storage := WebStorage.get(sheet_id)) is None:
+    if (storage := session.session.get(WebStorage, sheet_id)) is None:
         return None
 
     return storage.data
