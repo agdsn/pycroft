@@ -10,6 +10,7 @@
     :copyright: (c) 2011 by AG DSN.
 """
 import re
+import typing as t
 
 import ipaddr
 from sqlalchemy import String
@@ -58,9 +59,14 @@ class ModelBase(DeclarativeBase, metaclass=_ModelMeta):
         """This is a shortcut for `session.get(cls, –)`"""
         return session.get(cls, *a, **kw)
 
-    def __init__(self, **kwargs):
-        # workaround, see https://github.com/sqlalchemy/sqlalchemy/issues/9171
-        self.registry.constructor(self, **kwargs)
+    # the below workaround should be invisible to `mypy` because otherwise
+    # this untyped constructor “overrides” the typed ones sqlalchemy so laboriously provides.
+    # in particular, any call like `Address()` constitutes a call to an untyped function,
+    # and hence violates [no-untyped-call].
+    if not t.TYPE_CHECKING:
+        def __init__(self, **kwargs):
+            # workaround, see https://github.com/sqlalchemy/sqlalchemy/issues/9171
+            self.registry.constructor(self, **kwargs)
 
     @declared_attr
     def __tablename__(cls) -> str:
