@@ -1,7 +1,7 @@
 import pytest
 
 from pycroft.model.traffic import TrafficVolume, pmacct_traffic_egress, \
-    pmacct_traffic_ingress
+    pmacct_traffic_ingress, TrafficDirection
 from tests.factories import UserFactory
 
 ip = '141.30.228.39'
@@ -39,7 +39,7 @@ class TestPMAcctView:
         session.execute(egress_insert(utcnow))
         assert TrafficVolume.q.count() == 1
         volume = TrafficVolume.q.one()
-        assert volume.type == 'Egress'
+        assert volume.type == TrafficDirection.Egress
         assert volume.amount == 1024
         assert volume.packets == 20
         assert volume.user == user
@@ -70,7 +70,7 @@ class TestPMAcctView:
         session.execute(ingress_insert(utcnow))
         assert TrafficVolume.q.count() == 1
         volume = TrafficVolume.q.one()
-        assert volume.type == 'Ingress'
+        assert volume.type == TrafficDirection.Ingress
         assert volume.amount == 1024
         assert volume.packets == 20
         assert volume.user == user
