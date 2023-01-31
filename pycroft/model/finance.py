@@ -12,7 +12,7 @@ import typing as t
 from datetime import timedelta, date
 from math import fabs
 
-from sqlalchemy import ForeignKey, event, func, select, Enum
+from sqlalchemy import ForeignKey, event, func, select, Enum, ColumnElement
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship, object_session, Mapped, mapped_column
 from sqlalchemy.schema import CheckConstraint, ForeignKeyConstraint, UniqueConstraint
@@ -117,7 +117,7 @@ class AccountType(enum.Enum):
 class Account(IntegerIdModel):
     name: Mapped[str127]
     # noinspection PyUnresolvedReferences
-    type: Mapped[AccountType] = mapped_column(
+    type: Mapped[str] = mapped_column(
         Enum(AccountType, name="account_type"),
     )
     legacy: Mapped[bool] = mapped_column(default=False)
@@ -135,11 +135,11 @@ class Account(IntegerIdModel):
     # /backrefs
 
     @hybrid_property
-    def balance(self):
+    def _balance(self) -> int:
         return sum(s.amount for s in self.splits)
 
-    @balance.expression
-    def balance(cls):
+    @_balance.expression
+    def balance(cls) -> ColumnElement[int]:
         return select(func.coalesce(func.sum(Split.amount), 0))\
             .where(Split.account_id == cls.id)\
             .label("balance")
