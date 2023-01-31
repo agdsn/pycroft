@@ -196,7 +196,7 @@ def reset_password(user: User, processor: User) -> str:
                               " greater or equal permission level.")
 
     plain_password = user_helper.generate_password(12)
-    user.password = plain_password  # type: ignore
+    user.password = plain_password
 
     message = deferred_gettext("Password was reset")
     log_user_event(author=processor,
@@ -235,7 +235,7 @@ def maybe_setup_wifi(user: User, processor: User) -> str | None:
 @with_transaction
 def change_password(user: User, password: str) -> None:
     # TODO: verify password complexity
-    user.password = password  # type: ignore
+    user.password = password
 
     message = deferred_gettext("Password was changed")
     log_user_event(author=user,
@@ -378,7 +378,7 @@ def move_in(
                 make_member_of(user, group, processor, closed(session.utcnow(), None))
 
     if room:
-        user.room = room  # type: ignore
+        user.room = room
         user.address = room.address
 
         if mac and user.birthdate:
@@ -946,8 +946,7 @@ def membership_ending_task(user: User) -> UserTask:
         )
         # Casting jsonb -> bool directly is only supported since PG v11
         .filter(
-            UserTask.parameters_json["end_membership"].cast(String).cast(Boolean)
-            == True
+            UserTask.parameters_json["end_membership"].cast(String()).cast(Boolean())
         )
         .order_by(UserTask.due.asc())
         .first(),
@@ -977,7 +976,7 @@ def membership_beginning_task(user: User) -> UserTask:
         UserTask.q.filter_by(
             user_id=user.id, status=TaskStatus.OPEN, type=TaskType.USER_MOVE_IN
         )
-        .filter(UserTask.parameters_json["begin_membership"].cast(Boolean) == True)
+        .filter(UserTask.parameters_json["begin_membership"].cast(Boolean()))
         .order_by(UserTask.due.asc())
         .first(),
     )
