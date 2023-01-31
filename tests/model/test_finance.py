@@ -4,10 +4,11 @@
 from functools import partial
 
 import pytest
+from psycopg2.errorcodes import INVALID_TEXT_REPRESENTATION
 from sqlalchemy import select, func, text
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, DataError
 
-from pycroft.model.finance import Transaction, IllegalTransactionError, Split
+from pycroft.model.finance import Transaction, IllegalTransactionError, Split, Account
 from tests.factories import AccountFactory, UserFactory
 from tests.factories.finance import BankAccountFactory, BankAccountActivityFactory
 
@@ -185,3 +186,13 @@ def test_wrong_split_account(
     with pytest.raises(IntegrityError):
         with session.begin_nested():
             session.add_all([t, s1, s2, a])
+
+
+def test_create_account_type(session):
+    with session.begin_nested():
+        session.add(Account(name="foo", type="USER_ASSET"))
+
+
+def test_create_account_bad_type(session):
+    with pytest.raises(DataError), session.begin_nested():
+        session.add(Account(name="foo", type="BadType"))
