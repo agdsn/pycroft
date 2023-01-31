@@ -34,21 +34,28 @@ def get_archivable_members(session: Session) -> Sequence[ArchivableMemberInfo]:
     """
     # see FunctionElement.over
     mem_ends_at = func.upper(Membership.active_during)
-    window_args: dict[str, ClauseElement | Sequence[ClauseElement | str] | None] = {
+    window_args = {
         'partition_by': User.id,
         'order_by': nulls_last(mem_ends_at),
     }
+    # mypy: ignore[no-untyped-call]
     last_mem = (
         select(
             User.id.label('user_id'),
-            func.last_value(Membership.id).over(**window_args, rows=(None, None)).label('mem_id'),
-            func.last_value(mem_ends_at).over(**window_args, rows=(None, None)).label('mem_end'),
+            func.last_value(Membership.id)
+            .over(**window_args, rows=(None, None))  # type: ignore[no-untyped-call]
+            .label("mem_id"),
+            func.last_value(mem_ends_at)
+            .over(**window_args, rows=(None, None))  # type: ignore[no-untyped-call]
+            .label("mem_end"),
         )
         .select_from(User)
         .distinct()
         .join(Membership)
         .join(Config, Config.member_group_id == Membership.group_id)
-    ).cte('last_mem')
+    ).cte(
+        "last_mem"
+    )  # mypy: ignore[no-untyped-call]
     stmt = (
         select(
             User,
@@ -65,7 +72,7 @@ def get_archivable_members(session: Session) -> Sequence[ArchivableMemberInfo]:
         # …and use that to filter out the `do-not-archive` occurrences.
         .filter(CurrentProperty.property_name.is_(None))
         .join(User, User.id == last_mem.c.user_id)
-        .filter(last_mem.c.mem_end < current_timestamp() - timedelta(days=14))
+        .filter(last_mem.c.mem_end < current_timestamp() - timedelta(days=14))  # type: ignore[no-untyped-call]
         .order_by(last_mem.c.mem_end)
         .options(joinedload(User.hosts), # joinedload(User.current_memberships),
                  joinedload(User.account, innerjoin=True), joinedload(User.room),
