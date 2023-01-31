@@ -206,7 +206,7 @@ class User(BaseUser, UserMixin):
 
     # one to one from User to Account
     account_id: Mapped[int] = mapped_column(ForeignKey("account.id"), index=True)
-    account: Mapped[list[Account]] = relationship(back_populates="user")
+    account: Mapped[Account] = relationship(back_populates="user")
 
     unix_account_id: Mapped[int | None] = mapped_column(
         ForeignKey("unix_account.id"), unique=True
