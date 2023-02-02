@@ -671,7 +671,6 @@ def get_transaction_type(transaction: Transaction) -> tuple[str, str] | None:
 
 @with_transaction
 def end_payment_in_default_memberships(processor: User) -> list[User]:
-    # TODO remove `type: ignore` once on SQLA2.0 (#562)
     users = (
         User.q.join(User.current_properties)
         .filter(CurrentProperty.property_name == "payment_in_default")
@@ -693,7 +692,6 @@ def end_payment_in_default_memberships(processor: User) -> list[User]:
 
 
 def get_negative_members() -> list[User]:
-    # TODO remove `type: ignore` once on SQLA2.0 (#562)
     users = (
         User.q.join(User.current_properties)
         .filter(CurrentProperty.property_name == "membership_fee")

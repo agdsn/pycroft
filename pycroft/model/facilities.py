@@ -76,7 +76,6 @@ class Room(IntegerIdModel):
 
     swdd_vo_suchname: Mapped[str | None]
 
-    # TODO typing imports and use Sequence
     connected_patch_ports: Mapped[list[PatchPort]] = relationship(
         primaryjoin='and_(PatchPort.room_id == Room.id, PatchPort.switch_port_id != None)',
         viewonly=True,
