@@ -23,8 +23,10 @@ from sqlalchemy.orm import (
     MappedAsDataclass as OrigMappedAsDataclass,
 )
 
+from pycroft.helpers import utc
 from pycroft.model.session import session
 from pycroft.model.type_aliases import str50, str255, str40, mac_address
+from . import types as pycroft_sqla_types
 from pycroft.model.types import IPAddress, MACAddress, IPNetwork
 
 
@@ -48,7 +50,7 @@ class ModelBase(DeclarativeBase, metaclass=_ModelMeta):
         str50: String(50),
         str255: String(255),
         # does not work yet: see https://github.com/sqlalchemy/sqlalchemy/issues/9175
-        # utc.DateTimeTz: pycroft_sqla_types.DateTimeTz,
+        utc.DateTimeTz: pycroft_sqla_types.DateTimeTz,
         ipaddr._BaseIP: IPAddress,
         ipaddr._BaseNet: IPNetwork,
         mac_address: MACAddress,
@@ -58,15 +60,6 @@ class ModelBase(DeclarativeBase, metaclass=_ModelMeta):
     def get(cls, *a, **kw):
         """This is a shortcut for `session.get(cls, –)`"""
         return session.get(cls, *a, **kw)
-
-    # the below workaround should be invisible to `mypy` because otherwise
-    # this untyped constructor “overrides” the typed ones sqlalchemy so laboriously provides.
-    # in particular, any call like `Address()` constitutes a call to an untyped function,
-    # and hence violates [no-untyped-call].
-    if not t.TYPE_CHECKING:
-        def __init__(self, **kwargs):
-            # workaround, see https://github.com/sqlalchemy/sqlalchemy/issues/9171
-            self.registry.constructor(self, **kwargs)
 
     @declared_attr
     def __tablename__(cls) -> str:

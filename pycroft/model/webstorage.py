@@ -16,7 +16,7 @@ from pycroft.model.types import DateTimeTz
 
 class WebStorage(IntegerIdModel):
     data: Mapped[bytes] = mapped_column(LargeBinary)
-    expiry: Mapped[utc.DateTimeTz] = mapped_column(DateTimeTz)
+    expiry: Mapped[utc.DateTimeTz]
 
     @staticmethod
     def auto_expire() -> None:

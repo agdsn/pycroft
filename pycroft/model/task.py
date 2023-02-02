@@ -61,9 +61,9 @@ class Task(IntegerIdModel, Generic[TSchema, TParams]):
     __mapper_args__ = {'polymorphic_on': discriminator}
 
     type: Mapped[TaskType]
-    due: Mapped[utc.DateTimeTz] = mapped_column(DateTimeTz)
+    due: Mapped[utc.DateTimeTz]
     parameters_json: Mapped[t.Any] = mapped_column("parameters", JSONB)
-    created: Mapped[utc.DateTimeTz] = mapped_column(DateTimeTz)
+    created: Mapped[utc.DateTimeTz]
     creator_id: Mapped[int] = mapped_column(ForeignKey(User.id))
     creator: Mapped[User] = relationship(foreign_keys=[creator_id])
     status: Mapped[TaskStatus] = mapped_column(default=TaskStatus.OPEN)

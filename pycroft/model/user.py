@@ -97,7 +97,7 @@ class BaseUser(IntegerIdModel):
 
     login: Mapped[str40] = mapped_column(unique=True)
     name: Mapped[str255]
-    registered_at: Mapped[utc.DateTimeTz] = mapped_column(DateTimeTz)
+    registered_at: Mapped[utc.DateTimeTz]
     passwd_hash: Mapped[str_deferred | None]
 
     email: Mapped[str255 | None]

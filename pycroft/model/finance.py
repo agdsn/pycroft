@@ -7,7 +7,6 @@ pycroft.model.finance
 """
 from __future__ import annotations
 import datetime
-import enum
 import typing as t
 from datetime import timedelta, date
 from math import fabs
@@ -105,20 +104,20 @@ class Semester(IntegerIdModel):
     )
 
 
-class AccountType(enum.Enum):
-    ASSET = "ASSET"  # Aktivkonto
-    USER_ASSET = "USER_ASSET"  # Aktivkonto for users
-    BANK_ASSET = "BANK_ASSET"  # Aktivkonto for bank accounts
-    LIABILITY = "LIABILITY"  # Passivkonto
-    EXPENSE = "EXPENSE"  # Aufwandskonto
-    REVENUE = "REVENUE"  # Ertragskonto
-
+AccountType = t.Literal[
+    "ASSET",  # Aktivkonto
+    "USER_ASSET",  # Aktivkonto for users
+    "BANK_ASSET",  # Aktivkonto for bank accounts
+    "LIABILITY",  # Passivkonto
+    "EXPENSE",  # Aufwandskonto
+    "REVENUE",  # Ertragskonto
+]
 
 class Account(IntegerIdModel):
     name: Mapped[str127]
     # noinspection PyUnresolvedReferences
-    type: Mapped[str] = mapped_column(
-        Enum(AccountType, name="account_type"),
+    type: Mapped[AccountType] = mapped_column(
+        Enum(*AccountType.__args__, name="account_type"),
     )
     legacy: Mapped[bool] = mapped_column(default=False)
 
@@ -392,7 +391,7 @@ class BankAccountActivity(IntegerIdModel):
     other_account_number: Mapped[str255]
     other_routing_number: Mapped[str255]
     other_name: Mapped[str255]
-    imported_at: Mapped[utc.DateTimeTz] = mapped_column(DateTimeTz)
+    imported_at: Mapped[utc.DateTimeTz]
     posted_on: Mapped[date]
     valid_on: Mapped[date]
     transaction_id: Mapped[int | None] = mapped_column(
