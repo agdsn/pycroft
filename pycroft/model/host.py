@@ -10,7 +10,7 @@ import typing as t
 
 import ipaddr
 from sqlalchemy import ForeignKey, event, UniqueConstraint, Column
-from sqlalchemy.orm import backref, relationship, validates, Mapped, mapped_column
+from sqlalchemy.orm import relationship, validates, Mapped, mapped_column
 from sqlalchemy.schema import Table
 from sqlalchemy.types import Integer, String
 
@@ -47,10 +47,7 @@ class Host(IntegerIdModel):
         ForeignKey(Room.id, ondelete="SET NULL"),
         index=True,
     )
-    # many to one from Host to Room
-    room: Mapped[Room | None] = relationship(
-        Room, backref=backref("hosts", cascade_backrefs=False)
-    )
+    room: Mapped[Room | None] = relationship(Room, back_populates="hosts")
 
     # backrefs
     interfaces: Mapped[list[Interface]] = relationship(

@@ -20,6 +20,7 @@ from .finance import Account
 if t.TYPE_CHECKING:
     # backrefs:
     from .user import User, RoomHistoryEntry
+    from .host import Host
     from .port import PatchPort
     from .logging import RoomLogEntry
     from .swdd import Tenancy
@@ -88,6 +89,7 @@ class Room(IntegerIdModel):
 
     # backrefs
     users: Mapped[list[User]] = relationship(back_populates="room", viewonly=True)
+    hosts: Mapped[list[Host]] = relationship(back_populates="room")
     room_history_entries: Mapped[list[RoomHistoryEntry]] = relationship(
         back_populates="room",
         order_by="RoomHistoryEntry.id",
