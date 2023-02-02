@@ -153,3 +153,17 @@ rules:
     paths:
       include:
         - "tests"
+
+  - id: prefer-back-populates-over-backref
+    pattern: relationship(..., backref=sqlalchemy.orm.backref(...))
+    message: |
+      Don't use `backref=`, use `back_populates=` instead
+      and explicitly define the backref relation on the target class,
+      preferably in a comment block like `# backrefs … # /backrefs`.
+      For further information, see the remark at
+      https://docs.sqlalchemy.org/en/20/orm/backref.html.
+    languages: [ python ]
+    severity: ERROR
+    paths:
+      include:
+        - "pycroft/model"
