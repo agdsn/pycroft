@@ -16,7 +16,7 @@ def register_commands(app: Flask):
     @app.cli.command('create-model', help="Create the database model.")
     def create_model():
         engine = create_engine(os.getenv('PYCROFT_DB_URI'))
-        with engine.connect() as connection:
+        with engine.begin() as connection:
             create_db_model(bind=connection)
 
     @app.cli.command('drop-model', help="Drop the database model.")
