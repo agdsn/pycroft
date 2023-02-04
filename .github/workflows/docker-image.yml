@@ -29,6 +29,8 @@ jobs:
         run: pip install wheel
       - name: install pip dependencies
         run: pip install -r requirements.txt -r requirements.dev.txt
+      - name: Execute ruff
+        run: ruff check --format=github .
       - name: Execute mypy
         run: ./scripts/run_mypy.sh
       # docs stuff
