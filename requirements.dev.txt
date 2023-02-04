@@ -18,3 +18,4 @@ types-passlib~=1.7.7
 sphinx-paramlinks~=0.5.4
 sphinxcontrib-fulltoc~=1.2.0
 sphinxcontrib-httpdomain~=1.8.0
+ruff~=0.0.241
