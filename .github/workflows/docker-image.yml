@@ -9,14 +9,14 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
-    - uses: pre-commit/action@v2.0.3
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+    - uses: pre-commit/action@v3.0.0
   python-lint:
     runs-on: ubuntu-latest
     steps:
       - name: Check out pycroft and submodules
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           submodules: recursive
       - uses: actions/setup-python@v4
@@ -29,13 +29,21 @@ jobs:
         run: pip install wheel
       - name: install pip dependencies
         run: pip install -r requirements.txt -r requirements.dev.txt
+        id: pip-install
+      # now come the tests
+      - name: Execute ruff
+        run: ruff check --format=github .
+        if: success() || steps.pip-install.conclusion == 'success'
       - name: Execute mypy
         run: ./scripts/run_mypy.sh
+        if: success() || steps.pip-install.conclusion == 'success'
       # docs stuff
       - name: Build sphinx docs
         run: make SPHINXOPTS="-EN -w sphinx.log" -C doc html
+        if: success() || steps.pip-install.conclusion == 'success'
       - name: Render sphinx warnings as annotations
         run: python ./scripts/render_sphinx_log.py doc/sphinx.log
+        if: success() || steps.pip-install.conclusion == 'success'
       - name: Publish sphinx docs as pages artifact
         uses: actions/upload-pages-artifact@v1
         with:
@@ -63,7 +71,7 @@ jobs:
   npm-build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - uses: actions/setup-node@v3
       with:
         node-version: 16
@@ -77,7 +85,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
            submodules: 'true'
       - name: Fix permissions
@@ -98,7 +106,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
            submodules: 'true'
       - name: Fix permissions

@@ -899,7 +899,7 @@ def block(user_id):
 
         try:
             during = closedopen(session.utcnow(), ends_at)
-            blocked_user = lib.user.block(
+            lib.user.block(
                 user=myUser,
                 reason=form.reason.data,
                 processor=current_user,

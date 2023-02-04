@@ -78,7 +78,7 @@ class Room(IntegerIdModel):
     swdd_vo_suchname: Mapped[str | None]
 
     connected_patch_ports: Mapped[list[PatchPort]] = relationship(
-        primaryjoin='and_(PatchPort.room_id == Room.id, PatchPort.switch_port_id != None)',
+        primaryjoin='and_(PatchPort.room_id == Room.id, PatchPort.switch_port_id.is_not(None))',
         viewonly=True,
     )
 

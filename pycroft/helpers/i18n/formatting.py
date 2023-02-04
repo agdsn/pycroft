@@ -165,7 +165,7 @@ def format_param(p, options: dict[type, dict[str, typing.Any]]) -> Formattable:
         raise TypeError(
             f"No formatter available for type {qualified_typename(concrete_type)}"
             " or any supertype."
-        )
+        ) from None
     option_policy: OptionPolicy | None = getattr(formatter, "__option_policy__", None)
     if option_policy == "ignore":
         formatter_options: dict[str, typing.Any] = {}

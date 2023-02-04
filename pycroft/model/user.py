@@ -58,7 +58,7 @@ from pycroft.model.address import Address, address_remove_orphans
 from pycroft.model.base import ModelBase, IntegerIdModel
 from pycroft.model.exc import PycroftModelException
 from pycroft.model.facilities import Room
-from pycroft.model.types import DateTimeTz, TsTzRange
+from pycroft.model.types import TsTzRange
 from .type_aliases import str255, str40
 
 if t.TYPE_CHECKING:

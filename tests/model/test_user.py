@@ -49,7 +49,7 @@ class Test_User_Passwords:
         # Also, why do we depend on `generate_password` instead of testing it separately?
         # All of this is very unperformant with little benefit.
         for length in range(4, 10):
-            for cnt in range(1, 3):
+            for _ in range(1, 3):
                 pw = generate_password(length)
                 if pw == password:
                     continue

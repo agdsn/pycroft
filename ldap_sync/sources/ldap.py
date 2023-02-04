@@ -14,7 +14,6 @@ from .. import logger, conversion
 from ..concepts.record import UserRecord, GroupRecord
 from ..config import SyncConfig
 from ..concepts.types import LdapRecord
-from ..conversion import ldap_user_to_record, ldap_group_to_record
 
 
 def establish_and_return_ldap_connection(config: SyncConfig) -> ldap3.Connection:

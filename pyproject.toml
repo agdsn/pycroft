@@ -62,3 +62,41 @@ filterwarnings = [
     "ignore:.*load_module.*:DeprecationWarning:importlib._bootstrap",
 ]
 timeout = "10"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+exclude = [
+    "deps/",
+    "doc/",
+    # match statement cannot be parsed yet… :/
+    # see https://github.com/charliermarsh/ruff/issues/282
+
+    "ldap_sync/record_diff.py",
+    "web/blueprints/helpers/exception.py",
+]
+# to look up the meaning of specific rule IDs, use `ruff rule $id`
+select = [
+    "E",
+    "F",
+    "B",  # flake8-bugbear
+]
+ignore = [
+    "E741",  # ambiguous variable names
+    "E501",  # line length violations (for now)
+]
+unfixable = [
+    "B",  # fixing bug hazards requires knowledge about the intention
+
+    # We don't want to autofix these: when using `== True|False|None`
+    # in a sqlalchemy expression, the `is` would actually _not_ be correct!
+    # the correct workaround is to use the `.is_` / `.is_not` functions
+    # (or, in the case of bools, don't do a comparison at all or use negation)
+    "E711",  # comparison to None
+    "E712",  # comparison to True/False
+]
+
+[tool.ruff.per-file-ignores]
+"__init__.py" = ["E402", "F401"]
+"pycroft/model/_all.py" = ["F403"]
+"helpers/interactive.py" = ["F403"]

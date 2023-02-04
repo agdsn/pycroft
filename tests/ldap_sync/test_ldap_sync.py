@@ -421,9 +421,8 @@ class TestLdapSyncerOnceSynced(LdapSyncerTestBase):
         modified_user.email = None
         session.add(modified_user)
         session.flush()
-        id = modified_user.id
 
-        user_records_to_sync = list(
+        user_records_to_sync = list(  # noqa
             fetch_db_users(
                 session,
                 sync_config.user_base_dn,

@@ -18,8 +18,10 @@ def parse_vlan(vlan):
         raise ParsingError(f"VLAN identifier has no Name: {name}")
     try:
         taggedness = {'1': "tagged", '2': "untagged"}[prefix]
-    except KeyError:
-        raise ParsingError(f"VLAN identifier must start with '1' or '2': {stripped}")
+    except KeyError as e:
+        raise ParsingError(
+            f"VLAN identifier must start with '1' or '2': {stripped}"
+        ) from e
     return f"{name} ({taggedness})"
 
 

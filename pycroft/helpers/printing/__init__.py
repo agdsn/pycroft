@@ -135,8 +135,10 @@ def generate_user_sheet(
     style = getStyleSheet()
     story = []
 
-    PAGE_WIDTH = defaultPageSize[0]
-    PAGE_HEIGHT = defaultPageSize[1]
+    # noinspection Ruff
+    defaultPageSize[0]
+    # noinspection Ruff
+    defaultPageSize[1]
 
     # HEADER
     im_web = Image(ASSETS_WEB_FILENAME, 0.4 * cm, 0.4 * cm)

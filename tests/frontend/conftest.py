@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from pycroft import Config
 from pycroft.model.user import User, PropertyGroup
 from tests.factories import UserFactory, AdminPropertyGroupFactory, ConfigFactory
-from web import make_app, PycroftFlask
+from web import PycroftFlask
 from .assertions import TestClient
 from .fixture_helpers import login_context, BlueprintUrls, _build_rule, prepare_app_for_testing
 from ..factories.property import FinancePropertyGroupFactory, MembershipFactory

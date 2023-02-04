@@ -15,7 +15,6 @@ from flask import _request_ctx_stack, g, request
 from sqlalchemy.orm import scoped_session, sessionmaker
 from werkzeug.middleware.profiler import ProfilerMiddleware
 
-import ldap_sync
 import pycroft
 import web
 from pycroft.helpers.i18n import set_translation_lookup, get_locale

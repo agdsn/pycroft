@@ -11,7 +11,6 @@
 """
 import pathlib
 from cmath import log
-from datetime import datetime
 from itertools import chain
 from re import sub
 

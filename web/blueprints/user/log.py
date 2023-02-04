@@ -11,7 +11,6 @@ from sqlalchemy.orm import Query
 from hades_logs import hades_logs
 from hades_logs.exc import HadesConfigError, HadesOperationalError, HadesTimeout
 from pycroft.model import session
-from pycroft.model.facilities import Room
 from pycroft.model.host import SwitchPort
 from pycroft.model.port import PatchPort
 from pycroft.model.user import User

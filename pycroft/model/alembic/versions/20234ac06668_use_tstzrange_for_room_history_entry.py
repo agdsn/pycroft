@@ -69,7 +69,7 @@ CREATE OR REPLACE FUNCTION user_room_change_update_history() RETURNS trigger
     ###
 
     # -UNIQUENESS CHECK
-    op.execute(f'drop function room_history_entry_uniqueness cascade')
+    op.execute("drop function room_history_entry_uniqueness cascade")
     # also deletes the trigger
     ###
 

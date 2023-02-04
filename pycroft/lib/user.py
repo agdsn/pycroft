@@ -13,12 +13,11 @@ import os
 import re
 import typing
 import typing as t
-from datetime import datetime, timedelta, date
+from datetime import timedelta, date
 from difflib import SequenceMatcher
 from typing import Iterable
 
 from sqlalchemy import func, select, Boolean, String
-from sqlalchemy.engine import Row
 
 from pycroft import config, property
 from pycroft.helpers import user as user_helper, utc
@@ -829,7 +828,7 @@ def move_out(
 
     deleted_interfaces = list()
     num_hosts = 0
-    for num_hosts, h in enumerate(user.hosts, 1):
+    for num_hosts, h in enumerate(user.hosts, 1):  # noqa: B007
         if not h.switch and (h.room == user.room or end_membership):
             for interface in h.interfaces:
                 deleted_interfaces.append(interface.mac)
@@ -843,7 +842,6 @@ def move_out(
             .format(room=user.room.short_name,
                     num_hosts=num_hosts,
                     interfaces=', '.join(deleted_interfaces))
-        had_custom_address = user.has_custom_address
         user.room = None
     elif num_hosts:
         message = "Deleted interfaces {interfaces} of {num_hosts} hosts." \
@@ -947,7 +945,6 @@ def membership_ending_task(user: User) -> UserTask:
         # Casting jsonb -> bool directly is only supported since PG v11
         .filter(
             UserTask.parameters_json["end_membership"].cast(String).cast(Boolean)
-            == True
         )
         .order_by(UserTask.due.asc())
         .first(),
@@ -977,7 +974,7 @@ def membership_beginning_task(user: User) -> UserTask:
         UserTask.q.filter_by(
             user_id=user.id, status=TaskStatus.OPEN, type=TaskType.USER_MOVE_IN
         )
-        .filter(UserTask.parameters_json["begin_membership"].cast(Boolean) == True)
+        .filter(UserTask.parameters_json["begin_membership"].cast(Boolean))
         .order_by(UserTask.due.asc())
         .first(),
     )

@@ -24,7 +24,6 @@ class FinTS3Client(FinTS3PinTanClient):
         :return: A tuple with list of mt940.models.Transaction objects and another
         list with tuples of mt940-data and error messages.
         """
-        with_error = []
         with self._get_dialog() as dialog:
             hkkaz = self._find_highest_supported_command(HKKAZ5, HKKAZ6, HKKAZ7)
 

@@ -1,6 +1,6 @@
 import os
 from alembic import context
-from sqlalchemy import engine_from_config, pool, create_engine
+from sqlalchemy import create_engine
 from logging.config import fileConfig
 
 # this is the Alembic Config object, which provides
@@ -9,7 +9,7 @@ config = context.config
 try:
     uri = os.environ['PYCROFT_DB_URI']
 except KeyError:
-    raise ValueError("Please Provide a valid uri in `PYCROFT_DB_URI`.")
+    raise ValueError("Please Provide a valid uri in `PYCROFT_DB_URI`.") from None
 engine = create_engine(uri)
 
 # Interpret the config file for Python logging.
@@ -18,7 +18,7 @@ fileConfig(config.config_file_name)
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-from pycroft.model.base import ModelBase
+from pycroft.model.base import ModelBase  # noqa: E402
 target_metadata = ModelBase.metadata
 
 # other values from the config, defined by the needs of env.py,

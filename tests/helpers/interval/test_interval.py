@@ -35,7 +35,7 @@ def test_contained(one, other):
 ])
 def test_not_contained(one, other):
     assert other not in one
-    assert not (other in one)
+    assert not (other in one)  # noqa
 
 
 def test_begin_greater_than_end():

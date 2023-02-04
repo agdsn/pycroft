@@ -233,8 +233,12 @@ class Test_View_Only_Shortcut_Properties:
         assert res == 2
 
 
-h = lambda x: timedelta(hours=x)
-d = lambda x: timedelta(days=x)
+def h(x):
+    return timedelta(hours=x)
+
+
+def d(x):
+    return timedelta(days=x)
 
 
 class Test_Membership:

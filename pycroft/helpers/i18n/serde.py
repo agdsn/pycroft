@@ -23,8 +23,8 @@ def identity(x):
 def deserialize_money(v):
     try:
         return Money(Decimal(v[0]), v[1])
-    except IndexError:
-        raise ValueError()
+    except IndexError as e:
+        raise ValueError from e
 
 
 def serialize_interval(interval: Interval) -> dict[str, typing.Any]:
@@ -147,7 +147,7 @@ def serialize_param(param):
         raise TypeError(
             "No serialization available for type {} or any"
             "supertype".format(qualified_typename(concrete_type))
-        )
+        ) from None
     return {"type": qualified_typename(type_), "value": serializer(param)}
 
 
@@ -156,5 +156,5 @@ def deserialize_param(param):
     try:
         deserializer = deserialize_map[type_name]
     except KeyError:
-        raise TypeError(f"No deserialization available for type {type_name}")
+        raise TypeError(f"No deserialization available for type {type_name}") from None
     return deserializer(param["value"])

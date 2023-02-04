@@ -8,7 +8,6 @@ ldap_sync.concepts.record
 
 from __future__ import annotations
 
-import abc
 import dataclasses
 import typing
 

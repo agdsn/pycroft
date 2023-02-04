@@ -75,7 +75,9 @@ def make_member_of(
     user: User,
     group: PropertyGroup,
     processor: User,
-    during: Interval[DateTimeTz] = t.cast(Interval[DateTimeTz], UnboundedInterval),
+    during: Interval[DateTimeTz] = t.cast(  # noqa: B008
+        Interval[DateTimeTz], UnboundedInterval
+    ),
 ) -> None:
     """Makes a user member of a group in a given interval.
 
@@ -116,7 +118,9 @@ def remove_member_of(
     user: User,
     group: PropertyGroup,
     processor: User,
-    during: Interval[DateTimeTz] = t.cast(Interval[DateTimeTz], UnboundedInterval),
+    during: Interval[DateTimeTz] = t.cast(  # noqa: B008
+        Interval[DateTimeTz], UnboundedInterval
+    ),
 ) -> None:
     """Remove a user from a group in a given interval.
 
@@ -185,18 +189,15 @@ def user_memberships_query(user_id: int, active_groups_only: bool = False) -> Qu
     p_granted = aliased(Property)
     p_denied = aliased(Property)
     memberships = (
-        memberships
-            .join(group)
-            .outerjoin(p_granted, and_(p_granted.property_group_id == group.id,
-                                       p_granted.granted == True))
-            .add_column(func.array_agg(distinct(p_granted.name))
-                        .label('granted'))
-
-            .outerjoin(p_denied, and_(p_denied.property_group_id == group.id,
-                                      p_denied.granted == False))
-            .add_column(func.array_agg(distinct(p_denied.name))
-                        .label('denied'))
-
-            .group_by(Membership.id)
+        memberships.join(group)
+        .outerjoin(
+            p_granted, and_(p_granted.property_group_id == group.id, p_granted.granted)
+        )
+        .add_column(func.array_agg(distinct(p_granted.name)).label("granted"))
+        .outerjoin(
+            p_denied, and_(p_denied.property_group_id == group.id, ~p_denied.granted)
+        )
+        .add_column(func.array_agg(distinct(p_denied.name)).label("denied"))
+        .group_by(Membership.id)
     )
     return memberships

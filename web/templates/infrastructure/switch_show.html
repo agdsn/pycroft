@@ -32,7 +32,7 @@
             <dt>Management IP</dt>
             <dd>{{ switch.management_ip }}</dd>
             <dt>Standort</dt>
-            <dd>{% if switch.host.room != None %}{{ misc.room_link(switch.host.room) }}{% else %}unbekannt{% endif %}</dd>
+            <dd>{% if switch.host.room is not None %}{{ misc.room_link(switch.host.room) }}{% else %}unbekannt{% endif %}</dd>
         </dl>
     </section>
     <section>

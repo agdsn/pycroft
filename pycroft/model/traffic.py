@@ -5,7 +5,6 @@
 pycroft.model.traffic
 ~~~~~~~~~~~~~~~~~~~~~
 """
-import enum
 import typing as t
 
 from sqlalchemy import (
@@ -195,9 +194,9 @@ def traffic_history_query():
               ).cte()
 
     events_ingress = select(events).where(
-        or_(events.c.type == 'Ingress', events.c.type == None)).cte()
+        or_(events.c.type == 'Ingress', events.c.type.is_(None))).cte()
     events_egress = select(events).where(
-        or_(events.c.type == 'Egress', events.c.type == None)).cte()
+        or_(events.c.type == 'Egress', events.c.type.is_(None))).cte()
 
     hist = (select(func.coalesce(events_ingress.c.day, events_egress.c.day).label('timestamp'),
                    events_ingress.c.amount.label('ingress'),

@@ -4,7 +4,6 @@
 from functools import partial
 
 import pytest
-from psycopg2.errorcodes import INVALID_TEXT_REPRESENTATION
 from sqlalchemy import select, func, text
 from sqlalchemy.exc import IntegrityError, DataError
 

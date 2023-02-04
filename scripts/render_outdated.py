@@ -14,7 +14,7 @@ if __name__ == "__main__":
 
     COLS = "current wanted latest dependent".split()  # don't care about location
     if not j:
-        print(f"### :white_check_mark: All NPM packages up-to-date")
+        print("### :white_check_mark: All NPM packages up-to-date")
         exit(0)
     print(f"### :warning: {len(j)} Outdated NPM packages")
     print()

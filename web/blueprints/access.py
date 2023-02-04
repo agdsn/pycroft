@@ -67,7 +67,6 @@ class BlueprintAccess:
         :param str required_properties: Names of the properties that are
         required.
         """
-        global_properties = self.required_properties
         view_properties = required_properties
 
         def decorator(f):

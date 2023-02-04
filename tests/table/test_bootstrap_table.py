@@ -16,7 +16,7 @@ class TestColumn:
         assert c.name == "test_col"
         assert c.title == "Test Column"
         assert c.width == 0
-        assert c.cell_style == False
+        assert c.cell_style is False
         assert repr(c) == "<Column 'test_col' title='Test Column'>"
 
     def test_instantiation_without_name(self):
@@ -295,7 +295,9 @@ class TestSplittedTable:
         expected_field_names = ["split1_foo", "split1_bar", "split2_foo", "split2_bar"]
         observed_attr_strings = (m[0] for m in small_col_matches)
 
-        for expected_field_name, attr_string in zip(expected_field_names, observed_attr_strings):
+        for expected_field_name, attr_string in zip(
+            expected_field_names, observed_attr_strings, strict=True
+        ):
             DATA_FIELD_RE = r'data-field="(\w+)"'
             observed_field_name = re.search(DATA_FIELD_RE, attr_string).group(1)
             assert observed_field_name == expected_field_name

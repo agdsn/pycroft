@@ -112,7 +112,7 @@ def clean_ldap_base(get_connection, sync_config):
             },
         )
         if not result:  # pragma: no cover
-            raise RuntimeError(f"Could not create default password policy", result)
+            raise RuntimeError("Could not create default password policy", result)
     _cleanup_conn(conn)
 
 

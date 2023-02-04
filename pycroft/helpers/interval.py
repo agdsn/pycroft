@@ -727,7 +727,7 @@ def _complement(intervals: t.Iterable[Interval[T]]) -> t.Iterator[Interval[T]]:
         yield Interval(Bound(NegativeInfinity, False), ~first.lower_bound)
     a, b = tee(intervals)
     last = first
-    for current_, next_ in zip(chain((first,), a), b):
+    for current_, next_ in zip(chain((first,), a), b, strict=False):
         yield Interval(~current_.upper_bound, ~next_.lower_bound)
         last = next_
     if not last.upper_bound.unbounded:

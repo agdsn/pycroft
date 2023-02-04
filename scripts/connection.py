@@ -42,6 +42,8 @@ def get_connection_string():
     try:
         connection_string = os.environ['PYCROFT_DB_URI']
     except KeyError:
-        raise RuntimeError("Environment variable PYCROFT_DB_URI must be "
-                           "set to an SQLAlchemy connection string.")
+        raise RuntimeError(
+            "Environment variable PYCROFT_DB_URI must be "
+            "set to an SQLAlchemy connection string."
+        ) from None
     return connection_string
