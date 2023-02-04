@@ -945,7 +945,6 @@ def membership_ending_task(user: User) -> UserTask:
         # Casting jsonb -> bool directly is only supported since PG v11
         .filter(
             UserTask.parameters_json["end_membership"].cast(String).cast(Boolean)
-            == True
         )
         .order_by(UserTask.due.asc())
         .first(),
