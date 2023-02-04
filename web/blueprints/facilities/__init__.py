@@ -9,7 +9,6 @@
     :copyright: (c) 2012 by AG DSN.
 """
 from collections import defaultdict
-from operator import and_
 
 from flask import (Blueprint, flash, jsonify, render_template, url_for,
                    redirect, request, abort)

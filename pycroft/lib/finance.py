@@ -161,7 +161,7 @@ def complex_transaction(
 def transferred_amount(
     from_account: Account,
     to_account: Account,
-    when: Interval[date] = t.cast(Interval[date], UnboundedInterval),
+    when: Interval[date] = t.cast(Interval[date], UnboundedInterval),  # noqa: B008
 ) -> Decimal:
     """
     Determine how much has been transferred from one account to another in a
@@ -471,7 +471,7 @@ def is_ordered(
     except StopIteration:
         # iterable is empty
         return True
-    return all(relation(x, y) for x, y in zip(a, b))
+    return all(relation(x, y) for x, y in zip(a, b, strict=False))
 
 
 @with_transaction
@@ -505,9 +505,9 @@ def import_bank_account_activities_csv(
             process_record(index, record, imported_at=imported_at)
             for index, record in records)
     except StopIteration:
-        raise CSVImportError(gettext("No data present."))
+        raise CSVImportError(gettext("No data present.")) from None
     except csv.Error as e:
-        raise CSVImportError(gettext("Could not read CSV."), e)
+        raise CSVImportError(gettext("Could not read CSV."), e) from e
     if not activities:
         raise CSVImportError(gettext("No data present."))
     if not is_ordered((a[8] for a in activities), operator.ge):
@@ -616,7 +616,8 @@ def process_record(
                           "Record {1}: {2}")
         raw_record = restore_record(record)
         raise CSVImportError(
-            message.format(record.our_account_number, index, raw_record), e)
+            message.format(record.our_account_number, index, raw_record), e
+        ) from None
 
     try:
         valid_on = datetime.strptime(record.valid_on, "%d.%m.%y").date()
@@ -624,15 +625,14 @@ def process_record(
     except ValueError as e:
         message = gettext("Illegal date format. Record {1}: {2}")
         raw_record = restore_record(record)
-        raise CSVImportError(message.format(index, raw_record), e)
+        raise CSVImportError(message.format(index, raw_record), e) from e
 
     try:
         amount = Decimal(record.amount.replace(",", "."))
     except ValueError as e:
         message = gettext("Illegal value format {0}. Record {1}: {2}")
         raw_record = restore_record(record)
-        raise CSVImportError(
-            message.format(record.amount, index, raw_record), e)
+        raise CSVImportError(message.format(record.amount, index, raw_record), e) from e
 
     return (amount, bank_account.id, cleanup_description(record.reference),
             record.reference, record.other_account_number,

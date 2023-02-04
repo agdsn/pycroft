@@ -4,17 +4,14 @@ from functools import wraps
 from flask import jsonify, request, current_app
 from flask_restful import Api, Resource as FlaskRestfulResource, abort, \
     reqparse, inputs
-from ipaddr import IPAddress
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select, func
 from sqlalchemy.orm import joinedload, selectinload
 
 from pycroft.helpers import utc
 from pycroft.helpers.i18n import Message
-from pycroft.lib.finance import build_transactions_query, estimate_balance, \
-    get_last_import_date
-from pycroft.lib.host import change_mac, host_create, interface_create, \
-    host_edit
+from pycroft.lib.finance import estimate_balance, get_last_import_date
+from pycroft.lib.host import change_mac, host_create, interface_create, host_edit
 from pycroft.lib.net import SubnetFullException
 from pycroft.lib.swdd import get_swdd_person_id, get_relevant_tenancies, \
     get_first_tenancy_with_room

@@ -102,7 +102,7 @@ class DBTask(CeleryTask):
             raise RuntimeError(
                 "Environment variable PYCROFT_DB_URI must be "
                 "set to an SQLAlchemy connection string."
-            )
+            ) from None
 
         self.connection, self.engine = try_create_connection(
             connection_string, 5, logger=logging.getLogger("tasks"), echo=False

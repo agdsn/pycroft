@@ -104,7 +104,7 @@ class ModelBase(DeclarativeBase, metaclass=_ModelMeta):
         T = typing.TypeVar('T', bound='ModelBase')
 
         @classmethod
-        def get(cls: type[T], *a, **kw) -> T:
+        def get(cls: type[T], *a, **kw) -> T:  # noqa: F811
             pass
 
 

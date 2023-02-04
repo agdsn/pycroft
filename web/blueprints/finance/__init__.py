@@ -62,6 +62,8 @@ from web.table.table import date_format
 from web.template_filters import date_filter, money_filter, datetime_filter
 from web.template_tests import privilege_check
 
+from . import forms
+
 bp = Blueprint('finance', __name__)
 access = BlueprintAccess(bp, required_properties=['finance_show'])
 nav = BlueprintNavigation(bp, "Finanzen", icon='fa-euro-sign', blueprint_access=access)

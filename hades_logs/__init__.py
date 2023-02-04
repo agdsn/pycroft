@@ -159,7 +159,9 @@ def _get_extension():
     try:
         return current_app.extensions['hades_logs']
     except KeyError:
-        raise HadesConfigError("No HadesLogs instance registered to current Flask app")
+        raise HadesConfigError(
+            "No HadesLogs instance registered to current Flask app"
+        ) from None
+
 
 hades_logs: HadesLogs = LocalProxy(_get_extension)
-

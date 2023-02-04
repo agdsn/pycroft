@@ -828,7 +828,7 @@ def move_out(
 
     deleted_interfaces = list()
     num_hosts = 0
-    for num_hosts, h in enumerate(user.hosts, 1):
+    for num_hosts, h in enumerate(user.hosts, 1):  # noqa: B007
         if not h.switch and (h.room == user.room or end_membership):
             for interface in h.interfaces:
                 deleted_interfaces.append(interface.mac)
@@ -974,7 +974,7 @@ def membership_beginning_task(user: User) -> UserTask:
         UserTask.q.filter_by(
             user_id=user.id, status=TaskStatus.OPEN, type=TaskType.USER_MOVE_IN
         )
-        .filter(UserTask.parameters_json["begin_membership"].cast(Boolean) == True)
+        .filter(UserTask.parameters_json["begin_membership"].cast(Boolean))
         .order_by(UserTask.due.asc())
         .first(),
     )

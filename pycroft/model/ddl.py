@@ -560,7 +560,7 @@ class DDLManager:
                  DropView(view, if_exists=True), dialect=dialect)
 
     def register(self):
-        for target, create_ddl, drop_ddl in self.objects:
+        for target, create_ddl, _drop_ddl in self.objects:
             sqla_event.listen(target, 'after_create', create_ddl)
-        for target, create_ddl, drop_ddl in reversed(self.objects):
+        for target, _create_ddl, drop_ddl in reversed(self.objects):
             sqla_event.listen(target, 'before_drop', drop_ddl)

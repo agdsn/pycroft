@@ -44,7 +44,7 @@ def _build_rule(url_adapter, rule) -> str:
             for k, v in rule._converters.items()
         }
     except KeyError as e:
-        raise AssertionError(f"Cannot create mock argument for {e.args[0]}")
+        raise AssertionError(f"Cannot create mock argument for {e.args[0]}") from e
     return url_adapter.build(rule.endpoint, values, 'GET')
 
 

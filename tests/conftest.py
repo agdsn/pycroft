@@ -20,8 +20,10 @@ def engine():
     try:
         uri = os.environ['PYCROFT_DB_URI']
     except KeyError:
-        raise RuntimeError("Environment variable PYCROFT_DB_URI must be "
-                           "set to an SQLalchemy connection string.")
+        raise RuntimeError(
+            "Environment variable PYCROFT_DB_URI must be "
+            "set to an SQLalchemy connection string."
+        ) from None
     return create_engine(uri, poolclass=SingletonThreadPool, future=True)
 
 

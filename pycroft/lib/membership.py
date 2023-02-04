@@ -75,7 +75,9 @@ def make_member_of(
     user: User,
     group: PropertyGroup,
     processor: User,
-    during: Interval[DateTimeTz] = t.cast(Interval[DateTimeTz], UnboundedInterval),
+    during: Interval[DateTimeTz] = t.cast(  # noqa: B008
+        Interval[DateTimeTz], UnboundedInterval
+    ),
 ) -> None:
     """Makes a user member of a group in a given interval.
 
@@ -116,7 +118,9 @@ def remove_member_of(
     user: User,
     group: PropertyGroup,
     processor: User,
-    during: Interval[DateTimeTz] = t.cast(Interval[DateTimeTz], UnboundedInterval),
+    during: Interval[DateTimeTz] = t.cast(  # noqa: B008
+        Interval[DateTimeTz], UnboundedInterval
+    ),
 ) -> None:
     """Remove a user from a group in a given interval.
 

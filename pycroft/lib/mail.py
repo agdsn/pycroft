@@ -122,7 +122,7 @@ def send_mails(mails: list[Mail]) -> tuple[bool, int]:
                 'trace': True,
                 'data': {'exception_arguments': e.args}
             })
-            raise RetryableException
+            raise RetryableException from e
 
     try:
         smtp: smtplib.SMTP
@@ -153,7 +153,7 @@ def send_mails(mails: list[Mail]) -> tuple[bool, int]:
             },
         )
 
-        raise RetryableException
+        raise RetryableException from e
     else:
         failures: int = 0
 
