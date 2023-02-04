@@ -156,7 +156,7 @@ def interface_edit(
     interface: Interface,
     name: str,
     mac: str,
-    ips: t.Iterable[ipaddr.IPv4Address],
+    ips: t.Iterable[ipaddr._BaseIP],
     processor: User,
 ) -> None:
     message = "Edited interface ({}, {}) of host '{}'.".format(
@@ -198,7 +198,7 @@ def interface_edit(
                 session.add(IP(interface=interface, address=ip,
                                        subnet=subnet))
                 ips_changed = True
-                new_ips.add(str(ip))
+                new_ips.add(ipaddr.IPAddress(ip))
 
     if ips_changed:
         message += " New IPs: {}.".format(', '.join(str(ip) for ip in

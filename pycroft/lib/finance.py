@@ -18,7 +18,7 @@ from io import StringIO
 from itertools import chain, islice, tee, zip_longest
 from typing import Callable, TypeVar, NamedTuple
 
-from sqlalchemy import func, between, cast
+from sqlalchemy import func, between, cast, CTE
 from sqlalchemy import or_, and_, literal, select, exists, not_, \
     text, future
 from sqlalchemy.orm import aliased, contains_eager, joinedload, Session, Query
@@ -215,7 +215,7 @@ membership_fee_description = deferred_gettext("Mitgliedsbeitrag {fee_name}")
 #  See https://docs.sqlalchemy.org/en/14/orm/extensions/mypy.html#mypy-pep-484-support-for-orm-mappings
 # See also #562
 @typing.no_type_check
-def users_eligible_for_fee_query(membership_fee: MembershipFee) -> Select:
+def users_eligible_for_fee_query(membership_fee: MembershipFee) -> CTE:
     split_user_account = Split.__table__.alias()
     split_fee_account = Split.__table__.alias()
 
@@ -338,31 +338,50 @@ def post_transactions_for_membership_fee(
                                                         users.c.fee_account_id)).fetchall()
 
     if not simulate:
-        numbered_users = (select(users.c.id,
-                                 users.c.fee_account_id.label('fee_account_id'),
-                                 users.c.account_id,
-                                 func.row_number().over().label('index'))
-                          .select_from(users)
-                          .cte("membership_fee_numbered_users"))
+        # `over` not typed yet,
+        # see https://github.com/sqlalchemy/sqlalchemy/issues/6810
+        numbered_users = (
+            select(
+                users.c.id,
+                users.c.fee_account_id.label("fee_account_id"),
+                users.c.account_id,
+                func.row_number().over().label("index"),  # type: ignore[no-untyped-call]
+            )
+            .select_from(users)
+            .cte("membership_fee_numbered_users")
+        )
 
         # TODO use new-style insert(Transaction)
-        transactions = (Transaction.__table__.insert()  # type: ignore
-             .from_select([Transaction.description,
-                           Transaction.author_id,
-                           Transaction.posted_at,
-                           Transaction.valid_on,
-                           Transaction.confirmed],
-                          select(literal(description),
-                                 literal(processor.id),
-                                 func.current_timestamp(),
-                                 literal(membership_fee.ends_on),
-                                 True).select_from(users))
-             .returning(Transaction.id)
-             .cte('membership_fee_transactions'))
+        transactions = (
+            Transaction.__table__.insert()  # type: ignore
+            .from_select(
+                [
+                    Transaction.description,
+                    Transaction.author_id,
+                    Transaction.posted_at,
+                    Transaction.valid_on,
+                    Transaction.confirmed,
+                ],
+                select(
+                    literal(description),
+                    literal(processor.id),
+                    func.current_timestamp(),
+                    literal(membership_fee.ends_on),
+                    literal(True),
+                ).select_from(users),
+            )
+            .returning(Transaction.id)
+            .cte("membership_fee_transactions")
+        )
 
-        numbered_transactions = (select(transactions.c.id, func.row_number().over().label('index'))
-             .select_from(transactions)
-             .cte('membership_fee_numbered_transactions'))
+        numbered_transactions = (
+            select(
+                transactions.c.id,
+                func.row_number().over().label("index"),  # type: ignore[no-untyped-call]
+            )
+            .select_from(transactions)
+            .cte("membership_fee_numbered_transactions")
+        )
 
         # TODO use new-style insert(Split)
         split_insert_fee_account = (Split.__table__.insert()  # type: ignore
@@ -652,12 +671,11 @@ def get_transaction_type(transaction: Transaction) -> tuple[str, str] | None:
 
 @with_transaction
 def end_payment_in_default_memberships(processor: User) -> list[User]:
-    # TODO remove `type: ignore` once on SQLA2.0 (#562)
     users = (
         User.q.join(User.current_properties)
         .filter(CurrentProperty.property_name == "payment_in_default")
         .join(Account)
-        .filter(Account.balance <= 0)  # type: ignore
+        .filter(Account.balance <= 0)
         .all()
     )
 
@@ -674,12 +692,11 @@ def end_payment_in_default_memberships(processor: User) -> list[User]:
 
 
 def get_negative_members() -> list[User]:
-    # TODO remove `type: ignore` once on SQLA2.0 (#562)
     users = (
         User.q.join(User.current_properties)
         .filter(CurrentProperty.property_name == "membership_fee")
         .join(Account)
-        .filter(Account.balance > 0)  # type: ignore
+        .filter(Account.balance > 0)
         .all()
     )
 
@@ -875,8 +892,9 @@ def build_transactions_query(
     query = Split.q.join(Transaction).filter(Split.account == account)
 
     # see #562
-    if not (sort_by in Transaction.__table__.columns  # type: ignore
-            or sort_by in Split.__table__.columns):  # type: ignore
+    if not (
+        sort_by in Transaction.__table__.columns or sort_by in Split.__table__.columns
+    ):
         sort_by = "valid_on"
 
     descending = (sort_order == "desc") ^ (positive == False)
@@ -909,7 +927,7 @@ def match_activities() -> tuple[
            .filter(BankAccountActivity.transaction_id.is_(None)))
 
     def _fetch_normal(uid: int) -> User | None:
-        return User.get(uid)
+        return session.session.get(User, uid)
 
     for activity in session.session.scalars(stmt).all():
         user = match_reference(activity.reference, fetch_normal=_fetch_normal)

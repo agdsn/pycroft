@@ -7,8 +7,9 @@ import re
 import typing as t
 from collections import defaultdict
 from dataclasses import dataclass
+from itertools import groupby
 
-from sqlalchemy import func, and_, distinct, literal_column
+from sqlalchemy import func, and_, distinct, literal_column, select
 from sqlalchemy.orm import aliased, contains_eager, joinedload
 
 from pycroft.helpers.i18n import deferred_gettext
@@ -41,11 +42,14 @@ def get_overcrowded_rooms(building_id: int = None) -> dict[int, list[User]]:
 
     # rooms containing multiple users each of which has a host in the room
     oc_rooms_query = (
-        Room.q.join(User)
-            .join(Host).filter(User.room_id == Host.room_id)
-            .filter(*oc_rooms_filter)
-            .group_by(Room.id).having(func.count(distinct(User.id)) > 1)
-            .subquery()
+        select(Room)
+        .join(User)
+        .join(Host)
+        .filter(User.room_id == Host.room_id)
+        .filter(*oc_rooms_filter)
+        .group_by(Room.id)
+        .having(func.count(distinct(User.id)) > 1)
+        .subquery()
     )
 
     user = aliased(User)
@@ -53,23 +57,19 @@ def get_overcrowded_rooms(building_id: int = None) -> dict[int, list[User]]:
     # room can be extracted from the subquery
     oc_room = contains_eager(user.room, alias=oc_rooms_query)
 
-    query = (
-        session.session.query(user)
-            # only include users living in overcrowded rooms
-            .join(oc_rooms_query)
-            # only include users that have a host in their room
-            .join(Host,
-                  and_(user.id == Host.owner_id, user.room_id == Host.room_id))
-            .options(oc_room)
-            .options(oc_room.joinedload(Room.building))
-            .options(joinedload(user.current_properties))
+    stmt = (
+        select(user)
+        # only include users living in overcrowded rooms
+        .join(oc_rooms_query)
+        # only include users that have a host in their room
+        .join(Host, and_(user.id == Host.owner_id, user.room_id == Host.room_id))
+        .options(oc_room)
+        .options(oc_room.joinedload(Room.building))
+        .options(joinedload(user.current_properties))
     )
 
-    rooms = defaultdict(list)
-    for user in query.all():
-        rooms[user.room.id].append(user)
-
-    return rooms
+    users = session.session.scalars(stmt).unique().all()
+    return {k: list(v) for k, v in groupby(users, lambda u: u.room.id)}
 
 
 @with_transaction
@@ -229,5 +229,5 @@ def determine_building(shortname: str | None = None, id: int | None = None) -> B
             Building, Building.q.filter(Building.short_name == shortname).one()
         )
     if id:
-        return Building.get(id)
+        return session.session.get(Building, id)
     raise ValueError("Either shortname or id must be given to identify the building!")

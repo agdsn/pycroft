@@ -2,10 +2,18 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 
-from sqlalchemy import Column, String, UniqueConstraint
+from __future__ import annotations
+import typing as t
+
+from sqlalchemy import UniqueConstraint
+from sqlalchemy.orm import Mapped, relationship, mapped_column
 
 from pycroft.model import ddl
 from pycroft.model.base import IntegerIdModel
+
+if t.TYPE_CHECKING:
+    from .facilities import Room
+    from .user import User
 
 DEFAULT_CITY = "Dresden"
 DEFAULT_COUNTRY = "Germany"
@@ -26,19 +34,24 @@ class Address(IntegerIdModel):
 
     Establishing these consistencies requires triggers.
     """
-    street = Column(String(), nullable=False)
-    number = Column(String(), nullable=False)
-    addition = Column(String(), nullable=False, server_default="")
+    street: Mapped[str]
+    number: Mapped[str]
+    addition: Mapped[str] = mapped_column(server_default="")
     # Sometimes, zipcodes can contain things like dashes, so rather take String().
     # we could probably impose some format by a check but that would be over engineering
-    zip_code = Column(String(), nullable=False)
-    city = Column(String(), nullable=False, server_default=DEFAULT_CITY)
-    state = Column(String(), nullable=False, server_default="")
-    country = Column(String(), nullable=False, server_default=DEFAULT_COUNTRY)
+    zip_code: Mapped[str]
+    city: Mapped[str] = mapped_column(server_default=DEFAULT_CITY)
+    state: Mapped[str] = mapped_column(server_default="")
+    country: Mapped[str] = mapped_column(server_default=DEFAULT_COUNTRY)
 
     __table_args__ = (
         UniqueConstraint('street', 'number', 'addition', 'zip_code', 'city', 'state', 'country'),
     )
+
+    # backrefs
+    rooms: Mapped[list[Room]] = relationship(back_populates="address")
+    inhabitants: Mapped[list[User]] = relationship(back_populates="address")
+    # /backrefs
 
     def __str__(self):
         return f"{self:short}"

@@ -5,14 +5,18 @@
 pycroft.model.webstorage
 ~~~~~~~~~~~~~~~~~~~~~~~~
 """
+from sqlalchemy import func, LargeBinary
+from sqlalchemy.orm import Mapped, mapped_column
+
+from pycroft.helpers import utc
 from pycroft.model.base import IntegerIdModel
-from sqlalchemy import Column, func, LargeBinary
 from pycroft.model.session import session
 from pycroft.model.types import DateTimeTz
 
+
 class WebStorage(IntegerIdModel):
-    data = Column(LargeBinary, nullable=False)
-    expiry = Column(DateTimeTz, nullable=False)
+    data: Mapped[bytes] = mapped_column(LargeBinary)
+    expiry: Mapped[utc.DateTimeTz]
 
     @staticmethod
     def auto_expire() -> None:

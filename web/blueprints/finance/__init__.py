@@ -38,7 +38,7 @@ from pycroft.lib.finance import end_payment_in_default_memberships, \
     match_activities, take_actions_for_payment_in_default_users, get_pid_csv, get_negative_members
 from pycroft.lib.mail import MemberNegativeBalance
 from pycroft.lib.user import encode_type2_user_id, user_send_mails
-from pycroft.model.finance import Account, Transaction
+from pycroft.model.finance import Account, Transaction, AccountType
 from pycroft.model.finance import (
     BankAccount, BankAccountActivity, Split, MembershipFee, MT940Error)
 from pycroft.model.session import session, utcnow
@@ -529,7 +529,7 @@ def accounts_list():
         for t in groupby(
             Account.q.filter_by(legacy=False).outerjoin(User).filter(User.id == None)
                 .order_by(Account.type).all(),
-            lambda a: a.type
+            lambda a: a.type.value
         )
     }
 
@@ -595,7 +595,7 @@ def accounts_show(account_id):
         flash("Es existieren mehrere Nutzer, die mit diesem Konto"
               " verbunden sind!", "warning")
 
-    inverted = account.type == "USER_ASSET"
+    inverted = account.type == AccountType.USER_ASSET
 
     _table_kwargs = {
         'data_url': url_for("finance.accounts_show_json", account_id=account_id),
@@ -753,7 +753,7 @@ def transactions_unconfirmed_json():
     T = UnconfirmedTransactionsTable
 
     for transaction in transactions:
-        user_account = next((a for a in transaction.accounts if a.type == "USER_ASSET"), None)
+        user_account = next((a for a in transaction.accounts if a.type == AccountType.USER_ASSET), None)
         bank_acc_act = BankAccountActivity.q.filter_by(transaction_id=transaction.id).first()
 
         items.append(
@@ -1225,10 +1225,10 @@ def json_accounts_system():
         {
             "account_id": account.id,
             "account_name": localized(account.name),
-            "account_type": account.type
+            "account_type": account.type.value
         } for account in Account.q.outerjoin(User).filter(
             and_(User.account == None,
-                 Account.type != "USER_ASSET")
+                 Account.type != AccountType.USER_ASSET)
         ).all()])
 
 

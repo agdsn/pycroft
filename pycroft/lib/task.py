@@ -10,10 +10,11 @@ from datetime import datetime
 from typing import Mapping, TypeVar, Generic
 
 from marshmallow import ValidationError
-from sqlalchemy.orm import with_polymorphic
+from sqlalchemy import select
+from sqlalchemy.orm import with_polymorphic, Session
 
 from pycroft.helpers.i18n import deferred_gettext
-from pycroft.helpers.utc import DateTimeTz
+from pycroft.helpers.utc import DateTimeTz, with_min_time, ensure_tz
 from pycroft.lib.logging import log_task_event
 from pycroft.model import session
 from pycroft.model.session import with_transaction
@@ -205,10 +206,10 @@ def schedule_user_task(
     return task
 
 
-def get_active_tasks_by_type(type: TaskType) -> list[Task]:
+def get_active_tasks_by_type(type: TaskType) -> t.Sequence[t.Type[Task]]:
     task_and_subtypes = with_polymorphic(Task, "*")
-    return session.session.query(
-        task_and_subtypes.where(task_and_subtypes.type == type)
+    return session.session.scalars(
+        select(task_and_subtypes).where(task_and_subtypes.type == type)
     ).all()
 
 
@@ -238,7 +239,7 @@ def reschedule_task(task: Task, due: datetime, processor: User) -> None:
     if task.status != TaskStatus.OPEN:
         raise ValueError("Cannot execute a task that is not open")
 
-    task.due = due
+    task.due = ensure_tz(due)
     log_task_event(deferred_gettext("Rescheduled task {task_id} to {new_due}")
                    .format(task_id=task.id, new_due=due).to_json(),
                    author=processor, task=task)

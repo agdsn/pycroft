@@ -10,15 +10,27 @@
     :copyright: (c) 2011 by AG DSN.
 """
 import re
+import typing as t
 
-from sqlalchemy import Column, Table
-from sqlalchemy.orm import DeclarativeMeta, as_declarative, declared_attr, Query
-from sqlalchemy.types import Integer
+import ipaddr
+from sqlalchemy import String
+from sqlalchemy.orm import (
+    declared_attr,
+    Query,
+    DeclarativeBase,
+    Mapped,
+    mapped_column,
+    MappedAsDataclass as OrigMappedAsDataclass,
+)
 
+from pycroft.helpers import utc
 from pycroft.model.session import session
+from pycroft.model.type_aliases import str50, str255, str40, mac_address
+from . import types as pycroft_sqla_types
+from pycroft.model.types import IPAddress, MACAddress, IPNetwork
 
 
-class _ModelMeta(DeclarativeMeta):
+class _ModelMeta(type(DeclarativeBase)):
     """Metaclass for all mapped Database objects."""
     @property
     def q(cls):
@@ -29,14 +41,25 @@ class _ModelMeta(DeclarativeMeta):
         """
         return session.query(cls)
 
+
+class ModelBase(DeclarativeBase, metaclass=_ModelMeta):
+    """Base class for all database models."""
+
+    type_annotation_map = {
+        str40: String(40),
+        str50: String(50),
+        str255: String(255),
+        # does not work yet: see https://github.com/sqlalchemy/sqlalchemy/issues/9175
+        utc.DateTimeTz: pycroft_sqla_types.DateTimeTz,
+        ipaddr._BaseIP: IPAddress,
+        ipaddr._BaseNet: IPNetwork,
+        mac_address: MACAddress,
+    }
+
+    @classmethod
     def get(cls, *a, **kw):
         """This is a shortcut for `session.get(cls, –)`"""
         return session.get(cls, *a, **kw)
-
-
-@as_declarative(metaclass=_ModelMeta)
-class ModelBase:
-    """Base class for all database models."""
 
     @declared_attr
     def __tablename__(cls) -> str:
@@ -85,6 +108,35 @@ class ModelBase:
         def get(cls: type[T], *a, **kw) -> T:
             pass
 
+
+class _MappedAsDataclassPatchedMeta(type(OrigMappedAsDataclass), _ModelMeta):
+    ...
+
+
+class MappedAsDataclass(OrigMappedAsDataclass, metaclass=_MappedAsDataclassPatchedMeta):
+    """`MappedAsDataclass`, but with metaclass which includes our custom metaclass.
+
+    This exists because the following does not work:
+
+    .. code-block:: python
+
+        from sqlalchemy import
+        class Foo(MappedAsDataclass, ModelBase):
+            ...
+
+    The reason is that MappedAsDataclass implements its functionality with its own metaclass.
+    However, since classes can only have one metaclass, the metaclass of `MappedAsDataclass`
+    subclasses`DeclarativeMeta`.
+
+    In our case, this is not sufficient, since our `ModelBase` uses a custom metaclass
+    `_ModelMeta` for the (legacy) `.q` shorthand;
+    to fix this, we create a new metaclass inheriting from both `type(MappedAsDataclass)`
+    and `_ModelMeta`.
+    """
+
+    ...
+
+
 class IntegerIdModel(ModelBase):
     """
     Abstract base class for database models with an Integer primary column,
@@ -93,4 +145,9 @@ class IntegerIdModel(ModelBase):
 
     __abstract__ = True
 
-    id = Column(Integer, primary_key=True)
+    # init=False is required once we're moving to dataclass-based mappings.
+    # see https://docs.sqlalchemy.org/en/20/orm/dataclasses.html#integration-with-annotated
+    # and the following chapters.
+    # however, if we inherit with a _non-dataclass-based_ model, sqlalchemy will complain about
+    # the superfluous `init=False`.
+    id: Mapped[int] = mapped_column(primary_key=True)

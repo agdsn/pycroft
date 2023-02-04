@@ -5,66 +5,77 @@
 pycroft.model.traffic
 ~~~~~~~~~~~~~~~~~~~~~
 """
+import enum
+import typing as t
 
-from sqlalchemy import Column, ForeignKey, CheckConstraint, \
-    PrimaryKeyConstraint, func, or_, and_, true, literal_column, \
-    select, cast, TEXT
-from sqlalchemy.orm import relationship, backref, Query
+from sqlalchemy import (
+    ForeignKey,
+    CheckConstraint,
+    PrimaryKeyConstraint,
+    func,
+    or_,
+    and_,
+    true,
+    literal_column,
+    select,
+    cast,
+    TEXT,
+)
+from sqlalchemy.orm import relationship, Query, Mapped, mapped_column
 from sqlalchemy.sql.selectable import TableValuedAlias
-from sqlalchemy.types import BigInteger, Enum, Integer
+from sqlalchemy.types import BigInteger, Enum
 
 from pycroft.helpers import utc
 from pycroft.model.base import ModelBase
 from pycroft.model.ddl import DDLManager, Function, Trigger, View
-from pycroft.model.types import DateTimeTz
+from pycroft.model.type_aliases import datetime_tz
 from pycroft.model.user import User
 from pycroft.model.host import IP, Host, Interface
 
 ddl = DDLManager()
+
+TrafficDirection = t.Literal[
+    "Ingress",
+    "Egress"
+]
 
 
 class TrafficVolume(ModelBase):
     __table_args__ = (
         PrimaryKeyConstraint('ip_id', 'type', 'timestamp'),
     )
-    timestamp = Column(DateTimeTz, server_default=func.current_timestamp(), nullable=False)
-    amount = Column(BigInteger, CheckConstraint('amount >= 0'),
-                    nullable=False)
+    timestamp: Mapped[datetime_tz]
+    amount: Mapped[int] = mapped_column(BigInteger, CheckConstraint("amount >= 0"))
 
-    type = Column(Enum("Ingress", "Egress", name="traffic_direction"),
-                  nullable=False)
-    ip_id = Column(Integer, ForeignKey(IP.id, ondelete="CASCADE"),
-                   nullable=False, index=True)
-    ip = relationship(IP, backref=backref("traffic_volumes",
-                                          cascade="all, delete-orphan",
-                                          cascade_backrefs=False))
-    user_id = Column(Integer, ForeignKey(User.id, ondelete='CASCADE'),
-                     nullable=True, index=True)
-    user = relationship(User,
-                        backref=backref("traffic_volumes",
-                                        cascade="all, delete-orphan",
-                                        cascade_backrefs=False),
-                        uselist=False)
-    packets = Column(Integer, CheckConstraint('packets >= 0'),
-                     nullable=False)
+    type: Mapped[TrafficDirection] = mapped_column(
+        Enum(*TrafficDirection.__args__, name="traffic_direction")
+    )
+    ip_id: Mapped[int] = mapped_column(
+        ForeignKey(IP.id, ondelete="CASCADE"), index=True
+    )
+    ip: Mapped[IP] = relationship(back_populates="traffic_volumes")
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey(User.id, ondelete="CASCADE"), index=True
+    )
+    user: Mapped[User] = relationship(back_populates="traffic_volumes")
+    packets: Mapped[int] = mapped_column(CheckConstraint("packets >= 0"))
 
 
 TrafficVolume.__table__.add_is_dependent_on(IP.__table__)
-
 
 pmacct_traffic_egress = View(
     name='pmacct_traffic_egress',
     query=(
         Query([])
-            .add_columns(TrafficVolume.packets.label('packets'),
-                         TrafficVolume.amount.label('bytes'),
-                         TrafficVolume.timestamp.label('stamp_inserted'),
-                         TrafficVolume.timestamp.label('stamp_updated'),
-                         IP.address.label('ip_src'))
-            .select_from(TrafficVolume)
-            .filter_by(type='Egress')
-            .join(IP)
-            .statement  # turns our `Selectable` into something compilable
+        .add_columns(TrafficVolume.packets.label('packets'),
+                     TrafficVolume.amount.label('bytes'),
+                     TrafficVolume.timestamp.label('stamp_inserted'),
+                     TrafficVolume.timestamp.label('stamp_updated'),
+                     IP.address.label('ip_src'))
+        .select_from(TrafficVolume)
+        .filter_by(type='Egress')
+        .join(IP)
+        .statement  # turns our `Selectable` into something compilable
     ),
 )
 ddl.add_view(TrafficVolume.__table__, pmacct_traffic_egress)
@@ -117,24 +128,22 @@ pmacct_egress_upsert_trigger = Trigger(
 ddl.add_function(TrafficVolume.__table__, pmacct_egress_upsert)
 ddl.add_trigger(TrafficVolume.__table__, pmacct_egress_upsert_trigger)
 
-
 pmacct_traffic_ingress = View(
     name='pmacct_traffic_ingress',
     query=(
         Query([])
-            .add_columns(TrafficVolume.packets.label('packets'),
-                         TrafficVolume.amount.label('bytes'),
-                         TrafficVolume.timestamp.label('stamp_inserted'),
-                         TrafficVolume.timestamp.label('stamp_updated'),
-                         IP.address.label('ip_dst'))
-            .select_from(TrafficVolume)
-            .filter_by(type='Ingress')
-            .join(IP)
-            .statement  # turns our `Selectable` into something compilable
+        .add_columns(TrafficVolume.packets.label('packets'),
+                     TrafficVolume.amount.label('bytes'),
+                     TrafficVolume.timestamp.label('stamp_inserted'),
+                     TrafficVolume.timestamp.label('stamp_updated'),
+                     IP.address.label('ip_dst'))
+        .select_from(TrafficVolume)
+        .filter_by(type='Ingress')
+        .join(IP)
+        .statement  # turns our `Selectable` into something compilable
     ),
 )
 ddl.add_view(TrafficVolume.__table__, pmacct_traffic_ingress)
-
 
 pmacct_ingress_upsert = Function(
     name="pmacct_traffic_ingress_insert", arguments=[], language="plpgsql", rtype="trigger",
@@ -172,21 +181,23 @@ def traffic_history_query():
                      cast(TrafficVolume.type, TEXT).label('type')
                      )
               .select_from(
-                    func.generate_series(
-                        func.date_trunc('day', literal_column('arg_start')),
-                        func.date_trunc('day', literal_column('arg_end')),
-                        '1 day'
-                    ).alias('day')
-                    .outerjoin(TrafficVolume.__table__, and_(
-                        func.date_trunc('day', TrafficVolume.timestamp) == literal_column('day'),
-                        TrafficVolume.user_id == literal_column('arg_user_id'))
-                    )
-              )
+        func.generate_series(
+            func.date_trunc('day', literal_column('arg_start')),
+            func.date_trunc('day', literal_column('arg_end')),
+            '1 day'
+        ).alias('day')
+        .outerjoin(TrafficVolume.__table__, and_(
+            func.date_trunc('day', TrafficVolume.timestamp) == literal_column('day'),
+            TrafficVolume.user_id == literal_column('arg_user_id'))
+                   )
+    )
               .group_by(literal_column('day'), literal_column('type'))
               ).cte()
 
-    events_ingress = select(events).where(or_(events.c.type == 'Ingress', events.c.type == None)).cte()
-    events_egress = select(events).where(or_(events.c.type == 'Egress', events.c.type == None)).cte()
+    events_ingress = select(events).where(
+        or_(events.c.type == 'Ingress', events.c.type == None)).cte()
+    events_egress = select(events).where(
+        or_(events.c.type == 'Egress', events.c.type == None)).cte()
 
     hist = (select(func.coalesce(events_ingress.c.day, events_egress.c.day).label('timestamp'),
                    events_ingress.c.amount.label('ingress'),
@@ -212,6 +223,7 @@ ddl.add_function(
     traffic_history_function
 )
 
+
 def traffic_history(
     user_id: int, start: utc.DateTimeTz, end: utc.DateTimeTz, name='traffic_history'
 ) -> TableValuedAlias:
@@ -219,7 +231,7 @@ def traffic_history(
 
     See `sqlalchemy.sql.selectable.FromClause.table_valued`.
     """
-    return func.traffic_history(user_id, start, end)\
+    return func.traffic_history(user_id, start, end) \
         .table_valued("timestamp", "ingress", "egress", name=name)
 
 

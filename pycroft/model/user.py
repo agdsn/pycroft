@@ -14,20 +14,37 @@ from __future__ import annotations
 import operator
 import re
 import typing
+import typing as t
 from datetime import timedelta, date, datetime
 
 from flask_login import UserMixin
 from sqlalchemy import (
-    Boolean, Column, ForeignKey, Integer,
-    String, and_, exists, join, null, select, Sequence,
-    Date, func, UniqueConstraint, Index, text, event)
+    ForeignKey,
+    String,
+    and_,
+    exists,
+    join,
+    null,
+    select,
+    Sequence,
+    func,
+    UniqueConstraint,
+    Index,
+    text,
+    event,
+)
 from sqlalchemy.dialects.postgresql import ExcludeConstraint
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
-from sqlalchemy.orm import backref, object_session, relationship, validates, \
-    declared_attr, deferred
+from sqlalchemy.orm import (
+    object_session,
+    relationship,
+    validates,
+    Mapped,
+    mapped_column,
+)
 from sqlalchemy.orm.attributes import flag_modified
-from sqlalchemy.orm.collections import attribute_mapped_collection
+from sqlalchemy.orm.collections import attribute_keyed_dict
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.util import has_identity
 
@@ -42,6 +59,22 @@ from pycroft.model.base import ModelBase, IntegerIdModel
 from pycroft.model.exc import PycroftModelException
 from pycroft.model.facilities import Room
 from pycroft.model.types import DateTimeTz, TsTzRange
+from .type_aliases import str255, str40
+
+if t.TYPE_CHECKING:
+    # Pycharm likes it when we import these things instead of having implicitly stringified
+    # annotations.
+    # FKeys
+    from .finance import Account
+    from .property import CurrentProperty
+
+    # Backrefs
+    from .logging import LogEntry, UserLogEntry, TaskLogEntry
+    from .host import Host
+    from .swdd import Tenancy
+    from .task import UserTask
+    from .traffic import TrafficVolume
+
 
 manager = ddl.DDLManager()
 
@@ -54,29 +87,32 @@ class IllegalEmailError(PycroftModelException, ValueError):
     pass
 
 
-class BaseUser:
-    id = Column(Integer, primary_key=True)
-    login = Column(String(40), nullable=False, unique=True)
-    name = Column(String(255), nullable=False)
-    registered_at = Column(DateTimeTz, nullable=False)
-    @declared_attr
-    def passwd_hash(self):
-        return deferred(Column(String))
-    email = Column(String(255), nullable=True)
-    email_confirmed = Column(Boolean, server_default="False", nullable=False)
-    email_confirmation_key = Column(String, nullable=True)
-    birthdate = Column(Date, nullable=True)
+str_deferred = t.Annotated[str, mapped_column(deferred=True)]
+room_fk = t.Annotated[
+    int,
+    mapped_column(ForeignKey("room.id", ondelete="SET NULL"), index=True)
+]
+class BaseUser(IntegerIdModel):
+    __abstract__ = True
+
+    login: Mapped[str40] = mapped_column(unique=True)
+    name: Mapped[str255]
+    registered_at: Mapped[utc.DateTimeTz]
+    passwd_hash: Mapped[str_deferred | None]
+
+    email: Mapped[str255 | None]
+    email_confirmed: Mapped[bool] = mapped_column(server_default="False")
+    email_confirmation_key: Mapped[str | None]
+    birthdate: Mapped[date | None]
 
     # ForeignKey to Tenancy.person_id / swdd_vv.person_id, but cannot reference view
-    swdd_person_id = Column(Integer, nullable=True)
+    swdd_person_id: Mapped[int | None]
 
     # many to one from User to Room
-    @declared_attr
-    def room_id(self):
-        return Column(Integer, ForeignKey("room.id", ondelete="SET NULL"),
-                      nullable=True, index=True)
+    room_id: Mapped[room_fk | None]
 
-    login_regex = re.compile(r"""
+    login_regex = re.compile(
+        r"""
             ^
             # Must begin with a lowercase character
             [a-z]
@@ -107,6 +143,12 @@ class BaseUser:
                       "web", "git", "username", "log", "login", "help", "name"}
 
     login_character_limit = 22
+
+    def __init__(self, *args, **kwargs):
+        password = kwargs.pop("password", None)
+        super().__init__(**kwargs)
+        if password is not None:
+            self.password = password
 
     @validates('login')
     def validate_login(self, _, value):
@@ -149,11 +191,9 @@ class BaseUser:
         """
         return verify_password(plaintext_password, self.passwd_hash)
 
-    @hybrid_property
+    @property
     def password(self):
-        """Store a hash of a given plaintext passwd for the user.
-
-        """
+        """Store a hash of a given plaintext passwd for the user."""
         raise RuntimeError("Password can not be read, only set")
 
     @password.setter
@@ -161,31 +201,76 @@ class BaseUser:
         self.passwd_hash = hash_password(value)
 
 
-class User(ModelBase, BaseUser, UserMixin):
-    wifi_passwd_hash = deferred(Column(String))
+class User(BaseUser, UserMixin):
+    wifi_passwd_hash: Mapped[str | None] = mapped_column(deferred=True)
 
     # one to one from User to Account
-    account_id = Column(Integer, ForeignKey("account.id"), nullable=False, index=True)
-    account = relationship("Account", backref=backref("user", uselist=False, viewonly=True))
+    account_id: Mapped[int] = mapped_column(ForeignKey("account.id"), index=True)
+    account: Mapped[Account] = relationship(back_populates="user")
 
-    unix_account_id = Column(Integer, ForeignKey('unix_account.id'), nullable=True, unique=True)
-    unix_account: UnixAccount = relationship('UnixAccount')  # backref not really needed.
+    unix_account_id: Mapped[int | None] = mapped_column(
+        ForeignKey("unix_account.id"), unique=True
+    )
+    unix_account: Mapped[UnixAccount] = relationship(
+        "UnixAccount"
+    )  # backref not really needed.
 
-    address_id = Column(Integer, ForeignKey(Address.id), index=True, nullable=False)
-    address = relationship(Address, backref=backref("inhabitants", viewonly=True))
+    address_id: Mapped[int] = mapped_column(ForeignKey(Address.id), index=True)
+    address: Mapped[Address] = relationship(back_populates="inhabitants")
 
-    room = relationship("Room", backref=backref("users", viewonly=True), sync_backref=False)
+    # room_id defined in `BaseUser`
+    room: Mapped[Room | None] = relationship(back_populates="users", sync_backref=False)
 
-    email_forwarded = Column(Boolean, server_default='True', nullable=False)
+    email_forwarded: Mapped[bool] = mapped_column(server_default="True")
 
-    password_reset_token = Column(String, nullable=True)
+    password_reset_token: Mapped[str | None]
+
+    # backrefs
+    memberships: Mapped[list[Membership]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    room_history_entries: Mapped[list[RoomHistoryEntry]] = relationship(
+        back_populates="user",
+        order_by="RoomHistoryEntry.id",
+        viewonly=True
+    )
+    hosts: Mapped[list[Host]] = relationship(
+        back_populates="owner", cascade="all, delete-orphan"
+    )
+    authored_log_entries: Mapped[list[LogEntry]] = relationship(
+        back_populates="author", viewonly=True
+    )
+    log_entries: Mapped[list[UserLogEntry]] = relationship(
+        back_populates="user", foreign_keys="UserLogEntry.user_id",
+        viewonly=True, cascade="all, delete-orphan"
+    )
+    task_log_entries: Mapped[list[TaskLogEntry]] = relationship(
+        back_populates="user", viewonly=True
+    )
+    tenancies: Mapped[list[Tenancy]] = relationship(
+        primaryjoin="foreign(Tenancy.person_id) == User.swdd_person_id",
+        back_populates="user",
+        viewonly=True,
+    )
+    tasks: Mapped[list[UserTask]] = relationship(
+        back_populates="user",
+        # unfortunately the `back_populates` is not used to give precedence
+        # to one join path over another, so we have to specify the foreign key explicitly.
+        foreign_keys="UserTask.user_id",
+        viewonly=True,
+    )
+    traffic_volumes: Mapped[list[TrafficVolume]] = relationship(
+        back_populates="user",
+        viewonly=True,
+        cascade="all, delete-orphan",
+    )
+    # /backrefs
 
     def __init__(self, **kwargs: typing.Any) -> None:
-        password = kwargs.pop('password', None)
-        wifi_password = kwargs.pop('password', None)
-        super().__init__(**kwargs)
-        if password is not None:
-            self.password = password
+        # TODO this should never have worked because it popped `password` twice
+        wifi_password = kwargs.pop("password", None)
+        super().__init__(self, **kwargs)
         if wifi_password is not None:
             self.wifi_password = wifi_password
 
@@ -230,27 +315,28 @@ class User(ModelBase, BaseUser, UserMixin):
     def traffic_for_days(self, days):
         from pycroft.model.traffic import TrafficVolume
 
-        return select(func.sum(TrafficVolume.amount).label('amount')) \
-            .where(
-            TrafficVolume.timestamp >= (session.utcnow() - timedelta(days-1)).date()
-            .where(TrafficVolume.user_id == self.id))
-
+        return select(func.sum(TrafficVolume.amount).label("amount")).where(
+            TrafficVolume.timestamp
+            >= (session.utcnow() - timedelta(days - 1))
+            .date()
+            .where(TrafficVolume.user_id == self.id)
+        )
     #: This is a relationship to the `current_property` view filtering out
     #: the entries with `denied=True`.
-    current_properties = relationship(
-        'CurrentProperty',
-        primaryjoin='and_(User.id == foreign(CurrentProperty.user_id),'
-                    '~CurrentProperty.denied)',
-        order_by='CurrentProperty.property_name',
-        viewonly=True
+    current_properties: Mapped[list[CurrentProperty]] = relationship(
+        "CurrentProperty",
+        primaryjoin="and_(User.id == foreign(CurrentProperty.user_id),"
+        "~CurrentProperty.denied)",
+        order_by="CurrentProperty.property_name",
+        viewonly=True,
     )
     #: This is a relationship to the `current_property` view ignoring the
     #: `denied` attribute.
-    current_properties_maybe_denied = relationship(
-        'CurrentProperty',
-        primaryjoin='User.id == foreign(CurrentProperty.user_id)',
-        order_by='CurrentProperty.property_name',
-        viewonly=True
+    current_properties_maybe_denied: Mapped[list[CurrentProperty]] = relationship(
+        "CurrentProperty",
+        primaryjoin="User.id == foreign(CurrentProperty.user_id)",
+        order_by="CurrentProperty.property_name",
+        viewonly=True,
     )
 
     @property
@@ -427,13 +513,22 @@ manager.add_trigger(User.__table__, ddl.Trigger(
 
 
 class Group(IntegerIdModel):
-    name = Column(String(255), nullable=False)
-    discriminator = Column('type', String(17), nullable=False)
-    __mapper_args__ = {'polymorphic_on': discriminator}
+    name: Mapped[str255]
+    discriminator: Mapped[str] = mapped_column("type", String(17))
+    __mapper_args__ = {"polymorphic_on": discriminator}
 
-    users = relationship(User,
-                         secondary=lambda: Membership.__table__,
-                         viewonly=True)
+    users: Mapped[list[User]] = relationship(
+        User,
+        secondary=lambda: Membership.__table__,
+        viewonly=True,
+    )
+
+    # backrefs
+    memberships: Mapped[list[Membership]] = relationship(
+        cascade="all, delete-orphan",
+        order_by="Membership.id",
+    )
+    # /backrefs
 
     @hybrid_method
     def active_users(self, when=None):
@@ -460,7 +555,9 @@ class Group(IntegerIdModel):
 
 
 class Membership(IntegerIdModel):
-    active_during: Interval[utc.DateTimeTz] = Column(TsTzRange, nullable=False)
+    active_during: Mapped[Interval[utc.DateTimeTz]] = mapped_column(
+        TsTzRange, nullable=False
+    )
 
     def disable(self, at=None):
         if at is None:
@@ -470,19 +567,16 @@ class Membership(IntegerIdModel):
         flag_modified(self, 'active_during')
 
     # many to one from Membership to Group
-    group_id = Column(Integer, ForeignKey(Group.id, ondelete="CASCADE"),
-                      nullable=False, index=True)
-    group = relationship(Group, backref=backref("memberships",
-                                                cascade="all, delete-orphan",
-                                                order_by='Membership.id',
-                                                cascade_backrefs=False))
+    group_id: Mapped[int] = mapped_column(
+        ForeignKey(Group.id, ondelete="CASCADE"), index=True
+    )
+    group: Mapped[Group] = relationship(back_populates="memberships")
 
     # many to one from Membership to User
-    user_id = Column(Integer, ForeignKey(User.id, ondelete="CASCADE"),
-                     nullable=False, index=True)
-    user = relationship(User, backref=backref("memberships",
-                                              cascade="all, delete-orphan",
-                                              cascade_backrefs=False))
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey(User.id, ondelete="CASCADE"), index=True
+    )
+    user: Mapped[User] = relationship(back_populates="memberships")
 
     __table_args__ = (
         Index('ix_membership_active_during', 'active_during', postgresql_using='gist'),
@@ -500,33 +594,36 @@ def create_btree_gist(target, connection, **kw):
 
 
 class PropertyGroup(Group):
-    __mapper_args__ = {'polymorphic_identity': 'property_group'}
-    id = Column(Integer, ForeignKey(Group.id), primary_key=True,
-                nullable=False)
-    permission_level = Column(Integer, nullable=False, default=0)
+    __mapper_args__ = {"polymorphic_identity": "property_group"}
+    id: Mapped[int] = mapped_column(ForeignKey(Group.id), primary_key=True)
+    permission_level: Mapped[int] = mapped_column(default=0)
 
+    # TODO type
     property_grants = association_proxy(
         "properties", "granted",
         creator=lambda k, v: Property(name=k, granted=v)
     )
-    properties: dict[str, Property]
+    # backrefs
+    properties: Mapped[dict[str, Property]] = relationship(
+        back_populates="property_group",
+        cascade="all, delete-orphan",
+        collection_class=attribute_keyed_dict("name"),
+    )
+    # /backrefs
 
 
 class Property(IntegerIdModel):
     # TODO add unique key
-    name = Column(String(255), nullable=False)
-    granted = Column(Boolean, nullable=False)
+    name: Mapped[str255]
+    granted: Mapped[bool]
 
     # many to one from Property to PropertyGroup
     # nullable=True
-    property_group_id = Column(Integer, ForeignKey(PropertyGroup.id),
-                               nullable=False, index=True)
-    #TODO prüfen, ob cascade Properties löscht, wenn zugehörige PGroup deleted
-    property_group = relationship(
-        PropertyGroup,
-        backref=backref("properties", cascade="all, delete-orphan",
-                        collection_class=attribute_mapped_collection("name"))
+    property_group_id: Mapped[int] = mapped_column(
+        ForeignKey(PropertyGroup.id), index=True
     )
+    # TODO prüfen, ob cascade Properties löscht, wenn zugehörige PGroup deleted
+    property_group: Mapped[PropertyGroup] = relationship(back_populates="properties")
 
 
 unix_account_uid_seq = Sequence('unix_account_uid_seq', start=1000,
@@ -534,15 +631,16 @@ unix_account_uid_seq = Sequence('unix_account_uid_seq', start=1000,
 
 
 class UnixAccount(IntegerIdModel):
-    uid = Column(Integer, nullable=False, unique=True,
-                 server_default=unix_account_uid_seq.next_value())
-    gid = Column(Integer, nullable=False, default=100)
-    login_shell = Column(String, nullable=False, default="/bin/bash")
-    home_directory = Column(String, nullable=False, unique=True)
+    uid: Mapped[int] = mapped_column(
+        unique=True, server_default=unix_account_uid_seq.next_value()
+    )
+    gid: Mapped[int] = mapped_column(default=100)
+    login_shell: Mapped[str] = mapped_column(default="/bin/bash")
+    home_directory: Mapped[str] = mapped_column(unique=True)
 
 
 class RoomHistoryEntry(IntegerIdModel):
-    active_during: Interval = Column(TsTzRange, nullable=False)
+    active_during: Mapped[Interval[utc.DateTimeTz]] = mapped_column(TsTzRange)
 
     def disable(self, at=None):
         if at is None:
@@ -551,17 +649,15 @@ class RoomHistoryEntry(IntegerIdModel):
         self.active_during = self.active_during - starting_from(at)
         flag_modified(self, 'active_during')
 
-    room_id = Column(Integer, ForeignKey("room.id", ondelete="CASCADE"),
-                     nullable=False, index=True)
-    room = relationship(Room, backref=backref(name="room_history_entries",
-                                              order_by='RoomHistoryEntry.id',
-                                              viewonly=True))
+    room_id: Mapped[int] = mapped_column(
+        ForeignKey("room.id", ondelete="CASCADE"), index=True
+    )
+    room: Mapped[Room] = relationship(back_populates="room_history_entries")
 
-    user_id = Column(Integer, ForeignKey(User.id, ondelete="CASCADE"),
-                     nullable=False, index=True)
-    user = relationship(User, backref=backref("room_history_entries",
-                                              order_by='RoomHistoryEntry.id',
-                                              viewonly=True))
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey(User.id, ondelete="CASCADE"), index=True
+    )
+    user: Mapped[User] = relationship(back_populates="room_history_entries")
 
     __table_args__ = (
         Index('ix_room_history_entry_active_during', 'active_during', postgresql_using='gist'),
@@ -574,14 +670,22 @@ class RoomHistoryEntry(IntegerIdModel):
     )
 
 
-class PreMember(ModelBase, BaseUser):
-    login = Column(String(40), nullable=False, unique=False)
-    move_in_date = Column(Date, nullable=True)
-    previous_dorm = Column(String, nullable=True)
-    birthdate = Column(Date, nullable=False)
-    passwd_hash = Column(String, nullable=False)
+class PreMember(BaseUser):
+    login: Mapped[str40] = mapped_column(unique=False)
+    move_in_date: Mapped[date | None]
+    previous_dorm: Mapped[str | None]
+    birthdate: Mapped[date]
+    passwd_hash: Mapped[str]
 
-    room = relationship("Room")
+    room: Mapped[Room] = relationship("Room")
+
+    # backrefs
+    tenancies: Mapped[list[Tenancy]] = relationship(
+        primaryjoin="foreign(Tenancy.person_id) == PreMember.swdd_person_id",
+        back_populates="pre_member",
+        viewonly=True,
+    )
+    # /backrefs
 
     def __init__(self, **kwargs: typing.Any) -> None:
         password = kwargs.pop('password', None)

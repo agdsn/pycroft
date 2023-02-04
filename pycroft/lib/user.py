@@ -183,7 +183,7 @@ def get_user_sheet(sheet_id: int) -> bytes | None:
 
     if sheet_id is None:
         return None
-    if (storage := WebStorage.get(sheet_id)) is None:
+    if (storage := session.session.get(WebStorage, sheet_id)) is None:
         return None
 
     return storage.data
@@ -196,7 +196,7 @@ def reset_password(user: User, processor: User) -> str:
                               " greater or equal permission level.")
 
     plain_password = user_helper.generate_password(12)
-    user.password = plain_password  # type: ignore
+    user.password = plain_password
 
     message = deferred_gettext("Password was reset")
     log_user_event(author=processor,
@@ -235,7 +235,7 @@ def maybe_setup_wifi(user: User, processor: User) -> str | None:
 @with_transaction
 def change_password(user: User, password: str) -> None:
     # TODO: verify password complexity
-    user.password = password  # type: ignore
+    user.password = password
 
     message = deferred_gettext("Password was changed")
     log_user_event(author=user,
@@ -378,7 +378,7 @@ def move_in(
                 make_member_of(user, group, processor, closed(session.utcnow(), None))
 
     if room:
-        user.room = room  # type: ignore
+        user.room = room
         user.address = room.address
 
         if mac and user.birthdate:
@@ -685,10 +685,11 @@ def edit_address(
 def traffic_history(
     user_id: int, start: DateTimeTz, end: DateTimeTz
 ) -> list[TrafficHistoryEntry]:
-    result: list[Row] = session.session.execute(
-        select('*').select_from(
-            func_traffic_history(user_id, start, end))).fetchall()
-    return [TrafficHistoryEntry(**dict(row)) for row in result]
+    result = session.session.execute(
+        select("*")
+        .select_from(func_traffic_history(user_id, start, end))
+    ).fetchall()
+    return [TrafficHistoryEntry(**row._asdict()) for row in result]
 
 
 def has_balance_of_at_least(user: User, amount: int) -> bool:

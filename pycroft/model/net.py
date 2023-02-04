@@ -5,44 +5,55 @@
 pycroft.model.net
 ~~~~~~~~~~~~~~~~~
 """
-from sqlalchemy import (
-    CheckConstraint, Column, Integer, ForeignKey, String, between, event, sql)
-from sqlalchemy.orm import relationship
+from __future__ import annotations
+import typing as t
+
+import ipaddr
+from sqlalchemy import CheckConstraint, ForeignKey, between, event, sql
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.schema import AddConstraint
 
 from pycroft.model.base import IntegerIdModel
-from pycroft.model.types import IPAddress, IPNetwork
+from pycroft.model.type_aliases import str127, str50
 
+if t.TYPE_CHECKING:
+    # backrefs
+    from .host import IP
 
 class VLAN(IntegerIdModel):
-    name = Column(String(127), nullable=False)
-    vid = Column(Integer, nullable=False)
+    name: Mapped[str127]
+    vid: Mapped[int] = mapped_column()
 
-    __table_args__ = (
-        CheckConstraint(between(vid, 1, 4094)),
+    __table_args__ = (CheckConstraint(between(vid, 1, 4094)),)
+    # associations
+    switch_ports = relationship(
+        "SwitchPort",
+        secondary="switch_port_default_vlans",
+        back_populates="default_vlans",
     )
-    switch_ports = relationship('SwitchPort', secondary='switch_port_default_vlans',
-                                back_populates='default_vlans')
+    # /associations
+
+    # backrefs
     subnets = relationship('Subnet', back_populates='vlan', viewonly=True)
+    # /backrefs
 
 
 class Subnet(IntegerIdModel):
-    address = Column(IPNetwork, nullable=False)
-    gateway = Column(IPAddress)
-    reserved_addresses_bottom = Column(Integer, server_default=sql.text('0'),
-                                       nullable=False)
-    reserved_addresses_top = Column(Integer, server_default=sql.text('0'),
-                                    nullable=False)
-    description = Column(String(50))
+    address: Mapped[ipaddr._BaseNet]
+    gateway: Mapped[ipaddr._BaseIP | None]
+    reserved_addresses_bottom: Mapped[int] = mapped_column(server_default=sql.text("0"))
+    reserved_addresses_top: Mapped[int] = mapped_column(server_default=sql.text("0"))
+    description: Mapped[str50 | None]
 
-    vlan_id = Column(Integer, ForeignKey(VLAN.id), nullable=False, index=True)
-    vlan = relationship(VLAN, back_populates="subnets")
-    ips = relationship(
-        "IP",
+    vlan_id: Mapped[int] = mapped_column(ForeignKey(VLAN.id), index=True)
+    vlan: Mapped[VLAN] = relationship(back_populates="subnets")
+
+    # backrefs
+    ips: Mapped[list[IP]] = relationship(
         cascade="all, delete-orphan",
-        cascade_backrefs=False,
         back_populates="subnet",
     )
+    # /backrefs
 
 
 # Ensure that the gateway is contained in the subnet

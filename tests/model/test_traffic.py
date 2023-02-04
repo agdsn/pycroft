@@ -39,7 +39,7 @@ class TestPMAcctView:
         session.execute(egress_insert(utcnow))
         assert TrafficVolume.q.count() == 1
         volume = TrafficVolume.q.one()
-        assert volume.type == 'Egress'
+        assert volume.type == "Egress"
         assert volume.amount == 1024
         assert volume.packets == 20
         assert volume.user == user
@@ -70,7 +70,7 @@ class TestPMAcctView:
         session.execute(ingress_insert(utcnow))
         assert TrafficVolume.q.count() == 1
         volume = TrafficVolume.q.one()
-        assert volume.type == 'Ingress'
+        assert volume.type == "Ingress"
         assert volume.amount == 1024
         assert volume.packets == 20
         assert volume.user == user

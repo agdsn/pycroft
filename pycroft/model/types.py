@@ -13,7 +13,7 @@ from typing import Any
 import ipaddr
 from psycopg2._range import DateTimeTZRange
 from sqlalchemy import String, TypeDecorator, Integer, DateTime, literal
-from sqlalchemy.dialects.postgresql import MACADDR, INET
+from sqlalchemy.dialects.postgresql import MACADDR, INET, Range
 from sqlalchemy.dialects.postgresql.ranges import TSTZRANGE
 
 from pycroft.helpers.interval import Interval
@@ -163,17 +163,20 @@ class TsTzRange(TypeDecorator):
         """"""
         if value is None:
             return None
-        if not isinstance(value, DateTimeTZRange):
-            # see https://github.com/sqlalchemy/sqlalchemy/discussions/6942
-            raise PycroftModelException(
-                f"Unable to deserialize TsTzRange value {value!r} of type {type(value)}."
-                " Usually, this value should've been deserialized by psycopg2 into a"
-                " DatetimeTzRange.  Did you make a mistake in your query?"
-                " Note that you may have to use `cast(…, TsTzRange)` to let sqlalchemy know"
-                " of the return type –– even if you specified the type in `literal()` already!"
+        if isinstance(value, (Range, DateTimeTZRange)):
+            return Interval.from_explicit_data(
+                value.lower, value.lower_inc,
+                value.upper, value.upper_inc
             )
-        return Interval.from_explicit_data(value.lower, value.lower_inc,
-                                           value.upper, value.upper_inc)
+
+        # see https://github.com/sqlalchemy/sqlalchemy/discussions/6942
+        raise PycroftModelException(
+            f"Unable to deserialize TsTzRange value {value!r} of type {type(value)}."
+            " Usually, this value should've been deserialized by psycopg2 into a"
+            " DatetimeTzRange.  Did you make a mistake in your query?"
+            " Note that you may have to use `cast(…, TsTzRange)` to let sqlalchemy know"
+            " of the return type –– even if you specified the type in `literal()` already!"
+        )
 
     class comparator_factory(TSTZRANGE.Comparator):
         def contains(self, other: Any, **kwargs) -> None:
@@ -214,5 +217,10 @@ class InvalidMACAddressException(PycroftModelException, ValueError):
 
 
 class DateTimeTz(DateTime):
+    """A sqlalchemy type decorator corresponding to `datetime` types with time zone.
+
+    In other words, a `mapped_column(DateTimeTz)` produces python objects of type
+    :cls:`pycroft.helpers.utc.DateTimeTz`.
+    """
     def __init__(self):
         super().__init__(timezone=True)

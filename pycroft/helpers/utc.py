@@ -29,6 +29,12 @@ def datetime_max() -> DateTimeTz:
     return DateTimeTz(datetime.max.replace(tzinfo=timezone.utc))
 
 
+def ensure_tz(d: datetime) -> DateTimeTz:
+    if d.tzinfo is not None:
+        return DateTimeTz(d)
+    return DateTimeTz(d.replace(tzinfo=timezone.utc))
+
+
 def with_min_time(d: date) -> DateTimeTz:
     """Return the datetime corresponding to 00:00 UTC at the given date."""
     return DateTimeTz(datetime.combine(d, time_min()))

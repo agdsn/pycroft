@@ -5,17 +5,17 @@
 pycroft.model.finance
 ~~~~~~~~~~~~~~~~~~~~~
 """
+from __future__ import annotations
 import datetime
 import typing as t
+from datetime import timedelta, date
 from math import fabs
 
-from sqlalchemy import Column, ForeignKey, event, func, select, Boolean
+from sqlalchemy import ForeignKey, event, func, select, Enum, ColumnElement
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import relationship, backref, object_session, Mapped
-from sqlalchemy.schema import (
-    CheckConstraint, ForeignKeyConstraint, UniqueConstraint)
-from sqlalchemy.types import (
-    Date, Enum, Integer, Interval, String, Text)
+from sqlalchemy.orm import relationship, object_session, Mapped, mapped_column
+from sqlalchemy.schema import CheckConstraint, ForeignKeyConstraint, UniqueConstraint
+from sqlalchemy.types import String, Text
 
 from pycroft.helpers.i18n import gettext
 from pycroft.helpers.interval import closed
@@ -23,31 +23,37 @@ from pycroft.model import ddl
 from pycroft.model.types import Money, DateTimeTz
 from .base import IntegerIdModel
 from .exc import PycroftModelException
+from .type_aliases import str127, str255, datetime_tz_onupdate
+from ..helpers import utc
 
 manager = ddl.DDLManager()
 
+if t.TYPE_CHECKING:
+    # FKeys
+    # backrefs
+    from .facilities import Building
+    from .user import User
+
 
 class MembershipFee(IntegerIdModel):
-    name = Column(String, nullable=False)
-    regular_fee = Column(Money,
-                         CheckConstraint('regular_fee >= 0'),
-                         nullable=False)
+    name: Mapped[str]
+    regular_fee: Mapped[int] = mapped_column(Money, CheckConstraint("regular_fee >= 0"))
 
     # Timedelta after which a member has to pay
-    booking_begin = Column(Interval, nullable=False)
+    booking_begin: Mapped[timedelta]
 
     # Timedelta until which a member has to pay
-    booking_end = Column(Interval, nullable=False)
+    booking_end: Mapped[timedelta]
 
     # Timedelta after which members are being charged a late fee for not paying
     # in time + will be added to a group with "payment_in_default" property
-    payment_deadline = Column(Interval, nullable=False)
+    payment_deadline: Mapped[timedelta]
 
     # Timedelta after which the membership will be cancelled
-    payment_deadline_final = Column(Interval, nullable=False)
+    payment_deadline_final: Mapped[timedelta]
 
-    begins_on = Column(Date, nullable=False)
-    ends_on = Column(Date, nullable=False)
+    begins_on: Mapped[date]
+    ends_on: Mapped[date]
 
     def __contains__(self, date):
         return date in closed(self.begins_on, self.ends_on)
@@ -58,32 +64,37 @@ class MembershipFee(IntegerIdModel):
 
 
 class Semester(IntegerIdModel):
-    name = Column(String, nullable=False)
-    registration_fee = Column(Money, CheckConstraint('registration_fee >= 0'),
-                              nullable=False)
-    regular_semester_fee = Column(Money,
-                                  CheckConstraint('regular_semester_fee >= 0'),
-                                  nullable=False)
-    reduced_semester_fee = Column(Money,
-                                  CheckConstraint('reduced_semester_fee >= 0'),
-                                  nullable=False)
-    late_fee = Column(Money, CheckConstraint('late_fee >= 0'), nullable=False)
+    name: Mapped[str]
+    registration_fee: Mapped[int] = mapped_column(
+        Money,
+        CheckConstraint('registration_fee >= 0')
+    )
+    regular_semester_fee: Mapped[int] = mapped_column(
+        Money,
+        CheckConstraint('regular_semester_fee >= 0'),
+    )
+    reduced_semester_fee: Mapped[int] = mapped_column(
+        Money,
+        CheckConstraint('reduced_semester_fee >= 0'),
+    )
+    late_fee: Mapped[int] = mapped_column(Money, CheckConstraint('late_fee >= 0'))
     # Timedelta a person has to be member in a semester to be charged any
     # semester fee at all(grace period)
-    grace_period = Column(Interval, nullable=False)
+    grace_period: Mapped[timedelta]
     # Timedelta a member has to be present (i.e. not away although being member)
     # in a semester to be charged the full fee
-    reduced_semester_fee_threshold = Column(Interval, nullable=False)
+    reduced_semester_fee_threshold: Mapped[timedelta]
     # Timedelta after which members are being charged a late fee for not paying
     # in time
-    payment_deadline = Column(Interval, nullable=False)
+    payment_deadline: Mapped[timedelta]
     # Amount of outstanding debt a member can have without being charged a late
     # fee
-    allowed_overdraft = Column(Money,
-                               CheckConstraint('allowed_overdraft >= 0'),
-                               nullable=False)
-    begins_on = Column(Date, nullable=False)
-    ends_on = Column(Date, nullable=False)
+    allowed_overdraft: Mapped[int] = mapped_column(
+        Money,
+        CheckConstraint('allowed_overdraft >= 0'),
+    )
+    begins_on: Mapped[date]
+    ends_on: Mapped[date]
 
     def __contains__(self, date):
         return date in closed(self.begins_on, self.ends_on)
@@ -102,22 +113,32 @@ AccountType = t.Literal[
     "REVENUE",  # Ertragskonto
 ]
 
-
 class Account(IntegerIdModel):
-    name = Column(String(127), nullable=False)
+    name: Mapped[str127]
     # noinspection PyUnresolvedReferences
-    type: Mapped[AccountType] = Column(
-        Enum(*AccountType.__args__, name="account_type"), nullable=False
+    type: Mapped[AccountType] = mapped_column(
+        Enum(*AccountType.__args__, name="account_type"),
     )
-    legacy = Column(Boolean, default=False, nullable=False)
-    splits = relationship('Split', viewonly=True, back_populates='account')
+    legacy: Mapped[bool] = mapped_column(default=False)
+
+    # backrefs
+    splits: Mapped[list[Split]] = relationship(viewonly=True, back_populates="account")
+    user: Mapped[User | None] = relationship(viewonly=True, back_populates="account")
+    building: Mapped[Building | None] = relationship(
+        back_populates="fee_account", uselist=False
+    )
+    patterns: Mapped[list[AccountPattern]] = relationship(back_populates="account")
+    transactions: Mapped[list[Transaction]] = relationship(
+        secondary="split", back_populates="accounts", viewonly=True
+    )
+    # /backrefs
 
     @hybrid_property
-    def balance(self):
+    def _balance(self) -> int:
         return sum(s.amount for s in self.splits)
 
-    @balance.expression
-    def balance(cls):
+    @_balance.expression
+    def balance(cls) -> ColumnElement[int]:
         return select(func.coalesce(func.sum(Split.amount), 0))\
             .where(Split.account_id == cls.id)\
             .label("balance")
@@ -157,28 +178,42 @@ manager.add_function(
 
 
 class AccountPattern(IntegerIdModel):
-    pattern = Column(String, nullable=False)
-    account_id = Column(Integer, ForeignKey(Account.id, ondelete='CASCADE'), nullable=False)
-    account = relationship(Account, backref="patterns")
+    pattern: Mapped[str]
+    account_id: Mapped[int] = mapped_column(ForeignKey(Account.id, ondelete="CASCADE"))
+    account: Mapped[Account] = relationship(Account, back_populates="patterns")
 
 
 class Transaction(IntegerIdModel):
-    description = Column(Text(), nullable=False)
-    author_id = Column(Integer, ForeignKey("user.id", ondelete='SET NULL',
-                                           onupdate='CASCADE'),
-                       nullable=True)
-    author = relationship("User")
-    posted_at = Column(DateTimeTz, nullable=False,
-                       server_default=func.current_timestamp(),
-                       onupdate=func.current_timestamp())
-    valid_on = Column(Date, nullable=False,
-                      server_default=func.current_timestamp(), index=True)
-    accounts = relationship(Account, secondary="split", backref="transactions",
-                            viewonly=True)
+    description: Mapped[str] = mapped_column(Text())
+    author_id: Mapped[int | None] = mapped_column(
+        ForeignKey("user.id", ondelete="SET NULL", onupdate="CASCADE")
+    )
+    author: Mapped[User | None] = relationship("User")
+    # workaround, see sqlalchemy#9175
+    posted_at: Mapped[datetime_tz_onupdate]
 
-    confirmed = Column(Boolean(), nullable=False, default=True)
-    splits = relationship('Split', back_populates='transaction',
-                          cascade="all, delete-orphan", cascade_backrefs=False)
+    valid_on: Mapped[date] = mapped_column(
+        server_default=func.current_timestamp(), index=True
+    )
+
+    confirmed: Mapped[bool] = mapped_column(default=True)
+
+    # backrefs
+    splits: Mapped[list[Split]] = relationship(
+        back_populates="transaction",
+        cascade="all, delete-orphan",
+    )
+    bank_account_activities: Mapped[list[BankAccountActivity]] = relationship(
+        back_populates="transaction",
+        viewonly=True,
+    )
+    # /backrefs
+
+    # associations
+    accounts: Mapped[list[Account]] = relationship(
+        secondary="split", back_populates="transactions", viewonly=True
+    )
+    # /associations
 
     @property
     def amount(self):
@@ -195,18 +230,24 @@ class Transaction(IntegerIdModel):
 
 class Split(IntegerIdModel):
     # positive amount means credit (ger. Haben) and negative credit (ger. Soll)
-    amount = Column(Money, nullable=False)
-    account_id = Column(Integer, ForeignKey(Account.id, ondelete='CASCADE'),
-                        nullable=False, index=True)
-    account = relationship(Account, back_populates='splits')
-
-    transaction_id = Column(Integer,
-                            ForeignKey(Transaction.id, ondelete='CASCADE'),
-                            nullable=False)
-    transaction = relationship(Transaction, back_populates='splits')
-    __table_args__ = (
-        UniqueConstraint(transaction_id, account_id),
+    amount: Mapped[int] = mapped_column(Money)
+    account_id: Mapped[int] = mapped_column(
+        ForeignKey(Account.id, ondelete="CASCADE"),
+        index=True,
     )
+    account: Mapped[Account] = relationship(back_populates="splits")
+
+    transaction_id: Mapped[int] = mapped_column(
+        ForeignKey(Transaction.id, ondelete="CASCADE"),
+    )
+    transaction: Mapped[Transaction] = relationship(back_populates="splits")
+    __table_args__ = (UniqueConstraint(transaction_id, account_id),)
+
+    # backrefs
+    bank_account_activity: Mapped[BankAccountActivity | None] = relationship(
+        uselist=False,
+    )
+    # /backrefs
 
 
 manager.add_function(
@@ -294,21 +335,30 @@ event.listen(Transaction, "before_update", check_transaction_on_save)
 
 
 class BankAccount(IntegerIdModel):
-    name = Column(String(255), nullable=False)
-    bank = Column(String(255), nullable=False)
-    account_number = Column(String(10), nullable=False)
-    routing_number = Column(String(8), nullable=False)
-    iban = Column(String(34), nullable=False)
-    bic = Column(String(11), nullable=False)
-    fints_endpoint = Column(String, nullable=False)
-    account_id = Column(Integer, ForeignKey(Account.id), nullable=False,
-                        unique=True)
-    account = relationship(Account)
+    name: Mapped[str255]
+    bank: Mapped[str255]
+    account_number: Mapped[str] = mapped_column(String(10))
+    routing_number: Mapped[str] = mapped_column(String(8))
+    iban: Mapped[str] = mapped_column(String(34))
+    bic: Mapped[str] = mapped_column(String(11))
+    fints_endpoint: Mapped[str]
+    account_id: Mapped[int] = mapped_column(ForeignKey(Account.id), unique=True)
+    account: Mapped[Account] = relationship()
 
     __table_args__ = (
         UniqueConstraint(account_number, routing_number),
         UniqueConstraint(iban),
     )
+
+    # backrefs
+    activities: Mapped[list[BankAccountActivity]] = relationship(
+        back_populates="bank_account",
+        viewonly=True,
+    )
+    mt940_errors: Mapped[list[MT940Error]] = relationship(
+        back_populates="bank_account", viewonly=True
+    )
+    # /backrefs
 
     @hybrid_property
     def balance(self):
@@ -334,36 +384,40 @@ class BankAccount(IntegerIdModel):
 
 
 class BankAccountActivity(IntegerIdModel):
-    bank_account_id = Column(Integer, ForeignKey(BankAccount.id),
-                             nullable=False, index=True)
-    bank_account = relationship(BankAccount, backref=backref("activities", viewonly=True))
-    amount = Column(Money, nullable=False)
-    reference = Column(Text, nullable=False)
-    other_account_number = Column(String(255), nullable=False)
-    other_routing_number = Column(String(255), nullable=False)
-    other_name = Column(String(255), nullable=False)
-    imported_at = Column(DateTimeTz, nullable=False)
-    posted_on = Column(Date, nullable=False)
-    valid_on = Column(Date, nullable=False)
-    transaction_id = Column(Integer, ForeignKey(Transaction.id,
-                                                onupdate='CASCADE',
-                                                ondelete='SET NULL'))
-    transaction = relationship(Transaction, viewonly=True, sync_backref=False,
-                               backref=backref("bank_account_activities",
-                                               uselist=True))
-    account_id = Column(Integer, ForeignKey(Account.id, onupdate='CASCADE',
-                                            ondelete='SET NULL'))
-    account = relationship(Account, viewonly=True)
-    split = relationship(Split, foreign_keys=(transaction_id, account_id),
-                         backref=backref("bank_account_activity",
-                                         uselist=False))
-    matching_patterns = relationship(
-        AccountPattern,
+    bank_account_id: Mapped[int] = mapped_column(ForeignKey(BankAccount.id), index=True)
+    bank_account: Mapped[BankAccount] = relationship(back_populates="activities")
+    amount: Mapped[int] = mapped_column(Money)
+    reference: Mapped[str] = mapped_column(Text)
+    other_account_number: Mapped[str255]
+    other_routing_number: Mapped[str255]
+    other_name: Mapped[str255]
+    imported_at: Mapped[utc.DateTimeTz]
+    posted_on: Mapped[date]
+    valid_on: Mapped[date]
+    transaction_id: Mapped[int | None] = mapped_column(
+        ForeignKey(Transaction.id, onupdate="CASCADE", ondelete="SET NULL")
+    )
+    transaction: Mapped[Transaction | None] = relationship(
+        viewonly=True,
+        back_populates="bank_account_activities",
+    )
+    account_id: Mapped[int | None] = mapped_column(
+        ForeignKey(Account.id, onupdate="CASCADE", ondelete="SET NULL")
+    )
+    account: Mapped[Account | None] = relationship(viewonly=True)
+    split: Mapped[Split] = relationship(
+        foreign_keys=(transaction_id, account_id),
+        back_populates="bank_account_activity",
+    )
+
+    # associations
+    matching_patterns: Mapped[list[AccountPattern]] = relationship(
         primaryjoin='foreign(BankAccountActivity.reference)'
                     '.op("~*", is_comparison=True)(remote(AccountPattern.pattern))',
         uselist=True,
         viewonly=True
     )
+    # associations
 
     __table_args__ = (
         ForeignKeyConstraint((transaction_id, account_id),
@@ -375,16 +429,14 @@ class BankAccountActivity(IntegerIdModel):
 
 
 class MT940Error(IntegerIdModel):
-    mt940 = Column(Text(), nullable=False)
-    exception = Column(Text(), nullable=False)
-    author = relationship("User")
-    author_id = Column(Integer, ForeignKey("user.id"), nullable=False)
-    imported_at = Column(DateTimeTz, nullable=False,
-                       server_default=func.current_timestamp(),
-                       onupdate=func.current_timestamp())
-    bank_account = relationship(BankAccount, backref=backref("mt940_errors"))
-    bank_account_id = Column(Integer, ForeignKey(BankAccount.id),
-                             nullable=False)
+    mt940: Mapped[str] = mapped_column(Text())
+    exception: Mapped[str] = mapped_column(Text())
+    author_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
+    author: Mapped[User] = relationship()
+    imported_at: Mapped[datetime_tz_onupdate]
+    bank_account: Mapped[BankAccount] = relationship(back_populates="mt940_errors")
+    bank_account_id: Mapped[int] = mapped_column(ForeignKey(BankAccount.id))
+
 
 
 manager.add_constraint(

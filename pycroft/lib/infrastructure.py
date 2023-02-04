@@ -129,7 +129,7 @@ def create_switch_port(
     switch_port = SwitchPort(
         name=name,
         switch=switch,
-        default_vlans=default_vlans,  # type: ignore
+        default_vlans=default_vlans,
     )
     session.add(switch_port)
 
@@ -198,7 +198,7 @@ def edit_switch(
             .format(switch.host.name, str(switch.management_ip), management_ip)
         log_room_event(message.to_json(), processor, switch.host.room)
 
-        switch.management_ip = management_ip
+        switch.management_ip = ipaddr.IPAddress(management_ip)
     session.add(switch)
 
 
@@ -210,7 +210,7 @@ def create_switch(
     processor: User,
 ) -> Switch:
     switch = Switch(
-        management_ip=management_ip, host=Host(room=room, owner=User.get(0), name=name)
+        management_ip=management_ip, host=Host(room=room, owner=session.get(User, 0), name=name)
     )
     session.add(switch)
 

@@ -56,7 +56,6 @@ markers = [
     "meta: meta test (e.g. testing validity/consistency of fixtures)",
 ]
 filterwarnings = [
-    "always::sqlalchemy.exc.RemovedIn20Warning",
     # fixed in kombu v5.3: https://github.com/celery/kombu/issues/1339
     "ignore::DeprecationWarning:kombu.utils.compat",
     # actually caused by reportlab.

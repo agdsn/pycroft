@@ -16,7 +16,7 @@ Most prominently:
 import typing
 from typing import NamedTuple
 
-from sqlalchemy import and_, func, select, join
+from sqlalchemy import and_, func, select, join, text, literal
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import scoped_session, sessionmaker, joinedload, foreign, Session
 
@@ -64,13 +64,14 @@ def _fetch_db_users(
     return typing.cast(
         list[_UserProxyType],
         # Grab all users with the required property
-        User.q.options(joinedload(User.unix_account))
+        session.query(User)
+        .options(joinedload(User.unix_account))
         .join(User.current_properties)
         .filter(
             (CurrentProperty.property_name == required_property)
             if required_property
-            else True,
-            User.unix_account != None,
+            else literal(True),
+            User.unix_account_id.is_not(None),
         )
         # additional info:
         #  absence of `ldap_login_enabled` property → should_be_blocked
@@ -162,7 +163,7 @@ def _fetch_db_groups(session: Session) -> list[_GroupProxyType]:
                 .where(Membership.active_during.contains(func.current_timestamp()))
                 .group_by(Group.id)
                 .scalar_subquery(),
-                func.cast("{}", postgresql.ARRAY(User.login.type)),
+                func.cast(literal("{}"), postgresql.ARRAY(User.login.type)),
             ).label("members")
         ).all(),
     )

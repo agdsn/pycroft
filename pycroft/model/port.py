@@ -5,34 +5,40 @@
 pycroft.model.port
 ~~~~~~~~~~~~~~~~~~
 """
-from sqlalchemy import Column, String, Integer, ForeignKey
-from sqlalchemy.orm import relationship, backref
+from __future__ import annotations
+
+from sqlalchemy import String, ForeignKey
+from sqlalchemy.orm import relationship, mapped_column, Mapped
 
 from pycroft.model import ddl
-from pycroft.model.base import IntegerIdModel
-from pycroft.model.facilities import Room
-from pycroft.model.host import SwitchPort
+from .base import IntegerIdModel
+from .facilities import Room
+from .host import SwitchPort
 
 manager = ddl.DDLManager()
 
 
 class PatchPort(IntegerIdModel):
     """A patch panel port that may or not be connected to a switch"""
-    id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False)
 
-    switch_port_id = Column(Integer, ForeignKey(SwitchPort.id, ondelete="SET NULL"), unique=True)
-    switch_port = relationship(SwitchPort,
-                               backref=backref("patch_port", uselist=False, cascade_backrefs=False))
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name = mapped_column(String, nullable=False)
 
-    room_id = Column(Integer, ForeignKey("room.id", ondelete="CASCADE"),
-                     nullable=False, index=True)
-    room = relationship(Room, foreign_keys=room_id, backref=backref("patch_ports",
-                                                                    cascade="all, delete-orphan",
-                                                                    cascade_backrefs=False))
+    switch_port_id: Mapped[int | None] = mapped_column(
+        ForeignKey(SwitchPort.id, ondelete="SET NULL"), unique=True
+    )
+    switch_port: Mapped[SwitchPort] = relationship(back_populates="patch_port")
 
-    switch_room_id = Column(Integer, ForeignKey("room.id"), nullable=False, index=True)
-    switch_room = relationship(Room, foreign_keys=switch_room_id)
+    room_id: Mapped[int] = mapped_column(
+        ForeignKey("room.id", ondelete="CASCADE"), index=True
+    )
+    room: Mapped[Room] = relationship(
+        foreign_keys=room_id,
+        back_populates="patch_ports",
+    )
+
+    switch_room_id: Mapped[int] = mapped_column(ForeignKey("room.id"), index=True)
+    switch_room: Mapped[Room] = relationship(foreign_keys=switch_room_id)
 
     #__table_args__ = (UniqueConstraint("name", "switch_room_id"),)
 
