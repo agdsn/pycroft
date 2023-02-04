@@ -1,5 +1,9 @@
 # see https://github.com/topics/pre-commit-hook for more
 repos:
+-   repo: https://github.com/akaihola/darker
+    rev: 1.6.1
+    hooks:
+    -   id: darker
 -   repo: https://github.com/asottile/pyupgrade
     rev: v2.29.0
     hooks:
