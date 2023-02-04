@@ -122,7 +122,7 @@ def bank_accounts_activities_json():
 
     activity_q = (BankAccountActivity.q
                   .options(joinedload(BankAccountActivity.bank_account))
-                  .filter(BankAccountActivity.transaction_id == None))
+                  .filter(BankAccountActivity.transaction_id is None))
 
     return jsonify(items=[{
         'bank_account': activity.bank_account.name,
@@ -527,7 +527,7 @@ def accounts_list():
     accounts_by_type = {
         t[0]: list(t[1])
         for t in groupby(
-            Account.q.filter_by(legacy=False).outerjoin(User).filter(User.id == None)
+            Account.q.filter_by(legacy=False).outerjoin(User).filter(User.id.is_(None))
                 .order_by(Account.type).all(),
             lambda a: a.type.value
         )
@@ -913,7 +913,7 @@ def transactions_all_json():
                  (User.account_id == Split.account_id),
                  isouter=True))
                                  .group_by(Split.transaction_id)
-                                 .having(func.bool_and(User.id == None))
+                                 .having(func.bool_and(User.id.is_(None)))
                                  .alias("nut"))
 
         tid = literal_column("nut.transaction_id")
@@ -1227,7 +1227,7 @@ def json_accounts_system():
             "account_name": localized(account.name),
             "account_type": account.type.value
         } for account in Account.q.outerjoin(User).filter(
-            and_(User.account == None,
+            and_(User.account.is_(None),
                  Account.type != AccountType.USER_ASSET)
         ).all()])
 

@@ -106,7 +106,7 @@ radusergroup = View(
             literal(0).label('Priority'),
         ]).select_from(User)
         .outerjoin(network_access_subq, User.id == network_access_subq.c.user_id)
-        .filter(network_access_subq.c.network_access == None)
+        .filter(network_access_subq.c.network_access.is_(None))
         .join(User.hosts)
         .join(Host.interfaces)
         .join(Host.room)
