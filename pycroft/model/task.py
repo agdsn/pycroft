@@ -16,7 +16,6 @@ from sqlalchemy.orm import relationship, Mapped, mapped_column
 from typing import TypeVar, Generic
 
 from pycroft.model.base import IntegerIdModel
-from pycroft.model.types import DateTimeTz
 from .task_serialization import UserMoveOutSchema, UserMoveSchema, UserMoveInSchema, TaskParams
 from .type_aliases import str50
 from ..helpers import utc

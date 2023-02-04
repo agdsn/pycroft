@@ -365,7 +365,7 @@ def patch_port_edit(switch_room_id, patch_port_id):
         return redirect(url_for('.room_show', room_id=switch_room_id))
 
     if not patch_port.switch_room == switch_room:
-        flash(f"Patch-Port ist nicht im Switchraum!", "error")
+        flash("Patch-Port ist nicht im Switchraum!", "error")
         return redirect(url_for('.room_show', room_id=switch_room_id))
 
     form = PatchPortForm(switch_room=switch_room.short_name,
@@ -421,7 +421,7 @@ def patch_port_delete(switch_room_id, patch_port_id):
         return redirect(url_for('.room_show', room_id=switch_room_id))
 
     if not patch_port.switch_room == switch_room:
-        flash(f"Patch-Port ist nicht im Switchraum!", "error")
+        flash("Patch-Port ist nicht im Switchraum!", "error")
         return redirect(url_for('.room_show', room_id=switch_room_id))
 
     form = Form()

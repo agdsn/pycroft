@@ -13,12 +13,11 @@ import os
 import re
 import typing
 import typing as t
-from datetime import datetime, timedelta, date
+from datetime import timedelta, date
 from difflib import SequenceMatcher
 from typing import Iterable
 
 from sqlalchemy import func, select, Boolean, String
-from sqlalchemy.engine import Row
 
 from pycroft import config, property
 from pycroft.helpers import user as user_helper, utc
@@ -843,7 +842,6 @@ def move_out(
             .format(room=user.room.short_name,
                     num_hosts=num_hosts,
                     interfaces=', '.join(deleted_interfaces))
-        had_custom_address = user.has_custom_address
         user.room = None
     elif num_hosts:
         message = "Deleted interfaces {interfaces} of {num_hosts} hosts." \

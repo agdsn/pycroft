@@ -2,10 +2,8 @@
 #  This file is part of the Pycroft project and licensed under the terms of
 #  the Apache License, Version 2.0. See the LICENSE file for details
 import ipaddr
-import pytest
 
 from pycroft.lib import infrastructure as infra
-from pycroft.model.logging import RoomLogEntry
 from tests import factories
 
 

@@ -5,7 +5,6 @@
 pycroft.model.traffic
 ~~~~~~~~~~~~~~~~~~~~~
 """
-import enum
 import typing as t
 
 from sqlalchemy import (

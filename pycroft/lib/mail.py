@@ -143,11 +143,15 @@ def send_mails(mails: list[Mail]) -> tuple[bool, int]:
         traceback.print_exc()
 
         # smtp.connect failed to connect
-        logger.critical(f'Unable to connect to SMTP server: %s', e, extra={
-            'trace': True,
-            'tags': {'mailserver': f"{smtp_host}:{smtp_host}"},
-            'data': {'exception_arguments': e.args}
-        })
+        logger.critical(
+            "Unable to connect to SMTP server: %s",
+            e,
+            extra={
+                "trace": True,
+                "tags": {"mailserver": f"{smtp_host}:{smtp_host}"},
+                "data": {"exception_arguments": e.args},
+            },
+        )
 
         raise RetryableException
     else:

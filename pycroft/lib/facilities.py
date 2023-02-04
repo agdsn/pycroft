@@ -5,7 +5,6 @@ pycroft.lib.facilities
 import logging
 import re
 import typing as t
-from collections import defaultdict
 from dataclasses import dataclass
 from itertools import groupby
 

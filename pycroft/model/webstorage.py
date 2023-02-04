@@ -11,7 +11,6 @@ from sqlalchemy.orm import Mapped, mapped_column
 from pycroft.helpers import utc
 from pycroft.model.base import IntegerIdModel
 from pycroft.model.session import session
-from pycroft.model.types import DateTimeTz
 
 
 class WebStorage(IntegerIdModel):

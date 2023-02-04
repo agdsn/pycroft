@@ -16,7 +16,7 @@ Most prominently:
 import typing
 from typing import NamedTuple
 
-from sqlalchemy import and_, func, select, join, text, literal
+from sqlalchemy import and_, func, select, join, literal
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import scoped_session, sessionmaker, joinedload, foreign, Session
 

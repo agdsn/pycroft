@@ -16,7 +16,7 @@ class TestColumn:
         assert c.name == "test_col"
         assert c.title == "Test Column"
         assert c.width == 0
-        assert c.cell_style == False
+        assert c.cell_style is False
         assert repr(c) == "<Column 'test_col' title='Test Column'>"
 
     def test_instantiation_without_name(self):

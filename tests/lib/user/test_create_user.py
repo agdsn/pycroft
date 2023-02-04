@@ -1,5 +1,4 @@
 import dataclasses
-import operator
 from datetime import date
 
 import pytest

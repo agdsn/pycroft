@@ -11,10 +11,10 @@ from typing import Mapping, TypeVar, Generic
 
 from marshmallow import ValidationError
 from sqlalchemy import select
-from sqlalchemy.orm import with_polymorphic, Session
+from sqlalchemy.orm import with_polymorphic
 
 from pycroft.helpers.i18n import deferred_gettext
-from pycroft.helpers.utc import DateTimeTz, with_min_time, ensure_tz
+from pycroft.helpers.utc import DateTimeTz, ensure_tz
 from pycroft.lib.logging import log_task_event
 from pycroft.model import session
 from pycroft.model.session import with_transaction

@@ -85,7 +85,7 @@ class TestHadesView:
             assert row.NASIPAddress == switch.management_ip
             assert row.Attribute == "User-Name"
             assert row.Op == "=*"
-            assert row.Value == None
+            assert row.Value is None
             assert row.Priority == 10
 
         assert {row.NASPortId for row in rows} \

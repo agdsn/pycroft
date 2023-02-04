@@ -15,7 +15,6 @@ and initializes the session.
 
 """
 import logging
-import os
 
 from flask import _request_ctx_stack
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -24,7 +23,6 @@ from pycroft.model.session import set_scoped_session
 from scripts.connection import try_create_connection, get_connection_string
 
 from pycroft.model._all import *
-from pycroft import config
 
 connection_string = get_connection_string()
 

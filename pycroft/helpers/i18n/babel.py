@@ -15,8 +15,14 @@ from babel.support import Translations
 
 _unspecified_locale = Locale("en", "US")
 _null_translations = Translations()
-_locale_lookup: typing.Callable[[], Locale] = lambda: _unspecified_locale
-_translations_lookup: typing.Callable[[], Translations] = lambda: _null_translations
+
+
+def _locale_lookup() -> Locale:
+    return _unspecified_locale
+
+
+def _translations_lookup() -> Translations:
+    return _null_translations
 
 
 def get_locale() -> Locale:

@@ -356,8 +356,7 @@ def bank_account_activities_edit(activity_id):
             obj=activity, bank_account_name=activity.bank_account.name)
 
         if activity.transaction_id:
-            flash(f"Bankbewegung ist bereits zugewiesen!",
-                  'warning')
+            flash("Bankbewegung ist bereits zugewiesen!", "warning")
 
         form_args = {
             'form': form,

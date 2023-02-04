@@ -96,7 +96,7 @@ def make_app(debug=False, hades_logs=True):
     template_filters.register_filters(app)
     template_tests.register_checks(app)
 
-    babel = Babel(app)
+    Babel(app)
     if hades_logs:
         try:
             HadesLogs(app)
@@ -153,7 +153,7 @@ def make_app(debug=False, hades_logs=True):
         app.logger.info("An info log for inbetween")
         app.logger.error("Someone used the debug-sentry endpoint! Also, this is a test error.",
                          extra={'pi': 3.141})
-        div_by_zero = 1 / 0
+        div_by_zero = 1 / 0  # noqa
 
     @app.teardown_request
     def shutdown_session(exception=None):

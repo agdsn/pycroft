@@ -6,9 +6,8 @@ from jinja2.runtime import Context
 from sqlalchemy.orm import Session
 
 from pycroft.model.config import Config
-from pycroft.model.user import PropertyGroup, User
-from tests.factories.property import FinancePropertyGroupFactory, \
-    AdminPropertyGroupFactory, MembershipFactory
+from pycroft.model.user import User
+from tests.factories.property import AdminPropertyGroupFactory
 from tests.factories.user import UserFactory
 from web import PycroftFlask
 from web.template_filters import require

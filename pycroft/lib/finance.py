@@ -23,7 +23,6 @@ from sqlalchemy import or_, and_, literal, select, exists, not_, \
     text, future
 from sqlalchemy.orm import aliased, contains_eager, joinedload, Session, Query
 from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy.sql import Select
 
 from pycroft import config
 from pycroft.helpers.date import diff_month, last_day_of_month
@@ -897,7 +896,7 @@ def build_transactions_query(
     ):
         sort_by = "valid_on"
 
-    descending = (sort_order == "desc") ^ (positive == False)
+    descending = (sort_order == "desc") ^ (positive is False)
     ordering = sort_by + " desc" if descending else sort_by
     if search:
         query = query.filter(Transaction.description.ilike(f'%{search}%'))

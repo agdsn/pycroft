@@ -20,7 +20,7 @@ from sqlalchemy.types import String, Text
 from pycroft.helpers.i18n import gettext
 from pycroft.helpers.interval import closed
 from pycroft.model import ddl
-from pycroft.model.types import Money, DateTimeTz
+from pycroft.model.types import Money
 from .base import IntegerIdModel
 from .exc import PycroftModelException
 from .type_aliases import str127, str255, datetime_tz_onupdate

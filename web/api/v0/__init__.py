@@ -183,7 +183,7 @@ class ChangeEmailResource(Resource):
         try:
             edit_email(user, args.new_email, args.forwarded, processor=user)
             session.session.commit()
-        except IllegalEmailError as e:
+        except IllegalEmailError:
             abort(400, message='Invalid email address.')
         return "Email has been changed."
 

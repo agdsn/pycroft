@@ -11,7 +11,6 @@ from typing import Protocol, Sequence
 from sqlalchemy import func, nulls_last, and_, not_
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload, Session
-from sqlalchemy.sql.elements import ClauseElement
 from sqlalchemy.sql.functions import current_timestamp
 
 from pycroft import Config
