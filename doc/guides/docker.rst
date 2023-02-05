@@ -9,8 +9,9 @@ Requires
     *nothing*
 You need to install
 
-* `Docker-engine <https://docs.docker.com/engine/install/>`__ ``≥17.06.0``
+* `Docker-engine <https://docs.docker.com/engine/install/>`__ ``≥19.03.0``
 * `Docker Compose <https://docs.docker.com/compose/install/>`__ ``≥1.16.0``
+* `Docker buildx <https://github.com/docker/buildx#installing>`__ ``≥0.10.0``
 
 If not the case, add yourself to the ``docker`` group with
 
@@ -50,7 +51,7 @@ Requires
 
 .. code:: bash
 
-    docker compose build
+    docker buildx bake
 
 Building the production images
 ------------------------------
