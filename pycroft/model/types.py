@@ -220,7 +220,7 @@ class DateTimeTz(DateTime):
     """A sqlalchemy type decorator corresponding to `datetime` types with time zone.
 
     In other words, a `mapped_column(DateTimeTz)` produces python objects of type
-    :cls:`pycroft.helpers.utc.DateTimeTz`.
+    :class:`pycroft.helpers.utc.DateTimeTz`.
     """
     def __init__(self):
         super().__init__(timezone=True)
