@@ -34,7 +34,7 @@ you only need to do the following:
 
    .. code:: shell
 
-       mkvirtualenv -a . -r requirements.txt -r requirements.dev.txt
+       mkvirtualenv -a . -r requirements.txt -r requirements.dev.txt pycroft
        pip install -r requirements.txt -r requirements.dev.txt
 
 #. Run tests / Build docs / …
