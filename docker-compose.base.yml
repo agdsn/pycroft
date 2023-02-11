@@ -14,6 +14,9 @@ services:
     build:
       context: docker/dev
       dockerfile: ../dev.Dockerfile
+      x-bake:
+        contexts:
+          pycroft-base: target:base
     image: agdsn/pycroft-dev:${TAG:-latest}
     environment:
       PYTHONDEVMODE: 1
