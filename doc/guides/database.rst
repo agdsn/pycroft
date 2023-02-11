@@ -19,7 +19,7 @@ The password for the ``postgres`` user is ``password``.
 .. code:: shell
 
     # clone the anonymized dump into `data/`
-    git clone https://git.agdsn.de/AGDSN/pycroft-data.git data
+    git clone https://git.agdsn.de/AGDSN/pycroft-data.git data --depth=1
     # stop the web app while we're filling in the db. PW: `password`
     docker compose stop dev-app dev-webpack
     # execute the dump
