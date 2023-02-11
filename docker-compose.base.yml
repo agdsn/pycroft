@@ -17,7 +17,7 @@ services:
     image: agdsn/pycroft-dev:${TAG:-latest}
     environment:
       PYTHONDEVMODE: 1
-      PYCROFT_DB_URI: postgresql://postgres:password@db:5432/pycroft
+      PYCROFT_DB_URI: postgresql://postgres:password@db:5432/pycroft?options=-csearch_path%3Dpycroft,public
       PYCROFT_API_KEY: secret
       PYCROFT_LDAP_HOST: ldap
       PYCROFT_LDAP_PORT: 389

@@ -19,13 +19,16 @@ The password for the ``postgres`` user is ``password``.
 .. code:: shell
 
     # clone the anonymized dump into `data/`
-    git clone https://git.agdsn.de/AGDSN/pycroft-data.git data --depth=1
-    # stop the web app while we're filling in the db. PW: `password`
     docker compose stop dev-app dev-webpack
-    # execute the dump
-    psql -h 127.0.0.1 -p 55432 -U postgres -d pycroft -f data/pycroft.sql
+    git clone https://git.agdsn.de/AGDSN/pycroft-data.git data --depth=1
+    export PGPASSFILE=.pycroft.pgpass
+    psql -wb postgres://postgres@127.0.0.1:55432/pycroft \
+        -c '\set ON_ERROR_STOP 1' \
+        -c 'drop schema pycroft cascade' \
+        -f data/pycroft_schema.sql \
+        -f data/pycroft.sql
     # start the web app again
-    docker compose start dev-app
+    docker compose start dev-app dev-webpack
 
 Success
     Navigate to `<http://localhost:5000>`_.
