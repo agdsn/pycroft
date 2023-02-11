@@ -155,10 +155,16 @@ class BtnColumn(DictValueMixin, Column):
 
     if typing.TYPE_CHECKING:
         @classmethod
-        def value(cls, btn_class: str, href: str, title: str, tooltip: str,
-                  new_tab: str | None = None,
-                  icon: str | Iterable[str] | None = None) \
-            -> dict: ...
+        def value(
+            cls,
+            btn_class: str,
+            href: str,
+            title: str,
+            tooltip: str,
+            new_tab: str | None = None,
+            icon: str | Iterable[str] | None = None,
+        ) -> dict:
+            ...
 
 
 @custom_formatter_column('table.multiBtnFormatter')
@@ -168,14 +174,18 @@ class MultiBtnColumn(DictListValueMixin, Column):
 
     if typing.TYPE_CHECKING:
         @classmethod
-        def single_value(cls, href: str, title: str, glyphicon: str | None = None) -> dict: ...
+        def single_value(
+            cls, href: str, title: str, glyphicon: str | None = None
+        ) -> dict:
+            ...
 
 
 @custom_formatter_column('table.linkFormatter')
 class LinkColumn(DictValueMixin, Column):
     if typing.TYPE_CHECKING:
         @classmethod
-        def value(cls, href: str, title: str, glyphicon: str | None = None) -> dict: ...
+        def value(cls, href: str, title: str, glyphicon: str | None = None) -> dict:
+            ...
 
 
 
@@ -193,9 +203,14 @@ class RelativeDateColumn(Column):
 class TextWithBooleanColumn(DictValueMixin, Column):
     if typing.TYPE_CHECKING:
         @classmethod
-        def value(cls, text: str, bool: bool,
-                  icon_true: str | None = None,
-                  icon_false: str | None = None) -> dict: ...
+        def value(
+            cls,
+            text: str,
+            bool: bool,
+            icon_true: str | None = None,
+            icon_false: str | None = None,
+        ) -> dict:
+            ...
 
 
 @custom_formatter_column('table.userFormatter')

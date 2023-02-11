@@ -52,7 +52,8 @@ F = TypeVar('F', bound=Callable[..., Any])
 
 # noinspection PyOverloads
 @overload
-def with_transaction(wrapped: F) -> F: ...
+def with_transaction(wrapped: F) -> F:
+    ...
 
 @wrapt.decorator
 def with_transaction(wrapped, instance, args, kwargs):

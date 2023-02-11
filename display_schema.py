@@ -19,7 +19,8 @@ def fetch_mappers():
     # lets find all the mappers in our model
     mappers = []
     for attr in dir(_all):
-        if attr[0] == '_': continue
+        if attr[0] == "_":
+            continue
         try:
             cls = getattr(_all, attr)
             mappers.append(class_mapper(cls))
