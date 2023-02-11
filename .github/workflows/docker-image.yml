@@ -95,9 +95,9 @@ jobs:
       - name: Fix permissions
         run: sudo chmod -R a+rw .
       - name: print buildx definition
-        run: docker buildx bake --print
+        run: docker buildx bake --file docker-compose.prod.yml --print
       - name: Build the Docker image
-        run: docker buildx bake --load
+        run: docker buildx bake --file docker-compose.prod.yml --load
       - name: Login to GitLab Registry
         uses: docker/login-action@v1
         with:
