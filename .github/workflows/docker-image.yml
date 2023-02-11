@@ -94,6 +94,8 @@ jobs:
           version: v0.10.0
       - name: Fix permissions
         run: sudo chmod -R a+rw .
+      - name: print buildx definition
+        run: docker buildx bake --print
       - name: Build the Docker image
         run: docker buildx bake
       - name: Login to GitLab Registry
@@ -119,6 +121,8 @@ jobs:
           version: v0.10.0
       - name: Fix permissions
         run: sudo chmod -R a+rw .
+      - name: print buildx definition
+        run: docker buildx bake --print
       - name: Build
         run: docker buildx bake
       - name: Run test-app entrypoints
