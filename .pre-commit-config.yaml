@@ -1,4 +1,6 @@
 # see https://github.com/topics/pre-commit-hook for more
+default_language_version:
+    python: python3.10
 repos:
 -   repo: https://github.com/akaihola/darker
     rev: 1.6.1
