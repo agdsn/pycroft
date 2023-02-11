@@ -97,7 +97,7 @@ jobs:
       - name: print buildx definition
         run: docker buildx bake --print
       - name: Build the Docker image
-        run: docker buildx bake
+        run: docker buildx bake --load
       - name: Login to GitLab Registry
         uses: docker/login-action@v1
         with:
@@ -124,7 +124,7 @@ jobs:
       - name: print buildx definition
         run: docker buildx bake --print
       - name: Build
-        run: docker buildx bake
+        run: docker buildx bake --load
       - name: Run test-app entrypoints
         run: docker-compose -f docker-compose.test.yml run --rm --no-deps test-app
       - name: Start
