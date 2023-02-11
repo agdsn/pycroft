@@ -35,7 +35,7 @@ environment) with:
 
 ::
 
-   docker-compose run --rm dev-app pip install -r requirements.txt
+   docker compose run --rm dev-app pip install -r requirements.txt
 
 The production build also uses the submodules. Make sure to update the
 commit hash of the submodule HEAD if you change something. This will be

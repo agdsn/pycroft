@@ -9,7 +9,7 @@ Requires
     * :ref:`docker environment <docker environment>`
     * Alternatively (unit tests only): a venv with installed test dependencies
 
-For the testing setup, there exists a separate docker-compose file:
+For the testing setup, there exists a separate docker compose file:
 
 There is a ``test`` subcommand of the docker entrypoint which wraps ``pytest``.
 The ``legacy`` and pytest-based (``not legacy``) tests have to be run separately:

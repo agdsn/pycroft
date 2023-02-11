@@ -22,7 +22,7 @@ If not the case, add yourself to the ``docker`` group with
 For the changes to take effect, you need to log out and log back in again.
 
 Success
-    If ``docker-compose config`` displays the current configuration
+    If ``docker compose config`` displays the current configuration
 
 .. _docker environment:
 
@@ -64,7 +64,7 @@ e.g.:
 
 .. code:: bash
 
-   TAG=1.2.3 docker-compose -f docker-compose.prod.yml build
+   TAG=1.2.3 docker compose -f docker-compose.prod.yml build
 
 This will tag all generated images with the tag ``1.2.3``.
 
@@ -80,7 +80,7 @@ A complete environment can be started by running
 
 .. code:: bash
 
-   docker-compose up -d
+   docker compose up -d
 
 If you run this command for the first time, this might take a while, as
 the images have to be built (see :ref:`built images`)
@@ -96,9 +96,9 @@ Viewing logs
 ------------
 .. code:: sh
 
-   docker-compose logs # for all services
-   docker-compose logs dev-app  # for one service
-   docker-compose logs -f --tail=50 dev-app  # Print the last 50 entries and follow the logs
+   docker compose logs # for all services
+   docker compose logs dev-app  # for one service
+   docker compose logs -f --tail=50 dev-app  # Print the last 50 entries and follow the logs
 
 
 (Re-)building/Pulling images

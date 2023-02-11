@@ -5,7 +5,7 @@ Due to laziness, prefix every bash-snippet with
 
 .. code:: sh
 
-   alias drc=docker-compose
+   alias drc=docker compose
 
 Webpack appears to be missing a library
 ---------------------------------------
