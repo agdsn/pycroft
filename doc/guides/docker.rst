@@ -94,6 +94,9 @@ Success
 
 Viewing logs
 ------------
+Requires
+    * :ref:`docker environment <docker environment>`
+
 .. code:: sh
 
    docker compose logs # for all services
@@ -103,10 +106,12 @@ Viewing logs
 
 (Re-)building/Pulling images
 ----------------------------
+Requires
+    * :ref:`docker environment <docker environment>`
 
-You can (re-)build/pull a particular service/image (or all of them if no
-service is specified) by running:
+You can (re-)build/pull all images by running:
 
 .. code:: bash
 
-   docker-compose build --force-rm --pull [service]
+   docker buildx bake --pull
+
