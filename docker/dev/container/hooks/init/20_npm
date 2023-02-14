@@ -9,7 +9,7 @@ function execute_hook() {
   cd /opt/pycroft/app
 
   if [[ -d node_modules ]] && $(shopt -s nullglob dotglob; files=(node_modules/*); (( ${#files[@]} > 0 )) ); then
-    exit
+    return
   fi
 
   npm ci

@@ -17,7 +17,7 @@ function execute_hook() {
 
   if $PY -c 'import importlib.util as u; exit(0 if u.find_spec("pycroft") is not None else 1)'; then
     echo "Pip packages present, nothing to do"
-    exit
+    return
   fi
 
   $PIP install wheel
