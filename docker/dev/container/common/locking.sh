@@ -36,11 +36,34 @@ function clean_lock() {
   fi
 }
 
+# check whether the birth time of a given file exceeds a given age.
+# $1 filename
+# $2 maximum age in seconds
+function _file_older_than() {
+  local file="$1" max_age="$2"
+  if [[ ! -e $file ]]; then
+    return 1  # false
+  fi;
+  # stat: %W: unix timestamp of birth time
+  # date: %s: current unix timestamp
+  age=$(($(date +%s) - $(stat --format %W "$file")))
+  if (( age > max_age )); then
+    return 0  # true
+  else
+    return 1  # false
+  fi
+}
+
 # execute a command protected by a lock file.
 # $1: command (anything executable by bash)
 # $2: lock file path
 function execute_locked() {
   local cmd="$1" lockfile="$2"
+  if _file_older_than "$lockfile" $((30*60)); then
+    echo "Lock file $lockfile is older than 30m, probably left over."
+    echo "Please remove it manually or retry later."
+    return 1
+  fi;
 
   # creates file descriptor $lockfd
   exec {lockfd}<>"$lockfile"
