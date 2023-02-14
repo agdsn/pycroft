@@ -43,6 +43,7 @@ services:
       SWDD_HASH_KEY: key
       MAIL_CONFIRM_URL: "http://localhost/sipa/register/confirm/{}"
       PASSWORD_RESET_URL: "http://localhost/sipa/reset-password/{}"
+      FLASK_ENV: development
   dev:
     extends: dev-base
     volumes:
@@ -57,6 +58,10 @@ services:
       - POSTGRES_DB=pycroft
       - POSTGRES_PASSWORD=password
       - POSTGRES_INITDB_ARGS=--locale=C --encoding=UTF-8
+    healthcheck:
+      test: pg_isready -U postgres
+      interval: 2s
+      timeout: 2m
   ldap:
     image: dinkel/openldap
     environment:
@@ -66,11 +71,19 @@ services:
       - SLAPD_ADDITIONAL_MODULES=ppolicy
     volumes:
       - ./docker/ldap/schema:/etc/ldap/schema/custom
+    healthcheck:
+      test: "slapdn cn=config"
+      interval: 2s
   mq:
     image: rabbitmq:3.8-management
     environment:
       - RABBITMQ_DEFAULT_USER=celery
       - RABBITMQ_DEFAULT_PASS=celery
+    healthcheck:
+      test: rabbitmq-diagnostics check_running
+      start_period: 30s
+      interval: 5s
+      timeout: 2m
   mail:
     build:
       context: ./docker/
