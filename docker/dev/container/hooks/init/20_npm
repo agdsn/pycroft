@@ -1,11 +1,18 @@
 #!/bin/bash
 
 set -euo pipefail
+LOCKFILE=/opt/pycroft/app/.npm_setup.lock
 
-cd /opt/pycroft/app
+. /container/common/locking.sh
 
-if [[ -d node_modules ]] && $(shopt -s nullglob dotglob; files=(node_modules/*); (( ${#files[@]} > 0 )) ); then
-	exit
-fi
+function execute_hook() {
+  cd /opt/pycroft/app
 
-npm ci
+  if [[ -d node_modules ]] && $(shopt -s nullglob dotglob; files=(node_modules/*); (( ${#files[@]} > 0 )) ); then
+    exit
+  fi
+
+  npm ci
+}
+
+execute_locked execute_hook $LOCKFILE
