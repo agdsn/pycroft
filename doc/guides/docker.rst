@@ -76,11 +76,11 @@ Starting the containers
 Requires
     * :ref:`docker environment <docker environment>`
 
-A complete environment can be started by running
+The dev server and its dependent containers can be started by running
 
 .. code:: bash
 
-   docker compose up -d
+   docker compose up --wait dev-app
 
 If you run this command for the first time, this might take a while, as
 the images have to be built (see :ref:`built images`)
