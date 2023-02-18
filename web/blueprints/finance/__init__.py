@@ -38,7 +38,7 @@ from pycroft.lib.finance import end_payment_in_default_memberships, \
     match_activities, take_actions_for_payment_in_default_users, get_pid_csv, get_negative_members
 from pycroft.lib.mail import MemberNegativeBalance
 from pycroft.lib.user import encode_type2_user_id, user_send_mails
-from pycroft.model.finance import Account, Transaction, AccountType
+from pycroft.model.finance import Account, Transaction
 from pycroft.model.finance import (
     BankAccount, BankAccountActivity, Split, MembershipFee, MT940Error)
 from pycroft.model.session import session, utcnow
@@ -596,7 +596,7 @@ def accounts_show(account_id):
         flash("Es existieren mehrere Nutzer, die mit diesem Konto"
               " verbunden sind!", "warning")
 
-    inverted = account.type == AccountType.USER_ASSET
+    inverted = account.type == "USER_ASSET"
 
     _table_kwargs = {
         'data_url': url_for("finance.accounts_show_json", account_id=account_id),
@@ -754,8 +754,12 @@ def transactions_unconfirmed_json():
     T = UnconfirmedTransactionsTable
 
     for transaction in transactions:
-        user_account = next((a for a in transaction.accounts if a.type == AccountType.USER_ASSET), None)
-        bank_acc_act = BankAccountActivity.q.filter_by(transaction_id=transaction.id).first()
+        user_account = next(
+            (a for a in transaction.accounts if a.type == "USER_ASSET"), None
+        )
+        bank_acc_act = BankAccountActivity.q.filter_by(
+            transaction_id=transaction.id
+        ).first()
 
         items.append(
             {
@@ -1222,15 +1226,18 @@ def handle_payments_in_default():
 
 @bp.route('/json/accounts/system')
 def json_accounts_system():
-    return jsonify(accounts=[
-        {
-            "account_id": account.id,
-            "account_name": localized(account.name),
-            "account_type": account.type.value
-        } for account in Account.q.outerjoin(User).filter(
-            and_(User.account.is_(None),
-                 Account.type != AccountType.USER_ASSET)
-        ).all()])
+    return jsonify(
+        accounts=[
+            {
+                "account_id": account.id,
+                "account_name": localized(account.name),
+                "account_type": account.type,
+            }
+            for account in Account.q.outerjoin(User)
+            .filter(and_(User.account_id.is_(None), Account.type != "USER_ASSET"))
+            .all()
+        ]
+    )
 
 
 @bp.route('/json/accounts/user-search')
