@@ -19,13 +19,13 @@ from itertools import chain, islice, tee, zip_longest
 from typing import Callable, TypeVar, NamedTuple
 
 from mt940.models import Transaction as MT940Transaction
-from sqlalchemy import func, between, cast, CTE, Select
+from sqlalchemy import func, between, cast, CTE, Select, union
 from sqlalchemy import or_, and_, literal, select, exists, not_, \
     text, future
-from sqlalchemy.orm import aliased, contains_eager, joinedload, Session, Query
+from sqlalchemy.orm import aliased, contains_eager, joinedload, Session
 from sqlalchemy.orm.exc import NoResultFound
 
-from pycroft import config
+from pycroft import config, Config
 from pycroft.external_services.fints import StatementError, FinTS3Client
 from pycroft.helpers.date import diff_month, last_day_of_month
 from pycroft.helpers.i18n import deferred_gettext, gettext
@@ -59,32 +59,35 @@ def get_membership_fee_for_date(target_date: date) -> MembershipFee:
     :raises sqlalchemy.exc.MultipleResultsFound: if multiple membership fees
         were found:
     """
-    # TODO use `select` API
     return typing.cast(
         MembershipFee,
-        MembershipFee.q.filter(
-            between(target_date, MembershipFee.begins_on, MembershipFee.ends_on)
-        ).one()
+        session.session.scalars(
+            select(MembershipFee).filter(
+                between(target_date, MembershipFee.begins_on, MembershipFee.ends_on)
+            )
+        ).one(),
     )
 
 
 def get_last_applied_membership_fee() -> MembershipFee | None:
     """Get the last applied membership fee."""
-    # TODO use `select` API
     return typing.cast(
         MembershipFee,
-        MembershipFee.q
-        .filter(MembershipFee.ends_on <= func.current_timestamp())
-        .order_by(MembershipFee.ends_on.desc()).first()
+        session.session.scalar(
+            select(MembershipFee)
+            .filter(MembershipFee.ends_on <= func.current_timestamp())
+            .order_by(MembershipFee.ends_on.desc())
+        ),
     )
 
 
 def get_first_applied_membership_fee() -> MembershipFee:
     """Get the first applied membership fee."""
-    # TODO use `select` API
     return typing.cast(
         MembershipFee,
-        MembershipFee.q.order_by(MembershipFee.ends_on.desc()).first()
+        session.session.scalar(
+            select(MembershipFee).order_by(MembershipFee.ends_on.desc())
+        ),
     )
 
 
@@ -224,8 +227,11 @@ def users_eligible_for_fee_query(membership_fee: MembershipFee) -> CTE:
     rhe_end = RoomHistoryEntry.__table__.alias()
     rhe_begin = RoomHistoryEntry.__table__.alias()
 
-    fee_accounts = Account.q.join(Building).distinct(Account.id).all()
-    fee_accounts_ids = set([acc.id for acc in fee_accounts] + [config.membership_fee_account_id])
+    fee_account_ids_stmt = union(
+        select(Account.id).join(Building).distinct(Account.id),
+        select(Config.membership_fee_account_id),
+    )
+    fee_accounts_ids = set(session.session.scalars(fee_account_ids_stmt))
 
     properties_beginning_timestamp = with_min_time(
         membership_fee.begins_on
@@ -518,20 +524,26 @@ def import_bank_account_activities_csv(
             "Transaction are not sorted according to transaction date in "
             "descending order."))
     first_posted_on = activities[-1][8]
-    balance = session.session.query(
-        func.coalesce(func.sum(BankAccountActivity.amount), 0)
-    ).filter(
-        BankAccountActivity.posted_on < first_posted_on
-    ).scalar()
-    a = tuple(session.session.query(
-        BankAccountActivity.amount, BankAccountActivity.bank_account_id,
-        BankAccountActivity.reference, BankAccountActivity.reference,
-        BankAccountActivity.other_account_number,
-        BankAccountActivity.other_routing_number,
-        BankAccountActivity.other_name, BankAccountActivity.imported_at,
-        BankAccountActivity.posted_on, BankAccountActivity.valid_on
-    ).filter(
-        BankAccountActivity.posted_on >= first_posted_on)
+    balance = session.session.scalar(
+        select(func.coalesce(func.sum(BankAccountActivity.amount), 0)).filter(
+            BankAccountActivity.posted_on < first_posted_on
+        )
+    )
+    a = tuple(
+        session.session.scalars(
+            select(
+                BankAccountActivity.amount,
+                BankAccountActivity.bank_account_id,
+                BankAccountActivity.reference,
+                BankAccountActivity.reference,
+                BankAccountActivity.other_account_number,
+                BankAccountActivity.other_routing_number,
+                BankAccountActivity.other_name,
+                BankAccountActivity.imported_at,
+                BankAccountActivity.posted_on,
+                BankAccountActivity.valid_on,
+            ).filter(BankAccountActivity.posted_on >= first_posted_on)
+        )
     )
     b = tuple(reversed(activities))
     matcher = difflib.SequenceMatcher(a=a, b=b)
@@ -672,14 +684,14 @@ def get_transaction_type(transaction: Transaction) -> tuple[str, str] | None:
 
 
 @with_transaction
-def end_payment_in_default_memberships(processor: User) -> list[User]:
-    users = (
-        User.q.join(User.current_properties)
+def end_payment_in_default_memberships(processor: User) -> t.Sequence[User]:
+    users = session.session.scalars(
+        select(User)
+        .join(User.current_properties)
         .filter(CurrentProperty.property_name == "payment_in_default")
         .join(Account)
         .filter(Account.balance <= 0)
-        .all()
-    )
+    ).all()
 
     for user in users:
         if user.member_of(config.payment_in_default_group):
@@ -693,14 +705,14 @@ def end_payment_in_default_memberships(processor: User) -> list[User]:
     return users
 
 
-def get_negative_members() -> list[User]:
-    users = (
-        User.q.join(User.current_properties)
+def get_negative_members() -> t.Sequence[User]:
+    users = session.session.scalars(
+        select(User)
+        .join(User.current_properties)
         .filter(CurrentProperty.property_name == "membership_fee")
         .join(Account)
         .filter(Account.balance > 0)
-        .all()
-    )
+    ).all()
 
     return users
 
@@ -874,7 +886,7 @@ def build_transactions_query(
     limit: int = None,
     positive: bool = None,
     eagerload: bool = False,
-) -> Query:
+) -> Select[tuple[Split]]:
     """Build a query returning the Splits for a finance account
 
     :param account: The finance Account to filter by
@@ -893,7 +905,7 @@ def build_transactions_query(
 
     :returns: The prepared SQLAlchemy query
     """
-    query = Split.q.join(Transaction).filter(Split.account == account)
+    stmt = select(Split).join(Transaction).filter(Split.account == account)
 
     # see #562
     if not (
@@ -904,20 +916,20 @@ def build_transactions_query(
     descending = (sort_order == "desc") ^ (positive is False)
     ordering = sort_by + " desc" if descending else sort_by
     if search:
-        query = query.filter(Transaction.description.ilike(f'%{search}%'))
+        stmt = stmt.filter(Transaction.description.ilike(f"%{search}%"))
 
     if positive is not None:
         if positive:
-            query = query.filter(Split.amount >= 0)
+            stmt = stmt.filter(Split.amount >= 0)
         else:
-            query = query.filter(Split.amount < 0)
+            stmt = stmt.filter(Split.amount < 0)
 
-    query = query.order_by(text(ordering)).offset(offset).limit(limit)
+    stmt = stmt.order_by(text(ordering)).offset(offset).limit(limit)
 
     if eagerload:
-        query = query.options(contains_eager(Split.transaction))
+        stmt = stmt.options(contains_eager(Split.transaction))
 
-    return query
+    return stmt
 
 
 def match_activities() -> tuple[
@@ -1043,10 +1055,11 @@ def transaction_confirm(transaction: Transaction, processor: User) -> None:
 @with_transaction
 def transaction_confirm_all(processor: User) -> None:
     # Confirm all transactions older than one hour that are not confirmed yet
-    transactions = Transaction.q.filter_by(confirmed=False).filter(
-        Transaction.posted_at < session.utcnow() - timedelta(hours=1)
+    transactions = session.session.scalars(
+        select(Transaction)
+        .filter_by(confirmed=False)
+        .filter(Transaction.posted_at < func.current_timestamp() - timedelta(hours=1))
     )
-
     for transaction in transactions:
         transaction_confirm(transaction, processor)
 

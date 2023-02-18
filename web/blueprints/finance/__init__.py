@@ -734,7 +734,7 @@ def accounts_show_json(account_id):
 
     def rows_from_query(query):
         # iterating over `query` executes it
-        return [_format_row(split, style) for split in query]
+        return [_format_row(split, style) for split in session.scalars(query)]
 
     if splitted:
         rows_pos = rows_from_query(build_this_query(positive=True))
