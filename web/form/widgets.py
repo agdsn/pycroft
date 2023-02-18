@@ -1,6 +1,7 @@
 import wtforms_widgets
 from wtforms import ValidationError
 
+from pycroft.model import session
 from pycroft.model.user import User
 
 
@@ -16,5 +17,9 @@ class UserIDField(wtforms_widgets.fields.core.StringField):
         )
 
     def pre_validate(self, form):
-        if User.get(self.data) is None:
+        try:
+            id = int(self.data)
+        except ValueError:
+            raise ValidationError("Nutzer-ID muss eine ganzzahl sein.") from None
+        if session.session.get(User, id) is None:
             raise ValidationError("Ungültige Nutzer-ID.")
