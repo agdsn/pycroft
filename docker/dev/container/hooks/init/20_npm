@@ -1,18 +1,19 @@
 #!/bin/bash
 
 set -euo pipefail
-LOCKFILE=/opt/pycroft/app/.npm_setup.lock
+LOCKDIR=/opt/pycroft/app/node_modules
 
 . /container/common/locking.sh
 
 function execute_hook() {
   cd /opt/pycroft/app
 
-  if [[ -d node_modules ]] && $(shopt -s nullglob dotglob; files=(node_modules/*); (( ${#files[@]} > 0 )) ); then
+  if shopt -s nullglob dotglob; files=(node_modules/*); (( ${#files[@]} > 0 )); then
     return
   fi
 
   npm ci
 }
 
-execute_locked execute_hook $LOCKFILE
+[[ -d $LOCKDIR ]] || mkdir $LOCKDIR
+execute_with_dirlock execute_hook $LOCKDIR

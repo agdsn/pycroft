@@ -1,15 +1,15 @@
 #!/bin/bash
 
-# Try to close {lockfd} and remove lockfile.
+# Try to close {lockfd} and remove lockdir.
 #
 # this function shall be called only after an `flock` command
 #  has obtained a lock on the named file descriptor {lockfd}.
 #
 # {lockfd}: named file descriptor
 # $1: lockfd
-# $2: lockfile
+# $2: lockdir
 function clean_lock() {
-  local lockfd="$1" lockfile="$2"
+  local lockfd="$1" lockdir="$2"
 
   # closing the file descriptor to release the lock.  See `man 2 flock`.
   exec {lockfd}>&-
@@ -23,15 +23,15 @@ function clean_lock() {
   #         …the `clean_lock` trap starts firing
   #         …the FD gets closed by `exec $LOCKFD>&-`, effectively releasing the lock
   # 3.. [B] immediately obtains lock
-  # 3.. [A] …rm -f $lockfile runs, removes file without issues
+  # 3.. [A] …rm -f $lockdir runs, removes file without issues
   # 4. [A] exits
-  # 5. [C] starts, obtains lock because $lockfile does not exist
+  # 5. [C] starts, obtains lock because $lockdir does not exist
   # INCONSISTENT STATE: [A] exited, [B] running, [C] running
   # therefore, we re-obtain the lock as per the next line.
-  if flock --nonblock "$lockfile" --command "rm -f $lockfile"; then
-    echo "Successfully removed ${lockfile}."
+  if flock --nonblock "$lockdir" --command "rm -f $lockdir"; then
+    echo "Successfully removed ${lockdir}."
   else
-    echo -n "Could not remove lock file ${lockfile}. "
+    echo -n "Could not remove lock file ${lockdir}. "
     echo "Perhaps another process immediately obtained the lock."
   fi
 }
@@ -54,32 +54,27 @@ function _file_older_than() {
   fi
 }
 
-# execute a command protected by a lock file.
+# Execute a command protected by a lock on a given directory.
+#
+# The directory is assumed to exist.
+#
 # $1: command (anything executable by bash)
-# $2: lock file path
-function execute_locked() {
-  local cmd="$1" lockfile="$2"
-  if _file_older_than "$lockfile" $((30*60)); then
-    echo "Lock file $lockfile is older than 30m, probably left over."
-    echo "Please remove it manually or retry later."
-    return 1
-  fi;
+# $2: path to directory on which to obtain a lock
+function execute_with_dirlock() {
+  local cmd="$1" lockdir="$2"
 
   # creates file descriptor $lockfd
-  exec {lockfd}<>"$lockfile"
+  exec {lockfd}<"$lockdir"
 
   # Σ times ≥ 5min, should be enough for most purposes.
   for wait_s in 1 1 1 2 5 10 15 30 30 30 30 30 30 30 30 30; do
-    echo -n "Trying to obtain lock on ${lockfile} (timeout=${wait_s}s)... "
+    echo -n "Trying to obtain lock on ${lockdir} (timeout=${wait_s}s)... "
     if flock --exclusive --wait $wait_s $lockfd; then
-      trap 'clean_lock "$lockfd" "$lockfile"; exit 1' SIGINT SIGTERM SIGHUP
 
       # success, execution
       echo -e "Success!\nStarting execution."
       $cmd
 
-      # cleanup
-      clean_lock "$lockfd" "$lockfile"
       return 0
     fi;
     echo "Failed!"
