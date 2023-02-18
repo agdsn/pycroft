@@ -22,7 +22,7 @@ from sentry_sdk.integrations.logging import LoggingIntegration
 from sqlalchemy.orm import with_polymorphic, Session, scoped_session, sessionmaker
 from sqlalchemy.orm.exc import ObjectDeletedError
 
-from pycroft.lib.finance import get_negative_members
+from pycroft.lib.finance import get_negative_members, import_newer_than_days
 from pycroft.lib.logging import log_task_event
 from pycroft.lib.mail import send_mails, Mail, RetryableException, \
     TaskFailedTemplate, \
@@ -30,7 +30,6 @@ from pycroft.lib.mail import send_mails, Mail, RetryableException, \
 from pycroft.lib.task import get_task_implementation
 from pycroft.lib.traffic import delete_old_traffic_data
 from pycroft.model import session
-from pycroft.model.finance import BankAccountActivity
 from pycroft.model.session import with_transaction, set_scoped_session
 from pycroft.model.swdd import swdd_vo, swdd_import, swdd_vv
 from pycroft.model.task import Task, TaskStatus
@@ -190,8 +189,7 @@ def refresh_swdd_views():
 def mail_negative_members():
     from pycroft.lib.user import user_send_mails
 
-    activity = BankAccountActivity.q.order_by(BankAccountActivity.imported_at.desc()).first()
-    if activity.imported_at.date() >= session.utcnow().date() - timedelta(days=2):
+    if import_newer_than_days(session.session, days=2):
         negative_users = get_negative_members()
         user_send_mails(negative_users, MemberNegativeBalance())
     else:

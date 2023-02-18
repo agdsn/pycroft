@@ -1174,3 +1174,13 @@ def get_fints_transactions(
     if acc is None:
         raise KeyError(f"BankAccount with IBAN {bank_account.iban} not found.")
     return fints_client.get_filtered_transactions(acc, start_date, end_date)
+
+
+def import_newer_than_days(session: Session, days: int) -> bool:
+    # TODO properly test this
+    return session.scalar(
+        select(
+            func.max(BankAccountActivity.imported_at)
+            >= func.current_timestamp() - timedelta(days=days)
+        ),
+    )
