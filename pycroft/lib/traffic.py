@@ -11,8 +11,8 @@ This module contains functions concerning network traffic
 import typing as t
 from datetime import timedelta
 
-from sqlalchemy import func, select, literal_column
-from sqlalchemy.orm import join
+from sqlalchemy import func, select, literal_column, delete, CursorResult
+from sqlalchemy.orm import join, Session
 
 from pycroft.model import session
 from pycroft.model.traffic import TrafficVolume
@@ -45,3 +45,10 @@ def get_users_with_highest_traffic(days: int, limit: int) -> list[UserTrafficInf
             .limit(limit)
         ).fetchall(),
     )
+
+
+def delete_old_traffic_data(session: Session) -> int:
+    week_ago = func.current_timestamp() - timedelta(weeks=1)
+    stmt = delete(TrafficVolume).where(TrafficVolume.timestamp < week_ago)
+    result = t.cast(CursorResult, session.execute(stmt))
+    return result.rowcount

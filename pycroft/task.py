@@ -28,12 +28,12 @@ from pycroft.lib.mail import send_mails, Mail, RetryableException, \
     TaskFailedTemplate, \
     MemberNegativeBalance, send_template_mails
 from pycroft.lib.task import get_task_implementation
+from pycroft.lib.traffic import delete_old_traffic_data
 from pycroft.model import session
 from pycroft.model.finance import BankAccountActivity
 from pycroft.model.session import with_transaction, set_scoped_session
 from pycroft.model.swdd import swdd_vo, swdd_import, swdd_vv
 from pycroft.model.task import Task, TaskStatus
-from pycroft.model.traffic import TrafficVolume
 from scripts.connection import try_create_connection
 
 if dsn := os.getenv('PYCROFT_SENTRY_DSN'):
@@ -171,12 +171,8 @@ def execute_scheduled_tasks():
 
 @app.task(base=DBTask)
 def remove_old_traffic_data():
-    TrafficVolume.q.filter(
-        TrafficVolume.timestamp < (session.utcnow() - timedelta(7))).delete()
-
-    session.session.commit()
-
-    print("Deleted old traffic data")
+    num_deleted = delete_old_traffic_data(session.session)
+    print(f"Deleted old traffic data ({num_deleted} rows)")
 
 
 @app.task(base=DBTask)
