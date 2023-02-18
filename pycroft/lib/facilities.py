@@ -8,7 +8,7 @@ import typing as t
 from dataclasses import dataclass
 from itertools import groupby
 
-from sqlalchemy import func, and_, distinct, literal_column, select
+from sqlalchemy import func, and_, distinct, literal_column, select, exists, or_, Select
 from sqlalchemy.orm import aliased, contains_eager, joinedload
 
 from pycroft.helpers.i18n import deferred_gettext
@@ -71,6 +71,25 @@ def get_overcrowded_rooms(building_id: int = None) -> dict[int, list[User]]:
     return {k: list(v) for k, v in groupby(users, lambda u: u.room.id)}
 
 
+def similar_rooms_query(
+    number: str, level: int, building: Building, vo_suchname: str | None = None
+) -> Select:
+    return (
+        select()
+        .select_from(Room)
+        .where(
+            or_(
+                and_(
+                    Room.number == number,
+                    Room.level == level,
+                    Room.building == building,
+                ),
+                *([Room.swdd_vo_suchname == vo_suchname] if vo_suchname else []),
+            )
+        )
+    )
+
+
 @with_transaction
 def create_room(
     building: Building,
@@ -81,10 +100,16 @@ def create_room(
     inhabitable: bool = True,
     vo_suchname: str | None = None,
 ) -> Room:
-    if Room.q.filter_by(number=number, level=level, building=building).first() is not None:
-        raise RoomAlreadyExistsException
-
-    if vo_suchname and Room.q.filter_by(swdd_vo_suchname=vo_suchname).first() is not None:
+    similar_room_exists = session.session.scalar(
+        select(
+            exists(
+                similar_rooms_query(number, level, building, vo_suchname).add_columns(
+                    True
+                )
+            )
+        )
+    )
+    if similar_room_exists:
         raise RoomAlreadyExistsException
 
     room = Room(number=number,
@@ -109,7 +134,16 @@ def edit_room(
     processor: User,
 ) -> Room:
     if room.number != number:
-        if Room.q.filter_by(number=number, level=room.level, building=room.building).filter(Room.id!=room.id).first() is not None:
+        similar_room_exists = session.session.scalar(
+            select(
+                exists(
+                    similar_rooms_query(number, room.level, room.building)
+                    .filter(Room.id != room.id)
+                    .add_columns(True)
+                )
+            )
+        )
+        if similar_room_exists:
             raise RoomAlreadyExistsException()
 
         message = (
@@ -146,12 +180,9 @@ def edit_room(
 
 
 def get_room(building_id: int, level: int, room_number: str) -> Room | None:
-    return t.cast(
-        Room | None,
-        Room.q.filter_by(
-            number=room_number, level=level, building_id=building_id
-        ).one_or_none(),
-    )
+    return session.session.scalars(
+        select(Room).filter_by(number=room_number, level=level, building_id=building_id)
+    ).one_or_none()
 
 
 @dataclass
