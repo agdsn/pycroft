@@ -5,7 +5,7 @@ Git
 
 Cloning the repository
 ----------------------
-Requires
+Prerequisites
     * A basic understanding of `git <https://git-scm.com/>`__
     * `pre-commit <https://pre-commit.com/>`__
 
@@ -17,7 +17,7 @@ Requires
 
 Contributing to dependencies
 ----------------------------
-Requires
+Prerequisites
     * :ref:`built images <built images>`
 
 Pycroft has dependencies that are not part of the Pycroft project, but
@@ -35,7 +35,7 @@ environment) with:
 
 ::
 
-   docker-compose run --rm dev-app pip install -r requirements.txt
+   docker compose run --rm dev-app pip install -r requirements.txt
 
 The production build also uses the submodules. Make sure to update the
 commit hash of the submodule HEAD if you change something. This will be

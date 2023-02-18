@@ -15,7 +15,7 @@ prod
     Production environment. Contains only what is required to
     run Pycroft without development tools.
 
-For each environment a docker-compose file is provided. The following
+For each environment a docker compose file is provided. The following
 diagram shows all services/containers, images and volumes at a glance:
 
 .. figure:: ../_static/Docker.svg

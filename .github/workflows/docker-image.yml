@@ -88,10 +88,16 @@ jobs:
         uses: actions/checkout@v3
         with:
            submodules: 'true'
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          version: v0.10.0
       - name: Fix permissions
         run: sudo chmod -R a+rw .
+      - name: print buildx definition
+        run: docker buildx bake --file docker-compose.prod.yml --print
       - name: Build the Docker image
-        run: docker-compose -f docker-compose.prod.yml build
+        run: docker buildx bake --file docker-compose.prod.yml --load
       - name: Login to GitLab Registry
         uses: docker/login-action@v1
         with:
@@ -109,10 +115,16 @@ jobs:
         uses: actions/checkout@v3
         with:
            submodules: 'true'
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          version: v0.10.0
       - name: Fix permissions
         run: sudo chmod -R a+rw .
+      - name: print buildx definition
+        run: docker buildx bake --print
       - name: Build
-        run: docker-compose -f docker-compose.test.yml build
+        run: docker buildx bake --load
       - name: Run test-app entrypoints
         run: docker-compose -f docker-compose.test.yml run --rm --no-deps test-app
       - name: Start

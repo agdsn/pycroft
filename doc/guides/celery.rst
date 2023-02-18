@@ -5,7 +5,7 @@ Manual task execution
 ---------------------
 
 Start a shell
-    ``docker-compose run --rm dev-app shell``
+    ``docker compose run --rm dev-app shell``
 
 Activate the virtual environment
     ``. ~/venv/bin/activate``

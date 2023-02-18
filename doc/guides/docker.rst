@@ -5,12 +5,13 @@ Docker
 
 Installing Docker and Docker Compose
 ------------------------------------
-Requires
+Prerequisites
     *nothing*
 You need to install
 
-* `Docker-engine <https://docs.docker.com/engine/install/>`__ ``≥17.06.0``
+* `Docker-engine <https://docs.docker.com/engine/install/>`__ ``≥19.03.0``
 * `Docker Compose <https://docs.docker.com/compose/install/>`__ ``≥1.16.0``
+* `Docker buildx <https://github.com/docker/buildx#installing>`__ ``≥0.10.0``
 
 If not the case, add yourself to the ``docker`` group with
 
@@ -21,13 +22,13 @@ If not the case, add yourself to the ``docker`` group with
 For the changes to take effect, you need to log out and log back in again.
 
 Success
-    If ``docker-compose config`` displays the current configuration
+    If ``docker compose config`` displays the current configuration
 
 .. _docker environment:
 
 Setting environment variables
 -----------------------------
-Requires
+Prerequisites
     * :ref:`cloned repository <cloned repository>`
     * :ref:`installed docker <installed docker>`
 
@@ -45,16 +46,16 @@ This is best done using the ``.env`` file
 
 Building the dev images
 -----------------------
-Requires
+Prerequisites
     * :ref:`docker environment <docker environment>`
 
 .. code:: bash
 
-    docker compose build
+    docker buildx bake
 
 Building the production images
 ------------------------------
-Requires
+Prerequisites
     * :ref:`docker environment <docker environment>`
 
 The tag of the images created by ``docker compose`` can be specified
@@ -63,7 +64,7 @@ e.g.:
 
 .. code:: bash
 
-   TAG=1.2.3 docker-compose -f docker-compose.prod.yml build
+   TAG=1.2.3 docker compose -f docker-compose.prod.yml build
 
 This will tag all generated images with the tag ``1.2.3``.
 
@@ -72,14 +73,14 @@ This will tag all generated images with the tag ``1.2.3``.
 
 Starting the containers
 -----------------------
-Requires
+Prerequisites
     * :ref:`docker environment <docker environment>`
 
-A complete environment can be started by running
+The dev server and its dependent containers can be started by running
 
 .. code:: bash
 
-   docker-compose up -d
+   docker compose up --wait dev-app
 
 If you run this command for the first time, this might take a while, as
 the images have to be built (see :ref:`built images`)
@@ -93,19 +94,24 @@ Success
 
 Viewing logs
 ------------
+Prerequisites
+    * :ref:`docker environment <docker environment>`
+
 .. code:: sh
 
-   docker-compose logs # for all services
-   docker-compose logs dev-app  # for one service
-   docker-compose logs -f --tail=50 dev-app  # Print the last 50 entries and follow the logs
+   docker compose logs # for all services
+   docker compose logs dev-app  # for one service
+   docker compose logs -f --tail=50 dev-app  # Print the last 50 entries and follow the logs
 
 
 (Re-)building/Pulling images
 ----------------------------
+Prerequisites
+    * :ref:`docker environment <docker environment>`
 
-You can (re-)build/pull a particular service/image (or all of them if no
-service is specified) by running:
+You can (re-)build/pull all images by running:
 
 .. code:: bash
 
-   docker-compose build --force-rm --pull [service]
+   docker buildx bake --pull
+

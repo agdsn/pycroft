@@ -21,7 +21,7 @@ And possibly:
 Using a python virtual environment (venv)
 -----------------------------------------
 
-Requires
+Prerequisites
     * `virtualenvwrapper <https://virtualenvwrapper.readthedocs.io/en/latest/>`_
       (`arch:python-virtualenvwrapper <https://archlinux.org/packages/?name=python-virtualenvwrapper>`_,
       `debian:virtualenvwrapper <https://packages.debian.org/bullseye/virtualenvwrapper>`_)
@@ -34,7 +34,7 @@ you only need to do the following:
 
    .. code:: shell
 
-       mkvirtualenv -a . -r requirements.txt -r requirements.dev.txt
+       mkvirtualenv -a . -r requirements.txt -r requirements.dev.txt pycroft
        pip install -r requirements.txt -r requirements.dev.txt
 
 #. Run tests / Build docs / …

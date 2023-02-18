@@ -15,7 +15,8 @@ from web.template_filters import money_filter
 class ColoredColumn(DictValueMixin, Column):
     if typing.TYPE_CHECKING:
         @classmethod
-        def value(cls, value: str, is_positive: bool) -> dict: ...
+        def value(cls, value: str, is_positive: bool) -> dict:
+            ...
 
 
 class FinanceTable(BootstrapTable):

@@ -1,8 +1,8 @@
+# syntax=docker/dockerfile:1.4
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-# syntax=docker/dockerfile:1.3
-FROM agdsn/pycroft-base
+FROM pycroft-base
 
 USER root
 WORKDIR /
@@ -28,7 +28,7 @@ RUN apt-get update \
         vim \
     && apt-get clean
 
-COPY . /
+COPY --link . /
 
 USER pycroft
 WORKDIR /opt/pycroft

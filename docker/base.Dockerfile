@@ -1,8 +1,8 @@
+# syntax=docker/dockerfile:1.4
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 
-# syntax=docker/dockerfile:1.3
 FROM python:3.10-bullseye
 ARG UID=1000
 ARG GID=1000
@@ -29,6 +29,6 @@ RUN python3 -m venv /opt/pycroft/venv \
     && /opt/pycroft/venv/bin/pip install -U pip setuptools wheel \
     && mkdir /opt/pycroft/app /opt/pycroft/wheel
 
-COPY . /
+COPY --link . /
 
 ENTRYPOINT ["/container/entrypoint"]

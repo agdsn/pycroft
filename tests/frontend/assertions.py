@@ -16,7 +16,9 @@ class TestClient(flask.testing.FlaskClient):
     __test__ = False
 
     if t.TYPE_CHECKING:
-        def get(self, *a, **kw) -> flask.Response: ...
+
+        def get(self, *a, **kw) -> flask.Response:
+            ...
 
     def __init__(self, *a, **kw):
         super().__init__(*a, **kw)

@@ -3,7 +3,7 @@
 PyCharm Integration
 ===================
 
-Requires
+Prerequisites
     :ref:`docker environment <docker environment>`
 
 In order to integrate the setup into PyCharm, make sure that you are

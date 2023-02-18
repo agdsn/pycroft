@@ -15,7 +15,8 @@ import sqlalchemy.exc
 
 def try_mapper(module):
     for attr in dir(module):
-        if attr[0] == '_': continue
+        if attr[0] == "_":
+            continue
         try:
             cls = getattr(module, attr)
             class_mapper(cls)

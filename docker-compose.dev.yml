@@ -11,10 +11,14 @@ services:
     security_opt:
       - "seccomp:unconfined"
     depends_on:
-      - dev-db
-      - dev-ldap
-      - dev-mq
-      - dev-webpack
+      dev-db:
+        condition: service_healthy
+      dev-ldap:
+        condition: service_healthy
+      dev-mq:
+        condition: service_healthy
+      dev-webpack:
+        condition: service_started
     networks:
       dev:
         aliases:
@@ -22,11 +26,30 @@ services:
     ports:
       - "5000:5000"
     command: ["http", "--debug"]
+    healthcheck:
+      test: curl --fail http://localhost:5000
+      interval: 2s
+      start_period: 10s
   dev-webpack:
     extends:
       file: docker-compose.base.yml
       service: dev
     command: ["webpack", "--watch"]
+  dev-docs:
+    extends:
+      file: docker-compose.base.yml
+      service: dev
+    command: [
+      "serve-docs",
+      "--watch", "pycroft",
+      "--watch", "doc/_static",
+      "--watch", "ldap_sync",
+      "--watch", "web",
+    ]
+    healthcheck:
+      test: curl --fail http://localhost:8000
+    ports:
+      - "5001:8000"
   dev-db:
     extends:
       file: docker-compose.base.yml
@@ -65,23 +88,32 @@ services:
     extends:
       file: docker-compose.base.yml
       service: dev
+    depends_on:
+      dev-db:
+        condition: service_healthy
+      dev-mq:
+        condition: service_healthy
     networks:
       dev:
         aliases:
           - celery-worker
     command: "worker"
+    healthcheck:
+      test: "/opt/pycroft/venv/bin/celery -A pycroft.task inspect ping"
   dev-dummy-worker:
     extends:
       file: docker-compose.base.yml
       service: dev
     command: "dummy-worker worker --loglevel=debug"
     healthcheck:
-      test: "/opt/pycroft/venv/bin/celery -A helpers.dummy_celery_worker inspect ping"
+      test: "PYTHONPATH=/opt/pycroft/app /opt/pycroft/venv/bin/celery -A helpers.dummy_celery_worker inspect ping"
     environment:
       - TEST_HADES_BROKER_URI=amqp://celery:celery@mq:5672/
       - TEST_HADES_RESULT_BACKEND_URI=rpc://celery:celery@mq:5672/
     depends_on:
-      - dev-mq
+      dev-mq:
+        condition:
+          service_healthy
     networks:
       dev:
         aliases:
