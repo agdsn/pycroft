@@ -10,8 +10,8 @@ from datetime import datetime
 from typing import Mapping, TypeVar, Generic
 
 from marshmallow import ValidationError
-from sqlalchemy import select
-from sqlalchemy.orm import with_polymorphic
+from sqlalchemy import select, func
+from sqlalchemy.orm import with_polymorphic, Session
 
 from pycroft.helpers.i18n import deferred_gettext
 from pycroft.helpers.utc import DateTimeTz, ensure_tz
@@ -210,6 +210,16 @@ def get_active_tasks_by_type(type: TaskType) -> t.Sequence[t.Type[Task]]:
     task_and_subtypes = with_polymorphic(Task[t.Any, t.Any], "*")
     return session.session.scalars(
         select(task_and_subtypes).where(task_and_subtypes.type == type)
+    ).all()
+
+
+def get_scheduled_tasks(session: Session) -> t.Sequence[t.Type[Task]]:
+    task_and_subtypes = with_polymorphic(Task, "*")
+    return session.scalars(
+        select(task_and_subtypes).filter(
+            task_and_subtypes.status == TaskStatus.OPEN,
+            task_and_subtypes.due <= func.current_timestamp(),
+        )
     ).all()
 
 

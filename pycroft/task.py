@@ -19,7 +19,7 @@ from celery.schedules import crontab
 from celery.utils.log import get_task_logger
 from sentry_sdk.integrations.celery import CeleryIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
-from sqlalchemy.orm import with_polymorphic, Session, scoped_session, sessionmaker
+from sqlalchemy.orm import Session, scoped_session, sessionmaker
 from sqlalchemy.orm.exc import ObjectDeletedError
 
 from pycroft.lib.finance import get_negative_members, import_newer_than_days
@@ -27,12 +27,12 @@ from pycroft.lib.logging import log_task_event
 from pycroft.lib.mail import send_mails, Mail, RetryableException, \
     TaskFailedTemplate, \
     MemberNegativeBalance, send_template_mails
-from pycroft.lib.task import get_task_implementation
+from pycroft.lib.task import get_task_implementation, get_scheduled_tasks
 from pycroft.lib.traffic import delete_old_traffic_data
 from pycroft.model import session
 from pycroft.model.session import with_transaction, set_scoped_session
 from pycroft.model.swdd import swdd_vo, swdd_import, swdd_vv
-from pycroft.model.task import Task, TaskStatus
+from pycroft.model.task import TaskStatus
 from scripts.connection import try_create_connection
 
 if dsn := os.getenv('PYCROFT_SENTRY_DSN'):
@@ -123,11 +123,7 @@ def execute_scheduled_tasks():
     Implementations are given by `task_type_to_impl`.
     Errors are reported to the creator via `send_user_send_mail`.
     """
-    task_and_subtypes = with_polymorphic(Task, "*")
-    tasks = (session.session.query(task_and_subtypes)
-             .filter(task_and_subtypes.status == TaskStatus.OPEN,
-                     task_and_subtypes.due <= session.utcnow())
-             .all())
+    tasks = get_scheduled_tasks(session.session)
 
     print(f"executing {len(tasks)} scheduled tasks")
 
