@@ -816,23 +816,16 @@ def process_transactions(
     imported = ImportedTransactions([], [], [])
 
     for transaction in statement:
-        iban = transaction.data.get('applicant_iban', '')
-        if iban is None:
-            iban = ""
-        bic = transaction.data.get("applicant_bin", "")
-        if bic is None:
-            bic = ""
-        other_name = transaction.data.get("applicant_name", "")
-        if other_name is None:
-            other_name = ""
-        purpose = transaction.data.get("purpose", "")
-        if purpose is None:
-            purpose = ""
+        iban: str = transaction.data.get("applicant_iban") or ""
+        bic: str = transaction.data.get("applicant_bin") or ""
+        other_name: str = transaction.data.get("applicant_name") or ""
+        purpose = transaction.data.get("purpose") or ""
         if (
             "end_to_end_reference" in transaction.data
             and transaction.data["end_to_end_reference"] is not None
         ):
             purpose = purpose + " EREF+" + transaction.data["end_to_end_reference"]
+
         new_activity = BankAccountActivity(
             bank_account_id=bank_account.id,
             amount=transaction.data['amount'].amount,
