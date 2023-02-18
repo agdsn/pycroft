@@ -35,6 +35,21 @@ services:
       file: docker-compose.base.yml
       service: dev
     command: ["webpack", "--watch"]
+  dev-docs:
+    extends:
+      file: docker-compose.base.yml
+      service: dev
+    command: [
+      "serve-docs",
+      "--watch", "pycroft",
+      "--watch", "doc/_static",
+      "--watch", "ldap_sync",
+      "--watch", "web",
+    ]
+    healthcheck:
+      test: curl --fail http://localhost:8000
+    ports:
+      - "5001:8000"
   dev-db:
     extends:
       file: docker-compose.base.yml
