@@ -8,6 +8,7 @@ pycroft.lib.host
 import typing as t
 
 import ipaddr
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from pycroft.helpers.i18n import deferred_gettext
@@ -230,6 +231,8 @@ def sort_ports(ports: t.Iterable[SwitchPort]) -> list[SwitchPort]:
 
 
 def get_conflicting_interface(
-    session: Session, mac: str, current_mac: str | None = None
+    session: Session, new_mac: str, current_mac: str | None = None
 ) -> Interface | None:
-    return Interface.q.filter_by(mac=mac).filter(mac != current_mac).first()
+    if new_mac == current_mac:
+        return None
+    return session.scalar(select(Interface).filter_by(mac=new_mac))
