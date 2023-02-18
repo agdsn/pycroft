@@ -28,7 +28,7 @@ RUN apt-get update \
         vim \
     && apt-get clean
 
-COPY . /
+COPY --link . /
 
 USER pycroft
 WORKDIR /opt/pycroft

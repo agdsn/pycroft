@@ -29,6 +29,6 @@ RUN python3 -m venv /opt/pycroft/venv \
     && /opt/pycroft/venv/bin/pip install -U pip setuptools wheel \
     && mkdir /opt/pycroft/app /opt/pycroft/wheel
 
-COPY . /
+COPY --link . /
 
 ENTRYPOINT ["/container/entrypoint"]
