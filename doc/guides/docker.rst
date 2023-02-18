@@ -5,7 +5,7 @@ Docker
 
 Installing Docker and Docker Compose
 ------------------------------------
-Requires
+Prerequisites
     *nothing*
 You need to install
 
@@ -28,7 +28,7 @@ Success
 
 Setting environment variables
 -----------------------------
-Requires
+Prerequisites
     * :ref:`cloned repository <cloned repository>`
     * :ref:`installed docker <installed docker>`
 
@@ -46,7 +46,7 @@ This is best done using the ``.env`` file
 
 Building the dev images
 -----------------------
-Requires
+Prerequisites
     * :ref:`docker environment <docker environment>`
 
 .. code:: bash
@@ -55,7 +55,7 @@ Requires
 
 Building the production images
 ------------------------------
-Requires
+Prerequisites
     * :ref:`docker environment <docker environment>`
 
 The tag of the images created by ``docker compose`` can be specified
@@ -73,7 +73,7 @@ This will tag all generated images with the tag ``1.2.3``.
 
 Starting the containers
 -----------------------
-Requires
+Prerequisites
     * :ref:`docker environment <docker environment>`
 
 The dev server and its dependent containers can be started by running
@@ -94,7 +94,7 @@ Success
 
 Viewing logs
 ------------
-Requires
+Prerequisites
     * :ref:`docker environment <docker environment>`
 
 .. code:: sh
@@ -106,7 +106,7 @@ Requires
 
 (Re-)building/Pulling images
 ----------------------------
-Requires
+Prerequisites
     * :ref:`docker environment <docker environment>`
 
 You can (re-)build/pull all images by running:

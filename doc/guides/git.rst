@@ -5,7 +5,7 @@ Git
 
 Cloning the repository
 ----------------------
-Requires
+Prerequisites
     * A basic understanding of `git <https://git-scm.com/>`__
     * `pre-commit <https://pre-commit.com/>`__
 
@@ -17,7 +17,7 @@ Requires
 
 Contributing to dependencies
 ----------------------------
-Requires
+Prerequisites
     * :ref:`built images <built images>`
 
 Pycroft has dependencies that are not part of the Pycroft project, but

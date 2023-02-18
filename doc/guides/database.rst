@@ -5,7 +5,7 @@ Database setup
 
 Importing the database Dump
 ---------------------------
-Requires
+Prerequisites
     * :ref:`running containers`
     * Installed postgresql client
 
@@ -36,7 +36,7 @@ Success
 
 Open a psql shell
 -----------------
-Requires
+Prerequisites
     * :ref:`running containers`
 
 .. code:: shell
@@ -46,7 +46,7 @@ Requires
 
 Import a table from a CSV file
 ------------------------------
-Requires
+Prerequisites
     * :ref:`running containers`
     * Installed postgresql client
 

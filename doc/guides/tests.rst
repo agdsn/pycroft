@@ -5,7 +5,7 @@ Tests
 
 Running the test suite
 ----------------------
-Requires
+Prerequisites
     * :ref:`docker environment <docker environment>`
     * Alternatively (unit tests only): a venv with installed test dependencies
 
