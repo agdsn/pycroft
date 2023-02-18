@@ -9,6 +9,7 @@ import sys
 import typing as t
 from itertools import islice
 
+import ipaddr
 from ipaddr import IPv4Address, IPv6Address, IPv4Network, IPv6Network
 from sqlalchemy import func, and_, cast
 
@@ -17,6 +18,7 @@ from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.host import IP
 from pycroft.model.net import Subnet
+from pycroft.model.session import Session
 from pycroft.model.types import IPAddress
 
 class SubnetFullException(PycroftLibException):
@@ -114,3 +116,8 @@ def ptr_name(
         reversed_chars = reversed(ip_address.exploded.replace(':', ''))
         return '.'.join(islice(reversed_chars, num_chars))
     raise TypeError()
+
+
+def delete_ip(session: Session, ip: ipaddr._BaseIP) -> None:
+    # TODO use proper `delete` statement
+    session.delete(IP.q.filter_by(address=ip).first())

@@ -12,7 +12,7 @@ import ipaddr
 from pycroft.helpers.i18n import deferred_gettext
 from pycroft.helpers.net import port_name_sort_key
 from pycroft.lib.logging import log_user_event
-from pycroft.lib.net import get_subnets_for_room, get_free_ip
+from pycroft.lib.net import get_subnets_for_room, get_free_ip, delete_ip
 from pycroft.lib.user import migrate_user_host
 from pycroft.model.facilities import Room
 from pycroft.model.host import Interface, IP, Host, SwitchPort
@@ -183,7 +183,7 @@ def interface_edit(
     # IP removed
     for ip in current_ips:
         if ip not in ips:
-            session.delete(IP.q.filter_by(address=ip).first())
+            delete_ip(session, ip)
             ips_changed = True
             new_ips.remove(ip)
 
