@@ -4,10 +4,11 @@
 #
 # The directory is assumed to exist.
 #
-# $1: command (anything executable by bash)
-# $2: path to directory on which to obtain a lock
+# $1: path to directory on which to obtain a lock
+# $@: command (anything executable by bash)
 function execute_with_dirlock() {
-  local cmd="$1" lockdir="$2"
+  local -r lockdir="$1"
+  shift
 
   # creates file descriptor $lockfd
   exec {lockfd}<"$lockdir"
@@ -19,7 +20,7 @@ function execute_with_dirlock() {
 
       # success, execution
       echo -e "Success!\nStarting execution."
-      $cmd
+      "$@"
 
       return 0
     fi;

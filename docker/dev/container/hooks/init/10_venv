@@ -32,4 +32,4 @@ function execute_hook() {
 }
 
 [[ -d $LOCKDIR ]] || mkdir $LOCKDIR
-execute_with_dirlock execute_hook $LOCKDIR
+execute_with_dirlock $LOCKDIR execute_hook
