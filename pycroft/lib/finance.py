@@ -19,7 +19,7 @@ from itertools import chain, islice, tee, zip_longest
 from typing import Callable, TypeVar, NamedTuple
 
 from mt940.models import Transaction as MT940Transaction
-from sqlalchemy import func, between, cast, CTE
+from sqlalchemy import func, between, cast, CTE, Select
 from sqlalchemy import or_, and_, literal, select, exists, not_, \
     text, future
 from sqlalchemy.orm import aliased, contains_eager, joinedload, Session, Query
@@ -45,6 +45,7 @@ from pycroft.model.property import CurrentProperty, evaluate_properties
 from pycroft.model.session import with_transaction, utcnow
 from pycroft.model.types import Money
 from pycroft.model.user import User, Membership, RoomHistoryEntry
+from pycroft.model.utils import row_exists
 
 logger = logging.getLogger('pycroft.lib.finance')
 
@@ -809,6 +810,23 @@ class ImportedTransactions(t.NamedTuple):
     doubtful: list[BankAccountActivity]
 
 
+def similar_activity_stmt(activity: BankAccountActivity) -> Select:
+    return (
+        select()
+        .select_from(BankAccountActivity)
+        .filter_by(
+            bank_account_id=activity.bank_account_id,
+            amount=activity.amount,
+            reference=activity.reference,
+            other_account_number=activity.other_account_number,
+            other_routing_number=activity.other_routing_number,
+            other_name=activity.other_name,
+            posted_on=activity.posted_on,
+            valid_on=activity.valid_on,
+        )
+    )
+
+
 def process_transactions(
     bank_account: BankAccount,
     statement: t.Iterable[MT940Transaction],
@@ -839,19 +857,7 @@ def process_transactions(
         )
         if new_activity.posted_on >= date.today():
             imported.doubtful.append(new_activity)
-        elif BankAccountActivity.q.filter(and_(
-                BankAccountActivity.bank_account_id ==
-                new_activity.bank_account_id,
-                BankAccountActivity.amount == new_activity.amount,
-                BankAccountActivity.reference == new_activity.reference,
-                BankAccountActivity.other_account_number ==
-                new_activity.other_account_number,
-                BankAccountActivity.other_routing_number ==
-                new_activity.other_routing_number,
-                BankAccountActivity.other_name == new_activity.other_name,
-                BankAccountActivity.posted_on == new_activity.posted_on,
-                BankAccountActivity.valid_on == new_activity.valid_on
-        )).first() is None:
+        elif row_exists(session.session, similar_activity_stmt(new_activity)):
             imported.new.append(new_activity)
         else:
             imported.old.append(new_activity)
