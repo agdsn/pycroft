@@ -195,8 +195,8 @@ def suggest_room_address_data(building: Building) -> RoomAddressSuggestion | Non
 
     cols = (Address.street, Address.number, Address.zip_code,
             Address.city, Address.state, Address.country)
-    query = (
-        session.session.query()
+    stmt = (
+        select()
         .select_from(Room)
         .join(Address)
         .add_columns(*cols)
@@ -206,7 +206,7 @@ def suggest_room_address_data(building: Building) -> RoomAddressSuggestion | Non
         .order_by(literal_column('count').desc())
     )
 
-    rows = query.all()
+    rows = session.session.execute(stmt).all()
     if not rows:
         return None
 
@@ -245,9 +245,8 @@ def determine_building(shortname: str | None = None, id: int | None = None) -> B
     :return: The unique building
     """
     if shortname:
-        return t.cast(
-            Building, Building.q.filter(Building.short_name == shortname).one()
-        )
+        stmt = select(Building).filter(Building.short_name == shortname)
+        return t.cast(Building, session.session.scalars(stmt).one())
     if id:
         return session.session.get(Building, id)
     raise ValueError("Either shortname or id must be given to identify the building!")
