@@ -8,7 +8,7 @@ import typing as t
 from dataclasses import dataclass
 from itertools import groupby
 
-from sqlalchemy import func, and_, distinct, literal_column, select, exists, or_, Select
+from sqlalchemy import func, and_, distinct, literal_column, select, or_, Select
 from sqlalchemy.orm import aliased, contains_eager, joinedload
 
 from pycroft.helpers.i18n import deferred_gettext
@@ -20,6 +20,7 @@ from pycroft.model.facilities import Room, Building
 from pycroft.model.host import Host
 from pycroft.model.session import with_transaction
 from pycroft.model.user import User
+from pycroft.model.utils import row_exists
 
 logger = logging.getLogger(__name__)
 
@@ -100,16 +101,9 @@ def create_room(
     inhabitable: bool = True,
     vo_suchname: str | None = None,
 ) -> Room:
-    similar_room_exists = session.session.scalar(
-        select(
-            exists(
-                similar_rooms_query(number, level, building, vo_suchname).add_columns(
-                    True
-                )
-            )
-        )
-    )
-    if similar_room_exists:
+    if row_exists(
+        session.session, similar_rooms_query(number, level, building, vo_suchname)
+    ):
         raise RoomAlreadyExistsException
 
     room = Room(number=number,
@@ -134,16 +128,12 @@ def edit_room(
     processor: User,
 ) -> Room:
     if room.number != number:
-        similar_room_exists = session.session.scalar(
-            select(
-                exists(
-                    similar_rooms_query(number, room.level, room.building)
-                    .filter(Room.id != room.id)
-                    .add_columns(True)
-                )
-            )
-        )
-        if similar_room_exists:
+        if row_exists(
+            session.session,
+            similar_rooms_query(number, room.level, room.building).filter(
+                Room.id != room.id
+            ),
+        ):
             raise RoomAlreadyExistsException()
 
         message = (
