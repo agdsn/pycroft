@@ -1,15 +1,17 @@
 # Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+import typing as t
 from typing import NoReturn
 
+from flask import Blueprint
 from werkzeug import Response
 from werkzeug.utils import redirect
 
 from ..type_utils import abort
 
 
-def bake_endpoint(blueprint, fn):
+def bake_endpoint(blueprint: Blueprint, fn: t.Callable) -> str:
     return f"{blueprint.name}.{fn.__name__}"
 
 

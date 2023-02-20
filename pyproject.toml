@@ -47,6 +47,8 @@ module = [
     "pycroft.helpers.task",
     "pycroft.helpers.user",
     "pycroft.helpers.utc",
+    "web.blueprints",
+    "web.blueprints.access",
 ]
 disallow_untyped_defs = true
 disallow_untyped_calls = true

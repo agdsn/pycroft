@@ -1,14 +1,21 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+import typing as t
 from itertools import chain
 from flask.globals import current_app
-from flask import abort, request
+from flask import request, Blueprint
 from flask_login import current_user
+from werkzeug.wrappers import BaseResponse
+
 from web.blueprints import bake_endpoint
+from ..type_utils import abort
 
 
-def _check_properties(properties):
+TFun = t.TypeVar("TFun", bound=t.Callable)
+
+
+def _check_properties(properties: t.Iterable[str]) -> bool:
     missing_props = set(properties) - current_user.current_properties_set
     return not missing_props
 
@@ -48,35 +55,36 @@ class BlueprintAccess:
         def my_protected_view):
             return "Hello World"
     """
-    def __init__(self, blueprint, required_properties=()):
+
+    def __init__(self, blueprint: Blueprint, required_properties: t.Iterable[str] = ()):
         """Initialize the `BlueprintAccess`.
 
-        :param iterable[str] required_properties: An iterable of properties that
+        :param required_properties: An iterable of properties that
         are required to access any view function in the blueprint.
         """
         self.blueprint = blueprint
         self.required_properties = tuple(required_properties)
-        self.endpoint_properties_map = {}
+        self.endpoint_properties_map: dict[str, tuple[str, ...]] = {}
         blueprint.before_request(self._check_access)
 
-    def require(self, *required_properties):
+    def require(self, *required_properties: str) -> t.Callable[[TFun], TFun]:
         """Set per-view function restrictions.
 
         Decorate flask view functions with this decorator to specify properties
         a user must have in order to access the view function.
-        :param str required_properties: Names of the properties that are
+        :param required_properties: Names of the properties that are
         required.
         """
         view_properties = required_properties
 
-        def decorator(f):
+        def decorator(f: TFun) -> TFun:
             endpoint = bake_endpoint(self.blueprint, f)
             self.endpoint_properties_map[endpoint] = view_properties
-            f.required_properties = view_properties
+            f.required_properties = view_properties  # type: ignore[attr-defined]
             return f
         return decorator
 
-    def _check_access(self):
+    def _check_access(self) -> BaseResponse:
         if not current_user.is_authenticated:
             return current_app.login_manager.unauthorized()
         endpoint = request.endpoint
@@ -86,14 +94,14 @@ class BlueprintAccess:
             abort(403)
 
     @property
-    def is_accessible(self):
+    def is_accessible(self) -> bool:
         """Checks if the current user may access this blueprint."""
         return _check_properties(self.required_properties)
 
-    def is_endpoint_accessible(self, endpoint):
+    def is_endpoint_accessible(self, endpoint: str) -> bool:
         """Checks if the current user may access the given endpoint.
 
-        :param str endpoint: A endpoint name
+        :param endpoint: A endpoint name
         """
         endpoint_specific = self.endpoint_properties_map.get(endpoint, ())
         return _check_properties(chain(self.required_properties,
