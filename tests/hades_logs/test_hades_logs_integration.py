@@ -4,6 +4,9 @@ from hades_logs import HadesLogs, HadesTimeout
 from hades_logs.parsing import RadiusLogEntry
 
 
+pytestmark = pytest.mark.hades_logs
+
+
 class TestConfiguredHadesLogs:
     def test_nonexistent_port_has_no_logs(self, hades_logs):
         logs = list(hades_logs.fetch_logs(nasipaddress='', nasportid=''))

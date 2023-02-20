@@ -180,6 +180,7 @@ class TestDummyHadesLogs:
 
         return _logs
 
+    @pytest.mark.hades_logs
     def test_hades_logs_are_returned(self, logs: GetLogs):
         assert len(logs := logs(logtype="hades")) == 4
         for log in logs:
@@ -188,6 +189,7 @@ class TestDummyHadesLogs:
             assert "– groups: " in log['message'].lower()
             assert "tagged)" in log['message'].lower()
 
+    @pytest.mark.hades_logs
     def test_disconnected_user_emits_warning(self, logs: GetLogs, other_user: User):
         assert len(logs := logs(user_id=other_user.id, logtype="hades")) == 1
         assert "are in a connected room" in logs[0]['message'].lower()

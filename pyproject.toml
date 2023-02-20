@@ -54,6 +54,7 @@ addopts = "--tb=short --no-header"
 markers = [
     "slow: slow test (e.g. testing a timeout)",
     "meta: meta test (e.g. testing validity/consistency of fixtures)",
+    "hades_logs: tests touching the hades logs, i.e. requiring the `dummy_worker`",
 ]
 filterwarnings = [
     # fixed in kombu v5.3: https://github.com/celery/kombu/issues/1339
