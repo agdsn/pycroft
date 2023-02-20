@@ -4,8 +4,9 @@
 from typing import NoReturn
 
 from werkzeug import Response
-from werkzeug.exceptions import abort
 from werkzeug.utils import redirect
+
+from ..type_utils import abort
 
 
 def bake_endpoint(blueprint, fn):

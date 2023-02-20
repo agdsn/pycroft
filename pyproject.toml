@@ -16,6 +16,9 @@ files = [
     "pycroft/lib",
     "ldap_sync",
     "web/blueprints/finance",
+    "web/blueprints/__init__.py",
+    "web/blueprints/access.py",
+    "web/blueprints/navigation.py",
 ]
 mypy_path = "stubs"
 namespace_packages = true
