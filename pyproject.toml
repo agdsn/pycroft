@@ -49,6 +49,7 @@ module = [
     "pycroft.helpers.utc",
     "web.blueprints",
     "web.blueprints.access",
+    "web.blueprints.navigation",
 ]
 disallow_untyped_defs = true
 disallow_untyped_calls = true

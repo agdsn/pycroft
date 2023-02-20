@@ -1,12 +1,17 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+from __future__ import annotations
+import typing as t
 from dataclasses import dataclass, field
-from typing import Generic, TypeVar
+from typing import Generic
 
-from flask import request, url_for
+from flask import request, url_for, Blueprint, Flask
 from web.blueprints.access import BlueprintAccess
 from web.blueprints import bake_endpoint
+
+
+TFun = t.TypeVar("TFun", bound=t.Callable)
 
 
 class BlueprintNavigation:
@@ -44,15 +49,22 @@ class BlueprintNavigation:
     that are accessible for the current user.
     """
 
-    def __init__(self, blueprint, text, icon=None, description=None, blueprint_access=None,
-                 push_right=False):
+    def __init__(
+        self,
+        blueprint: Blueprint,
+        text: str,
+        icon: str | None = None,
+        description: str | None = None,
+        blueprint_access: BlueprintAccess | None = None,
+        push_right: bool = False,
+    ):
         """Init the `BlueprintNavigation` instance.
 
         :param blueprint: A `flask.Blueprint` instance.
         :param text: The text for the top bar navigation.
         :param description: An optional anchor title.
         """
-        self.blueprint = blueprint
+        self.blueprint: Blueprint = blueprint
         self.text = text
         self.icon = icon
         self.description = description
@@ -64,7 +76,7 @@ class BlueprintNavigation:
 
 
     @property
-    def is_allowed(self):
+    def is_allowed(self) -> bool:
         """Checks if the user has general access to the blueprint.
 
         This uses the `BlueprintAccess.is_accessible` to find out
@@ -75,7 +87,13 @@ class BlueprintNavigation:
         """
         return self._access.is_accessible
 
-    def navigate(self, text, weight=0, description=None, icon=None):
+    def navigate(
+        self,
+        text: str,
+        weight: int = 0,
+        description: str | None = None,
+        icon: str | None = None,
+    ) -> t.Callable[[TFun], TFun]:
         """A decorator to add a navigation menu entry for the actual view func.
 
         This is a decorator like the "route()" from `flask.Flask` or
@@ -88,7 +106,8 @@ class BlueprintNavigation:
         :param description: a anchor title.
         :param weight: weight (i.e. priority) of the object.
         """
-        def decorator(f):
+
+        def decorator(f: TFun) -> TFun:
             self._elements.append(NavigationItem(
                 endpoint=bake_endpoint(self.blueprint, f),
                 text=text,
@@ -101,7 +120,7 @@ class BlueprintNavigation:
             return f
         return decorator
 
-    def __iter__(self):
+    def __iter__(self) -> t.Iterator[NavigationItem]:
         """Get all navigation elements the user has access to.
 
         If there is a `BlueprintAccess` instance given to this navigation
@@ -116,7 +135,7 @@ class BlueprintNavigation:
                 yield element
 
     @property
-    def dropdown(self):
+    def dropdown(self) -> bool:
         """Checks if the menu element needs a dropdown
 
         `BlueprintNavigation` instances with only one navigable view
@@ -129,25 +148,27 @@ class BlueprintNavigation:
         return len(self._elements) > 1
 
     @property
-    def is_active(self):
+    def is_active(self) -> bool:
         """Tells if the blueprint of this instance is active.
 
         Active is a blueprint if a view func of it is shown.
 
         :return: True if active, False else.
         """
-        return self.blueprint.name == request.blueprint
+        # TODO remove these casts once on `Flask v2`
+        return t.cast(str, self.blueprint.name) == t.cast(str, request.blueprint)
 
     @property
-    def get_page_title(self):
+    def get_page_title(self) -> str | None:
         """Returns the active element of the instance, or nil"""
 
         for element in self._elements:
             if url_for(element.endpoint) == request.path:
                 return element.text
+        return None
 
     @property
-    def first(self):
+    def first(self) -> NavigationItem:
         """Get the first registered view function.
 
         This is used for non-dropdown rendering.
@@ -157,7 +178,7 @@ class BlueprintNavigation:
         return self._elements[0]
 
     @property
-    def css_classes(self):
+    def css_classes(self) -> list[str]:
         """Get the css classes for a top-level <li> menu element.
 
         :return: A list of strings.
@@ -169,7 +190,7 @@ class BlueprintNavigation:
             classes.append("active")
         return classes
 
-    def register_on(self, app):
+    def register_on(self, app: Flask) -> None:
         """This registers the `BlueprintNavigation` for the Flask app.
 
         This uses a `list` in the flask config object to register the
@@ -179,7 +200,7 @@ class BlueprintNavigation:
         elements. The order the elements are registered is the order the
         elements will be shown.
 
-        :param app: A `flask.Flask` application instance.
+        :param app: A flask app
         """
 
         if self.blueprint.name not in app.blueprints:
@@ -192,20 +213,21 @@ class BlueprintNavigation:
 
             app.config.setdefault('blueprint_navigation', SegmentedList())\
                 .append(self, right=self.push_right)
+        return
 
 
-T = TypeVar('T')
-
+TElem = t.TypeVar("TElem")
 
 @dataclass
-class SegmentedList(Generic[T]):
-    left: list[T] = field(default_factory=lambda: [])
-    right: list[T] = field(default_factory=lambda: [])
+class SegmentedList(Generic[TElem]):
+    left: list[TElem] = field(default_factory=lambda: [])
+    right: list[TElem] = field(default_factory=lambda: [])
 
-    def append(self, element: T, right=False):
+    def append(self, element: TElem, right: bool = False) -> None:
         (self.right if right else self.left).append(element)
+        return
 
-    def __iter__(self):
+    def __iter__(self) -> t.Iterator[TElem]:
         yield from self.left
         yield from self.right
 
