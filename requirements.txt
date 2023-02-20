@@ -2,20 +2,20 @@ babel>=2.12.1
 Click~=8.0
 #MySQL-python==1.2.5
 Flask-Babel~=2.0.0
-Flask-Login~=0.5.0
+Flask-Login~=0.6.2
 Flask-Testing~=0.8.1
 Flask-WTF~=1.0.0
 Flask-RESTful~=0.3.7
-Flask~=1.1.2
+Flask~=2.0.0
 # manual pin of itsdangerous: v2 does not use `simplejson` anymore,
 # even if installed, and hence cannot (de)serialize `Decimal`s out of the box.
 # When upgrading flask, remove this, add a custom deserializer or find another fix.
-itsdangerous~=1.1.0
-Jinja2~=2.11.2
-MarkupSafe~=1.0
+#itsdangerous~=1.1.0
+Jinja2~=3.0
+MarkupSafe~=2.0
 SQLAlchemy>=2.0.1
 WTForms~=2.2.1
-Werkzeug~=1.0.1
+Werkzeug~=2.0.0
 blinker~=1.4
 ipaddr~=2.2.0
 jsonschema~=3.2.0
