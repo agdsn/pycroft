@@ -9,6 +9,7 @@
 
     :copyright: (c) 2012 by AG DSN.
 """
+import typing as t
 from datetime import date
 from datetime import timedelta, datetime
 from functools import partial
@@ -23,7 +24,7 @@ from flask import (
     url_for, make_response)
 from flask_login import current_user
 from flask_wtf import FlaskForm
-from sqlalchemy import or_, and_, Text, cast
+from sqlalchemy import or_, and_, Text, cast, ColumnClause, FromClause
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from sqlalchemy.sql.expression import literal_column, func, select, Join
@@ -38,7 +39,7 @@ from pycroft.lib.finance import end_payment_in_default_memberships, \
     match_activities, take_actions_for_payment_in_default_users, get_pid_csv, get_negative_members
 from pycroft.lib.mail import MemberNegativeBalance
 from pycroft.lib.user import encode_type2_user_id, user_send_mails
-from pycroft.model.finance import Account, Transaction
+from pycroft.model.finance import Account, Transaction, AccountType
 from pycroft.model.finance import (
     BankAccount, BankAccountActivity, Split, MembershipFee, MT940Error)
 from pycroft.model.session import session, utcnow
@@ -122,9 +123,9 @@ def bank_accounts_activities_json():
             icon='fa-edit'
         )]
 
-    activity_q = (BankAccountActivity.q
-                  .options(joinedload(BankAccountActivity.bank_account))
-                  .filter(BankAccountActivity.transaction_id is None))
+    activity_q = BankAccountActivity.q.options(
+        joinedload(BankAccountActivity.bank_account)
+    ).filter(BankAccountActivity.transaction_id.is_(None))
 
     return jsonify(items=[{
         'bank_account': activity.bank_account.name,
@@ -164,7 +165,10 @@ def bank_accounts_errors_json():
 def bank_accounts_import():
     form = BankAccountActivitiesImportForm()
     form.account.choices = [(acc.id, acc.name) for acc in BankAccount.q.all()]
-    (transactions, old_transactions, doubtful_transactions) = ([], [], [])
+    transactions: list[BankAccountActivity] = []
+    old_transactions: list[BankAccountActivity] = []
+    doubtful_transactions: list[BankAccountActivity] = []
+
     if request.method != 'POST':
         del (form.start_date)
         form.end_date.data = date.today() - timedelta(days=1)
@@ -285,7 +289,9 @@ def bank_accounts_import_errors():
 def fix_import_error(error_id):
     error = MT940Error.get(error_id)
     form = FixMT940Form()
-    (transactions, old_transactions, doubtful_transactions) = ([], [], [])
+    transactions: list[BankAccountActivity] = []
+    old_transactions: list[BankAccountActivity] = []
+    doubtful_transactions: list[BankAccountActivity] = []
     new_exception = None
 
     if request.method != 'POST':
@@ -525,12 +531,18 @@ def _apply_checked_matches(matching, subform):
 @bp.route('/accounts/list')
 @nav.navigate("Konten", icon='fa-money-check-alt')
 def accounts_list():
-    accounts_by_type = {
-        t[0]: list(t[1])
-        for t in groupby(
-            Account.q.filter_by(legacy=False).outerjoin(User).filter(User.id.is_(None))
-                .order_by(Account.type).all(),
-            lambda a: a.type.value
+    def _key(a: Account) -> AccountType:
+        return a.type
+
+    accounts_by_type: dict[AccountType | t.Literal["LEGACY"], list[Account]] = {
+        type: list(acc)
+        for type, acc in groupby(
+            Account.q.filter_by(legacy=False)
+            .outerjoin(User)
+            .filter(User.id.is_(None))
+            .order_by(Account.type)
+            .all(),
+            _key,
         )
     }
 
@@ -642,8 +654,14 @@ def _format_row(split, style, prefix=None):
     return {f'{prefix}_{key}': val for key, val in row.items()}
 
 
-def _prefixed_merge(a, prefix_a, b, prefix_b):
-    result = {}
+T = t.TypeVar("T")
+U = t.TypeVar("U")
+
+
+def _prefixed_merge(
+    a: dict[str, T], prefix_a: str, b: dict[str, U], prefix_b: str
+) -> dict[str, T | U]:
+    result: dict[str, T | U] = {}
     result.update(**{f'{prefix_a}_{k}': v
                      for k, v in a.items()})
     result.update(**{f'{prefix_b}_{k}': v
@@ -911,6 +929,7 @@ def transactions_all_json():
     lower = request.args.get('after', "")
     upper = request.args.get('before', "")
     filter = request.args.get('filter', "nonuser")
+    transactions: FromClause
     if filter == "nonuser":
         non_user_transactions = (select(Split.transaction_id)
                                  .select_from(
@@ -921,7 +940,7 @@ def transactions_all_json():
                                  .having(func.bool_and(User.id.is_(None)))
                                  .alias("nut"))
 
-        tid = literal_column("nut.transaction_id")
+        tid: ColumnClause[int] = literal_column("nut.transaction_id")
         transactions = non_user_transactions.join(Transaction,
                                                   Transaction.id == tid)
     else:
