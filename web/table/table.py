@@ -157,13 +157,15 @@ class BtnColumn(DictValueMixin, Column):
         @classmethod
         def value(
             cls,
+            *,
             btn_class: str,
             href: str,
             title: str,
-            tooltip: str,
-            new_tab: str | None = None,
+            tooltip: str | None = None,
+            new_tab: bool | None = None,
             icon: str | Iterable[str] | None = None,
         ) -> dict:
+            # for argument types, see `btnFormatter`
             ...
 
 
@@ -175,8 +177,16 @@ class MultiBtnColumn(DictListValueMixin, Column):
     if typing.TYPE_CHECKING:
         @classmethod
         def single_value(
-            cls, href: str, title: str, glyphicon: str | None = None
+            cls,
+            *,
+            btn_class: str = None,
+            href: str,
+            title: str,
+            tooltip: str | None = None,
+            new_tab: bool | None = None,
+            icon: str | Iterable[str] | None = None,
         ) -> dict:
+            # for argument types, see `btnFormatter`
             ...
 
 
@@ -184,7 +194,15 @@ class MultiBtnColumn(DictListValueMixin, Column):
 class LinkColumn(DictValueMixin, Column):
     if typing.TYPE_CHECKING:
         @classmethod
-        def value(cls, href: str, title: str, glyphicon: str | None = None) -> dict:
+        def value(
+            cls,
+            *,
+            href: str,
+            title: str,
+            glyphicon: str | None = None,
+            new_tab: bool | None = None,
+        ) -> dict:
+            # for argument types, see `linkFormatter`
             ...
 
 
@@ -205,6 +223,7 @@ class TextWithBooleanColumn(DictValueMixin, Column):
         @classmethod
         def value(
             cls,
+            *,
             text: str,
             bool: bool,
             icon_true: str | None = None,
@@ -220,8 +239,9 @@ class UserColumn(Column):
         return DictValueMixin.value(type='plain', title=title)
 
     @classmethod
-    def value_native(cls, href: str, title: str,
-                     glyphicon: str | None = None) -> dict:
+    def value_native(
+        cls, *, href: str, title: str, glyphicon: str | None = None
+    ) -> dict:
         return DictValueMixin.value(
             type='native', href=href, title=title, glyphicon=glyphicon,
         )
