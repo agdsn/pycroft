@@ -1,3 +1,4 @@
+babel>=2.12.1
 Click~=8.0
 #MySQL-python==1.2.5
 Flask-Babel~=2.0.0
