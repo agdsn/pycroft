@@ -26,7 +26,7 @@ from .message import Message, SimpleMessage, NumericalMessage
 from .options import Options
 
 
-def localized(json_string: str, options: Options | None = None):
+def localized(json_string: str, options: Options | None = None) -> str:
     return Message.from_json(json_string).localize(options)
 
 

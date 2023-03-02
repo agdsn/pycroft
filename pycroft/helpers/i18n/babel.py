@@ -44,16 +44,16 @@ def set_translation_lookup(lookup_func: typing.Callable[[], Translations]) -> No
 
 
 def gettext(message: str) -> str:
-    return typing.cast(str, get_translations().ugettext(message))
+    return get_translations().ugettext(message)
 
 
 def dgettext(domain: str, message: str) -> str:
-    return typing.cast(str, get_translations().udgettext(domain, message))
+    return get_translations().udgettext(domain, message)
 
 
 def ngettext(singular: str, plural: str, n: int) -> str:
-    return typing.cast(str, get_translations().ungettext(singular, plural, n))
+    return get_translations().ungettext(singular, plural, n)
 
 
 def dngettext(domain: str, singular: str, plural: str, n: int) -> str:
-    return typing.cast(str, get_translations().udngettext(domain, singular, plural, n))
+    return get_translations().udngettext(domain, singular, plural, n)
