@@ -30,7 +30,7 @@ RUN apt-get update \
 
 COPY --link . /
 
-USER pycroft
+#USER pycroft
 WORKDIR /opt/pycroft
 
 EXPOSE 5000

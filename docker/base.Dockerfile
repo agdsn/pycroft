@@ -3,9 +3,10 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 
-FROM python:3.10-bullseye
-ARG UID=1000
-ARG GID=1000
+# syntax=docker/dockerfile:1.3
+FROM docker.io/python:3.10-bullseye
+#ARG UID=1000
+#ARG GID=1000
 ENV LANG=C.UTF-8 DEBIAN_FRONTEND=noninteractive
 
 COPY etc/apt /etc/apt
@@ -16,10 +17,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libpq5 \
     && apt-get clean
 
-RUN groupadd --force --gid $GID pycroft \
-    && useradd --non-unique --home-dir /opt/pycroft --create-home --uid $UID --gid $GID --comment "Application" pycroft
+#RUN groupadd --force --gid $GID pycroft \
+#    && useradd --non-unique --home-dir /opt/pycroft --create-home --uid $UID --gid $GID --comment "Application" pycroft
 
-USER pycroft
+#USER pycroft
 WORKDIR /opt/pycroft
 
 # - Create a virtual environment

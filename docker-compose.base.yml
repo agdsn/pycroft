@@ -9,7 +9,7 @@ services:
         - GID=${GID:-1000}
     image: agdsn/pycroft-base:${TAG:-latest}
     entrypoint: ["/bin/true"]
-    command: []
+    command: ""
   dev-base:
     build:
       context: docker/dev

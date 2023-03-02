@@ -1,4 +1,4 @@
-FROM golang:rc-alpine
+FROM docker.io/golang:rc-alpine
 RUN apk add --no-cache git
 RUN apk add --no-cache gcc
 RUN apk add --no-cache musl-dev
