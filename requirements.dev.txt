@@ -10,7 +10,6 @@ sphinx~=5.1.1
 sphinx-autobuild~=2021.3.14
 git+https://github.com/agdsn/guzzle_sphinx_theme.git@977d49fcbdf2b3df9660d813d4b33369391923e1#egg=guzzle-sphinx-theme
 mypy>=0.961
-types-Jinja2~=2.11.9
 types-babel~=2.9.2
 celery-types~=0.9.3
 types-jsonschema~=4.3.0
