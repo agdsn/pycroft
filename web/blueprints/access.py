@@ -84,14 +84,15 @@ class BlueprintAccess:
             return f
         return decorator
 
-    def _check_access(self) -> BaseResponse:
+    def _check_access(self) -> BaseResponse | None:
         if not current_user.is_authenticated:
-            return current_app.login_manager.unauthorized()
+            return t.cast(BaseResponse, current_app.login_manager.unauthorized())  # type: ignore[attr-defined]
         endpoint = request.endpoint
         properties = chain(self.required_properties,
                            self.endpoint_properties_map.get(endpoint, ()))
         if not _check_properties(properties):
             abort(403)
+        return None
 
     @property
     def is_accessible(self) -> bool:
