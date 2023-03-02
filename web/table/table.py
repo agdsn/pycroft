@@ -404,7 +404,7 @@ class BootstrapTable(metaclass=BootstrapTableMeta):
     def render(self, table_id):
         """Render the table, use _render() directly if jinja2 isn't available
         """
-        from jinja2 import Markup
+        from markupsafe import Markup
 
         return Markup(self._render(table_id))
 

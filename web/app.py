@@ -8,6 +8,7 @@ from flask import (
 )
 from flask_babel import Babel
 from flask_login import current_user
+from jinja2 import select_autoescape
 from werkzeug.datastructures import ImmutableDict
 from sentry_sdk.integrations.flask import FlaskIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
@@ -35,11 +36,10 @@ class PycroftFlask(Flask):
     jinja_options = ImmutableDict(
         Flask.jinja_options,
         extensions=[
-            jinja2.ext.autoescape,
             jinja2.ext.do,
             jinja2.ext.loopcontrols,
-            jinja2.ext.with_,
         ],
+        autoescape=select_autoescape(),
         undefined=jinja2.StrictUndefined,
     )
 
