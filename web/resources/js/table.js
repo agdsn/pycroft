@@ -27,41 +27,6 @@ const timeAgo = new TimeAgo('de-DE')
 
 export var faIcon = (icon) => `<span class="fa ${icon}"></span>`;
 
-export var linkTemplate = ({target, href, title}) => `
-    <a target="${target}" href="${href}">${title}</a>
-`;
-
-export var emptyLinkTemplate = ({target, href, empty_title}) => `
-    <a target="${target}" href="${href}">
-        <span class="text-muted">${empty_title}</span>
-    </a>
-`;
-
-export var glyphLinkTemplate = ({target, href, title, glyphicon}) => `
-    <a target="${target}" href="${href}">
-        ${title} ${faIcon(glyphicon)}
-    </a>
-`;
-
-export var btnTemplate = ({target, href, btn_class, title}) => `
-    <a target="${target}"  href="${href}" class="btn ${btn_class}">${title}</a>
-`;
-
-export var glyphBtnTemplate = ({target, href, btn_class, title, glyphicon}) => `
-    <a target="${target}" href="${href}" class="btn ${btn_class}" title="${title}">
-        ${faIcon(glyphicon)}
-    </a>
-`;
-
-export var multiGlyphBtnTemplate = ({href, btn_class, tooltip, title, glyphicons}) => `
-    <a href="${href}" class="btn ${btn_class}" title="${tooltip}">
-        <span class="badge rounded-pill bg-light text-dark">
-            ${glyphicons.map(faIcon).join("")}
-        </span>
-        ${title}
-    </a>
-`;
-
 /**
  * Using the `coloredFormatter` on a column requires
  * `data-cell-style="tdRelativeCellStyle"` so the color stripe will be
@@ -107,13 +72,22 @@ export function linkFormatter(value, row, index) {
     }
 
     if(value["glyphicon"]){
-        return glyphLinkTemplate({'href': value['href'], 'title': value['title'], 'target': target, 'glyphicon': value['glyphicon']});
+        return `
+            <a target="${target}" href="${value['href']}">
+                ${value['title']} ${faIcon(value['glyphicon'])}
+            </a>
+        `;
     } else if (value['empty'] !== true) {
-        return linkTemplate({'href': value['href'], 'title': value['title'], 'target': target});
+        return `
+            <a target="${target}" href="${value['href']}">${value['title']}</a>
+        `;
     } else {
-        return emptyLinkTemplate({'href': value['href'], 'empty_title': value['title'], 'target': target});
+        return `
+            <a target="${target}" href="${value['href']}">
+                <span class="text-muted">${value['title']}</span>
+            </a>
+        `;
     }
-
 }
 linkFormatter.attributes = { sortName: 'title' };
 
@@ -149,32 +123,25 @@ export function btnFormatter(value, row, index) {
 
     if (value['icon']) {
         if (value['icon'] instanceof Array) {
-            return multiGlyphBtnTemplate({
-                'href': value['href'],
-                'title': value['title'],
-                'btn_class': value['btn_class'],
-                'glyphicons': value['icon'],
-                'tooltip': value['tooltip'],
-                'target': target,
-            });
+            return `
+                <a href="${value['href']}" class="btn ${value['btn_class']}" title="${value['tooltip']}">
+                    <span class="badge rounded-pill bg-light text-dark">
+                        ${value['icon'].map(faIcon).join("")}
+                    </span>
+                    ${value['title']}
+                </a>
+            `;
         } else {
-            return glyphBtnTemplate({
-                'href': value['href'],
-                'title': value['title'],
-                'btn_class': value['btn_class'],
-                'glyphicon': value['icon'],
-                'tooltip': value['tooltip'],
-                'target': target,
-            });
+            return `
+                <a target="${target}" href="${value['href']}" class="btn ${value['btn_class']}" title="${value['title']}">
+                    ${faIcon(value['icon'])}
+                </a>
+            `;
         }
     } else {
-        return btnTemplate({
-            'href': value['href'],
-            'title': value['title'],
-            'btn_class': value['btn_class'],
-            'tooltip': value['tooltip'],
-            'target': target,
-        });
+        return `
+            <a target="${target}" href="${value['href']}" class="btn ${value['btn_class']}">${value['title']}</a>
+        `;
     }
 }
 
@@ -214,7 +181,6 @@ export function multiBtnFormatter(value, row, index) {
     if (!value) {
         return;
     }
-
     if (Array.isArray(value)) {
         return value.map(v => btnFormatter(v, row, index)).join('&nbsp;');
     }
@@ -248,22 +214,17 @@ export function dateFormatter(value, row, index) {
 }
 dateFormatter.attributes = { sortName: 'timestamp' };
 
-const relativeDateTemplate = ({formatted_date, relative_date}) => `
-    <span class="relative-date" title="${formatted_date}" data-bs-toggle="tooltip" data-placement="bottom">
-        ${relative_date}
-    </span>
-`;
-
 export function relativeDateFormatter(value, row, index) {
     if (!value) {
         return;
     }
     const msecEpoch = value['timestamp'] * 1000;
     const date = new Date(msecEpoch);
-    return relativeDateTemplate({
-        'formatted_date': value['formatted'],
-        'relative_date': timeAgo.format(date),
-    });
+    return `
+        <span class="relative-date" title="${value['formatted']}" data-bs-toggle="tooltip" data-placement="bottom">
+            ${(timeAgo.format(date))}
+        </span>
+    `;
 }
 dateFormatter.attributes = { sortName: 'timestamp' };
 
