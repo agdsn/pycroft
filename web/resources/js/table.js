@@ -60,35 +60,27 @@ export function tdRelativeCellStyle(value, row, index, field) {
     };
 }
 
-export function linkFormatter(value, row, index) {
+const targetStr = new_tab => new_tab ? "_blank" : "";
+
+export function linkFormatter(value, _row, _index) {
     if (!value) {
         return;
     }
 
-    let target = "";
+    let target = targetStr(value.new_tab);
+    const {href, title} = value;
+    let content;
 
-    if(value["new_tab"]){
-        target = "_blank"
-    }
-
-    if(value["glyphicon"]){
-        return `
-            <a target="${target}" href="${value['href']}">
-                ${value['title']} ${faIcon(value['glyphicon'])}
-            </a>
-        `;
-    } else if (value['empty'] !== true) {
-        return `
-            <a target="${target}" href="${value['href']}">${value['title']}</a>
-        `;
+    if (value.glyphicon) {
+        content = `${title} ${faIcon(value.glyphicon)}`;
+    } else if (value.empty === true) {
+        content = `<span class="text-muted">${title}</span>`;
     } else {
-        return `
-            <a target="${target}" href="${value['href']}">
-                <span class="text-muted">${value['title']}</span>
-            </a>
-        `;
+        content = title;
     }
+    return `<a target="${target}" href="${href}">${content}</a>`;
 }
+
 linkFormatter.attributes = { sortName: 'title' };
 
 /**
