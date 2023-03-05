@@ -24,7 +24,7 @@ The password for the ``postgres`` user is ``password``.
     export PGPASSFILE=.pycroft.pgpass
     psql -wb postgres://postgres@127.0.0.1:55432/pycroft \
         -c '\set ON_ERROR_STOP 1' \
-        -c 'drop schema pycroft cascade' \
+        -c 'drop schema if exists pycroft cascade' \
         -f data/pycroft_schema.sql \
         -f data/pycroft.sql
     # start the web app again
