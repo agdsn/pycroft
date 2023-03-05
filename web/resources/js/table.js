@@ -91,18 +91,19 @@ export function userFormatter(value, row, index) {
     if (!value) {
         return;
     }
-    if (value['type'] === 'plain') {
-        return value['title'];
-    } else if (value['type'] === 'native') {
-        return linkFormatter(value, row, index);
-    } else {
-        console.error("The following object could not be formatted by a userLogger:", value);
-        return "Invalid format";
+    switch (value.type) {
+        case "plain":
+            return value.title;
+        case "native":
+            return linkFormatter(value, row, index);
+        default:
+            console.error("The following object could not be formatted by a userLogger:", value);
+            return "Invalid format";
     }
 }
 userFormatter.attributes = { sortName: 'title' };
 
-export function btnFormatter(value, row, index) {
+export function btnFormatter(value, _row, _index) {
     if (!value) {
         return;
     }
