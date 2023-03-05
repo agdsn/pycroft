@@ -107,35 +107,29 @@ export function btnFormatter(value, _row, _index) {
     if (!value) {
         return;
     }
+    const target = targetStr(value.new_tab);
+    const {href, btn_class, title, icon} = value
 
-    let target = "";
-
-    if(value["new_tab"]){
-        target = "_blank"
-    }
-
-    if (value['icon']) {
-        if (value['icon'] instanceof Array) {
-            return `
-                <a href="${value['href']}" class="btn ${value['btn_class']}" title="${value['tooltip']}">
-                    <span class="badge rounded-pill bg-light text-dark">
-                        ${value['icon'].map(faIcon).join("")}
-                    </span>
-                    ${value['title']}
-                </a>
-            `;
-        } else {
-            return `
-                <a target="${target}" href="${value['href']}" class="btn ${value['btn_class']}" title="${value['title']}">
-                    ${faIcon(value['icon'])}
-                </a>
-            `;
-        }
-    } else {
+    if (!icon) {
         return `
-            <a target="${target}" href="${value['href']}" class="btn ${value['btn_class']}">${value['title']}</a>
+            <a target="${target}" href="${href}" class="btn ${btn_class}">${title}</a>
         `;
     }
+    if (icon instanceof Array) {
+        return `
+            <a href="${href}" class="btn ${btn_class}" title="${value.tooltip}">
+                <span class="badge rounded-pill bg-light text-dark">
+                    ${icon.map(faIcon).join("")}
+                </span>
+                ${title}
+            </a>
+        `;
+    }
+    return `
+        <a target="${target}" href="${href}" class="btn ${btn_class}" title="${title}">
+            ${faIcon(icon)}
+        </a>
+    `;
 }
 
 function humanByteSize(bytes, si) {
