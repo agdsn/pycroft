@@ -4,7 +4,6 @@
  * the Apache License, Version 2.0. See the LICENSE file for details.
  */
 
-import _ from "underscore";
 import $ from 'jquery';
 import TimeAgo from 'javascript-time-ago'
 import de from 'javascript-time-ago/locale/de'
@@ -26,36 +25,42 @@ $.extend($.fn.bootstrapTable.defaults.icons, {
 TimeAgo.addDefaultLocale(de)
 const timeAgo = new TimeAgo('de-DE')
 
-export var linkTemplate = _.template(
-    '<a target="<%- target %>"  href="<%- href %>"><%- title %></a>',
-);
+export var faIcon = (icon) => `<span class="fa ${icon}"></span>`;
 
-export var emptyLinkTemplate = _.template(
-    '<a target="<%- target %>"  href="<%- href %>"><span class="text-muted"><%- empty_title %></span></a>',
-);
+export var linkTemplate = ({target, href, title}) => `
+    <a target="${target}" href="${href}">${title}</a>
+`;
 
-export var glyphLinkTemplate = _.template(
-    '<a target="<%- target %>"  href="<%- href %>"><%- title %> <span class="fa <%- glyphicon %>"></span></a>',
-);
+export var emptyLinkTemplate = ({target, href, empty_title}) => `
+    <a target="${target}" href="${href}">
+        <span class="text-muted">${empty_title}</span>
+    </a>
+`;
 
-export var btnTemplate = _.template(
-    '<a target="<%- target %>"  href="<%- href %>" class="btn <%- btn_class %>"><%- title %></a>',
-);
+export var glyphLinkTemplate = ({target, href, title, glyphicon}) => `
+    <a target="${target}" href="${href}">
+        ${title} ${faIcon(glyphicon)}
+    </a>
+`;
 
-export var glyphBtnTemplate = _.template(
-    '<a target="<%- target %>" href="<%- href %>" class="btn <%- btn_class %>" title="<%- title %>"><span class="fa <%- glyphicon %>"></span></a>',
-);
+export var btnTemplate = ({target, href, btn_class, title}) => `
+    <a target="${target}"  href="${href}" class="btn ${btn_class}">${title}</a>
+`;
 
-export var multiGlyphBtnTemplate = _.template(
-    '<a href="<%- href %>" class="btn <%- btn_class %>" title="<%- tooltip %>">' +
-    '<span class="badge rounded-pill bg-light text-dark">' +
-    '<% for (var i = 0; i < glyphicons.length; i++) { %>' +
-    '<span class="fa <%- glyphicons[i] %>"></span>' +
-    '<% } %>' +
-    '</span>' +
-    '<%- title %>' +
-    '</a>',
-);
+export var glyphBtnTemplate = ({target, href, btn_class, title, glyphicon}) => `
+    <a target="${target}" href="${href}" class="btn ${btn_class}" title="${title}">
+        ${faIcon(glyphicon)}
+    </a>
+`;
+
+export var multiGlyphBtnTemplate = ({href, btn_class, tooltip, title, glyphicons}) => `
+    <a href="${href}" class="btn ${btn_class}" title="${tooltip}">
+        <span class="badge rounded-pill bg-light text-dark">
+            ${glyphicons.map(faIcon).join("")}
+        </span>
+        ${title}
+    </a>
+`;
 
 /**
  * Using the `coloredFormatter` on a column requires
@@ -243,11 +248,12 @@ export function dateFormatter(value, row, index) {
 }
 dateFormatter.attributes = { sortName: 'timestamp' };
 
-const relativeDateTemplate = _.template(
-    '<span class="relative-date" title="<%- formatted_date %>" data-bs-toggle="tooltip" data-placement="bottom">' +
-    '<%- relative_date %>' +
-    '</span>'
-);
+const relativeDateTemplate = ({formatted_date, relative_date}) => `
+    <span class="relative-date" title="${formatted_date}" data-bs-toggle="tooltip" data-placement="bottom">
+        ${relative_date}
+    </span>
+`;
+
 export function relativeDateFormatter(value, row, index) {
     if (!value) {
         return;
