@@ -39,7 +39,7 @@ This is best done using the ``.env`` file
 
     cp example.env .env
     sed -i "s/# *UID=.*$/UID=${UID}/" .env
-    sed -i "s/# *GID=.*$/UID=${GID}/" .env
+    sed -i "s/# *GID=.*$/GID=${GID}/" .env
 
 
 .. _built images:
