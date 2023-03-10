@@ -10,7 +10,7 @@ from collections import OrderedDict
 from collections.abc import Iterable
 from functools import partial, cached_property
 
-from sqlalchemy import event as sqla_event, schema, table
+from sqlalchemy import event as sqla_event, schema, table, text
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql import ClauseElement, Selectable
@@ -442,8 +442,8 @@ class View(schema.DDLElement):
         if not self.materialized:
             raise ValueError("Cannot refresh a non-materialized view")
 
-        _con = 'CONCURRENTLY ' if concurrently else ''
-        session.execute('REFRESH MATERIALIZED VIEW ' + _con + self.name)
+        _con = "CONCURRENTLY " if concurrently else ""
+        session.execute(text("REFRESH MATERIALIZED VIEW " + _con + self.name))
 
 
 class CreateView(schema.DDLElement):
