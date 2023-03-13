@@ -17,7 +17,11 @@ from itertools import groupby, zip_longest, chain
 
 import wtforms
 from fints.dialog import FinTSDialogError
-from fints.exceptions import FinTSClientPINError, FinTSError
+from fints.exceptions import (
+    FinTSClientPINError,
+    FinTSError,
+    FinTSClientTemporaryAuthError,
+)
 from fints.utils import mt940_to_array
 from flask import (
     Blueprint, abort, flash, jsonify, redirect, render_template, request,
@@ -166,6 +170,9 @@ def flash_fints_errors():
         yield
     except (FinTSDialogError, FinTSClientPINError) as e:
         flash(f"Ungültige FinTS-Logindaten: '{e}'", 'error')
+        raise PycroftException from e
+    except FinTSClientTemporaryAuthError as e:
+        flash(f"Temporärer Fehler bei der Authentifizierung: '{e}'", "error")
         raise PycroftException from e
     except FinTSError as e:
         flash(f"Anderer FinTS-Fehler: '{e}'", 'error')
