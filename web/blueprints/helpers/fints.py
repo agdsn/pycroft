@@ -1,30 +1,47 @@
+#  Copyright (c) 2023. The Pycroft Authors. See the AUTHORS file.
+#  This file is part of the Pycroft project and licensed under the terms of
+#  the Apache License, Version 2.0. See the LICENSE file for details
+
+import typing as t
 import datetime
 import logging
+from itertools import chain
+from typing import NamedTuple
+
 from fints.client import FinTS3PinTanClient
 from fints.models import SEPAAccount
 from fints.segments.statement import HKKAZ5, HKKAZ6, HKKAZ7
 from fints.utils import mt940_to_array
 from mt940.models import Transaction as MT940Transaction
 
+from pycroft.helpers.functional import extract_types
+
 logger = logging.getLogger(__name__)
 
 
-def parse_segment(seg) -> list[MT940Transaction]:
+class StatementError(NamedTuple):
+    statement: str
+    error: str
+
+
+def try_parse_segment(seg) -> list[MT940Transaction] | StatementError:
     # Note: MT940 messages are encoded in the S.W.I.F.T character set,
     # which is a subset of ISO 8859. There are no character in it that
     # differ between ISO 8859 variants, so we'll arbitrarily chose 8859-1.
-    return mt940_to_array(seg.statement_booked.decode("iso-8859-1"))
+    decoded_statement = seg.statement_booked.decode("iso-8859-1")
+    try:
+        return t.cast(list[MT940Transaction], mt940_to_array(decoded_statement))
+    except Exception as e:
+        return StatementError(decoded_statement, str(e))
 
 
 class FinTS3Client(FinTS3PinTanClient):
-    with_error = []
-
     def get_filtered_transactions(
         self,
         account: SEPAAccount,
         start_date: datetime.date | None = None,
         end_date: datetime.date | None = None,
-    ) -> tuple[list[MT940Transaction], list[tuple[str, str]]]:
+    ) -> tuple[list[MT940Transaction], list[StatementError]]:
         """
         Fetches the list of transactions of a bank account in a certain timeframe.
         MT940-Errors are catched and the statements containing them returned as
@@ -41,7 +58,7 @@ class FinTS3Client(FinTS3PinTanClient):
 
             logger.info(
                 f'Start fetching from {start_date} to {end_date}')
-            statement = self._fetch_with_touchdowns(
+            statement, errors = self._fetch_with_touchdowns(
                 dialog,
                 lambda touchdown: hkkaz(
                     account=hkkaz._fields['account'].type.from_sepa_account(
@@ -56,18 +73,16 @@ class FinTS3Client(FinTS3PinTanClient):
             )
             logger.info('Fetching done.')
 
+        logger.debug(f"Statement: {statement}")
+        return statement, errors
 
-
-        logger.debug(f'Statement: {statement}')
-
-
-        return statement, self.with_error
-
-    def decode_response(self, responses) -> list[MT940Transaction]:
-        statement = []
-        for seg in responses:
-            try:
-                statement += parse_segment(seg)
-            except Exception as e:
-                self.with_error.append((seg.statement_booked.decode('iso-8859-1'), str(e)))
-        return statement
+    def decode_response(
+        self, responses: list
+    ) -> tuple[list[MT940Transaction], list[StatementError]]:
+        segment_results, errors, rest = extract_types(
+            (try_parse_segment(seg) for seg in responses),
+            list[MT940Transaction],
+            StatementError,
+        )
+        assert not rest
+        return [*chain(*segment_results)], errors
