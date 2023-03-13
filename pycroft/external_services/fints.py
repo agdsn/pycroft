@@ -10,7 +10,7 @@ from typing import NamedTuple
 
 from fints.client import FinTS3PinTanClient
 from fints.models import SEPAAccount
-from fints.segments.statement import HKKAZ5, HKKAZ6, HKKAZ7
+from fints.segments.statement import HKKAZ5, HKKAZ6, HKKAZ7, HIKAZ5, HIKAZ6, HIKAZ7
 from fints.utils import mt940_to_array
 from mt940.models import Transaction as MT940Transaction
 
@@ -24,7 +24,9 @@ class StatementError(NamedTuple):
     error: str
 
 
-def try_decode_response(resp) -> list[MT940Transaction] | StatementError:
+def try_decode_response(
+    resp: HIKAZ5 | HIKAZ6 | HIKAZ7,
+) -> list[MT940Transaction] | StatementError:
     """Attempt to parse a FINTS response (“segment”)."""
 
     # Note: MT940 messages are encoded in the S.W.I.F.T character set,

@@ -15,6 +15,7 @@ ignore_missing_imports = true
 files = [
     "pycroft/helpers",
     "pycroft/lib",
+    "pycroft/external_services",
     "ldap_sync",
     "web/blueprints/finance",
     "web/blueprints/__init__.py",
@@ -37,6 +38,8 @@ module = [
     "ldap_sync.*",
     "pycroft.lib",
     "pycroft.lib.*",
+    "pycroft.external_services",
+    "pycroft.external_services.*",
     "pycroft.helpers",
     "pycroft.helpers.date",
     "pycroft.helpers.errorcode",
