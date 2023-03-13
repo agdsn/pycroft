@@ -4,15 +4,19 @@ from fints.client import FinTS3PinTanClient
 from fints.models import SEPAAccount
 from fints.segments.statement import HKKAZ5, HKKAZ6, HKKAZ7
 from fints.utils import mt940_to_array
+from mt940.models import Transaction as MT940Transaction
 
 logger = logging.getLogger(__name__)
 
 class FinTS3Client(FinTS3PinTanClient):
     with_error = []
 
-    def get_filtered_transactions(self, account: SEPAAccount,
-                         start_date: datetime.date = None,
-                         end_date: datetime.date = None):
+    def get_filtered_transactions(
+        self,
+        account: SEPAAccount,
+        start_date: datetime.date | None = None,
+        end_date: datetime.date | None = None,
+    ) -> tuple[list[MT940Transaction], list[tuple[str, str]]]:
         """
         Fetches the list of transactions of a bank account in a certain timeframe.
         MT940-Errors are catched and the statements containing them returned as
@@ -51,7 +55,7 @@ class FinTS3Client(FinTS3PinTanClient):
 
         return statement, self.with_error
 
-    def decode_response(self, responses):
+    def decode_response(self, responses) -> list[MT940Transaction]:
         statement = []
         for seg in responses:
             # Note: MT940 messages are encoded in the S.W.I.F.T character set,

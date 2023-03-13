@@ -18,6 +18,7 @@ from io import StringIO
 from itertools import chain, islice, tee, zip_longest
 from typing import Callable, TypeVar, NamedTuple
 
+from mt940.models import Transaction as MT940Transaction
 from sqlalchemy import func, between, cast, CTE
 from sqlalchemy import or_, and_, literal, select, exists, not_, \
     text, future
@@ -801,13 +802,9 @@ def take_actions_for_payment_in_default_users(
                            processor, user)
 
 
-class FintsTransaction(t.Protocol):
-    data: dict
-
-
 def process_transactions(
     bank_account: BankAccount,
-    statement: t.Iterable[FintsTransaction],
+    statement: t.Iterable[MT940Transaction],
 ) -> tuple[
     list[BankAccountActivity], list[BankAccountActivity], list[BankAccountActivity]
 ]:
