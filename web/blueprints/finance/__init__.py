@@ -47,6 +47,7 @@ from pycroft.lib.finance import (
     get_pid_csv,
     get_negative_members,
     get_fints_transactions,
+    ImportedTransactions,
 )
 from pycroft.lib.mail import MemberNegativeBalance
 from pycroft.lib.user import encode_type2_user_id, user_send_mails
@@ -194,26 +195,25 @@ def flash_fints_errors():
 def bank_accounts_import():
     form = BankAccountActivitiesImportForm()
     form.account.choices = [(acc.id, acc.name) for acc in BankAccount.q.all()]
+    imported = ImportedTransactions([], [], [])
 
     def display_form_response(
-        transactions: list[BankAccountActivity],
-        old_transactions: list[BankAccountActivity],
-        doubtful_transactions: list[BankAccountActivity],
+        imported: ImportedTransactions,
     ):
         return render_template(
             'finance/bank_accounts_import.html', form=form,
-            transactions=transactions,
-            old_transactions=old_transactions,
-            doubtful_transactions=doubtful_transactions
+            transactions=imported.new,
+            old_transactions=imported.old,
+            doubtful_transactions=imported.doubtful,
         )
 
     if not form.is_submitted():
         del (form.start_date)
         form.end_date.data = date.today() - timedelta(days=1)
-        return display_form_response([], [], [])
+        return display_form_response(imported)
 
     if not form.validate():
-        return display_form_response([], [], [])
+        return display_form_response(imported)
 
     bank_account = BankAccount.get(form.account.data)
 
@@ -241,7 +241,7 @@ def bank_accounts_import():
                 end_date=end_date,
             )
     except PycroftException:
-        return display_form_response([], [], [])
+        return display_form_response(imported)
 
     flash(f"Transaktionen vom {start_date} bis {end_date}.")
     if errors:
@@ -251,13 +251,14 @@ def bank_accounts_import():
             "error",
         )
 
-    (transactions, old_transactions, doubtful_transactions) = \
-        finance.process_transactions(bank_account, statement)
-    flash(f"Klassifizierung: {len(transactions)} neu "
-          f"/ {len(old_transactions)} alt "
-          f"/ {len(doubtful_transactions)} zu neu (Buchung >= {date.today()}T00:00Z).")
+    imported = finance.process_transactions(bank_account, statement)
+    flash(
+        f"Klassifizierung: {len(imported.new)} neu "
+        f"/ {len(imported.old)} alt "
+        f"/ {len(imported.doubtful)} zu neu (Buchung >= {date.today()}T00:00Z)."
+    )
     if not form.do_import.data:
-        return display_form_response(transactions, old_transactions, doubtful_transactions)
+        return display_form_response(imported)
 
     # persist transactions and errors
     session.add_all(
@@ -269,10 +270,12 @@ def bank_accounts_import():
         )
         for error in errors
     )
-    session.add_all(transactions)
+    session.add_all(imported.new)
     session.commit()
-    flash(f'{len(transactions)} Bankkontobewegungen wurden importiert.',
-          'success' if transactions else 'info')
+    flash(
+        f"{len(imported.new)} Bankkontobewegungen wurden importiert.",
+        "success" if imported.new else "info",
+    )
     return redirect(url_for(".accounts_show", account_id=bank_account.account_id))
 
 
@@ -317,9 +320,7 @@ def bank_accounts_import_errors():
 def fix_import_error(error_id):
     error = MT940Error.get(error_id)
     form = FixMT940Form()
-    transactions: list[BankAccountActivity] = []
-    old_transactions: list[BankAccountActivity] = []
-    doubtful_transactions: list[BankAccountActivity] = []
+    imported = ImportedTransactions([], [], [])
     new_exception = None
 
     if request.method != 'POST':
@@ -335,15 +336,13 @@ def fix_import_error(error_id):
             case _:
                 raise AssertionError("decode_responses returned Nonsense")
 
-
         if new_exception is None:
             flash('MT940 ist jetzt valide.', 'success')
-            (transactions, old_transactions, doubtful_transactions) = finance.process_transactions(
-                error.bank_account, statement)
+            imported = finance.process_transactions(error.bank_account, statement)
 
             if form.do_import.data is True:
                 # save transactions to database
-                session.add_all(transactions)
+                session.add_all(imported.new)
                 session.delete(error)
                 session.commit()
                 flash('Bankkontobewegungen wurden importiert.')
@@ -351,11 +350,16 @@ def fix_import_error(error_id):
         else:
             flash('Es existieren weiterhin Fehler.', 'error')
 
-    return render_template('finance/bank_accounts_error_fix.html',
-                           error_id=error_id, exception=error.exception,
-                           new_exception=new_exception, form=form,
-                           transactions=transactions, old_transactions=old_transactions,
-                           doubtful_transactions=doubtful_transactions)
+    return render_template(
+        "finance/bank_accounts_error_fix.html",
+        error_id=error_id,
+        exception=error.exception,
+        new_exception=new_exception,
+        form=form,
+        transactions=imported.new,
+        old_transactions=imported.old,
+        doubtful_transactions=imported.doubtful,
+    )
 
 
 @bp.route('/bank-accounts/create', methods=['GET', 'POST'])

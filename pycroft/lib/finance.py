@@ -803,15 +803,17 @@ def take_actions_for_payment_in_default_users(
                            processor, user)
 
 
+class ImportedTransactions(t.NamedTuple):
+    new: list[BankAccountActivity]
+    old: list[BankAccountActivity]
+    doubtful: list[BankAccountActivity]
+
+
 def process_transactions(
     bank_account: BankAccount,
     statement: t.Iterable[MT940Transaction],
-) -> tuple[
-    list[BankAccountActivity], list[BankAccountActivity], list[BankAccountActivity]
-]:
-    transactions = []  # new transactions which would be imported
-    old_transactions = []  # transactions which are already imported
-    doubtful_transactions = [] # transactions which may be changed by the bank because they are to new
+) -> ImportedTransactions:
+    imported = ImportedTransactions([], [], [])
 
     for transaction in statement:
         iban = transaction.data.get('applicant_iban', '')
@@ -843,7 +845,7 @@ def process_transactions(
             valid_on=transaction.data['date'],
         )
         if new_activity.posted_on >= date.today():
-            doubtful_transactions.append(new_activity)
+            imported.doubtful.append(new_activity)
         elif BankAccountActivity.q.filter(and_(
                 BankAccountActivity.bank_account_id ==
                 new_activity.bank_account_id,
@@ -857,11 +859,11 @@ def process_transactions(
                 BankAccountActivity.posted_on == new_activity.posted_on,
                 BankAccountActivity.valid_on == new_activity.valid_on
         )).first() is None:
-            transactions.append(new_activity)
+            imported.new.append(new_activity)
         else:
-            old_transactions.append(new_activity)
+            imported.old.append(new_activity)
 
-    return (transactions, old_transactions, doubtful_transactions)
+    return imported
 
 
 def build_transactions_query(
