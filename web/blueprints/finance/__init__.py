@@ -28,7 +28,6 @@ from flask import (
     url_for, make_response)
 from flask_login import current_user
 from flask_wtf import FlaskForm
-from mt940.models import Transaction as MT940Transaction
 from sqlalchemy import or_, and_, Text, cast, ColumnClause, FromClause
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
@@ -39,9 +38,16 @@ from pycroft import config, lib
 from pycroft.exc import PycroftException
 from pycroft.helpers.i18n import localized
 from pycroft.lib import finance
-from pycroft.lib.finance import end_payment_in_default_memberships, \
-    post_transactions_for_membership_fee, build_transactions_query, \
-    match_activities, take_actions_for_payment_in_default_users, get_pid_csv, get_negative_members
+from pycroft.lib.finance import (
+    end_payment_in_default_memberships,
+    post_transactions_for_membership_fee,
+    build_transactions_query,
+    match_activities,
+    take_actions_for_payment_in_default_users,
+    get_pid_csv,
+    get_negative_members,
+    get_fints_transactions,
+)
 from pycroft.lib.mail import MemberNegativeBalance
 from pycroft.lib.user import encode_type2_user_id, user_send_mails
 from pycroft.model.finance import Account, Transaction, AccountType
@@ -62,7 +68,6 @@ from web.blueprints.finance.tables import FinanceTable, FinanceTableSplitted, \
     UnconfirmedTransactionsTable
 from web.blueprints.helpers.api import json_agg_core
 from web.blueprints.helpers.exception import handle_errors
-from pycroft.external_services.fints import FinTS3Client, StatementError
 from web.blueprints.navigation import BlueprintNavigation
 from web.table.table import date_format
 from web.template_filters import date_filter, money_filter, datetime_filter
@@ -269,32 +274,6 @@ def bank_accounts_import():
     flash(f'{len(transactions)} Bankkontobewegungen wurden importiert.',
           'success' if transactions else 'info')
     return redirect(url_for(".accounts_show", account_id=bank_account.account_id))
-
-
-def get_fints_transactions(
-    *,
-    product_id: str,
-    user_id: int,
-    secret_pin: str,
-    bank_account: BankAccount,
-    start_date: date,
-    end_date: date,
-) -> tuple[list[MT940Transaction], list[StatementError]]:
-    # login with fints
-    fints_client = FinTS3Client(
-        bank_account.routing_number,
-        user_id,
-        secret_pin,
-        bank_account.fints_endpoint,
-        product_id=product_id,
-    )
-    acc = next(
-        (a for a in fints_client.get_sepa_accounts() if a.iban == bank_account.iban),
-        None,
-    )
-    if acc is None:
-        raise KeyError(f"BankAccount with IBAN {bank_account.iban} not found.")
-    return fints_client.get_filtered_transactions(acc, start_date, end_date)
 
 
 @bp.route('/bank-accounts/importmanual', methods=['GET', 'POST'])

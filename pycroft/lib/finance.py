@@ -26,6 +26,7 @@ from sqlalchemy.orm import aliased, contains_eager, joinedload, Session, Query
 from sqlalchemy.orm.exc import NoResultFound
 
 from pycroft import config
+from pycroft.external_services.fints import StatementError, FinTS3Client
 from pycroft.helpers.date import diff_month, last_day_of_month
 from pycroft.helpers.i18n import deferred_gettext, gettext
 from pycroft.helpers.interval import closed, Interval, UnboundedInterval, starting_from
@@ -1145,3 +1146,35 @@ def get_last_import_date(session: Session) -> datetime | None:
         select(func.max(BankAccountActivity.imported_at))
     ).first()
     return date
+
+
+def get_fints_transactions(
+    *,
+    product_id: str,
+    user_id: int,
+    secret_pin: str,
+    bank_account: BankAccount,
+    start_date: date,
+    end_date: date,
+) -> tuple[list[MT940Transaction], list[StatementError]]:
+    """Get the transactions from FinTS
+
+    External service dependencies:
+
+    - FinTS (:module:`pycroft.external_services.fints`)
+    """
+    # login with fints
+    fints_client = FinTS3Client(
+        bank_account.routing_number,
+        user_id,
+        secret_pin,
+        bank_account.fints_endpoint,
+        product_id=product_id,
+    )
+    acc = next(
+        (a for a in fints_client.get_sepa_accounts() if a.iban == bank_account.iban),
+        None,
+    )
+    if acc is None:
+        raise KeyError(f"BankAccount with IBAN {bank_account.iban} not found.")
+    return fints_client.get_filtered_transactions(acc, start_date, end_date)
