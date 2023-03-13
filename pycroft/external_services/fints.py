@@ -68,22 +68,20 @@ class FinTS3Client(FinTS3PinTanClient):
         with self._get_dialog() as dialog:
             hkkaz = self._find_highest_supported_command(HKKAZ5, HKKAZ6, HKKAZ7)
 
-            logger.info(
-                f'Start fetching from {start_date} to {end_date}')
+            logger.info(f"Start fetching from {start_date} to {end_date}")
             statement, errors = self._fetch_with_touchdowns(
                 dialog,
                 lambda touchdown: hkkaz(
-                    account=hkkaz._fields['account'].type.from_sepa_account(
-                        account),
+                    account=hkkaz._fields["account"].type.from_sepa_account(account),
                     all_accounts=False,
                     date_start=start_date,
                     date_end=end_date,
                     touchdown_point=touchdown,
                 ),
                 decode_response,
-                'HIKAZ'
+                "HIKAZ",
             )
-            logger.info('Fetching done.')
+            logger.info("Fetching done.")
 
         logger.debug(f"Statement: {statement}")
         return statement, errors

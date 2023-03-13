@@ -62,7 +62,7 @@ from web.blueprints.finance.tables import FinanceTable, FinanceTableSplitted, \
     UnconfirmedTransactionsTable
 from web.blueprints.helpers.api import json_agg_core
 from web.blueprints.helpers.exception import handle_errors
-from web.blueprints.helpers.fints import FinTS3Client, StatementError
+from pycroft.external_services.fints import FinTS3Client, StatementError
 from web.blueprints.navigation import BlueprintNavigation
 from web.table.table import date_format
 from web.template_filters import date_filter, money_filter, datetime_filter
