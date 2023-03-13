@@ -28,6 +28,7 @@ from flask import (
     url_for, make_response)
 from flask_login import current_user
 from flask_wtf import FlaskForm
+from mt940.models import Transaction as MT940Transaction
 from sqlalchemy import or_, and_, Text, cast, ColumnClause, FromClause
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
@@ -61,7 +62,7 @@ from web.blueprints.finance.tables import FinanceTable, FinanceTableSplitted, \
     UnconfirmedTransactionsTable
 from web.blueprints.helpers.api import json_agg_core
 from web.blueprints.helpers.exception import handle_errors
-from web.blueprints.helpers.fints import FinTS3Client
+from web.blueprints.helpers.fints import FinTS3Client, StatementError
 from web.blueprints.navigation import BlueprintNavigation
 from web.table.table import date_format
 from web.template_filters import date_filter, money_filter, datetime_filter
@@ -213,6 +214,7 @@ def bank_accounts_import():
 
     # set start_date, end_date
     if form.start_date.data is None:
+        # NB: start date default depends on `bank_account`
         form.start_date.data = (
             datetime.date(i)
             if (i := bank_account.last_imported_at) is not None
@@ -220,36 +222,29 @@ def bank_accounts_import():
         )
     if form.end_date.data is None:
         form.end_date.data = date.today()
+    start_date = form.start_date.data
+    end_date = form.end_date.data
 
-    # login with fints
     try:
         with flash_fints_errors():
-            fints = FinTS3Client(
-                bank_account.routing_number,
-                form.user.data,
-                form.secret_pin.data,
-                bank_account.fints_endpoint,
-                product_id=config.fints_product_id
+            statement, errors = get_fints_transactions(
+                product_id=config.fints_product_id,
+                user_id=form.user.data,
+                secret_pin=form.secret_pin.data,
+                bank_account=bank_account,
+                start_date=start_date,
+                end_date=end_date,
             )
-
-            acc = next((a for a in fints.get_sepa_accounts()
-                        if a.iban == bank_account.iban), None)
-            if acc is None:
-                raise KeyError(f'BankAccount with IBAN {bank_account.iban} not found.')
-            start_date = form.start_date.data
-            end_date = form.end_date.data
-            statement, errors = fints.get_filtered_transactions(
-                acc, start_date, end_date
-            )
-            flash(f"Transaktionen vom {start_date} bis {end_date}.")
-            if errors:
-                flash(
-                    f"{len(errors)} Statements enthielten fehlerhafte Daten und müssen "
-                    "vor dem Import manuell korrigiert werden",
-                    "error",
-                )
     except PycroftException:
         return display_form_response([], [], [])
+
+    flash(f"Transaktionen vom {start_date} bis {end_date}.")
+    if errors:
+        flash(
+            f"{len(errors)} Statements enthielten fehlerhafte Daten und müssen "
+            "vor dem Import manuell korrigiert werden",
+            "error",
+        )
 
     (transactions, old_transactions, doubtful_transactions) = \
         finance.process_transactions(bank_account, statement)
@@ -275,6 +270,31 @@ def bank_accounts_import():
           'success' if transactions else 'info')
     return redirect(url_for(".accounts_show", account_id=bank_account.account_id))
 
+
+def get_fints_transactions(
+    *,
+    product_id: str,
+    user_id: int,
+    secret_pin: str,
+    bank_account: BankAccount,
+    start_date: date,
+    end_date: date,
+) -> tuple[list[MT940Transaction], list[StatementError]]:
+    # login with fints
+    fints_client = FinTS3Client(
+        bank_account.routing_number,
+        user_id,
+        secret_pin,
+        bank_account.fints_endpoint,
+        product_id=product_id,
+    )
+    acc = next(
+        (a for a in fints_client.get_sepa_accounts() if a.iban == bank_account.iban),
+        None,
+    )
+    if acc is None:
+        raise KeyError(f"BankAccount with IBAN {bank_account.iban} not found.")
+    return fints_client.get_filtered_transactions(acc, start_date, end_date)
 
 
 @bp.route('/bank-accounts/importmanual', methods=['GET', 'POST'])
