@@ -238,11 +238,16 @@ def bank_accounts_import():
                 raise KeyError(f'BankAccount with IBAN {bank_account.iban} not found.')
             start_date = form.start_date.data
             end_date = form.end_date.data
-            statement, with_error = fints.get_filtered_transactions(acc, start_date, end_date)
+            statement, errors = fints.get_filtered_transactions(
+                acc, start_date, end_date
+            )
             flash(f"Transaktionen vom {start_date} bis {end_date}.")
-            if with_error:
-                flash(f"{len(with_error)} Statements enthielten fehlerhafte Daten und müssen "
-                      "vor dem Import manuell korrigiert werden", 'error')
+            if errors:
+                flash(
+                    f"{len(errors)} Statements enthielten fehlerhafte Daten und müssen "
+                    "vor dem Import manuell korrigiert werden",
+                    "error",
+                )
     except PycroftException:
         return display_form_response([], [], [])
 
@@ -255,10 +260,15 @@ def bank_accounts_import():
         return display_form_response(transactions, old_transactions, doubtful_transactions)
 
     # save errors to database
-    for error in with_error:
-        session.add(MT940Error(mt940=error[0], exception=error[1],
-                               author=current_user,
-                               bank_account=bank_account))
+    for error in errors:
+        session.add(
+            MT940Error(
+                mt940=error.statement,
+                exception=error.error,
+                author=current_user,
+                bank_account=bank_account,
+            )
+        )
 
     # save transactions to database
     session.add_all(transactions)
