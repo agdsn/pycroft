@@ -259,18 +259,16 @@ def bank_accounts_import():
     if not form.do_import.data:
         return display_form_response(transactions, old_transactions, doubtful_transactions)
 
-    # save errors to database
-    for error in errors:
-        session.add(
-            MT940Error(
-                mt940=error.statement,
-                exception=error.error,
-                author=current_user,
-                bank_account=bank_account,
-            )
+    # persist transactions and errors
+    session.add_all(
+        MT940Error(
+            mt940=error.statement,
+            exception=error.error,
+            author=current_user,
+            bank_account=bank_account,
         )
-
-    # save transactions to database
+        for error in errors
+    )
     session.add_all(transactions)
     session.commit()
     flash(f'{len(transactions)} Bankkontobewegungen wurden importiert.',
