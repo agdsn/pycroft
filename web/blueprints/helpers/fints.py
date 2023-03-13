@@ -35,6 +35,18 @@ def try_parse_segment(seg) -> list[MT940Transaction] | StatementError:
         return StatementError(decoded_statement, str(e))
 
 
+def decode_response(
+    responses: list,
+) -> tuple[list[MT940Transaction], list[StatementError]]:
+    segment_results, errors, rest = extract_types(
+        (try_parse_segment(seg) for seg in responses),
+        list[MT940Transaction],
+        StatementError,
+    )
+    assert not rest
+    return [*chain(*segment_results)], errors
+
+
 class FinTS3Client(FinTS3PinTanClient):
     def get_filtered_transactions(
         self,
@@ -68,21 +80,10 @@ class FinTS3Client(FinTS3PinTanClient):
                     date_end=end_date,
                     touchdown_point=touchdown,
                 ),
-                self.decode_response,
+                decode_response,
                 'HIKAZ'
             )
             logger.info('Fetching done.')
 
         logger.debug(f"Statement: {statement}")
         return statement, errors
-
-    def decode_response(
-        self, responses: list
-    ) -> tuple[list[MT940Transaction], list[StatementError]]:
-        segment_results, errors, rest = extract_types(
-            (try_parse_segment(seg) for seg in responses),
-            list[MT940Transaction],
-            StatementError,
-        )
-        assert not rest
-        return [*chain(*segment_results)], errors
