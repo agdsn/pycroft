@@ -24,22 +24,24 @@ class StatementError(NamedTuple):
     error: str
 
 
-def try_parse_segment(seg) -> list[MT940Transaction] | StatementError:
+def try_decode_response(resp) -> list[MT940Transaction] | StatementError:
+    """Attempt to parse a FINTS response (“segment”)."""
+
     # Note: MT940 messages are encoded in the S.W.I.F.T character set,
     # which is a subset of ISO 8859. There are no character in it that
     # differ between ISO 8859 variants, so we'll arbitrarily chose 8859-1.
-    decoded_statement = seg.statement_booked.decode("iso-8859-1")
+    decoded_statement = resp.statement_booked.decode("iso-8859-1")
     try:
         return t.cast(list[MT940Transaction], mt940_to_array(decoded_statement))
     except Exception as e:
         return StatementError(decoded_statement, str(e))
 
 
-def decode_response(
+def decode_responses(
     responses: list,
 ) -> tuple[list[MT940Transaction], list[StatementError]]:
     segment_results, errors, rest = extract_types(
-        (try_parse_segment(seg) for seg in responses),
+        (try_decode_response(resp) for resp in responses),
         list[MT940Transaction],
         StatementError,
     )
@@ -78,7 +80,7 @@ class FinTS3Client(FinTS3PinTanClient):
                     date_end=end_date,
                     touchdown_point=touchdown,
                 ),
-                decode_response,
+                decode_responses,
                 "HIKAZ",
             )
             logger.info("Fetching done.")
