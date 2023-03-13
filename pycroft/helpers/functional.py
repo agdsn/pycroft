@@ -5,33 +5,75 @@
 import typing as t
 from functools import wraps
 
-TOne = t.TypeVar("TOne")
-TOther = t.TypeVar("TOther")
+# OVERLOADS
+TElem = t.TypeVar("TElem")
+T1 = t.TypeVar("T1")
+T2 = t.TypeVar("T2")
+T3 = t.TypeVar("T3")
 
 
-def extract_type(
-    elements: t.Iterable[TOne | TOther], type_: type[TOne]
-) -> tuple[list[TOne], list[TOther]]:
+@t.overload
+def extract_types(
+    elements: t.Iterable[TElem],
+    __t1: type[T1],
+) -> tuple[list[T1], list[TElem]]:
+    ...
+
+
+@t.overload
+def extract_types(
+    elements: t.Iterable[TElem],
+    __t1: type[T1],
+    __t2: type[T2],
+) -> tuple[list[T1], list[T2], list[TElem]]:
+    ...
+
+
+@t.overload
+def extract_types(
+    elements: t.Iterable[TElem],
+    __t1: type[T1],
+    __t2: type[T2],
+    __t3: type[T3],
+) -> tuple[list[T1], list[T2], list[T3], list[TElem]]:
+    ...
+
+
+# add more overloads as needed
+# /OVERLOADS
+
+
+def extract_types(elements: t.Iterable[TElem], *types: type) -> tuple:
     """Extracts all elements of a certain type from an iterable.
 
-    Does not support unions!
+    Unions work, but break the type hints because in mypy's eyes, ``int | float``
+    is not an instance of ``type[int | float]``.
+
+    If you want to get stricter typing of the `rest`, then either do a `cast` or use an
+    additional type parameter and ``assert not rest`` to ensure that your assumption
+    regarding the type bound is not violated.
 
     :param elements: The iterable to extract from
     :param type_: The type instance of which to extract to a separate list
     :return: A tuple ``(elements of specified type, other elements)``.
 
-    >>> extract_type([1, 2, 3, "a", "b", "c"], int)
+    >>> extract_types([1, 2, 3, "a", "b", "c"], int)
     ([1, 2, 3], ['a', 'b', 'c'])
+    >>> extract_types([1, 2.0, 3, "a", "b", "c"], int, float)
+    ([1, 3], [2.0], ['a', 'b', 'c'])
+    >>> extract_types([1, 2.0, 3, "a", "b", "c"], int | float)
+    ([1, 2.0, 3], ['a', 'b', 'c'])
     """
-    of_type_one = []
+    by_type: tuple = ([],) * len(types)
     other = []
     for elem in elements:
-        match elem:
-            case type_():
-                of_type_one.append(elem)
-            case _:
-                other.append(elem)
-    return of_type_one, other
+        for i, type_ in enumerate(types):
+            if isinstance(elem, type_):
+                by_type[i].append(elem)
+                break
+        else:
+            other.append(elem)
+    return tuple((*by_type, other))
 
 
 TException = t.TypeVar("TException", bound=Exception)
