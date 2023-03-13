@@ -58,10 +58,10 @@ class FinTS3Client(FinTS3PinTanClient):
         start_date: datetime.date | None = None,
         end_date: datetime.date | None = None,
     ) -> tuple[list[MT940Transaction], list[StatementError]]:
-        """
-        Fetches the list of transactions of a bank account in a certain timeframe.
-        MT940-Errors are catched and the statements containing them returned as
-        a seperate list.
+        """Fetches the list of transactions of a bank account in a certain timeframe.
+
+        MT940-Errors are caught and the statements containing them returned as
+        a separate list.
 
         :param account: SEPA
         :param start_date: First day to fetch
