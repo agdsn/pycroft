@@ -8,6 +8,14 @@ from mt940.models import Transaction as MT940Transaction
 
 logger = logging.getLogger(__name__)
 
+
+def parse_segment(seg) -> list[MT940Transaction]:
+    # Note: MT940 messages are encoded in the S.W.I.F.T character set,
+    # which is a subset of ISO 8859. There are no character in it that
+    # differ between ISO 8859 variants, so we'll arbitrarily chose 8859-1.
+    return mt940_to_array(seg.statement_booked.decode("iso-8859-1"))
+
+
 class FinTS3Client(FinTS3PinTanClient):
     with_error = []
 
@@ -58,12 +66,8 @@ class FinTS3Client(FinTS3PinTanClient):
     def decode_response(self, responses) -> list[MT940Transaction]:
         statement = []
         for seg in responses:
-            # Note: MT940 messages are encoded in the S.W.I.F.T character set,
-            # which is a subset of ISO 8859. There are no character in it that
-            # differ between ISO 8859 variants, so we'll arbitrarily chose 8859-1.
             try:
-                statement += mt940_to_array(
-                    seg.statement_booked.decode('iso-8859-1'))
+                statement += parse_segment(seg)
             except Exception as e:
                 self.with_error.append((seg.statement_booked.decode('iso-8859-1'), str(e)))
         return statement
