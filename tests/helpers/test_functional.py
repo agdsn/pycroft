@@ -5,7 +5,7 @@ import itertools
 
 import pytest
 
-from pycroft.helpers.functional import extract_types, flatten
+from pycroft.helpers.functional import extract_types, flatten, with_catch
 
 EXAMPLES = {
     int: [1, 2],
@@ -51,3 +51,8 @@ NONTRIVIAL_TYPE_COMBINATIONS = [c for c in TYPE_COMBINATIONS if c]
 )
 def test_type_grouping_with_rest(input, args, expected):
     assert extract_types(input, *args) == expected
+
+
+@pytest.mark.parametrize("input, expected", [("1", int), ("2", int), ("x", ValueError)])
+def test_with_catch_int_conversion(input, expected):
+    assert isinstance(with_catch(int, ValueError)(input), expected)
