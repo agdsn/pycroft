@@ -1167,10 +1167,10 @@ def get_fints_transactions(
     """
     # login with fints
     fints_client = FinTS3Client(
-        bank_account.routing_number,
-        user_id,
-        secret_pin,
-        bank_account.fints_endpoint,
+        bank_identifier=bank_account.routing_number,
+        user_id=user_id,
+        pin=secret_pin,
+        server=bank_account.fints_endpoint,
         product_id=product_id,
     )
     acc = next(
