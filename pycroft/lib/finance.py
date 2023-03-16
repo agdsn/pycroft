@@ -18,6 +18,7 @@ from io import StringIO
 from itertools import chain, islice, tee, zip_longest
 from typing import Callable, TypeVar, NamedTuple
 
+from mt940.models import Transaction as MT940Transaction
 from sqlalchemy import func, between, cast, CTE
 from sqlalchemy import or_, and_, literal, select, exists, not_, \
     text, future
@@ -25,6 +26,7 @@ from sqlalchemy.orm import aliased, contains_eager, joinedload, Session, Query
 from sqlalchemy.orm.exc import NoResultFound
 
 from pycroft import config
+from pycroft.external_services.fints import StatementError, FinTS3Client
 from pycroft.helpers.date import diff_month, last_day_of_month
 from pycroft.helpers.i18n import deferred_gettext, gettext
 from pycroft.helpers.interval import closed, Interval, UnboundedInterval, starting_from
@@ -801,19 +803,17 @@ def take_actions_for_payment_in_default_users(
                            processor, user)
 
 
-class FintsTransaction(t.Protocol):
-    data: dict
+class ImportedTransactions(t.NamedTuple):
+    new: list[BankAccountActivity]
+    old: list[BankAccountActivity]
+    doubtful: list[BankAccountActivity]
 
 
 def process_transactions(
     bank_account: BankAccount,
-    statement: t.Iterable[FintsTransaction],
-) -> tuple[
-    list[BankAccountActivity], list[BankAccountActivity], list[BankAccountActivity]
-]:
-    transactions = []  # new transactions which would be imported
-    old_transactions = []  # transactions which are already imported
-    doubtful_transactions = [] # transactions which may be changed by the bank because they are to new
+    statement: t.Iterable[MT940Transaction],
+) -> ImportedTransactions:
+    imported = ImportedTransactions([], [], [])
 
     for transaction in statement:
         iban = transaction.data.get('applicant_iban', '')
@@ -845,7 +845,7 @@ def process_transactions(
             valid_on=transaction.data['date'],
         )
         if new_activity.posted_on >= date.today():
-            doubtful_transactions.append(new_activity)
+            imported.doubtful.append(new_activity)
         elif BankAccountActivity.q.filter(and_(
                 BankAccountActivity.bank_account_id ==
                 new_activity.bank_account_id,
@@ -859,11 +859,11 @@ def process_transactions(
                 BankAccountActivity.posted_on == new_activity.posted_on,
                 BankAccountActivity.valid_on == new_activity.valid_on
         )).first() is None:
-            transactions.append(new_activity)
+            imported.new.append(new_activity)
         else:
-            old_transactions.append(new_activity)
+            imported.old.append(new_activity)
 
-    return (transactions, old_transactions, doubtful_transactions)
+    return imported
 
 
 def build_transactions_query(
@@ -1148,3 +1148,36 @@ def get_last_import_date(session: Session) -> datetime | None:
         select(func.max(BankAccountActivity.imported_at))
     ).first()
     return date
+
+
+def get_fints_transactions(
+    *,
+    product_id: str,
+    user_id: int,
+    secret_pin: str,
+    bank_account: BankAccount,
+    start_date: date,
+    end_date: date,
+    FinTSClient: type[FinTS3Client] = FinTS3Client,
+) -> tuple[list[MT940Transaction], list[StatementError]]:
+    """Get the transactions from FinTS
+
+    External service dependencies:
+
+    - FinTS (:module:`pycroft.external_services.fints`)
+    """
+    # login with fints
+    fints_client = FinTSClient(
+        bank_identifier=bank_account.routing_number,
+        user_id=user_id,
+        pin=secret_pin,
+        server=bank_account.fints_endpoint,
+        product_id=product_id,
+    )
+    acc = next(
+        (a for a in fints_client.get_sepa_accounts() if a.iban == bank_account.iban),
+        None,
+    )
+    if acc is None:
+        raise KeyError(f"BankAccount with IBAN {bank_account.iban} not found.")
+    return fints_client.get_filtered_transactions(acc, start_date, end_date)

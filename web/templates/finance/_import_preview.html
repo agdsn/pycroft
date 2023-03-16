@@ -6,7 +6,8 @@
       <th>Verwendungszweck</th>
       <th>IBAN</th>
       <th>Name</th>
-      <th>Datum</th>
+      <th>Gültig</th>
+      <th>Gebucht</th>
     </tr>
     {% for transaction in transactions %}
       <tr>
@@ -15,6 +16,7 @@
         <td>{{ transaction.other_account_number }}</td>
         <td>{{ transaction.other_name }}</td>
         <td>{{ transaction.valid_on }}</td>
+        <td>{{ transaction.posted_on }}</td>
       </tr>
     {% endfor %}
   </table>
@@ -27,7 +29,8 @@
       <th>Verwendungszweck</th>
       <th>IBAN</th>
       <th>Name</th>
-      <th>Datum</th>
+      <th>Gültig</th>
+      <th>Gebucht</th>
     </tr>
     {% for transaction in old_transactions %}
       <tr>
@@ -36,6 +39,7 @@
         <td>{{ transaction.other_account_number }}</td>
         <td>{{ transaction.other_name }}</td>
         <td>{{ transaction.valid_on }}</td>
+        <td>{{ transaction.posted_on }}</td>
       </tr>
     {% endfor %}
   </table>
@@ -49,7 +53,8 @@
       <th>Verwendungszweck</th>
       <th>IBAN</th>
       <th>Name</th>
-      <th>Datum</th>
+      <th>Gültig</th>
+      <th>Gebucht</th>
     </tr>
     {% for transaction in doubtful_transactions %}
       <tr>
@@ -58,6 +63,7 @@
         <td>{{ transaction.other_account_number }}</td>
         <td>{{ transaction.other_name }}</td>
         <td>{{ transaction.valid_on }}</td>
+        <td>{{ transaction.posted_on }}</td>
       </tr>
     {% endfor %}
   </table>
