@@ -82,7 +82,7 @@ def extract_types(elements: t.Iterable[TElem], *types: type) -> tuple:
     if not types:
         return (list(elements),)
 
-    by_type = tuple([] for _ in types)
+    by_type: tuple[list, ...] = tuple([] for _ in types)
     other = []
     for elem in elements:
         for i, type_ in enumerate(types):
