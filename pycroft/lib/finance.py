@@ -1158,6 +1158,7 @@ def get_fints_transactions(
     bank_account: BankAccount,
     start_date: date,
     end_date: date,
+    FinTSClient: type[FinTS3Client] = FinTS3Client,
 ) -> tuple[list[MT940Transaction], list[StatementError]]:
     """Get the transactions from FinTS
 
@@ -1166,7 +1167,7 @@ def get_fints_transactions(
     - FinTS (:module:`pycroft.external_services.fints`)
     """
     # login with fints
-    fints_client = FinTS3Client(
+    fints_client = FinTSClient(
         bank_identifier=bank_account.routing_number,
         user_id=user_id,
         pin=secret_pin,
