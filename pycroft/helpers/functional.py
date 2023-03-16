@@ -1,9 +1,17 @@
 #  Copyright (c) 2023. The Pycroft Authors. See the AUTHORS file.
 #  This file is part of the Pycroft project and licensed under the terms of
 #  the Apache License, Version 2.0. See the LICENSE file for details
-
+import itertools
 import typing as t
 from functools import wraps
+
+
+T = t.TypeVar("T")
+
+
+def flatten(iters: t.Iterable[t.Iterable[T]]) -> t.Iterable[T]:
+    return itertools.chain(*iters)
+
 
 # OVERLOADS
 TElem = t.TypeVar("TElem")
