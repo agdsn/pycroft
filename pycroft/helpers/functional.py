@@ -23,6 +23,13 @@ T3 = t.TypeVar("T3")
 @t.overload
 def extract_types(
     elements: t.Iterable[TElem],
+) -> tuple[list[TElem]]:
+    ...
+
+
+@t.overload
+def extract_types(
+    elements: t.Iterable[TElem],
     __t1: type[T1],
 ) -> tuple[list[T1], list[TElem]]:
     ...
@@ -72,7 +79,10 @@ def extract_types(elements: t.Iterable[TElem], *types: type) -> tuple:
     >>> extract_types([1, 2.0, 3, "a", "b", "c"], int | float)
     ([1, 2.0, 3], ['a', 'b', 'c'])
     """
-    by_type: tuple = ([],) * len(types)
+    if not types:
+        return (list(elements),)
+
+    by_type = tuple([] for _ in types)
     other = []
     for elem in elements:
         for i, type_ in enumerate(types):
