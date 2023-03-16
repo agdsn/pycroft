@@ -2,9 +2,9 @@
 #  This file is part of the Pycroft project and licensed under the terms of
 #  the Apache License, Version 2.0. See the LICENSE file for details
 
-import typing as t
 import datetime
 import logging
+import typing as t
 from itertools import chain
 from typing import NamedTuple
 
@@ -37,6 +37,22 @@ def try_decode_response(
         return t.cast(list[MT940Transaction], mt940_to_array(decoded_statement))
     except Exception as e:
         return StatementError(decoded_statement, str(e))
+
+
+def build_segment(
+    hkkaz: type[HKKAZ5] | type[HKKAZ6] | type[HKKAZ7],
+    account: SEPAAccount,
+    start_date: datetime.date,
+    end_date: datetime.date,
+    touchdown: t.Any,
+) -> HKKAZ5 | HKKAZ6 | HKKAZ7:
+    return hkkaz(
+        account=hkkaz._fields["account"].type.from_sepa_account(account),
+        all_accounts=False,
+        date_start=start_date,
+        date_end=end_date,
+        touchdown_point=touchdown,
+    )
 
 
 def decode_responses(
@@ -73,14 +89,11 @@ class FinTS3Client(FinTS3PinTanClient):
             hkkaz = self._find_highest_supported_command(HKKAZ5, HKKAZ6, HKKAZ7)
 
             logger.info(f"Start fetching from {start_date} to {end_date}")
+
             statement, errors = self._fetch_with_touchdowns(
                 dialog,
-                lambda touchdown: hkkaz(
-                    account=hkkaz._fields["account"].type.from_sepa_account(account),
-                    all_accounts=False,
-                    date_start=start_date,
-                    date_end=end_date,
-                    touchdown_point=touchdown,
+                lambda touchdown: build_segment(
+                    hkkaz, account, start_date, end_date, touchdown
                 ),
                 decode_responses,
                 "HIKAZ",
