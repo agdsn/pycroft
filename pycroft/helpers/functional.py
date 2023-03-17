@@ -117,3 +117,23 @@ def with_catch(
             return e
 
     return _f
+
+
+TIn = t.TypeVar("TIn")
+TOut = t.TypeVar("TOut")
+TErr = t.TypeVar("TErr", bound=Exception)
+
+
+def map_collecting_errors(
+    func: t.Callable[[TIn], TOut],
+    error_type: type[TErr],
+    iterable: t.Iterable[TIn],
+) -> tuple[list[TOut], list[TErr]]:
+    results: list[TOut] = []
+    errors: list[TErr] = []
+    for x in iterable:
+        try:
+            results.append(func(x))
+        except error_type as e:
+            errors.append(e)
+    return results, errors

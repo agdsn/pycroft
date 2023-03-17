@@ -5,7 +5,12 @@ import itertools
 
 import pytest
 
-from pycroft.helpers.functional import extract_types, flatten, with_catch
+from pycroft.helpers.functional import (
+    extract_types,
+    flatten,
+    with_catch,
+    map_collecting_errors,
+)
 
 EXAMPLES = {
     int: [1, 2],
@@ -56,3 +61,37 @@ def test_type_grouping_with_rest(input, args, expected):
 @pytest.mark.parametrize("input, expected", [("1", int), ("2", int), ("x", ValueError)])
 def test_with_catch_int_conversion(input, expected):
     assert isinstance(with_catch(int, ValueError)(input), expected)
+
+
+@pytest.mark.parametrize(
+    "input",
+    [
+        [1, 2, 3],
+        [object(), 0, 7, "foo", None],
+        list(reversed([object(), 0, 7, "foo", None])),
+        [],
+        [None],
+        [float("NaN")],
+    ],
+)
+@pytest.mark.parametrize("error_type", [Exception, ZeroDivisionError, ValueError])
+def test_identity_no_error_collection(input, error_type):
+    assert map_collecting_errors(lambda x: x, error_type, input) == (list(input), [])
+
+
+@pytest.mark.parametrize(
+    "input, expected_result",
+    [
+        ([1, 0, 2, 0, 3], [1, 2, 3]),
+        ([1, 0, 2, 0, 3, 0], [1, 2, 3]),
+        ([0, 1, 0, 2, 0, 3], [1, 2, 3]),
+        ([0, 1, 0, 2, 0, 3, 0], [1, 2, 3]),
+    ],
+)
+def test_error_collection_inversion(input, expected_result):
+    result, errors = map_collecting_errors(
+        lambda x: 1 / (1 / x), ZeroDivisionError, input
+    )
+    assert result == expected_result
+    assert len(errors) == len(input) - len(expected_result)
+    assert all(isinstance(err, ZeroDivisionError) for err in errors)
