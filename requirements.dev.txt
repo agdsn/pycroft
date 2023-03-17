@@ -17,3 +17,4 @@ sphinx-paramlinks~=0.5.4
 sphinxcontrib-fulltoc~=1.2.0
 sphinxcontrib-httpdomain~=1.8.0
 ruff~=0.0.241
+watchdog~=2.3.1

@@ -93,7 +93,13 @@ def prepare_server(args) -> tuple[PycroftFlask, Callable]:
     if args.profile:
         app.config['PROFILE'] = True
         app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions=[30])
-    return app, lambda: app.run(debug=args.debug, port=args.port, host=args.host, threaded=True)
+    return app, lambda: app.run(
+        debug=args.debug,
+        port=args.port,
+        host=args.host,
+        threaded=True,
+        exclude_patterns=["**/lib/python3*"],
+    )
 
 
 def create_parser() -> argparse.ArgumentParser:
