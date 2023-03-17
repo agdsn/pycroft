@@ -14,7 +14,7 @@ from fints.models import SEPAAccount
 from fints.utils import Password
 
 from pycroft.external_services.fints import FinTS3Client
-from pycroft.lib.finance import get_fints_transactions
+from pycroft.lib.finance.fints import get_fints_transactions
 from tests.factories.finance import BankAccountFactory as BankAccountFactory_
 
 
