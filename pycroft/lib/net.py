@@ -12,13 +12,13 @@ from itertools import islice
 import ipaddr
 from ipaddr import IPv4Address, IPv6Address, IPv4Network, IPv6Network
 from sqlalchemy import func, and_, cast
+from sqlalchemy.orm import Session
 
 from pycroft.lib.exc import PycroftLibException
 from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.host import IP
 from pycroft.model.net import Subnet
-from pycroft.model.session import Session
 from pycroft.model.types import IPAddress
 
 class SubnetFullException(PycroftLibException):
