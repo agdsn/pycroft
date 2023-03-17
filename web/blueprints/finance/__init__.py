@@ -22,11 +22,13 @@ from fints.exceptions import (
     FinTSError,
     FinTSClientTemporaryAuthError,
 )
+from fints.utils import mt940_to_array
 from flask import (
     Blueprint, abort, flash, jsonify, redirect, render_template, request,
     url_for, make_response)
 from flask_login import current_user
 from flask_wtf import FlaskForm
+from mt940.models import Transaction as MT940Transaction
 from sqlalchemy import or_, and_, Text, cast, ColumnClause, FromClause
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
@@ -35,7 +37,6 @@ from wtforms import BooleanField
 
 from pycroft import config, lib
 from pycroft.exc import PycroftException
-from pycroft.external_services.fints import try_decode_response
 from pycroft.helpers.i18n import localized
 from pycroft.lib import finance
 from pycroft.lib.finance import (
@@ -327,14 +328,11 @@ def fix_import_error(error_id):
         form.mt940.data = error.mt940
 
     if form.validate_on_submit():
-        statement = []
-        match try_decode_response(form.mt940.data):
-            case Exception() as e:
-                new_exception = str(e)
-            case list() as l:
-                statement = l
-            case _:
-                raise AssertionError("decode_responses returned Nonsense")
+        statement: list[MT940Transaction] = []
+        try:
+            statement += mt940_to_array(form.mt940.data)
+        except Exception as e:
+            new_exception = str(e)
 
         if new_exception is None:
             flash('MT940 ist jetzt valide.', 'success')

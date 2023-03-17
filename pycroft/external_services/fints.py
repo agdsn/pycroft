@@ -2,11 +2,11 @@
 #  This file is part of the Pycroft project and licensed under the terms of
 #  the Apache License, Version 2.0. See the LICENSE file for details
 
+import dataclasses as d
 import datetime
 import logging
 import typing as t
 from itertools import chain
-from typing import NamedTuple
 
 from fints.client import FinTS3PinTanClient
 from fints.models import SEPAAccount
@@ -14,19 +14,19 @@ from fints.segments.statement import HKKAZ5, HKKAZ6, HKKAZ7, HIKAZ5, HIKAZ6, HIK
 from fints.utils import mt940_to_array
 from mt940.models import Transaction as MT940Transaction
 
-from pycroft.helpers.functional import extract_types
+from pycroft.helpers.functional import map_collecting_errors
 
 logger = logging.getLogger(__name__)
 
-
-class StatementError(NamedTuple):
+@d.dataclass(frozen=True)
+class StatementError(Exception):
     statement: str
     error: str
 
 
-def try_decode_response(
+def decode_response(
     resp: HIKAZ5 | HIKAZ6 | HIKAZ7,
-) -> list[MT940Transaction] | StatementError:
+) -> list[MT940Transaction]:
     """Attempt to parse a FINTS response (“segment”)."""
 
     # Note: MT940 messages are encoded in the S.W.I.F.T character set,
@@ -36,7 +36,7 @@ def try_decode_response(
     try:
         return t.cast(list[MT940Transaction], mt940_to_array(decoded_statement))
     except Exception as e:
-        return StatementError(decoded_statement, str(e))
+        raise StatementError(decoded_statement, str(e)) from e
 
 
 def build_segment(
@@ -58,12 +58,9 @@ def build_segment(
 def decode_responses(
     responses: list,
 ) -> tuple[list[MT940Transaction], list[StatementError]]:
-    segment_results, errors, rest = extract_types(
-        (try_decode_response(resp) for resp in responses),
-        list[MT940Transaction],
-        StatementError,
+    segment_results, errors = map_collecting_errors(
+        decode_response, StatementError, responses
     )
-    assert not rest
     return [*chain(*segment_results)], errors
 
 
