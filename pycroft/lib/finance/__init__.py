@@ -20,8 +20,7 @@ from typing import Callable, TypeVar, NamedTuple
 
 from mt940.models import Transaction as MT940Transaction
 from sqlalchemy import func, between, cast, CTE, Select, union
-from sqlalchemy import or_, and_, literal, select, exists, not_, \
-    text, future
+from sqlalchemy import or_, and_, literal, select, exists, not_, text, future
 from sqlalchemy.orm import aliased, contains_eager, joinedload, Session
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -38,8 +37,13 @@ from pycroft.model import session
 from pycroft.model.base import ModelBase
 from pycroft.model.facilities import Room, Building
 from pycroft.model.finance import (
-    Account, BankAccount, BankAccountActivity, Split, Transaction,
-    MembershipFee)
+    Account,
+    BankAccount,
+    BankAccountActivity,
+    Split,
+    Transaction,
+    MembershipFee,
+)
 from pycroft.model.functions import sign, least
 from pycroft.model.property import CurrentProperty, evaluate_properties
 from pycroft.model.session import with_transaction, utcnow
@@ -47,7 +51,7 @@ from pycroft.model.types import Money
 from pycroft.model.user import User, Membership, RoomHistoryEntry
 from pycroft.model.utils import row_exists
 
-logger = logging.getLogger('pycroft.lib.finance')
+logger = logging.getLogger("pycroft.lib.finance")
 
 
 def get_membership_fee_for_date(target_date: date) -> MembershipFee:
@@ -101,7 +105,7 @@ def simple_transaction(
     valid_on: date | None = None,
     confirmed: bool = True,
 ) -> Transaction:
-    """ Posts a simple transaction.
+    """Posts a simple transaction.
 
     A simple transaction is a transaction that consists of exactly two splits,
     where one account is debited and another different account is credited with
@@ -120,21 +124,15 @@ def simple_transaction(
     if valid_on is None:
         valid_on = session.utcnow().date()
     new_transaction = Transaction(
-        description=description,
-        author=author,
-        valid_on=valid_on,
-        confirmed=confirmed)
-    new_debit_split = Split(
-        amount=-amount,
-        account=debit_account,
-        transaction=new_transaction)
-    new_credit_split = Split(
-        amount=amount,
-        account=credit_account,
-        transaction=new_transaction)
-    session.session.add_all(
-        [new_transaction, new_debit_split, new_credit_split]
+        description=description, author=author, valid_on=valid_on, confirmed=confirmed
     )
+    new_debit_split = Split(
+        amount=-amount, account=debit_account, transaction=new_transaction
+    )
+    new_credit_split = Split(
+        amount=amount, account=credit_account, transaction=new_transaction
+    )
+    session.session.add_all([new_transaction, new_debit_split, new_credit_split])
     return new_transaction
 
 
@@ -185,26 +183,27 @@ def transferred_amount(
     """
     split1 = aliased(Split)
     split2 = aliased(Split)
-    query = session.session.query(
-        cast(func.sum(
-            sign(split2.amount) *
-            least(func.abs(split1.amount), func.abs(split2.amount))
-        ), Money)
-    ).select_from(
-        split1
-    ).join(
-        split2, split1.transaction_id == split2.transaction_id
-    ).join(
-        Transaction, split2.transaction_id == Transaction.id
-    ).filter(
-        split1.account == from_account,
-        split2.account == to_account,
-        sign(split1.amount) != sign(split2.amount)
+    query = (
+        session.session.query(
+            cast(
+                func.sum(
+                    sign(split2.amount)
+                    * least(func.abs(split1.amount), func.abs(split2.amount))
+                ),
+                Money,
+            )
+        )
+        .select_from(split1)
+        .join(split2, split1.transaction_id == split2.transaction_id)
+        .join(Transaction, split2.transaction_id == Transaction.id)
+        .filter(
+            split1.account == from_account,
+            split2.account == to_account,
+            sign(split1.amount) != sign(split2.amount),
+        )
     )
     if not when.unbounded:
-        query = query.filter(
-            between(Transaction.valid_on, when.begin, when.end)
-        )
+        query = query.filter(between(Transaction.valid_on, when.begin, when.end))
     elif when.begin is not None:
         query = query.filter(Transaction.valid_on >= when.begin)
     elif when.end is not None:
@@ -234,81 +233,122 @@ def users_eligible_for_fee_query(membership_fee: MembershipFee) -> CTE:
     fee_accounts_ids = set(session.session.scalars(fee_account_ids_stmt))
 
     properties_beginning_timestamp = with_min_time(
-        membership_fee.begins_on
-        + membership_fee.booking_begin
-        - timedelta(1)
+        membership_fee.begins_on + membership_fee.booking_begin - timedelta(1)
     )
     properties_end_timestamp = with_max_time(
-        membership_fee.begins_on
-        + membership_fee.booking_end
-        - timedelta(1)
+        membership_fee.begins_on + membership_fee.booking_end - timedelta(1)
     )
 
     begin_tstz = with_min_time(membership_fee.begins_on)
     end_tstz = with_max_time(membership_fee.ends_on)
 
-    fee_prop_beginning = evaluate_properties(properties_beginning_timestamp, name='fee_prop_beg')
-    fee_prop_end = evaluate_properties(properties_end_timestamp, name='fee_prop_end')
+    fee_prop_beginning = evaluate_properties(
+        properties_beginning_timestamp, name="fee_prop_beg"
+    )
+    fee_prop_end = evaluate_properties(properties_end_timestamp, name="fee_prop_end")
 
-    return (future.select(User.id.label('id'),
-                     User.name.label('name'),
-                     User.account_id.label('account_id'),
-                     # Select fee_account_id of the building or the default
-                     # fee_account_id if user was not living in a room at booking time
-                     func.coalesce(Building.fee_account_id,
-                                   literal(config.membership_fee_account_id)).label('fee_account_id'))
-             .select_from(User.__table__
-                 # The first two joins are there for filtering reasons (does this user have to pay?)
-                 # ----
-                 # `membership_fee` flag on booking_begin, if existent
-                 .outerjoin(fee_prop_beginning,
-                            and_(fee_prop_beginning.c.user_id == User.id,
-                                 fee_prop_beginning.c.property_name == 'membership_fee',
-                                 not_(fee_prop_beginning.c.denied)))
-                 # `membership_fee` flag on booking_end, if existent
-                 .outerjoin(fee_prop_end,
-                            and_(fee_prop_end.c.user_id == User.id,
-                                 fee_prop_end.c.property_name == 'membership_fee',
-                                 not_(fee_prop_end.c.denied)))
-
-                 # The following joins are there to get a meaningful `account_id` for the user
-                 # ----
-                 # Join RoomHistoryEntry, Room and Building of the user at membership_fee.ends_on
-                 .outerjoin(rhe_end,
-                            and_(rhe_end.c.user_id == User.id,
-                                 # Only join RoomHistoryEntry that is relevant
-                                 # on the fee interval end date
-                                 literal(end_tstz).op("<@")(rhe_end.c.active_during)))
-                 # Join RoomHistoryEntry, Room and Building of the user at membership_fee.begins_on
-                 # As second option if user moved out within the month
-                 .outerjoin(rhe_begin,
-                            and_(rhe_begin.c.user_id == User.id,
-                                 # Only join RoomHistoryEntry that is relevant
-                                 # on the fee interval end date
-                                 literal(begin_tstz).op("<@")(rhe_begin.c.active_during)))
-                 # Join with Room from membership_fee.ends_on if available,
-                 # if not, join with the Room from membership_fee.begins_on
-                 .outerjoin(Room, Room.id == func.coalesce(rhe_end.c.room_id, rhe_begin.c.room_id))
-                 .outerjoin(Building, Building.id == Room.building_id)
+    return (
+        future.select(
+            User.id.label("id"),
+            User.name.label("name"),
+            User.account_id.label("account_id"),
+            # Select fee_account_id of the building or the default
+            # fee_account_id if user was not living in a room at booking time
+            func.coalesce(
+                Building.fee_account_id, literal(config.membership_fee_account_id)
+            ).label("fee_account_id"),
+        )
+        .select_from(
+            User.__table__
+            # The first two joins are there for filtering reasons (does this user have to pay?)
+            # ----
+            # `membership_fee` flag on booking_begin, if existent
+            .outerjoin(
+                fee_prop_beginning,
+                and_(
+                    fee_prop_beginning.c.user_id == User.id,
+                    fee_prop_beginning.c.property_name == "membership_fee",
+                    not_(fee_prop_beginning.c.denied),
+                ),
             )
-            # Check if a booking already exists on the user account in the fee timespan
-            .where(not_(exists(select(None).select_from(split_user_account
-                    .join(Transaction, Transaction.id == split_user_account.c.transaction_id)
-                    .join(split_fee_account, split_fee_account.c.transaction_id == Transaction.id)
-                )
-                .where(and_(split_user_account.c.account_id == User.account_id,
-                            Transaction.valid_on.between(literal(membership_fee.begins_on),
-                                                         literal(membership_fee.ends_on)),
+            # `membership_fee` flag on booking_end, if existent
+            .outerjoin(
+                fee_prop_end,
+                and_(
+                    fee_prop_end.c.user_id == User.id,
+                    fee_prop_end.c.property_name == "membership_fee",
+                    not_(fee_prop_end.c.denied),
+                ),
+            )
+            # The following joins are there to get a meaningful `account_id` for the user
+            # ----
+            # Join RoomHistoryEntry, Room and Building of the user at membership_fee.ends_on
+            .outerjoin(
+                rhe_end,
+                and_(
+                    rhe_end.c.user_id == User.id,
+                    # Only join RoomHistoryEntry that is relevant
+                    # on the fee interval end date
+                    literal(end_tstz).op("<@")(rhe_end.c.active_during),
+                ),
+            )
+            # Join RoomHistoryEntry, Room and Building of the user at membership_fee.begins_on
+            # As second option if user moved out within the month
+            .outerjoin(
+                rhe_begin,
+                and_(
+                    rhe_begin.c.user_id == User.id,
+                    # Only join RoomHistoryEntry that is relevant
+                    # on the fee interval end date
+                    literal(begin_tstz).op("<@")(rhe_begin.c.active_during),
+                ),
+            )
+            # Join with Room from membership_fee.ends_on if available,
+            # if not, join with the Room from membership_fee.begins_on
+            .outerjoin(
+                Room, Room.id == func.coalesce(rhe_end.c.room_id, rhe_begin.c.room_id)
+            ).outerjoin(Building, Building.id == Room.building_id)
+        )
+        # Check if a booking already exists on the user account in the fee timespan
+        .where(
+            not_(
+                exists(
+                    select(None)
+                    .select_from(
+                        split_user_account.join(
+                            Transaction,
+                            Transaction.id == split_user_account.c.transaction_id,
+                        ).join(
+                            split_fee_account,
+                            split_fee_account.c.transaction_id == Transaction.id,
+                        )
+                    )
+                    .where(
+                        and_(
+                            split_user_account.c.account_id == User.account_id,
+                            Transaction.valid_on.between(
+                                literal(membership_fee.begins_on),
+                                literal(membership_fee.ends_on),
+                            ),
                             split_fee_account.c.account_id.in_(fee_accounts_ids),
                             split_fee_account.c.amount < 0,
-                            split_fee_account.c.id != split_user_account.c.id))
-            )))
-            # Only those users who had the `membership_fee` property on `booking_begin` or
-            # `booking_end`
-            .where(or_(fee_prop_beginning.column.is_not(None),
-                       fee_prop_end.column.is_not(None)))
-            .distinct()
-            .cte('membership_fee_users'))
+                            split_fee_account.c.id != split_user_account.c.id,
+                        )
+                    )
+                )
+            )
+        )
+        # Only those users who had the `membership_fee` property on `booking_begin` or
+        # `booking_end`
+        .where(
+            or_(
+                fee_prop_beginning.column.is_not(None), fee_prop_end.column.is_not(None)
+            )
+        )
+        .distinct()
+        .cte("membership_fee_users")
+    )
+
 
 class AffectedUserInfo(t.TypedDict):
     id: int
@@ -336,14 +376,16 @@ def post_transactions_for_membership_fee(
     :return: A list of name of all affected users
     """
 
-    description = membership_fee_description.format(fee_name=membership_fee.name).to_json()
+    description = membership_fee_description.format(
+        fee_name=membership_fee.name
+    ).to_json()
 
     # Select all users who fulfill the requirements for the fee in the fee timespan
     users = users_eligible_for_fee_query(membership_fee)
 
-    affected_users_raw = session.session.execute(select(users.c.id,
-                                                        users.c.name,
-                                                        users.c.fee_account_id)).fetchall()
+    affected_users_raw = session.session.execute(
+        select(users.c.id, users.c.name, users.c.fee_account_id)
+    ).fetchall()
 
     if not simulate:
         # `over` not typed yet,
@@ -392,32 +434,53 @@ def post_transactions_for_membership_fee(
         )
 
         # TODO use new-style insert(Split)
-        split_insert_fee_account = (Split.__table__.insert()  # type: ignore
-            .from_select([Split.amount, Split.account_id, Split.transaction_id],
-                         select(literal(-membership_fee.regular_fee, type_=Money),
-                                numbered_users.c.fee_account_id,
-                                numbered_transactions.c.id)
-                         .select_from(numbered_users.join(numbered_transactions,
-                                                          numbered_transactions.c.index == numbered_users.c.index))
-                         )
+        split_insert_fee_account = (
+            Split.__table__.insert()  # type: ignore
+            .from_select(
+                [Split.amount, Split.account_id, Split.transaction_id],
+                select(
+                    literal(-membership_fee.regular_fee, type_=Money),
+                    numbered_users.c.fee_account_id,
+                    numbered_transactions.c.id,
+                ).select_from(
+                    numbered_users.join(
+                        numbered_transactions,
+                        numbered_transactions.c.index == numbered_users.c.index,
+                    )
+                ),
+            )
             .returning(Split.id)
-            .cte('membership_fee_split_fee_account'))
+            .cte("membership_fee_split_fee_account")
+        )
 
         # TODO use new-style insert(Split)
-        split_insert_user = (Split.__table__.insert().from_select(  # type: ignore
-            [Split.amount, Split.account_id, Split.transaction_id],
-            select(literal(membership_fee.regular_fee, type_=Money),
-                   numbered_users.c.account_id,
-                   numbered_transactions.c.id)
-            .select_from(numbered_users.join(numbered_transactions,
-                                             numbered_transactions.c.index == numbered_users.c.index)))
+        split_insert_user = (
+            Split.__table__.insert()
+            .from_select(  # type: ignore
+                [Split.amount, Split.account_id, Split.transaction_id],
+                select(
+                    literal(membership_fee.regular_fee, type_=Money),
+                    numbered_users.c.account_id,
+                    numbered_transactions.c.id,
+                ).select_from(
+                    numbered_users.join(
+                        numbered_transactions,
+                        numbered_transactions.c.index == numbered_users.c.index,
+                    )
+                ),
+            )
             .returning(Split.id)
-            .cte('membership_fee_split_user'))
+            .cte("membership_fee_split_user")
+        )
 
-        session.session.execute(select().select_from(split_insert_fee_account
-                                                       .join(split_insert_user,
-                                                             split_insert_user.c.id ==
-                                                             split_insert_fee_account.c.id)))
+        session.session.execute(
+            select().select_from(
+                split_insert_fee_account.join(
+                    split_insert_user,
+                    split_insert_user.c.id == split_insert_fee_account.c.id,
+                )
+            )
+        )
 
     return [
         t.cast(AffectedUserInfo, dict(user._mapping)) for user in affected_users_raw
@@ -446,16 +509,14 @@ class MT940Dialect(csv.Dialect):
     quotechar = '"'
     doublequote = True
     skipinitialspace = True
-    lineterminator = '\n'
+    lineterminator = "\n"
     quoting = csv.QUOTE_ALL
 
 
 class CSVImportError(PycroftLibException):
     def __init__(self, message: str, cause: t.Any | None = None) -> None:
         if cause is not None:
-            message = gettext("{0}\nCaused by:\n{1}").format(
-                message, cause
-            )
+            message = gettext("{0}\nCaused by:\n{1}").format(message, cause)
         self.cause = cause
         super().__init__(message)
 
@@ -512,7 +573,8 @@ def import_bank_account_activities_csv(
         next(records)
         activities = tuple(
             process_record(index, record, imported_at=imported_at)
-            for index, record in records)
+            for index, record in records
+        )
     except StopIteration:
         raise CSVImportError(gettext("No data present.")) from None
     except csv.Error as e:
@@ -520,9 +582,12 @@ def import_bank_account_activities_csv(
     if not activities:
         raise CSVImportError(gettext("No data present."))
     if not is_ordered((a[8] for a in activities), operator.ge):
-        raise CSVImportError(gettext(
-            "Transaction are not sorted according to transaction date in "
-            "descending order."))
+        raise CSVImportError(
+            gettext(
+                "Transaction are not sorted according to transaction date in "
+                "descending order."
+            )
+        )
     first_posted_on = activities[-1][8]
     balance = session.session.scalar(
         select(func.coalesce(func.sum(BankAccountActivity.amount), 0)).filter(
@@ -548,32 +613,43 @@ def import_bank_account_activities_csv(
     b = tuple(reversed(activities))
     matcher = difflib.SequenceMatcher(a=a, b=b)
     for tag, i1, i2, j1, j2 in matcher.get_opcodes():
-        if 'equal' == tag:
+        if "equal" == tag:
             continue
-        elif 'insert' == tag:
+        elif "insert" == tag:
             balance += sum(a[0] for a in islice(activities, j1, j2))
             session.session.add_all(
                 BankAccountActivity(
-                    amount=e[0], bank_account_id=e[1], reference=e[3],
+                    amount=e[0],
+                    bank_account_id=e[1],
+                    reference=e[3],
                     other_account_number=e[4],
-                    other_routing_number=e[5], other_name=e[6],
-                    imported_at=e[7], posted_on=e[8], valid_on=e[9]
-                ) for e in islice(activities, j1, j2)
+                    other_routing_number=e[5],
+                    other_name=e[6],
+                    imported_at=e[7],
+                    posted_on=e[8],
+                    valid_on=e[9],
+                )
+                for e in islice(activities, j1, j2)
             )
-        elif 'delete' == tag:
+        elif "delete" == tag:
             continue
-        elif 'replace' == tag:
+        elif "replace" == tag:
             raise CSVImportError(
-                gettext("Import conflict:\n"
-                        "Database bank account activities:\n{0}\n"
-                        "File bank account activities:\n{1}").format(
-                    '\n'.join(str(x) for x in islice(activities, i1, i2)),
-                    '\n'.join(str(x) for x in islice(activities, j1, j2))))
+                gettext(
+                    "Import conflict:\n"
+                    "Database bank account activities:\n{0}\n"
+                    "File bank account activities:\n{1}"
+                ).format(
+                    "\n".join(str(x) for x in islice(activities, i1, i2)),
+                    "\n".join(str(x) for x in islice(activities, j1, j2)),
+                )
+            )
         else:
             raise AssertionError()
     if balance != expected_balance:
-        message = gettext("Balance after does not equal expected balance: "
-                          "{0} != {1}.")
+        message = gettext(
+            "Balance after does not equal expected balance: " "{0} != {1}."
+        )
         raise CSVImportError(message.format(balance, expected_balance))
 
 
@@ -581,35 +657,46 @@ def remove_space_characters(field: str | None) -> str | None:
     """Remove every 28th character if it is a space character."""
     if field is None:
         return None
-    return "".join(c for i, c in enumerate(field) if i % 28 != 27 or c != ' ')
+    return "".join(c for i, c in enumerate(field) if i % 28 != 27 or c != " ")
 
 
 # Banks are using the original reference field to store several subfields with
 # SEPA. Subfields start with a four letter tag name and the plus sign, they
 # are separated by space characters.
 sepa_description_field_tags: tuple[str, ...] = (
-    'EREF', 'KREF', 'MREF', 'CRED', 'DEBT', 'SVWZ', 'ABWA', 'ABWE'
+    "EREF",
+    "KREF",
+    "MREF",
+    "CRED",
+    "DEBT",
+    "SVWZ",
+    "ABWA",
+    "ABWE",
 )
-sepa_description_pattern = re.compile(''.join(chain(
-    '^',
-    [fr'(?:({tag}\+.*?)(?: (?!$)|$))?'
-     for tag in sepa_description_field_tags],
-    '$'
-)), re.UNICODE)
+sepa_description_pattern = re.compile(
+    "".join(
+        chain(
+            "^",
+            [rf"(?:({tag}\+.*?)(?: (?!$)|$))?" for tag in sepa_description_field_tags],
+            "$",
+        )
+    ),
+    re.UNICODE,
+)
 
 
 def cleanup_description(description: str) -> str:
     match = sepa_description_pattern.match(description)
     if match is None:
         return description
-    return ' '.join(remove_space_characters(f) for f in match.groups() if f is not None)
+    return " ".join(remove_space_characters(f) for f in match.groups() if f is not None)
 
 
 def restore_record(record: MT940Record) -> str:
     string_buffer = StringIO()
-    csv.DictWriter(
-        string_buffer, MT940_FIELDNAMES, dialect=MT940Dialect
-    ).writerow(record._asdict())
+    csv.DictWriter(string_buffer, MT940_FIELDNAMES, dialect=MT940Dialect).writerow(
+        record._asdict()
+    )
     restored_record = string_buffer.getvalue()
     string_buffer.close()
     return restored_record
@@ -627,8 +714,7 @@ def process_record(
             account_number=record.our_account_number
         ).one()
     except NoResultFound as e:
-        message = gettext("No bank account with account number {0}. "
-                          "Record {1}: {2}")
+        message = gettext("No bank account with account number {0}. " "Record {1}: {2}")
         raw_record = restore_record(record)
         raise CSVImportError(
             message.format(record.our_account_number, index, raw_record), e
@@ -649,10 +735,18 @@ def process_record(
         raw_record = restore_record(record)
         raise CSVImportError(message.format(record.amount, index, raw_record), e) from e
 
-    return (amount, bank_account.id, cleanup_description(record.reference),
-            record.reference, record.other_account_number,
-            record.other_routing_number, record.other_name, imported_at,
-            posted_on, valid_on)
+    return (
+        amount,
+        bank_account.id,
+        cleanup_description(record.reference),
+        record.reference,
+        record.other_account_number,
+        record.other_routing_number,
+        record.other_name,
+        imported_at,
+        posted_on,
+        valid_on,
+    )
 
 
 def user_has_paid(user: User) -> bool:
@@ -765,7 +859,7 @@ def get_users_with_payment_in_default(session: Session) -> tuple[set[User], set[
                 if end is not None and end >= ts_now - timedelta(days=7):
                     continue
 
-            if not user.has_property('payment_in_default'):
+            if not user.has_property("payment_in_default"):
                 # Add user to new payment in default list
                 users_pid_membership.add(user)
 
@@ -775,7 +869,7 @@ def get_users_with_payment_in_default(session: Session) -> tuple[set[User], set[
 
     users_membership_terminated.difference_update(users_pid_membership)
 
-    _bal = operator.attrgetter('account.balance')
+    _bal = operator.attrgetter("account.balance")
     users_pid_membership = set(sorted(users_pid_membership, key=_bal))
     users_membership_terminated = set(sorted(users_membership_terminated, key=_bal))
 
@@ -792,8 +886,9 @@ def take_actions_for_payment_in_default_users(
 
     for user in users_pid_membership:
         if not user.member_of(config.payment_in_default_group):
-            make_member_of(user, config.payment_in_default_group,
-                           processor, closed(ts_now, None))
+            make_member_of(
+                user, config.payment_in_default_group, processor, closed(ts_now, None)
+            )
 
     from pycroft.lib.user import move_out
 
@@ -808,12 +903,15 @@ def take_actions_for_payment_in_default_users(
             except NoResultFound:
                 fee = get_last_applied_membership_fee()
 
-            end_membership_date = utcnow() - (timedelta(days=in_default_days) - fee.payment_deadline_final)
+            end_membership_date = utcnow() - (
+                timedelta(days=in_default_days) - fee.payment_deadline_final
+            )
 
             move_out(user, "Zahlungsrückstand", processor, end_membership_date, True)
 
-            log_user_event("Mitgliedschaftsende wegen Zahlungsrückstand.",
-                           processor, user)
+            log_user_event(
+                "Mitgliedschaftsende wegen Zahlungsrückstand.", processor, user
+            )
 
 
 class ImportedTransactions(t.NamedTuple):
@@ -858,14 +956,14 @@ def process_transactions(
 
         new_activity = BankAccountActivity(
             bank_account_id=bank_account.id,
-            amount=transaction.data['amount'].amount,
+            amount=transaction.data["amount"].amount,
             reference=purpose,
             other_account_number=iban,
             other_routing_number=bic,
             other_name=other_name,
             imported_at=session.utcnow(),
-            posted_on=transaction.data['guessed_entry_date'],
-            valid_on=transaction.data['date'],
+            posted_on=transaction.data["guessed_entry_date"],
+            valid_on=transaction.data["date"],
         )
         if new_activity.posted_on >= date.today():
             imported.doubtful.append(new_activity)
@@ -932,15 +1030,17 @@ def build_transactions_query(
     return stmt
 
 
-def match_activities() -> tuple[
-    dict[BankAccountActivity, User], dict[BankAccountActivity, Account]
-]:
+def match_activities() -> (
+    tuple[dict[BankAccountActivity, User], dict[BankAccountActivity, Account]]
+):
     """For all unmatched transactions, determine which user or team they should be matched with."""
     matching: dict[BankAccountActivity, User] = {}
     team_matching: dict[BankAccountActivity, Account] = {}
-    stmt = (select(BankAccountActivity)
-           .options(joinedload(BankAccountActivity.bank_account))
-           .filter(BankAccountActivity.transaction_id.is_(None)))
+    stmt = (
+        select(BankAccountActivity)
+        .options(joinedload(BankAccountActivity.bank_account))
+        .filter(BankAccountActivity.transaction_id.is_(None))
+    )
 
     def _fetch_normal(uid: int) -> User | None:
         return session.session.get(User, uid)
@@ -958,15 +1058,17 @@ def match_activities() -> tuple[
     return matching, team_matching
 
 
-U = TypeVar('U')
-TUser = TypeVar('TUser')
+U = TypeVar("U")
+TUser = TypeVar("TUser")
 
 
 def _and_then(thing: T | None, f: Callable[[T], U | None]) -> U | None:
     return None if thing is None else f(thing)
 
 
-def match_reference(reference: str, fetch_normal: Callable[[int], TUser | None]) -> TUser | None:
+def match_reference(
+    reference: str, fetch_normal: Callable[[int], TUser | None]
+) -> TUser | None:
     """Try to return a user fitting a given bank reference string.
 
     :param reference: the bank reference
@@ -990,18 +1092,26 @@ def match_pycroft_reference(reference: str) -> int | None:
     """Given a bank reference, return the user id"""
     from pycroft.lib.user import check_user_id
 
-    search = re.findall(r"([\d]{4,6} ?[-/?:,+.]? ?[\d]{1,2})", reference.replace(' ', ''))
+    search = re.findall(
+        r"([\d]{4,6} ?[-/?:,+.]? ?[\d]{1,2})", reference.replace(" ", "")
+    )
     if not search:
         return None
 
     for group in search:
         try:
-            uid = group.replace(' ', '').replace('/', '-') \
-                .replace('?', '-').replace(':', '-').replace(',', '-') \
-                .replace('+', '-').replace('.', '-')
-            if uid[-2] != '-' and uid[-3] != '-':
+            uid = (
+                group.replace(" ", "")
+                .replace("/", "-")
+                .replace("?", "-")
+                .replace(":", "-")
+                .replace(",", "-")
+                .replace("+", "-")
+                .replace(".", "-")
+            )
+            if uid[-2] != "-" and uid[-3] != "-":
                 # interpret as type 2 UID with missing -
-                uid = uid[:-2] + '-' + uid[-2:]
+                uid = uid[:-2] + "-" + uid[-2:]
 
             if check_user_id(uid):
                 uid = uid.split("-")[0]
@@ -1064,7 +1174,9 @@ def transaction_confirm_all(processor: User) -> None:
         transaction_confirm(transaction, processor)
 
 
-def fee_from_valid_date(session: Session, valid_on: date, account: Account) -> Split | None:
+def fee_from_valid_date(
+    session: Session, valid_on: date, account: Account
+) -> Split | None:
     """If existent, get the membership fee split for a given date"""
     fee: Split | None = session.scalars(
         select(Split)
@@ -1133,7 +1245,9 @@ def estimate_balance(session: Session, user: User, end_date: date) -> Decimal:
     if not this_month_fee_outstanding:
         months_to_pay -= 1
 
-    return t.cast(Decimal, (-user.account.balance) - (months_to_pay * last_fee.regular_fee))
+    return t.cast(
+        Decimal, (-user.account.balance) - (months_to_pay * last_fee.regular_fee)
+    )
 
 
 def get_pid_csv() -> str:
@@ -1146,11 +1260,16 @@ def get_pid_csv() -> str:
     f = StringIO()
 
     writer = csv.writer(f)
-    writer.writerow(('id', 'email', 'name', 'balance'))
-    writer.writerows((encode_type2_user_id(u.id),
-                      f"{u.login}@agdsn.me",
-                      u.name,
-                      str(-u.account.balance)) for u in users)
+    writer.writerow(("id", "email", "name", "balance"))
+    writer.writerows(
+        (
+            encode_type2_user_id(u.id),
+            f"{u.login}@agdsn.me",
+            u.name,
+            str(-u.account.balance),
+        )
+        for u in users
+    )
 
     return f.getvalue()
 
