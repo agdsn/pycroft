@@ -324,40 +324,44 @@ def fix_import_error(error_id):
     imported = ImportedTransactions([], [], [])
     new_exception = None
 
-    if request.method != 'POST':
+    def default_response():
+        return render_template(
+            "finance/bank_accounts_error_fix.html",
+            error_id=error_id,
+            exception=error.exception,
+            new_exception=new_exception,
+            form=form,
+            transactions=imported.new,
+            old_transactions=imported.old,
+            doubtful_transactions=imported.doubtful,
+        )
+
+    if not form.is_submitted():
         form.mt940.data = error.mt940
+        return default_response()
 
-    if form.validate_on_submit():
-        statement: list[MT940Transaction] = []
-        try:
-            statement += mt940_to_array(form.mt940.data)
-        except Exception as e:
-            new_exception = str(e)
+    if not form.validate():
+        return default_response()
 
-        if new_exception is None:
-            flash(f"MT940 ist jetzt valide ({len(statement)} statements)", "success")
-            imported = finance.process_transactions(error.bank_account, statement)
+    try:
+        statement: list[MT940Transaction] = mt940_to_array(form.mt940.data)
+    except Exception as e:
+        new_exception = str(e)
+        flash("Es existieren weiterhin Fehler.", "error")
+        return default_response()
 
-            if form.do_import.data is True:
-                # save transactions to database
-                session.add_all(imported.new)
-                session.delete(error)
-                session.commit()
-                flash('Bankkontobewegungen wurden importiert.')
-                return redirect(url_for(".bank_accounts_import_errors"))
-        else:
-            flash('Es existieren weiterhin Fehler.', 'error')
+    flash(f"MT940 ist jetzt valide ({len(statement)} statements)", "success")
+    imported = finance.process_transactions(error.bank_account, statement)
 
-    return render_template(
-        "finance/bank_accounts_error_fix.html",
-        error_id=error_id,
-        exception=error.exception,
-        new_exception=new_exception,
-        form=form,
-        transactions=imported.new,
-        old_transactions=imported.old,
-        doubtful_transactions=imported.doubtful,
-    )
+    # save transactions to database
+    if not form.do_import.data:
+        return default_response()
+
+    session.add_all(imported.new)
+    session.delete(error)
+    session.commit()
+    flash("Bankkontobewegungen wurden importiert.")
+    return redirect(url_for(".bank_accounts_import_errors"))
 
 
 @bp.route('/bank-accounts/create', methods=['GET', 'POST'])
