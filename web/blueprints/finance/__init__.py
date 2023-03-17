@@ -350,6 +350,10 @@ def fix_import_error(error_id):
         flash("Es existieren weiterhin Fehler.", "error")
         return default_response()
 
+    if not statement:
+        flash("MT940 ist valide, enthält aber keine statements", "warning")
+        return default_response()
+
     flash(f"MT940 ist jetzt valide ({len(statement)} statements)", "success")
     imported = finance.process_transactions(error.bank_account, statement)
 
