@@ -43,13 +43,13 @@ from pycroft.lib.finance import (
     end_payment_in_default_memberships,
     post_transactions_for_membership_fee,
     build_transactions_query,
-    match_activities,
     take_actions_for_payment_in_default_users,
     get_pid_csv,
     get_negative_members,
     get_fints_transactions,
     ImportedTransactions,
 )
+from pycroft.lib.finance.matching import match_activities
 from pycroft.lib.mail import MemberNegativeBalance
 from pycroft.lib.user import encode_type2_user_id, user_send_mails
 from pycroft.model.finance import Account, Transaction, AccountType
