@@ -335,7 +335,7 @@ def fix_import_error(error_id):
             new_exception = str(e)
 
         if new_exception is None:
-            flash('MT940 ist jetzt valide.', 'success')
+            flash(f"MT940 ist jetzt valide ({len(statement)} statements)", "success")
             imported = finance.process_transactions(error.bank_account, statement)
 
             if form.do_import.data is True:
