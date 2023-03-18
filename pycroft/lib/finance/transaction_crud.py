@@ -181,7 +181,7 @@ def build_transactions_query(
     return stmt
 
 
-def similar_activity_stmt(activity: BankAccountActivity) -> Select:
+def _similar_activity_stmt(activity: BankAccountActivity) -> Select:
     return (
         select()
         .select_from(BankAccountActivity)
@@ -234,7 +234,7 @@ def process_transactions(
         )
         if new_activity.posted_on >= date.today():
             imported.doubtful.append(new_activity)
-        elif row_exists(session.session, similar_activity_stmt(new_activity)):
+        elif row_exists(session.session, _similar_activity_stmt(new_activity)):
             imported.new.append(new_activity)
         else:
             imported.old.append(new_activity)
