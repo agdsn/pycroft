@@ -9,7 +9,6 @@ import pytest
 from factory import Iterator
 from sqlalchemy.orm import Session
 
-import pycroft.lib.finance.matching
 from pycroft import Config
 from pycroft.helpers.date import last_day_of_month
 from pycroft.helpers.interval import closedopen, starting_from
@@ -641,9 +640,7 @@ class TestMatching:
         ("FOO, FOO BAR, HSS46 16-11", None),
     ])
     def test_matching(self, reference, expected):
-        result = pycroft.lib.finance.matching.match_reference(
-            reference, lambda uid: f"pyc-{uid}"
-        )
+        result = finance.matching._match_reference(reference, lambda uid: f"pyc-{uid}")
         assert result == expected
 
 

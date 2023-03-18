@@ -32,13 +32,13 @@ def match_activities() -> (
         return session.session.get(User, uid)
 
     for activity in session.session.scalars(stmt).all():
-        user = match_reference(activity.reference, fetch_normal=_fetch_normal)
+        user = _match_reference(activity.reference, fetch_normal=_fetch_normal)
 
         if user:
             matching.update({activity: user})
             continue
 
-        if team := match_team_transaction(activity):
+        if team := _match_team_transaction(activity):
             team_matching.update({activity: team})
 
     return matching, team_matching
@@ -54,7 +54,7 @@ def _and_then(thing: T | None, f: Callable[[T], U | None]) -> U | None:
 TUser = TypeVar("TUser")
 
 
-def match_reference(
+def _match_reference(
     reference: str, fetch_normal: Callable[[int], TUser | None]
 ) -> TUser | None:
     """Try to return a user fitting a given bank reference string.
@@ -69,14 +69,14 @@ def match_reference(
         "AWV-MELDEPFLICHT BEACHTENHOTLINE BUNDESBANK.(0800) 1234-111", ""
     ).strip()
 
-    pyc_user = _and_then(match_pycroft_reference(reference), fetch_normal)
+    pyc_user = _and_then(_match_pycroft_reference(reference), fetch_normal)
     if pyc_user:
         return pyc_user
 
     return None
 
 
-def match_pycroft_reference(reference: str) -> int | None:
+def _match_pycroft_reference(reference: str) -> int | None:
     """Given a bank reference, return the user id"""
     from pycroft.lib.user import check_user_id
 
@@ -113,7 +113,7 @@ def match_pycroft_reference(reference: str) -> int | None:
     return None
 
 
-def match_team_transaction(activity: BankAccountActivity) -> Account | None:
+def _match_team_transaction(activity: BankAccountActivity) -> Account | None:
     """Return the first team account that matches a given activity, or None.
 
     There is no tie-breaking mechanism if multiple patterns match.

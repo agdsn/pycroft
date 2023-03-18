@@ -1,7 +1,7 @@
 import pytest
 from sqlalchemy.orm import Session
 
-from pycroft.lib.finance.matching import match_activities
+from pycroft.lib.finance import match_activities
 from pycroft.model.finance import AccountPattern, Account, BankAccountActivity
 from tests.factories import AccountFactory
 from tests.factories.finance import BankAccountFactory, BankAccountActivityFactory

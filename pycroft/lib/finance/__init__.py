@@ -41,6 +41,7 @@ from pycroft.model.session import with_transaction, utcnow
 from pycroft.model.types import Money
 from pycroft.model.user import User, Membership, RoomHistoryEntry
 
+from .matching import match_activities
 from .transaction_crud import (
     simple_transaction,
     complex_transaction,
