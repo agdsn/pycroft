@@ -6,42 +6,36 @@ pycroft.lib.finance
 ~~~~~~~~~~~~~~~~~~~
 """
 import csv
-import difflib
 import logging
 import operator
-import re
 import typing
 import typing as t
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 from io import StringIO
-from itertools import chain, islice, tee, zip_longest
-from typing import NamedTuple
+from itertools import zip_longest
 
-from sqlalchemy import func, between, cast, CTE, union
+from sqlalchemy import func, between, CTE, union
 from sqlalchemy import or_, and_, literal, select, exists, not_, future
-from sqlalchemy.orm import aliased, Session
+from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
 
 from pycroft import config, Config
 from pycroft.helpers.date import diff_month, last_day_of_month
-from pycroft.helpers.i18n import deferred_gettext, gettext
-from pycroft.helpers.interval import closed, Interval, UnboundedInterval, starting_from
-from pycroft.helpers.utc import with_min_time, with_max_time, DateTimeTz
-from pycroft.lib.exc import PycroftLibException
+from pycroft.helpers.i18n import deferred_gettext
+from pycroft.helpers.interval import closed, starting_from
+from pycroft.helpers.utc import with_min_time, with_max_time
 from pycroft.lib.logging import log_user_event
 from pycroft.lib.membership import make_member_of, remove_member_of
 from pycroft.model import session
 from pycroft.model.facilities import Room, Building
 from pycroft.model.finance import (
     Account,
-    BankAccount,
     BankAccountActivity,
     Split,
     Transaction,
     MembershipFee,
 )
-from pycroft.model.functions import sign, least
 from pycroft.model.property import CurrentProperty, evaluate_properties
 from pycroft.model.session import with_transaction, utcnow
 from pycroft.model.types import Money
@@ -100,55 +94,6 @@ def get_first_applied_membership_fee() -> MembershipFee:
             select(MembershipFee).order_by(MembershipFee.ends_on.desc())
         ),
     )
-
-
-def transferred_amount(
-    from_account: Account,
-    to_account: Account,
-    when: Interval[date] = t.cast(Interval[date], UnboundedInterval),  # noqa: B008
-) -> Decimal:
-    """
-    Determine how much has been transferred from one account to another in a
-    given interval.
-
-    A negative value indicates that more has been transferred from to_account
-    to from_account than the other way round.
-
-    The interval boundaries may be None, which indicates no lower and upper
-    bound respectively.
-
-    :param from_account: source account
-    :param to_account: destination account
-    :param when: Interval in which transactions became valid
-    """
-    split1 = aliased(Split)
-    split2 = aliased(Split)
-    query = (
-        session.session.query(
-            cast(
-                func.sum(
-                    sign(split2.amount)
-                    * least(func.abs(split1.amount), func.abs(split2.amount))
-                ),
-                Money,
-            )
-        )
-        .select_from(split1)
-        .join(split2, split1.transaction_id == split2.transaction_id)
-        .join(Transaction, split2.transaction_id == Transaction.id)
-        .filter(
-            split1.account == from_account,
-            split2.account == to_account,
-            sign(split1.amount) != sign(split2.amount),
-        )
-    )
-    if not when.unbounded:
-        query = query.filter(between(Transaction.valid_on, when.begin, when.end))
-    elif when.begin is not None:
-        query = query.filter(Transaction.valid_on >= when.begin)
-    elif when.end is not None:
-        query = query.filter(Transaction.valid_on <= when.end)
-    return t.cast(Decimal, query.scalar())
 
 
 membership_fee_description = deferred_gettext("Mitgliedsbeitrag {fee_name}")
@@ -425,268 +370,6 @@ def post_transactions_for_membership_fee(
     return [
         t.cast(AffectedUserInfo, dict(user._mapping)) for user in affected_users_raw
     ]
-
-
-class MT940Record(NamedTuple):
-    our_account_number: str
-    posted_on: str
-    valid_on: str
-    type: str
-    reference: str
-    other_name: str
-    other_account_number: str
-    other_routing_number: str
-    amount: str
-    currency: str
-    info: str
-
-
-MT940_FIELDNAMES = MT940Record._fields
-
-
-class MT940Dialect(csv.Dialect):
-    delimiter = ";"
-    quotechar = '"'
-    doublequote = True
-    skipinitialspace = True
-    lineterminator = "\n"
-    quoting = csv.QUOTE_ALL
-
-
-class CSVImportError(PycroftLibException):
-    def __init__(self, message: str, cause: t.Any | None = None) -> None:
-        if cause is not None:
-            message = gettext("{0}\nCaused by:\n{1}").format(message, cause)
-        self.cause = cause
-        super().__init__(message)
-
-
-T = t.TypeVar("T")
-
-
-def is_ordered(
-    iterable: t.Iterable[T],
-    relation: t.Callable[[T, T], bool] = operator.le,  # type: ignore
-) -> bool:
-    """
-    Check that an iterable is ordered with respect to a given relation.
-
-    :param iterable: an iterable
-    :param relation: a binary relation
-    :return: Whether each element and its successor yield True under the given relation.
-    """
-    a, b = tee(iterable)
-    try:
-        next(b)
-    except StopIteration:
-        # iterable is empty
-        return True
-    return all(relation(x, y) for x, y in zip(a, b, strict=False))
-
-
-@with_transaction
-def import_bank_account_activities_csv(
-    csv_file: StringIO,
-    expected_balance: Decimal,
-    imported_at: DateTimeTz | None = None,
-) -> None:
-    """
-    Import bank account activities from a MT940 CSV file into the database.
-
-    The new activities are merged with the activities that are already saved to
-    the database.
-
-    :param csv_file:
-    :param expected_balance:
-    :param imported_at:
-    :return:
-    """
-
-    if imported_at is None:
-        imported_at = session.utcnow()
-
-    # Convert to MT940Record and enumerate
-    reader = csv.reader(csv_file, dialect=MT940Dialect)
-    records = enumerate((MT940Record._make(r) for r in reader), 1)
-    try:
-        # Skip first record (header)
-        next(records)
-        activities = tuple(
-            process_record(index, record, imported_at=imported_at)
-            for index, record in records
-        )
-    except StopIteration:
-        raise CSVImportError(gettext("No data present.")) from None
-    except csv.Error as e:
-        raise CSVImportError(gettext("Could not read CSV."), e) from e
-    if not activities:
-        raise CSVImportError(gettext("No data present."))
-    if not is_ordered((a[8] for a in activities), operator.ge):
-        raise CSVImportError(
-            gettext(
-                "Transaction are not sorted according to transaction date in "
-                "descending order."
-            )
-        )
-    first_posted_on = activities[-1][8]
-    balance = session.session.scalar(
-        select(func.coalesce(func.sum(BankAccountActivity.amount), 0)).filter(
-            BankAccountActivity.posted_on < first_posted_on
-        )
-    )
-    a = tuple(
-        session.session.scalars(
-            select(
-                BankAccountActivity.amount,
-                BankAccountActivity.bank_account_id,
-                BankAccountActivity.reference,
-                BankAccountActivity.reference,
-                BankAccountActivity.other_account_number,
-                BankAccountActivity.other_routing_number,
-                BankAccountActivity.other_name,
-                BankAccountActivity.imported_at,
-                BankAccountActivity.posted_on,
-                BankAccountActivity.valid_on,
-            ).filter(BankAccountActivity.posted_on >= first_posted_on)
-        )
-    )
-    b = tuple(reversed(activities))
-    matcher = difflib.SequenceMatcher(a=a, b=b)
-    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
-        if "equal" == tag:
-            continue
-        elif "insert" == tag:
-            balance += sum(a[0] for a in islice(activities, j1, j2))
-            session.session.add_all(
-                BankAccountActivity(
-                    amount=e[0],
-                    bank_account_id=e[1],
-                    reference=e[3],
-                    other_account_number=e[4],
-                    other_routing_number=e[5],
-                    other_name=e[6],
-                    imported_at=e[7],
-                    posted_on=e[8],
-                    valid_on=e[9],
-                )
-                for e in islice(activities, j1, j2)
-            )
-        elif "delete" == tag:
-            continue
-        elif "replace" == tag:
-            raise CSVImportError(
-                gettext(
-                    "Import conflict:\n"
-                    "Database bank account activities:\n{0}\n"
-                    "File bank account activities:\n{1}"
-                ).format(
-                    "\n".join(str(x) for x in islice(activities, i1, i2)),
-                    "\n".join(str(x) for x in islice(activities, j1, j2)),
-                )
-            )
-        else:
-            raise AssertionError()
-    if balance != expected_balance:
-        message = gettext(
-            "Balance after does not equal expected balance: " "{0} != {1}."
-        )
-        raise CSVImportError(message.format(balance, expected_balance))
-
-
-def remove_space_characters(field: str | None) -> str | None:
-    """Remove every 28th character if it is a space character."""
-    if field is None:
-        return None
-    return "".join(c for i, c in enumerate(field) if i % 28 != 27 or c != " ")
-
-
-# Banks are using the original reference field to store several subfields with
-# SEPA. Subfields start with a four letter tag name and the plus sign, they
-# are separated by space characters.
-sepa_description_field_tags: tuple[str, ...] = (
-    "EREF",
-    "KREF",
-    "MREF",
-    "CRED",
-    "DEBT",
-    "SVWZ",
-    "ABWA",
-    "ABWE",
-)
-sepa_description_pattern = re.compile(
-    "".join(
-        chain(
-            "^",
-            [rf"(?:({tag}\+.*?)(?: (?!$)|$))?" for tag in sepa_description_field_tags],
-            "$",
-        )
-    ),
-    re.UNICODE,
-)
-
-
-def cleanup_description(description: str) -> str:
-    match = sepa_description_pattern.match(description)
-    if match is None:
-        return description
-    return " ".join(remove_space_characters(f) for f in match.groups() if f is not None)
-
-
-def restore_record(record: MT940Record) -> str:
-    string_buffer = StringIO()
-    csv.DictWriter(string_buffer, MT940_FIELDNAMES, dialect=MT940Dialect).writerow(
-        record._asdict()
-    )
-    restored_record = string_buffer.getvalue()
-    string_buffer.close()
-    return restored_record
-
-
-def process_record(
-    index: int, record: MT940Record, imported_at: DateTimeTz
-) -> tuple[Decimal, int, str, str, str, str, str, datetime, date, date]:
-    if record.currency != "EUR":
-        message = gettext("Unsupported currency {0}. Record {1}: {2}")
-        raw_record = restore_record(record)
-        raise CSVImportError(message.format(record.currency, index, raw_record))
-    try:
-        bank_account = BankAccount.q.filter_by(
-            account_number=record.our_account_number
-        ).one()
-    except NoResultFound as e:
-        message = gettext("No bank account with account number {0}. " "Record {1}: {2}")
-        raw_record = restore_record(record)
-        raise CSVImportError(
-            message.format(record.our_account_number, index, raw_record), e
-        ) from None
-
-    try:
-        valid_on = datetime.strptime(record.valid_on, "%d.%m.%y").date()
-        posted_on = datetime.strptime(record.posted_on, "%d.%m.%y").date()
-    except ValueError as e:
-        message = gettext("Illegal date format. Record {1}: {2}")
-        raw_record = restore_record(record)
-        raise CSVImportError(message.format(index, raw_record), e) from e
-
-    try:
-        amount = Decimal(record.amount.replace(",", "."))
-    except ValueError as e:
-        message = gettext("Illegal value format {0}. Record {1}: {2}")
-        raw_record = restore_record(record)
-        raise CSVImportError(message.format(record.amount, index, raw_record), e) from e
-
-    return (
-        amount,
-        bank_account.id,
-        cleanup_description(record.reference),
-        record.reference,
-        record.other_account_number,
-        record.other_routing_number,
-        record.other_name,
-        imported_at,
-        posted_on,
-        valid_on,
-    )
 
 
 def user_has_paid(user: User) -> bool:
