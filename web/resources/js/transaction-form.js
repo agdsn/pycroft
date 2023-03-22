@@ -64,3 +64,8 @@ $(function () {
     // Show add button in last row
     split_rows.last().find(".split-add-button").removeClass("hidden");
 });
+
+$('#accept_selected').onclick({
+    // Appends to paylonad
+  $('.selected').forEach()
+})
