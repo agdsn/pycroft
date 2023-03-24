@@ -8,7 +8,7 @@ import typing as t
 from dataclasses import dataclass
 from itertools import groupby
 
-from sqlalchemy import func, and_, distinct, literal_column, select
+from sqlalchemy import func, and_, distinct, literal_column, select, or_, Select
 from sqlalchemy.orm import aliased, contains_eager, joinedload
 
 from pycroft.helpers.i18n import deferred_gettext
@@ -20,6 +20,7 @@ from pycroft.model.facilities import Room, Building
 from pycroft.model.host import Host
 from pycroft.model.session import with_transaction
 from pycroft.model.user import User
+from pycroft.model.utils import row_exists
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +72,25 @@ def get_overcrowded_rooms(building_id: int = None) -> dict[int, list[User]]:
     return {k: list(v) for k, v in groupby(users, lambda u: u.room.id)}
 
 
+def similar_rooms_query(
+    number: str, level: int, building: Building, vo_suchname: str | None = None
+) -> Select:
+    return (
+        select()
+        .select_from(Room)
+        .where(
+            or_(
+                and_(
+                    Room.number == number,
+                    Room.level == level,
+                    Room.building == building,
+                ),
+                *([Room.swdd_vo_suchname == vo_suchname] if vo_suchname else []),
+            )
+        )
+    )
+
+
 @with_transaction
 def create_room(
     building: Building,
@@ -81,10 +101,9 @@ def create_room(
     inhabitable: bool = True,
     vo_suchname: str | None = None,
 ) -> Room:
-    if Room.q.filter_by(number=number, level=level, building=building).first() is not None:
-        raise RoomAlreadyExistsException
-
-    if vo_suchname and Room.q.filter_by(swdd_vo_suchname=vo_suchname).first() is not None:
+    if row_exists(
+        session.session, similar_rooms_query(number, level, building, vo_suchname)
+    ):
         raise RoomAlreadyExistsException
 
     room = Room(number=number,
@@ -109,7 +128,12 @@ def edit_room(
     processor: User,
 ) -> Room:
     if room.number != number:
-        if Room.q.filter_by(number=number, level=room.level, building=room.building).filter(Room.id!=room.id).first() is not None:
+        if row_exists(
+            session.session,
+            similar_rooms_query(number, room.level, room.building).filter(
+                Room.id != room.id
+            ),
+        ):
             raise RoomAlreadyExistsException()
 
         message = (
@@ -146,12 +170,9 @@ def edit_room(
 
 
 def get_room(building_id: int, level: int, room_number: str) -> Room | None:
-    return t.cast(
-        Room | None,
-        Room.q.filter_by(
-            number=room_number, level=level, building_id=building_id
-        ).one_or_none(),
-    )
+    return session.session.scalars(
+        select(Room).filter_by(number=room_number, level=level, building_id=building_id)
+    ).one_or_none()
 
 
 @dataclass
@@ -174,8 +195,8 @@ def suggest_room_address_data(building: Building) -> RoomAddressSuggestion | Non
 
     cols = (Address.street, Address.number, Address.zip_code,
             Address.city, Address.state, Address.country)
-    query = (
-        session.session.query()
+    stmt = (
+        select()
         .select_from(Room)
         .join(Address)
         .add_columns(*cols)
@@ -185,7 +206,7 @@ def suggest_room_address_data(building: Building) -> RoomAddressSuggestion | Non
         .order_by(literal_column('count').desc())
     )
 
-    rows = query.all()
+    rows = session.session.execute(stmt).all()
     if not rows:
         return None
 
@@ -224,9 +245,8 @@ def determine_building(shortname: str | None = None, id: int | None = None) -> B
     :return: The unique building
     """
     if shortname:
-        return t.cast(
-            Building, Building.q.filter(Building.short_name == shortname).one()
-        )
+        stmt = select(Building).filter(Building.short_name == shortname)
+        return t.cast(Building, session.session.scalars(stmt).one())
     if id:
         return session.session.get(Building, id)
     raise ValueError("Either shortname or id must be given to identify the building!")

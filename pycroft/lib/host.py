@@ -8,11 +8,13 @@ pycroft.lib.host
 import typing as t
 
 import ipaddr
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from pycroft.helpers.i18n import deferred_gettext
 from pycroft.helpers.net import port_name_sort_key
 from pycroft.lib.logging import log_user_event
-from pycroft.lib.net import get_subnets_for_room, get_free_ip
+from pycroft.lib.net import get_subnets_for_room, get_free_ip, delete_ip
 from pycroft.lib.user import migrate_user_host
 from pycroft.model.facilities import Room
 from pycroft.model.host import Interface, IP, Host, SwitchPort
@@ -183,7 +185,7 @@ def interface_edit(
     # IP removed
     for ip in current_ips:
         if ip not in ips:
-            session.delete(IP.q.filter_by(address=ip).first())
+            delete_ip(session, ip)
             ips_changed = True
             new_ips.remove(ip)
 
@@ -226,3 +228,11 @@ def sort_ports(ports: t.Iterable[SwitchPort]) -> list[SwitchPort]:
         return port_name_sort_key(port.name)
 
     return sorted(ports, key=make_sort_key)
+
+
+def get_conflicting_interface(
+    session: Session, new_mac: str, current_mac: str | None = None
+) -> Interface | None:
+    if new_mac == current_mac:
+        return None
+    return session.scalar(select(Interface).filter_by(mac=new_mac))

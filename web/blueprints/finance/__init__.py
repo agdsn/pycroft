@@ -635,7 +635,7 @@ def balance_json(account_id):
 
 @bp.route('/accounts/<int:account_id>')
 def accounts_show(account_id):
-    account = Account.get(account_id)
+    account = session.get(Account, account_id)
 
     if account is None:
         flash(f"Konto mit ID {account_id} existiert nicht!", 'error')
@@ -734,7 +734,7 @@ def accounts_show_json(account_id):
 
     def rows_from_query(query):
         # iterating over `query` executes it
-        return [_format_row(split, style) for split in query]
+        return [_format_row(split, style) for split in session.scalars(query)]
 
     if splitted:
         rows_pos = rows_from_query(build_this_query(positive=True))
