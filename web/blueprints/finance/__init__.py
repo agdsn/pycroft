@@ -13,7 +13,7 @@ import typing as t
 from datetime import date
 from datetime import timedelta, datetime
 from functools import partial
-from itertools import groupby, zip_longest, chain
+from itertools import zip_longest, chain
 
 import wtforms
 from fints.dialog import FinTSDialogError
@@ -29,8 +29,7 @@ from flask import (
 from flask_login import current_user
 from flask_wtf import FlaskForm
 from mt940.models import Transaction as MT940Transaction
-from sqlalchemy import or_, and_, Text, cast, ColumnClause, FromClause
-from sqlalchemy.orm import joinedload
+from sqlalchemy import or_, Text, cast, ColumnClause, FromClause
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from sqlalchemy.sql.expression import literal_column, func, select, Join
 from wtforms import BooleanField
@@ -46,13 +45,20 @@ from pycroft.lib.finance import (
     take_actions_for_payment_in_default_users,
     get_pid_csv,
     get_negative_members,
+    get_system_accounts,
     ImportedTransactions,
     match_activities,
+    get_all_bank_accounts,
+    get_unassigned_bank_account_activities,
+    get_all_mt940_errors,
+    get_accounts_by_type,
+    get_last_import_date,
+    get_last_membership_fee,
 )
 from pycroft.lib.finance.fints import get_fints_transactions
 from pycroft.lib.mail import MemberNegativeBalance
 from pycroft.lib.user import encode_type2_user_id, user_send_mails
-from pycroft.model.finance import Account, Transaction, AccountType
+from pycroft.model.finance import Account, Transaction
 from pycroft.model.finance import (
     BankAccount, BankAccountActivity, Split, MembershipFee, MT940Error)
 from pycroft.model.session import session, utcnow
@@ -103,26 +109,30 @@ def bank_accounts_list():
 
 @bp.route('/bank-accounts/list/json')
 def bank_accounts_list_json():
-    return jsonify(items=[
-        {
-            'name': bank_account.name,
-            'bank': bank_account.bank,
-            'ktonr': bank_account.account_number,
-            'blz': bank_account.routing_number,
-            'iban': bank_account.iban,
-            'bic': bank_account.bic,
-            'kto': BankAccountTable.kto.value(
-                href=url_for('.accounts_show', account_id=bank_account.account_id),
-                title='Konto anzeigen',
-                btn_class='btn-primary'
-            ),
-            'balance': money_filter(bank_account.balance),
-            'last_imported_at': (
-                str(datetime.date(i))
-                if (i := bank_account.last_imported_at) is not None
-                else "nie"
-            )
-        } for bank_account in BankAccount.q.all()])
+    return jsonify(
+        items=[
+            {
+                "name": bank_account.name,
+                "bank": bank_account.bank,
+                "ktonr": bank_account.account_number,
+                "blz": bank_account.routing_number,
+                "iban": bank_account.iban,
+                "bic": bank_account.bic,
+                "kto": BankAccountTable.kto.value(
+                    href=url_for(".accounts_show", account_id=bank_account.account_id),
+                    title="Konto anzeigen",
+                    btn_class="btn-primary",
+                ),
+                "balance": money_filter(bank_account.balance),
+                "last_imported_at": (
+                    str(datetime.date(i))
+                    if (i := bank_account.last_imported_at) is not None
+                    else "nie"
+                ),
+            }
+            for bank_account in get_all_bank_accounts(session)
+        ]
+    )
 
 
 @bp.route('/bank-accounts/activities/json')
@@ -135,40 +145,48 @@ def bank_accounts_activities_json():
             icon='fa-edit'
         )]
 
-    activity_q = BankAccountActivity.q.options(
-        joinedload(BankAccountActivity.bank_account)
-    ).filter(BankAccountActivity.transaction_id.is_(None))
+    activity_q = get_unassigned_bank_account_activities(session)
 
-    return jsonify(items=[{
-        'bank_account': activity.bank_account.name,
-        'name': activity.other_name,
-        'valid_on': date_format(activity.valid_on, formatter=date_filter),
-        'imported_at': date_format(activity.imported_at, formatter=date_filter),
-        'reference': activity.reference,
-        'amount': activity.amount,
-        'iban': activity.other_account_number,
-        'actions': actions(activity.id),
-        'row_positive': activity.amount >= 0,
-    } for activity in activity_q.all()])
+    return jsonify(
+        items=[
+            {
+                "bank_account": activity.bank_account.name,
+                "name": activity.other_name,
+                "valid_on": date_format(activity.valid_on, formatter=date_filter),
+                "imported_at": date_format(activity.imported_at, formatter=date_filter),
+                "reference": activity.reference,
+                "amount": activity.amount,
+                "iban": activity.other_account_number,
+                "actions": actions(activity.id),
+                "row_positive": activity.amount >= 0,
+            }
+            for activity in activity_q
+        ]
+    )
 
 
 @bp.route('/bank-accounts/import/errors/json')
 def bank_accounts_errors_json():
     T = ImportErrorTable
-    return jsonify(items=[
-        {
-            'name': error.bank_account.name,
-            'fix': T.fix.value(
-                href=url_for('.fix_import_error', error_id=error.id),
-                title='korrigieren',
-                btn_class='btn-primary'
-            ),
-            'imported_at': (
-                str(datetime.date(i))
-                if (i := error.imported_at) is not None
-                else "nie"
-            ),
-        } for error in MT940Error.q.all()])
+    return jsonify(
+        items=[
+            {
+                "name": error.bank_account.name,
+                "fix": T.fix.value(
+                    href=url_for(".fix_import_error", error_id=error.id),
+                    title="korrigieren",
+                    btn_class="btn-primary",
+                ),
+                "imported_at": (
+                    str(datetime.date(i))
+                    if (i := error.imported_at) is not None
+                    else "nie"
+                ),
+            }
+            for error in get_all_mt940_errors(session)
+        ]
+    )
+
 
 from contextlib import contextmanager
 
@@ -195,7 +213,9 @@ def flash_fints_errors():
 @nav.navigate("Bankkontobewegungen importieren", icon='fa-file-import')
 def bank_accounts_import():
     form = BankAccountActivitiesImportForm()
-    form.account.choices = [(acc.id, acc.name) for acc in BankAccount.q.all()]
+    form.account.choices = [
+        (acc.id, acc.name) for acc in get_all_bank_accounts(session)
+    ]
     imported = ImportedTransactions([], [], [])
 
     def display_form_response(
@@ -284,7 +304,7 @@ def bank_accounts_import():
 @access.require('finance_change')
 def bank_accounts_import_manual():
     form = BankAccountActivitiesImportManualForm()
-    form.account.query = BankAccount.q.all()
+    form.account.query = get_all_bank_accounts(session)
 
     if form.validate_on_submit():
         bank_account = form.account.data
@@ -425,6 +445,7 @@ def bank_account_activities_edit(activity_id):
             description=activity.reference)
 
         if form.validate_on_submit():
+            # TODO use `session.get`
             debit_account = Account.q.filter(
                 Account.id == form.account_id.data
             ).one()
@@ -573,25 +594,9 @@ def _apply_checked_matches(matching, subform):
 @bp.route('/accounts/list')
 @nav.navigate("Konten", icon='fa-money-check-alt')
 def accounts_list():
-    def _key(a: Account) -> AccountType:
-        return a.type
-
-    accounts_by_type: dict[AccountType | t.Literal["LEGACY"], list[Account]] = {
-        type: list(acc)
-        for type, acc in groupby(
-            Account.q.filter_by(legacy=False)
-            .outerjoin(User)
-            .filter(User.id.is_(None))
-            .order_by(Account.type)
-            .all(),
-            _key,
-        )
-    }
-
-    accounts_by_type['LEGACY'] = Account.q.filter_by(legacy=True).all()
-
     return render_template(
-        'finance/accounts_list.html', accounts=accounts_by_type
+        "finance/accounts_list.html",
+        accounts=get_accounts_by_type(session),
     )
 
 
@@ -641,6 +646,7 @@ def accounts_show(account_id):
         flash(f"Konto mit ID {account_id} existiert nicht!", 'error')
         abort(404)
 
+    # TODO extract to lib function
     try:
         user = User.q.filter_by(account_id=account.id).one()
     except NoResultFound:
@@ -1162,7 +1168,7 @@ def membership_fees_json():
 @bp.route('/membership_fee/create', methods=("GET", "POST"))
 @access.require('finance_change')
 def membership_fee_create():
-    previous_fee = MembershipFee.q.order_by(MembershipFee.id.desc()).first()
+    previous_fee = get_last_membership_fee(session)
     if previous_fee:
         begins_on_default = previous_fee.ends_on + timedelta(1)
 
@@ -1287,18 +1293,16 @@ def handle_payments_in_default():
 
 @bp.route('/json/accounts/system')
 def json_accounts_system():
-    return jsonify(
-        accounts=[
+    return {
+        "accounts": [
             {
                 "account_id": account.id,
                 "account_name": localized(account.name),
                 "account_type": account.type,
             }
-            for account in Account.q.outerjoin(User)
-            .filter(and_(User.account_id.is_(None), Account.type != "USER_ASSET"))
-            .all()
+            for account in get_system_accounts(session)
         ]
-    )
+    }
 
 
 @bp.route('/json/accounts/user-search')
@@ -1339,8 +1343,8 @@ def payment_reminder_mail():
     form = ConfirmPaymentReminderMail()
 
     if form.validate_on_submit() and form.confirm.data:
-        activity = BankAccountActivity.q.order_by(BankAccountActivity.imported_at.desc()).first()
-        if activity.imported_at.date() >= utcnow().date() - timedelta(days=3):
+        last_import_date = get_last_import_date(session).date()
+        if last_import_date >= utcnow().date() - timedelta(days=3):
             negative_users = get_negative_members()
             user_send_mails(negative_users, MemberNegativeBalance())
 
