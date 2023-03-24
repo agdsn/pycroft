@@ -45,6 +45,7 @@ class TestHashing:
         assert verify_password(pw, encrypted), \
             f"{hash_method.name}: '{encrypted}' should verify '{pw}'"
 
+    @pytest.mark.slow
     @pytest.mark.parametrize('random_pw', (generate_password(8) for i in range(10)))
     def test_hash_type(self, random_pw):
         """Assert that the password scheme used for new passwords is
