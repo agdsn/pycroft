@@ -5,7 +5,6 @@
 pycroft.lib.finance
 ~~~~~~~~~~~~~~~~~~~
 """
-import logging
 import typing
 import typing as t
 from datetime import datetime, timedelta
@@ -47,8 +46,6 @@ from .transaction_crud import (
     process_transactions,
     ImportedTransactions,
 )
-
-logger = logging.getLogger("pycroft.lib.finance")
 
 
 def user_has_paid(user: User) -> bool:
