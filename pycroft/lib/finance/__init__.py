@@ -8,21 +8,26 @@ pycroft.lib.finance
 import typing
 import typing as t
 from datetime import datetime, timedelta
-from itertools import zip_longest
+from itertools import zip_longest, groupby
 
-from sqlalchemy import func
+from sqlalchemy import func, and_
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from pycroft.model.finance import (
+    Account,
     BankAccountActivity,
     Split,
     Transaction,
+    BankAccount,
+    MT940Error,
+    AccountType,
 )
 from pycroft.model.user import User
 from .matching import match_activities
 from .membership_fee import (
     get_membership_fee_for_date,
+    get_last_membership_fee,
     get_last_applied_membership_fee,
     estimate_balance,
     post_transactions_for_membership_fee,
@@ -83,11 +88,61 @@ def get_last_import_date(session: Session) -> datetime | None:
     return date
 
 
-def import_newer_than_days(session: Session, days: int) -> bool:
+def import_newer_than_days(session: Session, days: int) -> bool | None:
     # TODO properly test this
     return session.scalar(
         select(
             func.max(BankAccountActivity.imported_at)
             >= func.current_timestamp() - timedelta(days=days)
-        ),
+        )
     )
+
+
+def get_system_accounts(session: Session) -> list[Account]:
+    """Return all accounts which neither belong to a user nor are user assets"""
+    # TODO use session.execute(select(…))
+    return (
+        Account.q.outerjoin(User)
+        .filter(and_(User.account_id.is_(None), Account.type != "USER_ASSET"))
+        .all()
+    )
+
+
+def get_accounts_by_type(
+    session: Session,
+) -> dict[AccountType | t.Literal["LEGACY"], list[Account]]:
+    def _key(a: Account) -> AccountType:
+        return a.type
+
+    accounts_by_type: dict[AccountType | t.Literal["LEGACY"], list[Account]] = {
+        type: list(acc)
+        for type, acc in groupby(
+            Account.q.filter_by(legacy=False)
+            .outerjoin(User)
+            .filter(User.id.is_(None))
+            .order_by(Account.type)
+            .all(),
+            _key,
+        )
+    }
+
+    accounts_by_type["LEGACY"] = Account.q.filter_by(legacy=True).all()
+    return accounts_by_type
+
+
+def get_all_bank_accounts(session: Session) -> list[BankAccount]:
+    return BankAccount.q.all()
+
+
+def get_unassigned_bank_account_activities(
+    session: Session,
+) -> list[BankAccountActivity]:
+    return (
+        BankAccountActivity.q.options(joinedload(BankAccountActivity.bank_account))
+        .filter(BankAccountActivity.transaction_id.is_(None))
+        .all()
+    )
+
+
+def get_all_mt940_errors(session: Session) -> list[MT940Error]:
+    return MT940Error.q.all()

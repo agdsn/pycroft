@@ -128,12 +128,12 @@ def transaction_confirm_all(processor: User) -> None:
 
 def build_transactions_query(
     account: Account,
-    search: str = None,
+    search: str | None = None,
     sort_by: str = "valid_on",
-    sort_order: str = None,
-    offset: int = None,
-    limit: int = None,
-    positive: bool = None,
+    sort_order: str | None = None,
+    offset: int | None = None,
+    limit: int | None = None,
+    positive: bool | None = None,
     eagerload: bool = False,
 ) -> Select[tuple[Split]]:
     """Build a query returning the Splits for a finance account
