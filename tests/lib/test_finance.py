@@ -2,11 +2,8 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import dataclasses
-import operator
-import pkgutil
 from datetime import date, timedelta, datetime, timezone
 from decimal import Decimal
-from io import StringIO
 
 import pytest
 from factory import Iterator
@@ -14,42 +11,33 @@ from sqlalchemy.orm import Session
 
 from pycroft import Config
 from pycroft.helpers.date import last_day_of_month
-from pycroft.helpers.interval import closedopen, openclosed, single, starting_from
+from pycroft.helpers.interval import closedopen, starting_from
 from pycroft.lib import finance
 from pycroft.lib.finance import (
-    cleanup_description,
-    import_bank_account_activities_csv, simple_transaction,
-    transferred_amount,
-    is_ordered, estimate_balance,
+    simple_transaction,
+    estimate_balance,
     post_transactions_for_membership_fee, get_users_with_payment_in_default,
     end_payment_in_default_memberships,
     take_actions_for_payment_in_default_users)
 from pycroft.model.finance import (
-    BankAccountActivity,
     Transaction,
     Split,
     Account,
     MembershipFee,
-    BankAccount,
 )
 from pycroft.model.user import Membership, User
 from tests.factories import MembershipFactory, ConfigFactory
-from tests.factories.finance import MembershipFeeFactory, TransactionFactory, \
-    AccountFactory, BankAccountFactory, BankAccountActivityFactory
+from tests.factories.finance import (
+    MembershipFeeFactory,
+    TransactionFactory,
+    AccountFactory,
+    BankAccountActivityFactory,
+)
 from tests.factories.user import UserFactory
 
 
 @pytest.mark.usefixtures("session", "processor")
 class TestBankAccount:
-    @pytest.fixture(scope="class")
-    def bank_account(self, class_session) -> BankAccount:
-        return BankAccountFactory.create(
-            name="Hauptkonto",
-            bank="Spaßkasse",
-            account__name="Bankkonto 3120219540",
-            account_number='3120219540',
-        )
-
     @pytest.fixture(scope="class")
     def fee_account(self, class_session) -> Account:
         return AccountFactory.create(name="Membership Fees", type="REVENUE")
@@ -62,44 +50,6 @@ class TestBankAccount:
     def user_account(self, user):
         return user.account
 
-    def test_import_bank_account_csv(self, bank_account):
-        """
-        This test should verify that the csv import works as expected.
-        """
-        data = pkgutil.get_data(__package__, "data_test_finance.csv")
-        f = StringIO(data.decode("utf-8"))
-        import_bank_account_activities_csv(f, Decimal("43.42"), date(2015, 1, 1))
-
-        # test for correct dataimport
-        activity = BankAccountActivity.q.filter_by(
-            bank_account=bank_account,
-            reference="0000-3, SCH, AAA, ZW41D/01 99 1, SS 13",
-        ).first()
-        assert activity.other_account_number == "12345678"
-        assert activity.other_routing_number == "80040400"
-        assert activity.other_name == "SCH, AAA"
-        assert activity.amount == 9000.00
-        assert activity.posted_on == date(2013, 1, 2)
-        assert activity.valid_on == date(2013, 1, 2)
-
-        # verify that the right year gets chosen for the transaction
-        activity = BankAccountActivity.q.filter_by(
-            bank_account=bank_account, reference="Pauschalen"
-        ).first()
-        assert activity.posted_on == date(2012, 12, 24)
-        assert activity.valid_on == date(2012, 12, 24)
-
-        # verify that a negative amount is imported correctly
-        assert activity.amount == -6.00
-
-        # verify that the correct transaction year gets chosen for a valuta date
-        # which is in the next year
-        activity = BankAccountActivity.q.filter_by(
-            bank_account=bank_account, reference="BESTELLUNG SUPERMEGATOLLER SERVER"
-        ).first()
-        assert activity.posted_on == date(2013, 12, 29)
-        assert activity.valid_on == date(2013, 1, 10)
-
     # TODO move && expand.
     #  this has nothing to do with a bank account.
     def test_simple_transaction(self, fee_account, user_account, processor):
@@ -107,48 +57,6 @@ class TestBankAccount:
             "transaction", fee_account, user_account, Decimal(90), processor
         )
         assert t is not None
-
-    def test_transferred_value(self, utcnow, fee_account, user_account, processor):
-        author = processor
-        amount = Decimal(90)
-        today = utcnow.date()
-        for valid_on in (today - timedelta(1), today, today + timedelta(1)):
-            simple_transaction(
-                description="transaction",
-                debit_account=fee_account,
-                credit_account=user_account,
-                amount=amount,
-                author=author,
-                valid_on=valid_on,
-            )
-
-        assert transferred_amount(fee_account, user_account, single(today)) == amount
-        assert (
-            transferred_amount(fee_account, user_account, starting_from(today))
-            == 2 * amount
-        )
-        assert (
-            transferred_amount(fee_account, user_account, openclosed(None, today))
-            == 2 * amount
-        )
-        assert transferred_amount(fee_account, user_account) == 3 * amount
-
-
-# noinspection SpellCheckingInspection
-@pytest.mark.parametrize(
-    "description, clean_description",
-    (
-        ["1234-0 Dummy, User, with a- space at position 28"] * 2,
-        (
-            "EREF+Long EREF 1234567890 w ith a parasitic space "
-            "SVWZ+A reference with paras itic spaces at multiples of  28",
-            "EREF+Long EREF 1234567890 with a parasitic space "
-            "SVWZ+A reference with parasitic spaces at multiples of 28",
-        ),
-    ),
-)
-def test_description_cleanup(description, clean_description):
-    assert cleanup_description(description) == clean_description
 
 
 @dataclasses.dataclass
@@ -532,16 +440,6 @@ class TestMembershipFeePosting:
         assert not user.has_property("payment_in_default"), "User has payment_in_default property"
 
 
-class TestIsOrdered:
-    def test_ordered(self):
-        assert is_ordered((1, 2, 3))
-
-    def test_not_ordered(self):
-        assert not is_ordered((1, 3, 2))
-
-    def test_custom_operator(self):
-        assert is_ordered((3, 2, 1), relation=operator.gt)
-
 class TestSplitTypes:
     @pytest.fixture
     def a_user(self) -> Account:
@@ -742,7 +640,7 @@ class TestMatching:
         ("FOO, FOO BAR, HSS46 16-11", None),
     ])
     def test_matching(self, reference, expected):
-        result = finance.match_reference(reference, lambda uid: f"pyc-{uid}")
+        result = finance.matching._match_reference(reference, lambda uid: f"pyc-{uid}")
         assert result == expected
 
 
