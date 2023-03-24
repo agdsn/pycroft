@@ -213,7 +213,7 @@ def get_active_tasks_by_type(type: TaskType) -> t.Sequence[t.Type[Task]]:
     ).all()
 
 
-def get_scheduled_tasks(session: Session) -> t.Sequence[t.Type[Task]]:
+def get_scheduled_tasks(session: Session) -> t.Sequence[Task]:
     task_and_subtypes = with_polymorphic(Task, "*")
     return session.scalars(
         select(task_and_subtypes).filter(
