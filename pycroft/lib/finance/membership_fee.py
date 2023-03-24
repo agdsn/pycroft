@@ -54,9 +54,7 @@ def get_membership_fee_for_date(target_date: date) -> MembershipFee:
 def get_last_membership_fee(session: Session) -> MembershipFee | None:
     # TODO evaluate whether makes sense,
     #  or whether we should just use the last applied membership fee
-    return MembershipFee.q.order_by(
-        MembershipFee.id.desc()
-    ).first()  # mypy: ignore[no-any-return]
+    return session.scalar(select(MembershipFee).order_by(MembershipFee.id.desc()))
 
 
 def get_last_applied_membership_fee() -> MembershipFee | None:
