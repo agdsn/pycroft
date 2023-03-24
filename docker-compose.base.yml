@@ -19,6 +19,7 @@ services:
           pycroft-base: target:base
     image: agdsn/pycroft-dev:${TAG:-latest}
     environment:
+      PATH: /opt/pycroft/venv/bin:/opt/pycroft/venv/bin:/opt/venv/bin:/usr/local/bin:/usr/bin:/bin
       PYTHONDEVMODE: 1
       PYCROFT_DB_URI: postgresql://postgres:password@db:5432/pycroft?options=-csearch_path%3Dpycroft,public
       PYCROFT_API_KEY: secret
