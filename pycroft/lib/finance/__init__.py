@@ -88,13 +88,13 @@ def get_last_import_date(session: Session) -> datetime | None:
     return date
 
 
-def import_newer_than_days(session: Session, days: int) -> bool:
+def import_newer_than_days(session: Session, days: int) -> bool | None:
     # TODO properly test this
     return session.scalar(
         select(
             func.max(BankAccountActivity.imported_at)
             >= func.current_timestamp() - timedelta(days=days)
-        ),
+        )
     )
 
 

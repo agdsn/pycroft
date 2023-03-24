@@ -44,14 +44,11 @@ def get_membership_fee_for_date(target_date: date) -> MembershipFee:
     :raises sqlalchemy.exc.MultipleResultsFound: if multiple membership fees
         were found:
     """
-    return typing.cast(
-        MembershipFee,
-        session.session.scalars(
-            select(MembershipFee).filter(
-                between(target_date, MembershipFee.begins_on, MembershipFee.ends_on)
-            )
-        ).one(),
-    )
+    return session.session.scalars(
+        select(MembershipFee).filter(
+            between(target_date, MembershipFee.begins_on, MembershipFee.ends_on)
+        )
+    ).one()
 
 
 def get_last_membership_fee(session: Session) -> MembershipFee | None:
@@ -64,23 +61,17 @@ def get_last_membership_fee(session: Session) -> MembershipFee | None:
 
 def get_last_applied_membership_fee() -> MembershipFee | None:
     """Get the last applied membership fee."""
-    return typing.cast(
-        MembershipFee,
-        session.session.scalar(
-            select(MembershipFee)
-            .filter(MembershipFee.ends_on <= func.current_timestamp())
-            .order_by(MembershipFee.ends_on.desc())
-        ),
+    return session.session.scalar(
+        select(MembershipFee)
+        .filter(MembershipFee.ends_on <= func.current_timestamp())
+        .order_by(MembershipFee.ends_on.desc())
     )
 
 
-def get_first_applied_membership_fee() -> MembershipFee:
+def get_first_applied_membership_fee() -> MembershipFee | None:
     """Get the first applied membership fee."""
-    return typing.cast(
-        MembershipFee,
-        session.session.scalar(
-            select(MembershipFee).order_by(MembershipFee.ends_on.desc())
-        ),
+    return session.session.scalar(
+        select(MembershipFee).order_by(MembershipFee.ends_on.desc())
     )
 
 

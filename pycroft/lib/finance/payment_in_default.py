@@ -18,6 +18,7 @@ from pycroft.lib.membership import make_member_of, remove_member_of
 from pycroft.model import session
 from pycroft.model.finance import (
     Account,
+    MembershipFee,
 )
 from pycroft.model.property import CurrentProperty
 from pycroft.model.session import with_transaction, utcnow
@@ -91,9 +92,9 @@ def get_users_with_payment_in_default(session: Session) -> tuple[set[User], set[
     for user in users:
         in_default_days = user.account.in_default_days
 
+        fee: MembershipFee | None
         try:
             fee_date = ts_now - timedelta(days=in_default_days)
-
             fee = get_membership_fee_for_date(fee_date)
         except NoResultFound:
             fee = get_last_applied_membership_fee()
@@ -147,12 +148,15 @@ def take_actions_for_payment_in_default_users(
         if user.member_of(config.member_group):
             in_default_days = user.account.in_default_days
 
+            fee: MembershipFee | None
             try:
                 fee_date = ts_now - timedelta(days=in_default_days)
-
                 fee = get_membership_fee_for_date(fee_date)
             except NoResultFound:
                 fee = get_last_applied_membership_fee()
+            if fee is None:
+                raise ValueError("No fee found")
+
 
             end_membership_date = utcnow() - (
                 timedelta(days=in_default_days) - fee.payment_deadline_final
