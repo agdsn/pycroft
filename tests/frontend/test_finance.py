@@ -189,12 +189,6 @@ class TestAccount:
         class_session.flush()
         return t1, t2
 
-    @pytest.fixture(scope="class")
-    def legacy_account(self, class_session: Session) -> Account:
-        account = f.AccountFactory(type="ASSET", legacy=True)
-        class_session.flush()
-        return account
-
     def test_list_accounts(self, session, client: TestClient, account):
         with client.renders_template("finance/accounts_list.html") as recorded:
             client.assert_ok("finance.accounts_list")
@@ -224,6 +218,14 @@ class TestAccount:
         assert i["total"] == 2
         if not query_args.get("splitted", False):
             assert len(i["rows"]) == query_args.get("limit", 2)
+
+
+class TestAccountToggleLegacy:
+    @pytest.fixture(scope="class")
+    def legacy_account(self, class_session: Session) -> Account:
+        account = f.AccountFactory(type="ASSET", legacy=True)
+        class_session.flush()
+        return account
 
     def test_account_toggle_legacy_404(self, client: TestClient):
         client.assert_url_response_code(
