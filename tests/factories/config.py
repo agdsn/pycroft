@@ -34,5 +34,5 @@ class ConfigFactory(BaseFactory):
     pre_member_group = SubFactory(PropertyGroupFactory)
 
     # `Account`s
-    membership_fee_account = SubFactory(AccountFactory)
+    membership_fee_account = SubFactory(AccountFactory, type="REVENUE")
     membership_fee_bank_account = SubFactory(BankAccountFactory)
