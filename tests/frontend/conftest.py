@@ -116,3 +116,10 @@ def admin_logged_in(admin: User, module_test_client: TestClient) -> None:
     """A module-scoped convenience fixture to log in an admin"""
     with login_context(module_test_client, admin.login, "password"):
         yield
+
+
+@pytest.fixture(scope="module")
+def treasurer_logged_in(treasurer: User, module_test_client: TestClient) -> None:
+    """A module-scoped convenience fixture to log in an admin"""
+    with login_context(module_test_client, treasurer.login, "password"):
+        yield

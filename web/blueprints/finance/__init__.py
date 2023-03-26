@@ -406,6 +406,7 @@ def bank_accounts_create():
         )
         session.add(new_bank_account)
         session.commit()
+        flash("Bankkonto wurde erstellt.", "success")
         return redirect(url_for('.bank_accounts_list'))
 
     return render_template('finance/bank_accounts_create.html',
