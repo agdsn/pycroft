@@ -32,6 +32,8 @@ from mt940.models import Transaction as MT940Transaction
 from sqlalchemy import or_, Text, cast, ColumnClause, FromClause
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from sqlalchemy.sql.expression import literal_column, func, select, Join
+from webargs import fields
+from webargs.flaskparser import use_kwargs
 from wtforms import BooleanField
 
 from pycroft import config, lib
@@ -618,9 +620,8 @@ def account_toggle_legacy(account_id):
 
 
 @bp.route('/accounts/<int:account_id>/balance/json')
-def balance_json(account_id):
-    invert = request.args.get('invert', 'False') == 'True'
-
+@use_kwargs({"invert": fields.Bool(missing=False)})
+def balance_json(account_id, invert: bool):
     sum_exp = func.sum(Split.amount).over(order_by=Transaction.valid_on)
 
     if invert:
@@ -717,15 +718,30 @@ def _prefixed_merge(
     return result
 
 
-@bp.route('/accounts/<int:account_id>/json')
-def accounts_show_json(account_id):
-    style = request.args.get('style')
-    limit = request.args.get('limit', type=int)
-    offset = request.args.get('offset', type=int)
-    sort_by = request.args.get('sort', default="valid_on")
-    sort_order = request.args.get('order', default="desc")
-    search = request.args.get('search')
-    splitted = request.args.get('splitted', default=False, type=bool)
+@bp.route("/accounts/<int:account_id>/json")
+@use_kwargs(
+    {
+        "style": fields.String(),
+        "limit": fields.Int(),
+        "offset": fields.Int(),
+        "sort_by": fields.String(data_key="sort", missing="valid_on"),
+        "sort_order": fields.String(data_key="order", missing="desc"),
+        "search": fields.String(),
+        "splitted": fields.Bool(missing=False),
+    },
+    location="query",
+)
+def accounts_show_json(
+    account_id: int,
+    *,
+    style: str | None = None,
+    limit: int | None = None,
+    offset: int | None = None,
+    sort_by: str,
+    sort_order: str,
+    search: str | None = None,
+    splitted: bool,
+):
     if sort_by.startswith("soll_") or sort_order.startswith("haben_"):
         sort_by = '_'.join(sort_by.split('_')[1:])
 
@@ -971,12 +987,16 @@ def transactions_all():
                                                 **request.args))
 
 
-@access.require('finance_show')
-@bp.route('/transactions/json')
-def transactions_all_json():
-    lower = request.args.get('after', "")
-    upper = request.args.get('before', "")
-    filter = request.args.get('filter', "nonuser")
+@access.require("finance_show")
+@bp.route("/transactions/json")
+@use_kwargs(
+    {
+        "lower": fields.Str(data_key="after", missing=""),
+        "upper": fields.Str(data_key="before", missing=""),
+        "filter": fields.Str(missing="nonuser"),
+    }
+)
+def transactions_all_json(*, lower: str, upper: str, filter: str):
     transactions: FromClause
     if filter == "nonuser":
         non_user_transactions = (select(Split.transaction_id)
