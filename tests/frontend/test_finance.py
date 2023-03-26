@@ -1,8 +1,10 @@
 #  Copyright (c) 2023. The Pycroft Authors. See the AUTHORS file.
 #  This file is part of the Pycroft project and licensed under the terms of
 #  the Apache License, Version 2.0. See the LICENSE file for details
-from datetime import date
+import csv
+from datetime import date, datetime
 from decimal import Decimal
+from io import StringIO
 from itertools import chain
 
 import pytest
@@ -300,3 +302,46 @@ class TestAccountCreate:
         ).one_or_none()
         assert acc is not None
         assert not acc.legacy
+
+
+class TestPaymentInDefault:
+    def test_get_handle_pid(self, client: TestClient):
+        with client.renders_template("generic_form.html"):
+            client.assert_ok("finance.handle_payments_in_default")
+
+    def test_post_handle_pid(self, client: TestClient):
+        with client.flashes_message("Zahlungsrückstände behandelt", "success"):
+            client.assert_url_redirects(
+                url_for("finance.handle_payments_in_default"),
+                method="POST",
+                data={},
+                expected_location=url_for("finance.membership_fees"),
+            )
+
+    def test_get_payment_in_default_csv(self, client: TestClient):
+        resp = client.assert_url_ok(url_for("finance.csv_payments_in_default"))
+        assert resp.headers["Content-Type"] == "text/csv"
+        assert list(csv.DictReader(StringIO(resp.data.decode()))) == []
+
+
+class TestPaymentReminderMail:
+    def test_get_payment_reminder_mail_get(self, client: TestClient):
+        with client.renders_template("generic_form.html"):
+            client.assert_ok("finance.payment_reminder_mail")
+
+    def test_get_payment_reminder_mail_post_import_too_old(self, client: TestClient):
+        with client.flashes_message("darf nicht älter als .* sein", "error"):
+            client.assert_redirects(
+                "finance.payment_reminder_mail", method="POST", data={"confirm": True}
+            )
+
+    def test_get_payment_reminder_mail_post(
+        self, session, client: TestClient, activity
+    ):
+        activity.imported_at = datetime.now()
+        session.add(activity)
+        session.flush()
+        with client.flashes_message("erinnerungen gesendet", "success"):
+            client.assert_redirects(
+                "finance.payment_reminder_mail", method="POST", data={"confirm": True}
+            )
