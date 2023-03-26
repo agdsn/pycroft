@@ -219,6 +219,26 @@ class TestAccount:
         if not query_args.get("splitted", False):
             assert len(i["rows"]) == query_args.get("limit", 2)
 
+    def test_get_system_accounts(self, config, client):
+        accounts = client.assert_ok("finance.json_accounts_system").json["accounts"]
+        assert len(accounts) > 0
+        assert config.membership_fee_account.name in [
+            a["account_name"] for a in accounts
+        ]
+        assert config.membership_fee_account.id in [a["account_id"] for a in accounts]
+
+    @pytest.mark.parametrize(
+        "query_from_account",
+        [lambda a: a.user.name, lambda a: a.user.id, lambda a: a.user.login],
+    )
+    def test_search_user_account(self, member_account, client, query_from_account):
+        query = query_from_account(member_account)
+        resp = client.assert_url_ok(
+            url_for("finance.json_accounts_user_search", query=query)
+        )
+        assert len(a := resp.json["accounts"]) == 1
+        assert a[0]["account_id"] == member_account.id
+
 
 class TestAccountToggleLegacy:
     @pytest.fixture(scope="class")
