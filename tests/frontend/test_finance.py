@@ -1,6 +1,8 @@
 #  Copyright (c) 2023. The Pycroft Authors. See the AUTHORS file.
 #  This file is part of the Pycroft project and licensed under the terms of
 #  the Apache License, Version 2.0. See the LICENSE file for details
+from datetime import date
+from decimal import Decimal
 from itertools import chain
 
 import pytest
@@ -9,6 +11,7 @@ from sqlalchemy.orm import Session
 
 import tests.factories as f
 from pycroft import Config
+from pycroft.lib.finance import simple_transaction
 from pycroft.model.finance import (
     BankAccount,
     BankAccountActivity,
@@ -169,22 +172,18 @@ class TestAccount:
     def member_account_transactions(
         self, member_account, class_session, bank_account, config, treasurer
     ) -> tuple[Transaction, Transaction]:
-        # for some reason setting `splits` in the `TransactionFactory` does not work
-        t1 = Transaction(
+        kw = {"author": treasurer, "valid_on": date.today(), "amount": Decimal(100)}
+        t1 = simple_transaction(
             description="Mitgliedsbeitrag",
-            author=treasurer,
-            splits=[
-                Split(account=member_account, amount=-100),
-                Split(account=config.membership_fee_account, amount=100),
-            ],
+            credit_account=config.membership_fee_account,
+            debit_account=member_account,
+            **kw,
         )
-        t2 = Transaction(
+        t2 = simple_transaction(
             description="Zahlung",
-            author=treasurer,
-            splits=[
-                Split(account=bank_account.account, amount=-100),
-                Split(account=member_account, amount=100),
-            ],
+            credit_account=member_account,
+            debit_account=bank_account.account,
+            **kw,
         )
         class_session.add_all([t1, t2])
         class_session.flush()
