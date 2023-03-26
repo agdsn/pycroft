@@ -201,6 +201,25 @@ class TestAccount:
         accounts_by_type = ctx["accounts"]
         assert account in [*chain(*accounts_by_type.values())]
 
+    def test_user_account_show(self, client, member_account):
+        with client.renders_template("finance/accounts_show.html"):
+            client.assert_url_ok(
+                url_for("finance.accounts_show", account_id=member_account.id)
+            )
+
+    def test_nonexistent_account_show(self, client):
+        client.assert_url_response_code(
+            url_for("finance.accounts_show", account_id=9999), 404
+        )
+
+    def test_system_account_show(self, client, config):
+        with client.renders_template("finance/accounts_show.html"):
+            client.assert_url_ok(
+                url_for(
+                    "finance.accounts_show", account_id=config.membership_fee_account.id
+                )
+            )
+
     @pytest.mark.parametrize(
         "query_args",
         [
@@ -241,6 +260,16 @@ class TestAccount:
         )
         assert len(a := resp.json["accounts"]) == 1
         assert a[0]["account_id"] == member_account.id
+
+    @pytest.mark.parametrize("invert", [False, True])
+    def test_user_account_balance_json(self, member_account, client, invert):
+        resp = client.assert_url_ok(
+            url_for("finance.balance_json", account_id=member_account.id, invert=invert)
+        )
+        # we have 2 transactions on the same day, but on that day the balance is 0.
+        # so we expect two data points for that day, both proclaiming a balance of `0`.
+        assert len(items := resp.json["items"]) == 2
+        assert [i["balance"] for i in items] == [0, 0]
 
 
 class TestAccountToggleLegacy:
