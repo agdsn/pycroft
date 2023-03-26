@@ -399,6 +399,7 @@ class BankAccountActivity(IntegerIdModel):
     )
     transaction: Mapped[Transaction | None] = relationship(
         back_populates="bank_account_activities",
+        overlaps="bank_account_activity",
     )
     account_id: Mapped[int | None] = mapped_column(
         ForeignKey(Account.id, onupdate="CASCADE", ondelete="SET NULL")
@@ -407,6 +408,7 @@ class BankAccountActivity(IntegerIdModel):
     split: Mapped[Split] = relationship(
         foreign_keys=(transaction_id, account_id),
         back_populates="bank_account_activity",
+        overlaps="transaction",
     )
 
     # associations
