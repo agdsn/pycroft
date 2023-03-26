@@ -7,7 +7,13 @@ import pytest
 from sqlalchemy import select, func, text
 from sqlalchemy.exc import IntegrityError, DataError
 
-from pycroft.model.finance import Transaction, IllegalTransactionError, Split, Account
+from pycroft.model.finance import (
+    Transaction,
+    IllegalTransactionError,
+    Split,
+    Account,
+    BankAccount,
+)
 from tests.factories import AccountFactory, UserFactory
 from tests.factories.finance import BankAccountFactory, BankAccountActivityFactory
 
@@ -141,7 +147,7 @@ def immediate_activity_matches_split_trigger(session):
 
 
 @pytest.fixture
-def bank_account():
+def bank_account() -> BankAccount:
     return BankAccountFactory()
 
 

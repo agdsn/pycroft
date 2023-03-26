@@ -100,7 +100,9 @@ class TestClient(flask.testing.FlaskClient):
         return self.assert_url_forbidden(url_for(endpoint), method=method, **kw)
 
     @contextlib.contextmanager
-    def renders_template(self, template: str, allow_others: bool = False):
+    def renders_template(
+        self, template: str, allow_others: bool = False
+    ) -> t.Iterator[list[tuple[j.Template, t.Any]]]:
         app = self.application
         recorded: list[tuple[j.Template, t.Any]] = []
 
@@ -109,7 +111,7 @@ class TestClient(flask.testing.FlaskClient):
 
         template_rendered.connect(record, app)
         try:
-            yield
+            yield recorded
         finally:
             template_rendered.disconnect(record, app)
 
