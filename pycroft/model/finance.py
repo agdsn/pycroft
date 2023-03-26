@@ -398,7 +398,6 @@ class BankAccountActivity(IntegerIdModel):
         ForeignKey(Transaction.id, onupdate="CASCADE", ondelete="SET NULL")
     )
     transaction: Mapped[Transaction | None] = relationship(
-        viewonly=True,
         back_populates="bank_account_activities",
     )
     account_id: Mapped[int | None] = mapped_column(
