@@ -8,6 +8,7 @@ from itertools import chain
 import pytest
 from flask import url_for
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 
 import tests.factories as f
 from pycroft import Config
@@ -273,3 +274,29 @@ class TestAccountToggleLegacy:
         )
         session.refresh(legacy_account)
         assert legacy_account.legacy is False
+
+
+class TestAccountCreate:
+    def test_account_create_get(self, client: TestClient):
+        with client.renders_template("finance/accounts_create.html"):
+            client.assert_ok("finance.accounts_create")
+
+    def test_account_create_invalid_post(self, client: TestClient):
+        client.assert_url_ok(url_for("finance.accounts_create"), method="POST", data={})
+
+    def test_account_create_valid_post(self, session, client: TestClient):
+        formdata = {
+            "name": "Test (newly created)",
+            "type": "ASSET",
+        }
+        client.assert_url_redirects(
+            url_for("finance.accounts_create"),
+            method="POST",
+            data=formdata,
+            expected_location=url_for("finance.accounts_list"),
+        )
+        acc = session.scalars(
+            select(Account).filter_by(name="Test (newly created)")
+        ).one_or_none()
+        assert acc is not None
+        assert not acc.legacy
