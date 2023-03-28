@@ -5,34 +5,40 @@
  */
 
 import * as td from "@eonasdan/tempus-dominus";
-import {DateTime} from "@eonasdan/tempus-dominus";
-import Dates from "@eonasdan/tempus-dominus/types/dates";
-import Display from "@eonasdan/tempus-dominus/types/display";
+import Dates from "@eonasdan/tempus-dominus";
+import Display from "@eonasdan/tempus-dominus";
 
 td.DefaultOptions.display ??= {};
 td.DefaultOptions.display.components ??= {};
-td.DefaultOptions.display.components.useTwentyfourHour = true;
 td.DefaultOptions.allowInputToggle = true;
+td.DefaultOptions.localization ??= {};
+td.DefaultOptions.localization.hourCycle = 'h23';
 
+// this is a dict of objects passed in at plugin loading time
+// see https://github.com/Eonasdan/tempus-dominus/blob/fbb65fa2baac50f8b340f617e6467326c21e4859/src/js/tempus-dominus.ts#L595-L599
 interface TdClasses {
     TempusDominus: typeof td.TempusDominus,
     Dates: typeof Dates,
     Display: typeof Display,
+    DateTime: typeof td.DateTime,
+    Namespace: typeof td.Namespace,
 }
 
 class IsoPlugin {
     load(option: {}, tdClasses: TdClasses, tdFactory: any) {
         // See https://getdatepicker.com/6/plugins/ for some general examples
-        tdClasses.Dates.prototype.formatInput = function (date: DateTime) {
+        // @ts-ignore
+        tdClasses.Dates.prototype.formatInput = function (date: td.DateTime) {
             return date.toISOString();
-        }
+        };
+        // @ts-ignore
         tdClasses.Dates.prototype.parseInput = function (input: string) {
-            return DateTime.convert(new Date(Date.parse(input)))
-        }
+            return tdClasses.DateTime.convert(new Date(Date.parse(input)))
+        };
     }
 }
 
-td.extend(new IsoPlugin(), {});
+td.extend(new IsoPlugin().load, {});
 
 const selector = 'form [data-role=datetimepicker]';
 /** Initialize TempusDominus on all elements with `[data-role=datetimepicker]`. */
