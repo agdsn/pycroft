@@ -1,5 +1,8 @@
 {% extends "layout.html" %}
 
+{% import "macros/resources.html" as resources %}
+
+
 {% block content %}
     {{ unconfirmed_transactions_table.render(table_id='transactions_unconfirmed') }}
 
@@ -11,3 +14,8 @@
     </a>
   <button class="btn btn-success" id="accept_selected">Auswahl bestätigen</button>
 {% endblock %}
+
+
+  {% block page_script %}
+{{ resources.link_script_file('transaction-form.js' | require) }}
+    {% endblock %}

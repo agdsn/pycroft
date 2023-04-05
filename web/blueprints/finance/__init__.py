@@ -830,6 +830,7 @@ def transactions_unconfirmed_json():
 
         items.append(
             {
+                'id': transaction.id,
                 'description': T.description.value(
                     href=url_for(".transactions_show", transaction_id=transaction.id),
                     title=transaction.description,
@@ -896,6 +897,16 @@ def transaction_confirm(transaction_id):
     flash('Transaktion bestätigt.', 'success')
     return redirect(url_for('.transactions_unconfirmed'))
 
+@bp.route('/transaction/confirm_selected', methods=['GET', 'POST'])
+@access.require('finance_change')
+def transactions_confirm_selected():
+    ids = request.form.getlist("Ids", [])
+    print(ids)
+    for id in ids:
+        transaction = Transaction.q.filter_by(confirmed=False).filter(id=id)
+        transaction_confirm(transaction, current_user)
+        session.commit()
+    return redirect(url_for('.transactions_unconfirmed'))
 
 @bp.route('/transaction/confirm', methods=['GET', 'POST'])
 @access.require('finance_change')
