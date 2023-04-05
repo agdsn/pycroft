@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/"
+                       xmlns:moz="http://www.mozilla.org/2006/browser/search/">
   <ShortName>Pycroft</ShortName>
   <Description>open the the userspage for a provided userid</Description>
-  <Tags>pyrcoft</Tags>
+  <InputEncoding>UTF-8</InputEncoding>
+  <Tags>pycroft</Tags>
   <Contact>support@agdsn.de</Contact>
-  <Url type="text/html" method="get" template="https://pycroft.agdsn.de/user/{searchTerms}"/>
+  <Url type="text/html" method="GET" template="https://pycroft.agdsn.de/user/{searchTerms}"/>
+  <Image height="50" width="50" type="image/png">https://pycroft.agdsn.de/static/img/pycroft.227b3d51d56182dd578dfbf40b377256.svg</Image>
 </OpenSearchDescription>
-
