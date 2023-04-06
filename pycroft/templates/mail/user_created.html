@@ -1,7 +1,7 @@
 {%- set links = [] -%}
 {%- import "macros/link.html" as link with context -%}
 
-<pre>
+{{ link.start_pre(mode) }}
 English version below!
 
 ---
@@ -85,4 +85,4 @@ Best Regards
 Your AG DSN
 
 {{ link.render_link_list(mode) }}
-</pre>
+{{ link.end_pre(mode) }}
