@@ -1,4 +1,6 @@
-<pre>
+{% extends "base.html.j2" %}
+{%- import "macros/link.html" as link with context -%}
+{% block body %}
 English version below!
 
 ---
@@ -12,17 +14,18 @@ eingetragen wurde:
 {{ user.address.zip_code }} {{ user.address.city }}
 {{ user.address.country }}
 
-Du kannst deinen Netzwerkanschluss nach vorherigem Login auf unserer <a href="https://agdsn.de/sipa/usersuite/">Internetseite</a>
+Du kannst deinen Netzwerkanschluss nach vorherigem Login auf unserer {{ link.render_link("Internetseite", "https://agdsn.de/sipa/usersuite/") }}
 freischalten.
 Falls du deinen Netzwerkanschluss bereits freigeschaltet hast, sollte dieser nun
 mit der korrekten MAC Adresse in dem oben angegebenen Zimmer funktionieren.
 
 Um bei anstehenden Wartungsarbeiten an deinem Netzwerkanschluss immer rechtzeitig
-informiert zu sein, empfehlen wir dir unsere <a href="https://status.agdsn.net/subscribers/subscribe">Statusseite</a> zu abonnieren.
+informiert zu sein, empfehlen wir dir unsere {{ link.render_link("Statusseite", "https://status.agdsn.net/subscribers/subscribe") }} zu abonnieren.
 
 Viele Grüße
 Deine AG DSN
 
+{{ link.render_link_list() }}
 --
 
 Hello {{ user.name }},
@@ -34,13 +37,13 @@ member account:
 {{ user.address.zip_code }} {{ user.address.city }}
 {{ user.address.country }}
 
-You can enable your network connection after logging in on our <a href="https://agdsn.de/sipa/usersuite/">webpage</a>.
+You can enable your network connection after logging in on our {{ link.render_link("webpage", "https://agdsn.de/sipa/usersuite/") }}.
 If you have already enabled your network connection, it should now
 work with the correct MAC address in the room specified above.
 
 To always receive the latest news about upcoming maintenance, we recommend to
-subscribe to our <a href="https://status.agdsn.net/subscribers/subscribe">status page</a>.
+subscribe to our {{ link.render_link("status page", "https://status.agdsn.net/subscribers/subscribe") }}.
 
 Best Regards
 Your AG DSN
-</pre>
+{% endblock %}

@@ -1,4 +1,5 @@
-<pre>
+{%- extends "base.html.j2" -%}
+{%- block body -%}
 * English version below *
 
 Hallo {{ user.name }},
@@ -97,4 +98,4 @@ Your AG DSN
 [4] Office hours:         https://agdsn.de/sipa/pages/support/contacts
 [5] Finance constitution:
 https://agdsn.de/sipa/documents/legal/beitragsordnung.pdf
-</pre>
+{%- endblock -%}

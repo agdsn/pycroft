@@ -1,4 +1,4 @@
-{%- macro render_link(text, url, mode) -%}
+{%- macro render_link(text, url) -%}
 {%- if mode == 'html' -%}
 <a href="{{ url }}">{{ text }}</a>
 {%- else -%}
@@ -6,7 +6,7 @@
 {%- endif -%}
 {%- endmacro -%}
 
-{%- macro render_link_list(mode) -%}
+{% macro render_link_list() -%}
 {%- if mode != 'html' -%}
 {%- for n in range(links|length) -%}
 [{{ n }}] {{ links[n] }}
