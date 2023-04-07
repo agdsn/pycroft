@@ -65,19 +65,15 @@ $(function () {
     split_rows.last().find(".split-add-button").removeClass("hidden");
 
   document.querySelector("#accept_selected").addEventListener('click', function (element){
-      var ids = []
+      var ids = [];
         $('#transactions_unconfirmed').bootstrapTable('getSelections').forEach(function (element){
-            alert(element["id"]);
-            ids.push(element["id"])
+            ids.push(element["id"]);
         })
-
-      alert(window.location.protocol +window.location.host + "/transaction/confirm_selected")
       if(ids.length > 0)
       $.ajax({
           type: "POST",
-          contentType: 'application/json; charset=utf-8',
-          url: window.location.protocol + window.location.host + "/transaction/confirm_selected",
-          data: JSON.stringify({ids: ids}),
+          url: "/finance/transaction/confirm_selected",
+          data: {ids: ids},
           success: function (result) {
              console.log(result);
           },
@@ -86,8 +82,7 @@ $(function () {
           },
           dataType: "json"
         });
-      //window.location.reload()
-  //
+      setTimeout(() => { window.location.reload(); }, 500);
   })
 });
 

@@ -897,15 +897,20 @@ def transaction_confirm(transaction_id):
     flash('Transaktion bestätigt.', 'success')
     return redirect(url_for('.transactions_unconfirmed'))
 
-@bp.route('/transaction/confirm_selected', methods=['GET', 'POST'])
+
+@bp.route('/transaction/confirm_selected', methods=['POST'])
 @access.require('finance_change')
 def transactions_confirm_selected():
-    ids = request.form.getlist("Ids", [])
-    print(ids)
+    """
+    Confirms the unconfirmed transactions that where selected by the user in the frontend
+    Javascript is used to post
+    """
+    ids = request.form.getlist("ids[]")
     for id in ids:
-        transaction = Transaction.q.filter_by(confirmed=False).filter(id=id)
-        transaction_confirm(transaction, current_user)
-        session.commit()
+        if id.isnumeric():
+            transaction = Transaction.get(int(id))
+            lib.finance.transaction_confirm(transaction, current_user)
+            session.commit()
     return redirect(url_for('.transactions_unconfirmed'))
 
 @bp.route('/transaction/confirm', methods=['GET', 'POST'])
