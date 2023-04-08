@@ -898,7 +898,7 @@ def transaction_confirm(transaction_id):
     return redirect(url_for('.transactions_unconfirmed'))
 
 
-@bp.route('/transaction/confirm_selected', methods=['POST'])
+@bp.route('/transaction/confirm_selected', methods=['GET', 'POST'])
 @access.require('finance_change')
 def transactions_confirm_selected():
     """
