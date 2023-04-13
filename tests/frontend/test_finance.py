@@ -374,3 +374,29 @@ class TestPaymentReminderMail:
             client.assert_redirects(
                 "finance.payment_reminder_mail", method="POST", data={"confirm": True}
             )
+
+
+class TestTransactionsShow:
+    @pytest.fixture(scope="class")
+    def transaction(self, class_session) -> Transaction:
+        t = f.TransactionFactory()
+        class_session.flush()
+        return t
+
+    def test_transactions_show(self, client: TestClient, transaction: Transaction):
+        with client.renders_template("finance/transactions_show.html"):
+            client.assert_url_ok(
+                url_for("finance.transactions_show", transaction_id=transaction.id)
+            )
+
+    def test_transactions_show_404(self, client: TestClient):
+        client.assert_url_response_code(
+            url_for("finance.transactions_show", transaction_id=9999), code=404
+        )
+
+    def test_transactions_show_json(self, client: TestClient, transaction: Transaction):
+        resp = client.assert_url_ok(
+            url_for("finance.transactions_show_json", transaction_id=transaction.id)
+        )
+        # 1 simple transaction = 2 splits
+        assert len(resp.json["items"]) == 2
