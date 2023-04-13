@@ -1,8 +1,8 @@
 import re
 
 from flask import url_for
+from markupsafe import Markup
 from wtforms import Form, Field, ValidationError
-from wtforms.widgets import HTMLString
 
 from pycroft.helpers.net import mac_regex
 from pycroft.lib.host import get_conflicting_interface
@@ -37,7 +37,7 @@ class UniqueMac:
         owner = ci.host.owner
         url = url_for("user.user_show", user_id=owner.id, _anchor="hosts")
         raise ValidationError(
-            HTMLString(
+            Markup(
                 f"{confirmable_div(self.annex_field)}MAC bereits in Verwendung!<br/>Nutzer: "
                 f'<a target="_blank" href="{url}#hosts">{owner.name}</a></div>'
             )
