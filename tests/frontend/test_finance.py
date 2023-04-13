@@ -400,3 +400,60 @@ class TestTransactionsShow:
         )
         # 1 simple transaction = 2 splits
         assert len(resp.json["items"]) == 2
+
+
+class TestNoTransactionsUnconfirmed:
+    def test_transactions_unconfirmed(self, client: TestClient):
+        with client.renders_template("finance/transactions_unconfirmed.html"):
+            client.assert_ok("finance.transactions_unconfirmed")
+
+    def test_transactions_unconfirmed_json(self, client: TestClient):
+        resp = client.assert_url_ok(url_for("finance.transactions_unconfirmed_json"))
+        assert len(resp.json["items"]) == 0
+
+
+@pytest.fixture(scope="class")
+def unconfirmed_transaction(class_session) -> Transaction:
+    t = f.TransactionFactory(confirmed=False)
+    class_session.flush()
+    return t
+
+
+@pytest.fixture(scope="class")
+def confirmed_transaction(class_session) -> Transaction:
+    t = f.TransactionFactory(confirmed=True)
+    class_session.flush()
+    return t
+
+
+@pytest.mark.usefixtures("unconfirmed_transaction")
+class TestUnconfirmedTransaction:
+    def test_transactions_unconfirmed(self, client: TestClient):
+        with client.renders_template("finance/transactions_unconfirmed.html"):
+            client.assert_ok("finance.transactions_unconfirmed")
+
+    def test_transactions_unconfirmed_json(self, client: TestClient):
+        resp = client.assert_url_ok(url_for("finance.transactions_unconfirmed_json"))
+        assert len(resp.json["items"]) == 1
+
+    def test_transactions_all(self, client: TestClient):
+        with client.renders_template("finance/transactions_overview.html"):
+            client.assert_ok("finance.transactions_all")
+
+    @pytest.mark.parametrize(
+        "query_args",
+        [
+            {},
+            {"filter": "nonuser"},
+            {"filter": "user"},
+            {"after": "2000-01-15"},
+            {"before": "2060-01-01"},
+        ],
+    )
+    def test_transactions_all_json(
+        self, client: TestClient, query_args: dict[str, str]
+    ):
+        resp = client.assert_url_ok(
+            url_for("finance.transactions_all_json", **query_args)
+        )
+        assert resp.json["items"]
