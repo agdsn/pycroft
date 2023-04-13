@@ -543,3 +543,28 @@ class TestTransactionDelete:
             client.assert_url_ok(
                 url_for("finance.transaction_delete", transaction_id=transaction.id)
             )
+
+
+class TestTransactionCreate:
+    def test_transaction_create_get(self, client: TestClient):
+        with client.renders_template("finance/transactions_create.html"):
+            client.assert_ok("finance.transactions_create")
+
+    def test_transaction_create_post(self, client: TestClient, session: Session):
+        # see TransactionCreateForm
+        formdata = {
+            "valid_on": "2021-01-01",
+            "description": "Test",
+            "splits-0-account": "-",
+            "splits-0-account_id": "1",
+            "splits-0-amount": "1000",
+            "splits-1-account": "-",
+            "splits-1-account_id": "2",
+            "splits-1-amount": "-1000",
+        }
+        client.assert_url_redirects(
+            url_for("finance.transactions_create"),
+            method="POST",
+            data=formdata,
+            # return url depends on id of created transaction
+        )

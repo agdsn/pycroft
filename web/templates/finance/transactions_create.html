@@ -12,7 +12,7 @@
 
 {% block content %}
     <form method="POST" action="{{ url_for('.transactions_create') }}" role="form">
-        {{ form.csrf_token() }}
+        {% if "csrf_token" in form %} {{ form.csrf_token() }} {% endif %}
         <div class="row">
             <div class="col-sm-3">
                 {{ form['description'](render_mode="basic") }}
