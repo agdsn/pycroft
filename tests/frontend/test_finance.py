@@ -501,3 +501,45 @@ class TestConfirmation:
             data={},
             expected_location=url_for("finance.transactions_unconfirmed"),
         )
+
+
+class TestTransactionDelete:
+    @pytest.fixture(scope="class", autouse=True)
+    def transaction(self, class_session) -> Transaction:
+        t = f.TransactionFactory(confirmed=False)
+        class_session.flush()
+        return t
+
+    def test_transaction_delete_post(
+        self, client: TestClient, transaction: Transaction
+    ):
+        assert transaction.id is not None
+        client.assert_url_redirects(
+            url_for("finance.transaction_delete", transaction_id=transaction.id),
+            method="POST",
+            data={},
+            expected_location=url_for("finance.transactions_unconfirmed"),
+        )
+
+    def test_transaction_delete_404(self, client: TestClient):
+        client.assert_url_response_code(
+            url_for("finance.transaction_delete", transaction_id=9999), code=404
+        )
+
+    def test_transaction_delete_already_confirmed(
+        self, client: TestClient, confirmed_transaction: Transaction
+    ):
+        with client.flashes_message("bereits bestätigt", "error"):
+            client.assert_url_response_code(
+                url_for(
+                    "finance.transaction_delete",
+                    transaction_id=confirmed_transaction.id,
+                ),
+                code=400,
+            )
+
+    def test_transaction_delete_get(self, client, transaction: Transaction):
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(
+                url_for("finance.transaction_delete", transaction_id=transaction.id)
+            )
