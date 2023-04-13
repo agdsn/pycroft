@@ -117,6 +117,8 @@ def datetime_filter(dt, format=None):
     """
     if dt is None:
         return "k/A"
+    if isinstance(dt, str):
+        return dt
     return flask_babel.format_datetime(dt, format)
 
 
