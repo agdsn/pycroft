@@ -56,4 +56,5 @@ def invalid_entry(raw_entry):
 
 def test_invalid_vlan_name_raises(invalid_entry):
     with pytest.raises(ParsingError):
-        invalid_entry.vlans  # pylint: disable=pointless-statement
+        # noinspection PyStatementEffect
+        invalid_entry.vlans  # noqa: B018

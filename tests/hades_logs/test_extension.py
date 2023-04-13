@@ -87,7 +87,8 @@ class TestConfiguredInitialization(ConfiguredFlaskAppTestBase):
     def test_proxy_object_accessible(self, app):
         try:
             with app.app_context():
-                hades_logs  # pylint: disable=pointless-statement
+                # noinspection PyStatementEffect
+                hades_logs  # noqa: B018
         except RuntimeError:
             pytest.fail("`hades_logs` inaccessible although in app context")
 
