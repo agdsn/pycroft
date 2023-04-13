@@ -920,7 +920,7 @@ def transaction_confirm_all():
         with handle_errors(session):
             lib.finance.transaction_confirm_all(current_user)
             session.commit()
-    except PycroftException:
+    except PycroftException:  # pragma: no cover
         return default_response()
 
     flash("Alle Transaktionen wurden bestätigt.", 'success')

@@ -457,3 +457,47 @@ class TestUnconfirmedTransaction:
             url_for("finance.transactions_all_json", **query_args)
         )
         assert resp.json["items"]
+
+
+class TestConfirmation:
+    @pytest.mark.parametrize("method", ["GET", "POST"])
+    def test_confirmation_post(
+        self, client: TestClient, unconfirmed_transaction: Transaction, method: str
+    ):
+        client.assert_url_redirects(
+            url_for(
+                "finance.transaction_confirm", transaction_id=unconfirmed_transaction.id
+            ),
+            method=method,
+            expected_location=url_for("finance.transactions_unconfirmed"),
+        )
+
+    def test_confirm_nonexistent(self, client: TestClient):
+        with client.flashes_message("existiert nicht", "error"):
+            client.assert_url_response_code(
+                url_for("finance.transaction_confirm", transaction_id=9999), code=404
+            )
+
+    def test_confirm_confirmed_transaction(
+        self, client: TestClient, confirmed_transaction: Transaction
+    ):
+        with client.flashes_message("bereits bestätigt", "error"):
+            client.assert_url_response_code(
+                url_for(
+                    "finance.transaction_confirm",
+                    transaction_id=confirmed_transaction.id,
+                ),
+                code=400,
+            )
+
+    def test_transaction_confirm_all_get(self, client: TestClient):
+        with client.renders_template("generic_form.html"):
+            client.assert_ok("finance.transaction_confirm_all")
+
+    def test_transaction_confirm_all_post(self, client: TestClient):
+        client.assert_url_redirects(
+            url_for("finance.transaction_confirm_all"),
+            method="POST",
+            data={},
+            expected_location=url_for("finance.transactions_unconfirmed"),
+        )

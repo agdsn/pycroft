@@ -29,6 +29,7 @@ if t.TYPE_CHECKING:
 
 class LogEntry(IntegerIdModel):
     discriminator: Mapped[str50] = mapped_column("type")
+    discriminator: Mapped[str50 | None] = mapped_column("type")
     __mapper_args__ = {"polymorphic_on": discriminator}
 
     # variably sized string
