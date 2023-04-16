@@ -23,6 +23,7 @@ from pycroft.model.finance import (
     Split,
 )
 from tests.frontend.assertions import TestClient
+from .fixture_helpers import serialize_formdata
 
 
 pytestmark = pytest.mark.usefixtures("treasurer_logged_in", "session")
@@ -550,18 +551,28 @@ class TestTransactionCreate:
         with client.renders_template("finance/transactions_create.html"):
             client.assert_ok("finance.transactions_create")
 
-    def test_transaction_create_post(self, client: TestClient, session: Session):
+    @pytest.fixture(scope="class")
+    def account1(self, class_session):
+        return f.AccountFactory()
+
+    @pytest.fixture(scope="class")
+    def account2(self, class_session):
+        return f.AccountFactory()
+
+    def test_transaction_create_post(
+        self, client: TestClient, session: Session, account1, account2
+    ):
         # see TransactionCreateForm
-        formdata = {
-            "valid_on": "2021-01-01",
-            "description": "Test",
-            "splits-0-account": "-",
-            "splits-0-account_id": "1",
-            "splits-0-amount": "1000",
-            "splits-1-account": "-",
-            "splits-1-account_id": "2",
-            "splits-1-amount": "-1000",
-        }
+        formdata = serialize_formdata(
+            {
+                "valid_on": "2021-01-01",
+                "description": "Test",
+                "splits": [
+                    {"account": "-", "account_id": account1.id, "amount": 1000},
+                    {"account": "-", "account_id": account2.id, "amount": -1000},
+                ],
+            }
+        )
         client.assert_url_redirects(
             url_for("finance.transactions_create"),
             method="POST",
