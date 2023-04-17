@@ -17,7 +17,9 @@ class MembershipFactory(BaseFactory):
         exclude = ('begins_at', 'ends_at')
     begins_at = datetime.now(timezone.utc)
     ends_at = None
-    active_during = interval.closedopen(begins_at, ends_at)
+    active_during = factory.LazyAttribute(
+        lambda m: interval.closedopen(m.begins_at, m.ends_at)
+    )
 
     user = factory.SubFactory(UserFactory)
     # note: group is non-nullable!
