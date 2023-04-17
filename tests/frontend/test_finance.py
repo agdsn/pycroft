@@ -14,6 +14,7 @@ from sqlalchemy import select
 
 import tests.factories as f
 from pycroft import Config
+from pycroft.helpers.date import last_day_of_month
 from pycroft.lib.finance import simple_transaction
 from pycroft.model.finance import (
     BankAccount,
@@ -21,6 +22,7 @@ from pycroft.model.finance import (
     Account,
     Transaction,
     Split,
+    MembershipFee,
 )
 from tests.frontend.assertions import TestClient
 from .fixture_helpers import serialize_formdata
@@ -578,4 +580,80 @@ class TestTransactionCreate:
             method="POST",
             data=formdata,
             # return url depends on id of created transaction
+        )
+
+
+@pytest.fixture(scope="class")
+def membership_fee(class_session) -> MembershipFee:
+    return f.finance.MembershipFeeFactory(
+        begins_on=(b := datetime.fromisoformat("2010-01-01")),
+        ends_on=last_day_of_month(b),
+    )
+
+
+class TestMembershipFeeBook:
+    def test_membership_fee_book_get(self, client, membership_fee):
+        with client.renders_template("finance/membership_fee_book.html"):
+            client.assert_url_ok(
+                url_for("finance.membership_fee_book", fee_id=membership_fee.id)
+            )
+
+    def test_membership_fee_book_404(self, client):
+        with client.flashes_message("existiert nicht", category="error"):
+            client.assert_url_response_code(
+                url_for("finance.membership_fee_book", fee_id=9999),
+                code=404,
+            )
+
+    def test_membership_fee_post(self, client, membership_fee):
+        with client.flashes_message("neue Buchungen erstellt", category="success"):
+            client.assert_url_redirects(
+                url_for("finance.membership_fee_book", fee_id=membership_fee.id),
+                method="POST",
+                data={},
+                expected_location=url_for("finance.membership_fees"),
+            )
+
+
+class TestMembershipFeeUsersDue:
+    """Tests for the table endpoint listing the users for which a fee is due"""
+
+    @pytest.fixture
+    def user_not_paid(self, session, config):
+        u = f.UserFactory(
+            with_membership=True,
+            membership__group=config.member_group,
+            membership__begins_at=datetime.fromisoformat("2000-01-01"),
+            registered_at="2000-01-01",
+        )
+        session.flush()
+        return u
+
+    def test_nobody(self, client, membership_fee):
+        resp = client.assert_url_ok(
+            url_for(
+                "finance.membership_fee_users_due_json",
+                fee_id=membership_fee.id,
+            )
+        )
+        assert "items" in resp.json
+        assert resp.json["items"] == []
+
+    def test_somebody(self, session, client, membership_fee, user_not_paid):
+        resp = client.assert_url_ok(
+            url_for(
+                "finance.membership_fee_users_due_json",
+                fee_id=membership_fee.id,
+            )
+        )
+        assert "items" in resp.json
+        assert len(resp.json["items"]) == 1
+
+    def test_404(self, client):
+        client.assert_url_response_code(
+            url_for(
+                "finance.membership_fee_users_due_json",
+                fee_id=9999,
+            ),
+            code=404,
         )
