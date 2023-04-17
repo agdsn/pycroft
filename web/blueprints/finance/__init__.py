@@ -829,7 +829,7 @@ def transactions_unconfirmed_json():
 
         items.append(
             {
-                'id': transaction.id,
+"id": transaction.id,
                 'description': T.description.value(
                     href=url_for(".transactions_show", transaction_id=transaction.id),
                     title=transaction.description,
