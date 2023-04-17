@@ -657,3 +657,77 @@ class TestMembershipFeeUsersDue:
             ),
             code=404,
         )
+
+
+class TestMembershipFees:
+    def test_membership_fees_get(self, client: TestClient):
+        with client.renders_template("finance/membership_fees.html"):
+            client.assert_ok("finance.membership_fees")
+
+    def test_membership_fees_json(self, client: TestClient, membership_fee):
+        resp = client.assert_ok("finance.membership_fees_json")
+        assert "items" in resp.json
+        assert len(resp.json["items"]) > 0
+
+
+class MembershipFeeTest:
+    @pytest.fixture(scope="session")
+    def formdata(self) -> dict[str, str]:
+        # follows MembershipFeeCreateForm
+        return {
+            "begins_on": "2021-01-01",
+            "ends_on": "2021-01-31",
+            "name": "Semesterbeitrag",
+            "regular_fee": "30.00",
+            "booking_begin": "1",
+            "booking_end": "14",
+            "payment_deadline": "14",
+            "payment_deadline_final": "30",
+        }
+
+
+class TestMembershipFeeCreate(MembershipFeeTest):
+    @pytest.fixture(scope="class", params=[0, 1, 2])
+    def previous_fees(self, class_session, request):
+        f.finance.MembershipFeeFactory.create_batch(request.param)
+
+    def test_get(self, client: TestClient):
+        with client.renders_template("finance/membership_fee_create.html"):
+            client.assert_ok("finance.membership_fee_create")
+
+    def test_post_invalid_data(self, client):
+        client.assert_ok(
+            "finance.membership_fee_create",
+            method="POST",
+            data={},
+        )
+
+    def test_post(self, client: TestClient, previous_fees, formdata):
+        client.assert_redirects(
+            "finance.membership_fee_create",
+            method="POST",
+            data=formdata,
+            expected_location=url_for("finance.membership_fees"),
+        )
+
+
+class TestMembershipFeeEdit(MembershipFeeTest):
+    def test_get(self, client, membership_fee):
+        with client.renders_template("finance/membership_fee_edit.html"):
+            client.assert_url_ok(
+                url_for("finance.membership_fee_edit", fee_id=membership_fee.id)
+            )
+
+    def test_404(self, client):
+        client.assert_url_response_code(
+            url_for("finance.membership_fee_edit", fee_id=9999),
+            code=404,
+        )
+
+    def test_post_invalid_data(self, client, membership_fee, formdata):
+        client.assert_url_redirects(
+            url_for("finance.membership_fee_edit", fee_id=membership_fee.id),
+            method="POST",
+            data=formdata,
+            expected_location=url_for("finance.membership_fees"),
+        )
