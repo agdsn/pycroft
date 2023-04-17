@@ -810,7 +810,6 @@ def transactions_unconfirmed():
         unconfirmed_transactions_table=UnconfirmedTransactionsTable(
             data_url=url_for(".transactions_unconfirmed_json"))
     )
-"""TODO: Add post mapping which forges the Payload send by JS and accepts the selected"""
 
 @bp.route('/transactions/unconfirmed/json')
 def transactions_unconfirmed_json():
