@@ -64,25 +64,25 @@ $(function () {
     // Show add button in last row
     split_rows.last().find(".split-add-button").removeClass("hidden");
 
-  document.querySelector("#accept_selected").addEventListener('click', function (element){
+  document.querySelector("#accept_selected").addEventListener('click', function (element) {
       var ids = [];
-        $('#transactions_unconfirmed').bootstrapTable('getSelections').forEach(function (element){
-            ids.push(element["id"]);
-        })
-      if(ids.length > 0)
-      $.ajax({
-          type: "POST",
-          url: "/finance/transaction/confirm_selected",
-          data: {ids: ids},
-          success: function (result) {
-             console.log(result);
-          },
-          error:function (error){
-              console.log(error);
-          },
-          dataType: "json"
-        });
-      setTimeout(() => { window.location.reload(); }, 500);
+      const table = $('#transactions_unconfirmed');
+      table.bootstrapTable('getSelections').forEach(function (element) {
+          ids.push(element["id"]);
+      })
+      if (ids.length > 0) {
+          fetch("/finance/transaction/confirm_selected", {
+              method: "POST",
+              body: JSON.stringify({ids: ids}),
+              headers: {"Content-Type": "application/json"},
+          })
+              .then(r => {
+                  console.debug("Got response, reloading page");
+                  // TODO: something to inform the user that the action took place
+                  table.bootstrapTable('refresh');
+              })
+              .catch(e => console.error(`Got error when submitting transactions to confirm: ${e}`));
+      }
   })
 });
 
