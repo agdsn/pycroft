@@ -5,11 +5,10 @@ from datetime import datetime
 
 from flask import url_for
 from flask_wtf import FlaskForm as Form
-from markupsafe import escape
+from markupsafe import escape, Markup
 from wtforms import Field
 from wtforms.validators import (
     Regexp, ValidationError, DataRequired, Email, Optional)
-from wtforms.widgets import HTMLString
 from wtforms_widgets.fields.core import TextField, TextAreaField, BooleanField, \
     QuerySelectField, FormField, \
     QuerySelectMultipleField, DateField, IntegerField, TimeField
@@ -94,11 +93,13 @@ class UniqueName:
                   {escape(user.name)}
                 </a>""" for user in conflicting_inhabitants
         )
-        raise ValidationError(HTMLString(
-            f'{confirmable_div(self.force_field)}'
-            f'* Ähnliche Benutzer existieren bereits in diesem Zimmer:'
-            f'<br/>Nutzer: {user_links}</div>'
-        ))
+        raise ValidationError(
+            Markup(
+                f"{confirmable_div(self.force_field)}"
+                f"* Ähnliche Benutzer existieren bereits in diesem Zimmer:"
+                f"<br/>Nutzer: {user_links}</div>"
+            )
+        )
 
 
 class UniqueEmail:
@@ -128,10 +129,12 @@ class UniqueEmail:
             f"""<a target="_blank" href="{url_for('user.user_show', user_id=user.id)}"/>
                 {escape(user.name)}</a>""" for user in conflicting_users
         )
-        raise ValidationError(HTMLString(
-            f"{confirmable_div(self.force_field)}* E-Mail bereits in Verwendung!"
-            f"<br/>Nutzer:{user_links}</div>"
-        ))
+        raise ValidationError(
+            Markup(
+                f"{confirmable_div(self.force_field)}* E-Mail bereits in Verwendung!"
+                f"<br/>Nutzer:{user_links}</div>"
+            )
+        )
 
 
 class UserSearchForm(Form):

@@ -94,8 +94,8 @@ class TransactionFactory(BaseFactory):
     description = Faker('word')
     author = SubFactory('tests.factories.user.UserFactory')
 
-    posted_at = Faker('date')
-    valid_on = Faker('date')
+    posted_at = Faker("date_time_this_decade")
+    valid_on = LazyAttribute(lambda o: o.posted_at.date())
 
     confirmed = True
 

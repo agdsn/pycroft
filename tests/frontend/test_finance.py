@@ -14,6 +14,7 @@ from sqlalchemy import select
 
 import tests.factories as f
 from pycroft import Config
+from pycroft.helpers.date import last_day_of_month
 from pycroft.lib.finance import simple_transaction
 from pycroft.model.finance import (
     BankAccount,
@@ -21,8 +22,10 @@ from pycroft.model.finance import (
     Account,
     Transaction,
     Split,
+    MembershipFee,
 )
 from tests.frontend.assertions import TestClient
+from .fixture_helpers import serialize_formdata
 
 
 pytestmark = pytest.mark.usefixtures("treasurer_logged_in", "session")
@@ -374,3 +377,357 @@ class TestPaymentReminderMail:
             client.assert_redirects(
                 "finance.payment_reminder_mail", method="POST", data={"confirm": True}
             )
+
+
+class TestTransactionsShow:
+    @pytest.fixture(scope="class")
+    def transaction(self, class_session) -> Transaction:
+        t = f.TransactionFactory()
+        class_session.flush()
+        return t
+
+    def test_transactions_show(self, client: TestClient, transaction: Transaction):
+        with client.renders_template("finance/transactions_show.html"):
+            client.assert_url_ok(
+                url_for("finance.transactions_show", transaction_id=transaction.id)
+            )
+
+    def test_transactions_show_404(self, client: TestClient):
+        client.assert_url_response_code(
+            url_for("finance.transactions_show", transaction_id=9999), code=404
+        )
+
+    def test_transactions_show_json(self, client: TestClient, transaction: Transaction):
+        resp = client.assert_url_ok(
+            url_for("finance.transactions_show_json", transaction_id=transaction.id)
+        )
+        # 1 simple transaction = 2 splits
+        assert len(resp.json["items"]) == 2
+
+
+class TestNoTransactionsUnconfirmed:
+    def test_transactions_unconfirmed(self, client: TestClient):
+        with client.renders_template("finance/transactions_unconfirmed.html"):
+            client.assert_ok("finance.transactions_unconfirmed")
+
+    def test_transactions_unconfirmed_json(self, client: TestClient):
+        resp = client.assert_url_ok(url_for("finance.transactions_unconfirmed_json"))
+        assert len(resp.json["items"]) == 0
+
+
+@pytest.fixture(scope="class")
+def unconfirmed_transaction(class_session) -> Transaction:
+    t = f.TransactionFactory(confirmed=False)
+    class_session.flush()
+    return t
+
+
+@pytest.fixture(scope="class")
+def confirmed_transaction(class_session) -> Transaction:
+    t = f.TransactionFactory(confirmed=True)
+    class_session.flush()
+    return t
+
+
+@pytest.mark.usefixtures("unconfirmed_transaction")
+class TestUnconfirmedTransaction:
+    def test_transactions_unconfirmed(self, client: TestClient):
+        with client.renders_template("finance/transactions_unconfirmed.html"):
+            client.assert_ok("finance.transactions_unconfirmed")
+
+    def test_transactions_unconfirmed_json(self, client: TestClient):
+        resp = client.assert_url_ok(url_for("finance.transactions_unconfirmed_json"))
+        assert len(resp.json["items"]) == 1
+
+    def test_transactions_all(self, client: TestClient):
+        with client.renders_template("finance/transactions_overview.html"):
+            client.assert_ok("finance.transactions_all")
+
+    @pytest.mark.parametrize(
+        "query_args",
+        [
+            {},
+            {"filter": "nonuser"},
+            {"filter": "user"},
+            {"after": "2000-01-15"},
+            {"before": "2060-01-01"},
+        ],
+    )
+    def test_transactions_all_json(
+        self, client: TestClient, query_args: dict[str, str]
+    ):
+        resp = client.assert_url_ok(
+            url_for("finance.transactions_all_json", **query_args)
+        )
+        assert resp.json["items"]
+
+
+class TestConfirmation:
+    @pytest.mark.parametrize("method", ["GET", "POST"])
+    def test_confirmation_post(
+        self, client: TestClient, unconfirmed_transaction: Transaction, method: str
+    ):
+        client.assert_url_redirects(
+            url_for(
+                "finance.transaction_confirm", transaction_id=unconfirmed_transaction.id
+            ),
+            method=method,
+            expected_location=url_for("finance.transactions_unconfirmed"),
+        )
+
+    def test_confirm_nonexistent(self, client: TestClient):
+        with client.flashes_message("existiert nicht", "error"):
+            client.assert_url_response_code(
+                url_for("finance.transaction_confirm", transaction_id=9999), code=404
+            )
+
+    def test_confirm_confirmed_transaction(
+        self, client: TestClient, confirmed_transaction: Transaction
+    ):
+        with client.flashes_message("bereits bestätigt", "error"):
+            client.assert_url_response_code(
+                url_for(
+                    "finance.transaction_confirm",
+                    transaction_id=confirmed_transaction.id,
+                ),
+                code=400,
+            )
+
+    def test_transaction_confirm_all_get(self, client: TestClient):
+        with client.renders_template("generic_form.html"):
+            client.assert_ok("finance.transaction_confirm_all")
+
+    def test_transaction_confirm_all_post(self, client: TestClient):
+        client.assert_url_redirects(
+            url_for("finance.transaction_confirm_all"),
+            method="POST",
+            data={},
+            expected_location=url_for("finance.transactions_unconfirmed"),
+        )
+
+
+class TestTransactionDelete:
+    @pytest.fixture(scope="class", autouse=True)
+    def transaction(self, class_session) -> Transaction:
+        t = f.TransactionFactory(confirmed=False)
+        class_session.flush()
+        return t
+
+    def test_transaction_delete_post(
+        self, client: TestClient, transaction: Transaction
+    ):
+        assert transaction.id is not None
+        client.assert_url_redirects(
+            url_for("finance.transaction_delete", transaction_id=transaction.id),
+            method="POST",
+            data={},
+            expected_location=url_for("finance.transactions_unconfirmed"),
+        )
+
+    def test_transaction_delete_404(self, client: TestClient):
+        client.assert_url_response_code(
+            url_for("finance.transaction_delete", transaction_id=9999), code=404
+        )
+
+    def test_transaction_delete_already_confirmed(
+        self, client: TestClient, confirmed_transaction: Transaction
+    ):
+        with client.flashes_message("bereits bestätigt", "error"):
+            client.assert_url_response_code(
+                url_for(
+                    "finance.transaction_delete",
+                    transaction_id=confirmed_transaction.id,
+                ),
+                code=400,
+            )
+
+    def test_transaction_delete_get(self, client, transaction: Transaction):
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(
+                url_for("finance.transaction_delete", transaction_id=transaction.id)
+            )
+
+
+class TestTransactionCreate:
+    def test_transaction_create_get(self, client: TestClient):
+        with client.renders_template("finance/transactions_create.html"):
+            client.assert_ok("finance.transactions_create")
+
+    @pytest.fixture(scope="class")
+    def account1(self, class_session):
+        return f.AccountFactory()
+
+    @pytest.fixture(scope="class")
+    def account2(self, class_session):
+        return f.AccountFactory()
+
+    def test_transaction_create_post(
+        self, client: TestClient, session: Session, account1, account2
+    ):
+        # see TransactionCreateForm
+        formdata = serialize_formdata(
+            {
+                "valid_on": "2021-01-01",
+                "description": "Test",
+                "splits": [
+                    {"account": "-", "account_id": account1.id, "amount": 1000},
+                    {"account": "-", "account_id": account2.id, "amount": -1000},
+                ],
+            }
+        )
+        client.assert_url_redirects(
+            url_for("finance.transactions_create"),
+            method="POST",
+            data=formdata,
+            # return url depends on id of created transaction
+        )
+
+
+@pytest.fixture(scope="class")
+def membership_fee(class_session) -> MembershipFee:
+    return f.finance.MembershipFeeFactory(
+        begins_on=(b := datetime.fromisoformat("2010-01-01")),
+        ends_on=last_day_of_month(b),
+    )
+
+
+class TestMembershipFeeBook:
+    def test_membership_fee_book_get(self, client, membership_fee):
+        with client.renders_template("finance/membership_fee_book.html"):
+            client.assert_url_ok(
+                url_for("finance.membership_fee_book", fee_id=membership_fee.id)
+            )
+
+    def test_membership_fee_book_404(self, client):
+        with client.flashes_message("existiert nicht", category="error"):
+            client.assert_url_response_code(
+                url_for("finance.membership_fee_book", fee_id=9999),
+                code=404,
+            )
+
+    def test_membership_fee_post(self, client, membership_fee):
+        with client.flashes_message("neue Buchungen erstellt", category="success"):
+            client.assert_url_redirects(
+                url_for("finance.membership_fee_book", fee_id=membership_fee.id),
+                method="POST",
+                data={},
+                expected_location=url_for("finance.membership_fees"),
+            )
+
+
+class TestMembershipFeeUsersDue:
+    """Tests for the table endpoint listing the users for which a fee is due"""
+
+    @pytest.fixture
+    def user_not_paid(self, session, config):
+        u = f.UserFactory(
+            with_membership=True,
+            membership__group=config.member_group,
+            membership__begins_at=datetime.fromisoformat("2000-01-01"),
+            registered_at="2000-01-01",
+        )
+        session.flush()
+        return u
+
+    def test_nobody(self, client, membership_fee):
+        resp = client.assert_url_ok(
+            url_for(
+                "finance.membership_fee_users_due_json",
+                fee_id=membership_fee.id,
+            )
+        )
+        assert "items" in resp.json
+        assert resp.json["items"] == []
+
+    def test_somebody(self, session, client, membership_fee, user_not_paid):
+        resp = client.assert_url_ok(
+            url_for(
+                "finance.membership_fee_users_due_json",
+                fee_id=membership_fee.id,
+            )
+        )
+        assert "items" in resp.json
+        assert len(resp.json["items"]) == 1
+
+    def test_404(self, client):
+        client.assert_url_response_code(
+            url_for(
+                "finance.membership_fee_users_due_json",
+                fee_id=9999,
+            ),
+            code=404,
+        )
+
+
+class TestMembershipFees:
+    def test_membership_fees_get(self, client: TestClient):
+        with client.renders_template("finance/membership_fees.html"):
+            client.assert_ok("finance.membership_fees")
+
+    def test_membership_fees_json(self, client: TestClient, membership_fee):
+        resp = client.assert_ok("finance.membership_fees_json")
+        assert "items" in resp.json
+        assert len(resp.json["items"]) > 0
+
+
+class MembershipFeeTest:
+    @pytest.fixture(scope="session")
+    def formdata(self) -> dict[str, str]:
+        # follows MembershipFeeCreateForm
+        return {
+            "begins_on": "2021-01-01",
+            "ends_on": "2021-01-31",
+            "name": "Semesterbeitrag",
+            "regular_fee": "30.00",
+            "booking_begin": "1",
+            "booking_end": "14",
+            "payment_deadline": "14",
+            "payment_deadline_final": "30",
+        }
+
+
+class TestMembershipFeeCreate(MembershipFeeTest):
+    @pytest.fixture(scope="class", params=[0, 1, 2])
+    def previous_fees(self, class_session, request):
+        f.finance.MembershipFeeFactory.create_batch(request.param)
+
+    def test_get(self, client: TestClient):
+        with client.renders_template("finance/membership_fee_create.html"):
+            client.assert_ok("finance.membership_fee_create")
+
+    def test_post_invalid_data(self, client):
+        client.assert_ok(
+            "finance.membership_fee_create",
+            method="POST",
+            data={},
+        )
+
+    def test_post(self, client: TestClient, previous_fees, formdata):
+        client.assert_redirects(
+            "finance.membership_fee_create",
+            method="POST",
+            data=formdata,
+            expected_location=url_for("finance.membership_fees"),
+        )
+
+
+class TestMembershipFeeEdit(MembershipFeeTest):
+    def test_get(self, client, membership_fee):
+        with client.renders_template("finance/membership_fee_edit.html"):
+            client.assert_url_ok(
+                url_for("finance.membership_fee_edit", fee_id=membership_fee.id)
+            )
+
+    def test_404(self, client):
+        client.assert_url_response_code(
+            url_for("finance.membership_fee_edit", fee_id=9999),
+            code=404,
+        )
+
+    def test_post_invalid_data(self, client, membership_fee, formdata):
+        client.assert_url_redirects(
+            url_for("finance.membership_fee_edit", fee_id=membership_fee.id),
+            method="POST",
+            data=formdata,
+            expected_location=url_for("finance.membership_fees"),
+        )
