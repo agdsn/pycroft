@@ -904,12 +904,12 @@ def transactions_confirm_selected():
     Confirms the unconfirmed transactions that where selected by the user in the frontend
     Javascript is used to post
     """
-    ids = request.form.getlist("ids[]")
+    ids = request.json.get("ids", [])
+
     for id in ids:
-        if id.isnumeric():
-            transaction = Transaction.get(int(id))
-            lib.finance.transaction_confirm(transaction, current_user)
-            session.commit()
+        transaction = Transaction.get(int(id))
+        lib.finance.transaction_confirm(transaction, current_user)
+        session.commit()
     return redirect(url_for('.transactions_unconfirmed'))
 
 
