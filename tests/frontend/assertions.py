@@ -88,7 +88,7 @@ class TestClient(flask.testing.FlaskClient):
             assert resp.location == self.fully_qualify_location(expected_location)
         return resp
 
-    def assert_url_forbidden(self, url: str, method: str = "GET", **kw) -> Response:
+    def assert_url_forbidden(self, url: str, method: str = "HEAD", **kw) -> Response:
         resp = self.open(url, method=method, **kw)
         status = resp.status_code
         assert (
@@ -96,7 +96,7 @@ class TestClient(flask.testing.FlaskClient):
         ), f"Access to {url} expected to be forbidden, got status {status}"
         return resp
 
-    def assert_forbidden(self, endpoint: str, method: str = "GET", **kw) -> Response:
+    def assert_forbidden(self, endpoint: str, method: str = "HEAD", **kw) -> Response:
         return self.assert_url_forbidden(url_for(endpoint), method=method, **kw)
 
     @contextlib.contextmanager

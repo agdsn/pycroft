@@ -897,8 +897,8 @@ def transaction_confirm(transaction_id):
     return redirect(url_for('.transactions_unconfirmed'))
 
 
-@bp.route('/transaction/confirm_selected', methods=['GET', 'POST'])
-@access.require('finance_change')
+@bp.route("/transaction/confirm_selected", methods=["HEAD", "POST"])
+@access.require("finance_change")
 def transactions_confirm_selected():
     """
     Confirms the unconfirmed transactions that where selected by the user in the frontend
@@ -911,6 +911,7 @@ def transactions_confirm_selected():
             lib.finance.transaction_confirm(transaction, current_user)
             session.commit()
     return redirect(url_for('.transactions_unconfirmed'))
+
 
 @bp.route('/transaction/confirm', methods=['GET', 'POST'])
 @access.require('finance_change')
