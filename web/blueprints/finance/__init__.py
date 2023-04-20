@@ -904,7 +904,7 @@ def transactions_confirm_selected():
     Confirms the unconfirmed transactions that where selected by the user in the frontend
     Javascript is used to post
     """
-    ids = request.json.get("ids", [])
+    ids = request.json.get("ids")
 
     for id in ids:
         transaction = Transaction.get(int(id))

@@ -78,8 +78,11 @@ $(function () {
           })
               .then(r => {
                   console.debug("Got response, reloading page");
-                  // TODO: something to inform the user that the action took place
+
+                  const tost = document.getElementById('tost');
+                  tost.className = "show";
                   table.bootstrapTable('refresh');
+                  setTimeout(function(){ tost.className = tost.className.replace("show", ""); }, 1000);
               })
               .catch(e => console.error(`Got error when submitting transactions to confirm: ${e}`));
       }
