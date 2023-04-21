@@ -10,6 +10,7 @@
     :copyright: (c) 2012 by AG DSN.
 """
 import typing as t
+from collections.abc import Iterable
 from datetime import date
 from datetime import timedelta, datetime
 from functools import partial
@@ -829,8 +830,8 @@ def transactions_unconfirmed_json():
 
         items.append(
             {
-"id": transaction.id,
-                'description': T.description.value(
+                "id": transaction.id,
+                "description": T.description.value(
                     href=url_for(".transactions_show", transaction_id=transaction.id),
                     title=transaction.description,
                     new_tab=True,
@@ -870,7 +871,8 @@ def transactions_unconfirmed_json():
                         btn_class='btn-danger btn-sm'
                     )
                 ]
-            if privilege_check(current_user, 'finance_change') else [],
+                if privilege_check(current_user, "finance_change")
+                else [],
             })
 
     return jsonify(items=items)
@@ -893,8 +895,8 @@ def transaction_confirm(transaction_id):
 
     session.commit()
 
-    flash('Transaktion bestätigt.', 'success')
-    return redirect(url_for('.transactions_unconfirmed'))
+    flash("Transaktion bestätigt.", "success")
+    return redirect(url_for(".transactions_unconfirmed"))
 
 
 @bp.route("/transaction/confirm_selected", methods=["HEAD", "POST"])
@@ -904,13 +906,24 @@ def transactions_confirm_selected():
     Confirms the unconfirmed transactions that where selected by the user in the frontend
     Javascript is used to post
     """
-    ids = request.json.get("ids")
+    if not request.json:
+        return redirect(url_for(".transactions_unconfirmed"))
+
+    ids = request.json.get("ids", [])
+    if not isinstance(ids, Iterable):
+        ids = []
 
     for id in ids:
-        transaction = Transaction.get(int(id))
-        lib.finance.transaction_confirm(transaction, current_user)
-        session.commit()
-    return redirect(url_for('.transactions_unconfirmed'))
+        if isinstance(id, int):
+            transaction = Transaction.get(int(id))
+            if transaction:
+                lib.finance.transaction_confirm(transaction, current_user)
+            else:
+                flash("Transaktion existiert nicht.", "error")
+                abort(404)
+
+            session.commit()
+    return redirect(url_for(".transactions_unconfirmed"))
 
 
 @bp.route('/transaction/confirm', methods=['GET', 'POST'])
@@ -940,8 +953,8 @@ def transaction_confirm_all():
     except PycroftException:  # pragma: no cover
         return default_response()
 
-    flash("Alle Transaktionen wurden bestätigt.", 'success')
-    return redirect(url_for('.transactions_unconfirmed'))
+    flash("Alle Transaktionen wurden bestätigt.", "success")
+    return redirect(url_for(".transactions_unconfirmed"))
 
 
 @bp.route('/transaction/<int:transaction_id>/delete', methods=['GET', 'POST'])
