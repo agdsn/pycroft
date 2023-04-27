@@ -58,6 +58,7 @@ from web.blueprints.access import BlueprintAccess
 from web.blueprints.helpers.exception import handle_errors
 from web.blueprints.helpers.form import refill_room_data
 from web.blueprints.helpers.user import get_user_or_404, get_pre_member_or_404
+from web.blueprints.helpers.tenancy import get_tenancies_for_debitorenummer
 from web.blueprints.host.tables import HostTable
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.task.tables import TaskTable
@@ -1354,3 +1355,17 @@ def mail_group():
     return render_template("generic_form.html",
                            page_title="Rundmail an Gruppe",
                            form_args=form_args)
+
+
+@bp.route('user/member-request/<debitor_id>/edit')
+def get_tenancy_for_debitor(debitor_id):
+    T = TenancyTable
+    return jsonify(items=[{
+        'begins_at': date_format(tenancy.mietbeginn, formatter=date_filter),
+        'ends_at': date_format(tenancy.mietende, formatter=date_filter),
+        'room': T.room.value(
+            href=url_for('facilities.room_show', room_id=tenancy.room.id) if tenancy.room else '#',
+            title=tenancy.room.short_name if tenancy.room else tenancy.vo_suchname
+        ),
+        'status': tenancy.status.name
+    } for tenancy in get_tenancies_for_debitorenummer(debitor_id)])
