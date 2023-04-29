@@ -79,10 +79,10 @@ $(function () {
               .then(r => {
                   console.debug("Got response, reloading page");
 
-                  const tost = document.getElementById('tost');
-                  tost.className = "show";
+                  const toast = document.getElementById('toast');
+                  toast.className = "show";
                   table.bootstrapTable('refresh');
-                  setTimeout(function(){ tost.className = tost.className.replace("show", ""); }, 1000);
+                  setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 1000);
               })
               .catch(e => console.error(`Got error when submitting transactions to confirm: ${e}`));
       }

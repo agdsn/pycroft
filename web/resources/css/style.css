@@ -511,7 +511,7 @@ tr.row-membership-inactive {
         content: "" !important;
     }
 }
-#tost{
+#toast{
   visibility: hidden;
   min-width: 250px;
   margin-left: -125px;
@@ -526,6 +526,6 @@ tr.row-membership-inactive {
   bottom: 30px;
   font-size: 17px;
 }
-#tost.show {
+#toast.show {
   visibility: visible;
 }
