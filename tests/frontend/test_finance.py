@@ -2,6 +2,7 @@
 #  This file is part of the Pycroft project and licensed under the terms of
 #  the Apache License, Version 2.0. See the LICENSE file for details
 import csv
+import json
 from datetime import date, datetime
 from decimal import Decimal
 from io import StringIO
@@ -731,3 +732,60 @@ class TestMembershipFeeEdit(MembershipFeeTest):
             data=formdata,
             expected_location=url_for("finance.membership_fees"),
         )
+
+
+@pytest.mark.usefixtures("unconfirmed_transaction")
+class TestConfirmSelected:
+    def test_send_no_json(self, client: TestClient):
+        client.assert_url_redirects(
+            url_for("finance.transactions_confirm_selected"),
+            method="POST",
+            data={},
+            expected_location=url_for("finance.transactions_unconfirmed"),
+        )
+
+    def test_empty_post(self, client: TestClient):
+        client.assert_url_redirects(
+            url_for("finance.transactions_confirm_selected"),
+            method="POST",
+            data=json.dumps({}),
+            content_type="application/json",
+            expected_location=url_for("finance.transactions_unconfirmed"),
+        )
+
+    @pytest.mark.parametrize(
+        "incorrect_values", ["asdawd", "2ad", "dawda", ["acawd", "sadawd", "ad"], 2, 3]
+    )
+    def test_wrong_payload(self, incorrect_values, client: TestClient):
+        client.assert_url_redirects(
+            url_for("finance.transactions_confirm_selected"),
+            method="POST",
+            data=json.dumps({"ids": incorrect_values}),
+            content_type="application/json",
+            expected_location=url_for("finance.transactions_unconfirmed"),
+        )
+
+    @pytest.mark.parametrize("proper_values", [[1, 2, 3], [12, 8]])
+    def test_proper_payload_not_found(self, client: TestClient, proper_values):
+        client.assert_url_response_code(
+            url_for("finance.transactions_confirm_selected"),
+            method="POST",
+            data=json.dumps({"ids": proper_values}),
+            content_type="application/json",
+            code=404,
+        )
+
+    def test_confirm_selected(
+        self, client: TestClient, unconfirmed_transaction: Transaction
+    ):
+        resp = client.assert_url_ok(url_for("finance.transactions_unconfirmed_json"))
+        assert len(resp.json["items"]) >= 1
+        client.assert_url_response_code(
+            url_for("finance.transactions_confirm_selected"),
+            method="POST",
+            data=json.dumps({"ids": [unconfirmed_transaction.id]}),
+            content_type="application/json",
+            code=302,
+        )
+        resp = client.assert_url_ok(url_for("finance.transactions_unconfirmed_json"))
+        assert len(resp.json["items"]) == 0

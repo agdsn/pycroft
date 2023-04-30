@@ -1,5 +1,8 @@
 {% extends "layout.html" %}
 
+{% import "macros/resources.html" as resources %}
+
+
 {% block content %}
     {{ unconfirmed_transactions_table.render(table_id='transactions_unconfirmed') }}
 
@@ -9,4 +12,11 @@
         <span class="fa fa-check"></span>
         Alle bestätigen
     </a>
+  <button class="btn btn-success" id="accept_selected">Auswahl bestätigen</button>
+  <div id="toast">Successfully transmitted!</div>
+{% endblock %}
+
+
+{% block page_script %}
+{{ resources.link_script_file('transaction-form.js' | require) }}
 {% endblock %}

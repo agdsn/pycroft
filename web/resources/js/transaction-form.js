@@ -63,4 +63,30 @@ $(function () {
     });
     // Show add button in last row
     split_rows.last().find(".split-add-button").removeClass("hidden");
+
+    document
+        .querySelector("#accept_selected")
+        .addEventListener('click', (element) => {
+              let ids = [];
+              const table = $('#transactions_unconfirmed');
+              table.bootstrapTable('getSelections').forEach((element) => { ids.push(element["id"]); });
+              if (ids.length > 0) {
+                  fetch("/finance/transaction/confirm_selected", {
+                      method: "POST",
+                      body: JSON.stringify({ ids: ids }),
+                      headers: { "Content-Type": "application/json" },
+                  })
+                      .then(r => {
+                          console.debug("Got response, reloading page");
+
+                          const toast = document.getElementById('toast');
+                          toast.className = "show";
+                          table.bootstrapTable('refresh');
+                          setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 1000);
+                      })
+                      .catch(e => console.error(`Got error when submitting transactions to confirm: ${e}`));
+              }
+        });
 });
+
+

@@ -203,6 +203,8 @@ class TransactionTable(BootstrapTable):
 
 class UnconfirmedTransactionsTable(BootstrapTable):
     """A table for displaying unconfirmed transactions """
+    selection = Column("Checkbox", col_args={"data-checkbox": "true"})
+    id = Column("id")
     description = LinkColumn("Beschreibung")
     user = LinkColumn("Nutzer")
     room = Column("Wohnort")
