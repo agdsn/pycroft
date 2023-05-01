@@ -5,7 +5,7 @@ from decimal import Decimal
 
 import pytest
 
-from pycroft.model.types import Money
+from pycroft.model.types import Money, MACAddress
 
 
 class TestMoneyType:
@@ -42,3 +42,31 @@ class TestMoneyType:
     @pytest.mark.parametrize('rv', list(CORRECT_PAIRS.keys()))
     def test_inversion(self, rv):
         assert rv == Money.process_bind_param(Money.process_result_value(rv, None), None)
+
+class TestMACType:
+    CORRECT_VALUES = {
+        "value": ["12:12:12:12:12:12", "FF:FF:FF:FF:FF:FF", "12:da:Ac:12:22:22"],
+        "postgres": [
+            "{12}:{12}:{12}:{12}:{12}:{12}",
+            "{FF}:{FF}:{FF}:{FF}:{FF}:{FF}",
+            "{12}:{da}:{Ac}:{12}:{22}:{22}",
+        ],
+    }
+    mac = MACAddress
+
+    @pytest.mark.parametrize("rv", CORRECT_VALUES)
+    def test_bind_param(self, rv):
+        assert self.mac.process_bind_param(None, rv["value"], None) == rv.replace(
+            ":", ""
+        )
+
+    @pytest.mark.parametrize("rv", [None, ""])
+    def test_bind_param_empty_str(self, rv):
+        assert self.mac.process_bind_param(None, rv, None) is None
+
+    @pytest.mark.parametrize(
+        "rv", ["12:12:12:12", "FF:FF:FF:FF:FF", "asfdawd", "FF:FF:FF:FF:FF:wF"]
+    )
+    def test_bind_param_error(self, rv):
+        with pytest.raises(ValueError):
+            self.mac.process_bind_param(None, rv, None)
