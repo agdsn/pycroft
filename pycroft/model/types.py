@@ -94,8 +94,8 @@ class MACAddress(TypeDecorator):
 
     def process_bind_param(self, value, dialect):
         """"""
-        if value is None:
-            return value
+        if not value:
+            return None
         m = mac_regex.match(value)
         if m is None:
             raise ValueError(f'"{value}" is not a valid MAC address.')
