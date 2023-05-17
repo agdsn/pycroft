@@ -234,7 +234,7 @@ def process_transactions(
         )
         if new_activity.posted_on >= date.today():
             imported.doubtful.append(new_activity)
-        elif row_exists(session.session, _similar_activity_stmt(new_activity)):
+        elif not row_exists(session.session, _similar_activity_stmt(new_activity)):
             imported.new.append(new_activity)
         else:
             imported.old.append(new_activity)
