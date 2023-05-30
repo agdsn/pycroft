@@ -43,6 +43,7 @@ class TestMoneyType:
     def test_inversion(self, rv):
         assert rv == Money.process_bind_param(Money.process_result_value(rv, None), None)
 
+
 class TestMACType:
     CORRECT_VALUES = {
         "value": ["12:12:12:12:12:12", "FF:FF:FF:FF:FF:FF", "12:da:Ac:12:22:22"],
