@@ -55,11 +55,9 @@ class TestMACType:
     }
     mac = MACAddress
 
-    @pytest.mark.parametrize("rv", CORRECT_VALUES)
+    @pytest.mark.parametrize("rv", CORRECT_VALUES["value"])
     def test_bind_param(self, rv):
-        assert self.mac.process_bind_param(None, rv["value"], None) == rv.replace(
-            ":", ""
-        )
+        assert self.mac.process_bind_param(None, rv, None) == rv.replace(":", "")
 
     @pytest.mark.parametrize("rv", [None, ""])
     def test_bind_param_empty_str(self, rv):
