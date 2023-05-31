@@ -5,6 +5,8 @@ import logging
 import sentry_sdk
 from flask import (
     Flask, current_app, redirect, render_template, request, url_for,
+    g,
+    make_response,
 )
 from flask_babel import Babel
 from flask_login import current_user
@@ -174,10 +176,33 @@ def make_app(debug=False, hades_logs=True):
         if current_user.is_anonymous and request.blueprint not in ("login", 'api', None):
             return current_app.login_manager.unauthorized()
 
+    if app.debug:
+        register_pyinstrument(app)
     register_commands(app)
 
     return app
 
+
+def register_pyinstrument(app: Flask):
+    try:
+        from pyinstrument import Profiler
+    except ImportError:
+        app.logger.info("in debug mode, but pyinstrument not installed.")
+        return
+
+    @app.before_request
+    def before_request():
+        if "profile" in request.args:
+            g.profiler = Profiler()
+            g.profiler.start()
+
+    @app.after_request
+    def after_request(response):
+        if not hasattr(g, "profiler"):
+            return response
+        g.profiler.stop()
+        output_html = g.profiler.output_html()
+        return make_response(output_html)
 
 IGNORED_EXCEPTION_TYPES = (HTTPException,)
 

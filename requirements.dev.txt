@@ -1,5 +1,6 @@
 factory-boy~=3.2.0
 pydot~=1.4.1
+pyinstrument~=4.2.0
 pytest~=7.0.0
 pytest-timeout~=2.1.0
 pytest-cov~=4.0.0
