@@ -10,6 +10,7 @@ from pycroft.exc import PycroftException
 from pycroft.helpers.net import mac_regex, get_interface_manufacturer
 from pycroft.lib import host as lib_host
 from pycroft.lib.net import get_subnets_for_room, get_unused_ips
+from pycroft.lib.facilities import get_room
 from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.host import Host, Interface
@@ -86,13 +87,19 @@ def host_edit(host_id):
     if not form.validate():
         return default_response()
 
-    room = Room.q.filter_by(number=form.room_number.data,
-                            level=form.level.data,
-                            building=form.building.data).one()
+    # existence guaranteed by validator
     owner = User.get(form.owner_id.data)
-
     try:
         with handle_errors(session.session):
+            if not (
+                room := get_room(
+                    building_id=form.building.data,
+                    level=form.level.data,
+                    room_number=form.room_number.data,
+                )
+            ):
+                form.room_number.errors.append("room does not exist")
+                return default_response()
             lib_host.host_edit(
                 host, owner, room, form.name.data,
                 processor=current_user
@@ -130,12 +137,20 @@ def host_create():
     if not form.validate_on_submit():
         return default_response()
 
-    room = Room.q.filter_by(number=form.room_number.data,
-                            level=form.level.data,
-                            building=form.building.data).one()
+    # existence verified by validator
     owner = User.get(form.owner_id.data)
     try:
         with handle_errors(session.session):
+            if not (
+                room := get_room(
+                    building_id=form.building.data,
+                    level=form.level.data,
+                    room_number=form.room_number.data,
+                )
+            ):
+                form.room_number.errors.append("room does not exist")
+                return default_response()
+
             host = lib_host.host_create(
                 owner, room, form.name.data, processor=current_user
             )
