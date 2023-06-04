@@ -55,6 +55,7 @@ def handle_errors(session: Session):
         raise
     except Exception as e:
         traceback.print_exc()
+        logger.exception("Unexpected error when handling web response", stack_info=True)
         flash(f"Es ist ein unerwarteter Fehler aufgetreten: {e}", "error")
         session.rollback()
         raise UnexpectedException from e
