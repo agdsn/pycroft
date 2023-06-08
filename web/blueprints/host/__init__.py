@@ -93,7 +93,7 @@ def host_edit(host_id):
         with handle_errors(session.session):
             if not (
                 room := get_room(
-                    building_id=form.building.data,
+                    building_id=form.building.data.id,
                     level=form.level.data,
                     room_number=form.room_number.data,
                 )
@@ -143,7 +143,9 @@ def host_create():
         with handle_errors(session.session):
             if not (
                 room := get_room(
-                    building_id=form.building.data,
+                    # TODO I know this is a double query,
+                    # but we should fix this on the `get_room` side.
+                    building_id=form.building.data.id,
                     level=form.level.data,
                     room_number=form.room_number.data,
                 )
