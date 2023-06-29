@@ -292,7 +292,7 @@ def interface_edit(interface_id):
                 processor=current_user
             )
             session.session.commit()
-    except PycroftException:
+    except PycroftException:  # pragma: no cover
         return default_response()
 
     flash("Interface erfolgreich bearbeitet.", 'success')

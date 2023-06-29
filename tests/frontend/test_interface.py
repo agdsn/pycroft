@@ -42,7 +42,7 @@ class TestInterfaceDelete:
                 url_for("host.interface_delete", interface_id=interface.id)
             )
 
-    def test_delete_interface_post(self, session, client, interface):
+    def test_delete_interface_post(self, session, client, interface, host):
         with client.flashes_message("Interface.*gelöscht", category="success"):
             client.assert_url_redirects(
                 url_for("host.interface_delete", interface_id=interface.id),
@@ -50,3 +50,36 @@ class TestInterfaceDelete:
             )
         session.refresh(host)
         assert interface not in host.interfaces
+
+
+@pytest.mark.usefixtures("session")
+class TestInterfaceEdit:
+    def test_edit_nonexistent_interface(self, client):
+        client.assert_url_response_code(
+            url_for("host.interface_edit", interface_id=999), code=404
+        )
+
+    def test_edit_interface_get(self, client, interface):
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(
+                url_for("host.interface_edit", interface_id=interface.id)
+            )
+
+    def test_edit_interface_post_invalid_data(self, client, interface):
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(
+                url_for("host.interface_edit", interface_id=interface.id),
+                data={"mac": "invalid"},
+                method="POST",
+            )
+
+    def test_edit_interface_success(self, session, client, interface):
+        with client.flashes_message("Interface.*bearbeitet", category="success"):
+            client.assert_url_redirects(
+                url_for("host.interface_edit", interface_id=interface.id),
+                method="POST",
+                data={"mac": "00:11:22:33:44:55", "name": "new name"},
+            )
+        session.refresh(interface)
+        assert interface.mac == "00:11:22:33:44:55"
+        assert interface.name == "new name"
