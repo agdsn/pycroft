@@ -29,6 +29,26 @@ def interface(module_session, host) -> Interface:
 pytestmark = pytest.mark.usefixtures("admin_logged_in")
 
 
+class TestInterfacesJson:
+    def test_interfaces_nonexistent_host(self, client):
+        client.assert_url_response_code(
+            url_for("host.host_interfaces_json", host_id=999), code=404
+        )
+
+    def test_interfaces_json(self, client, interface):
+        resp = client.assert_url_ok(
+            url_for("host.host_interfaces_json", host_id=interface.host.id)
+        )
+
+        assert "items" in resp.json
+        items = resp.json["items"]
+        assert len(items) == 1
+        [item] = items
+        assert item["id"] == interface.id
+        assert len(item["actions"]) == 2
+        assert item["ips"] != ""
+
+
 @pytest.mark.usefixtures("session")
 class TestInterfaceDelete:
     def test_delete_nonexistent_interface(self, client):
