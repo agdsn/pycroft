@@ -119,3 +119,4 @@ unfixable = [
 "__init__.py" = ["E402", "F401"]
 "pycroft/model/_all.py" = ["F403"]
 "helpers/interactive.py" = ["F403"]
+"**/*.pyi" = ["F811"]
