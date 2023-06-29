@@ -18,7 +18,7 @@ def client(module_test_client: TestClient) -> TestClient:
 
 @pytest.fixture(scope="module", autouse=True)
 def host(module_session) -> Host:
-    return f.HostFactory(interface=None)
+    return f.HostFactory(interface=None, room__patched_with_subnet=True)
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -52,6 +52,34 @@ class TestInterfacesJson:
 def test_interface_table(client, interface):
     with client.renders_template("host/interface_table.html"):
         client.assert_url_ok(url_for("host.interface_table", host_id=interface.host_id))
+
+
+def test_user_hosts(client, host):
+    resp = client.assert_url_ok(url_for("host.user_hosts_json", user_id=host.owner.id))
+
+    assert "items" in resp.json
+    items = resp.json["items"]
+    assert len(items) == 1
+    [item] = items
+    assert item["switch"]
+    assert item["port"]
+    assert item["id"] == host.id
+    assert len(item["actions"]) == 2
+
+
+@pytest.fixture()
+def host_without_room(session):
+    return f.HostFactory(room=None)
+
+
+def test_user_host_without_room(client, host_without_room):
+    resp = client.assert_url_ok(
+        url_for("host.user_hosts_json", user_id=host_without_room.owner.id)
+    )
+    assert len(resp.json["items"]) == 1
+    [it] = resp.json["items"]
+    assert it["switch"] is None
+    assert it["port"] is None
 
 
 @pytest.mark.usefixtures("session")
