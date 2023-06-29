@@ -242,7 +242,7 @@ def interface_delete(interface_id):
         with handle_errors(session.session):
             lib_host.interface_delete(interface, current_user)
             session.session.commit()
-    except PycroftException:
+    except PycroftException:  # pragma: no cover
         return default_response()
 
     flash("Interface erfolgreich gelöscht.", 'success')
