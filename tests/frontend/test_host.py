@@ -93,3 +93,48 @@ class TestHostEdit:
                 "room_number": 999,
             },
         )
+
+
+@pytest.mark.usefixtures("admin_logged_in")
+class TestHostCreate:
+    def test_create_host_nonexistent_owner(self, client):
+        client.assert_url_response_code(
+            url_for("host.host_create", user_id=999), code=404
+        )
+
+    def test_create_host_get(self, client, owner):
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(url_for("host.host_create", user_id=owner.id))
+
+    def test_create_host_post(self, session, client, owner, host):
+        with client.flashes_message("Host.*erstellt", category="success"):
+            client.assert_url_redirects(
+                url_for("host.host_create", user_id=owner.id),
+                method="POST",
+                data={
+                    "name": "test-host",
+                    "building": owner.room.building.id,
+                    "level": owner.room.level,
+                    "room_number": owner.room.number,
+                },
+            )
+            session.refresh(owner)
+            # assert len(owner.hosts) == 1
+            # assert owner.hosts[0].name == "test-host"
+            new_hosts = set(owner.hosts) - {host}
+            assert len(new_hosts) == 1
+            assert list(new_hosts)[0].name == "test-host"
+
+    def test_create_host_post_invalid_data(self, session, client, owner):
+        client.assert_url_ok(
+            url_for("host.host_create", user_id=owner.id),
+            method="POST",
+            data={
+                "name": "test-host",
+                "building": owner.room.building.id,
+                "level": owner.room.level,
+                "room_number": 999,
+            },
+        )
+        session.refresh(owner)
+        assert len(owner.hosts) == 1

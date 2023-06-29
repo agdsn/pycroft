@@ -157,13 +157,15 @@ def host_create():
                 owner, room, form.name.data, processor=current_user
             )
             session.session.commit()
-    except PycroftException:
+    except PycroftException:  # pragma: no cover
         return default_response()
 
-    return redirect(url_for(
-        '.interface_create',
-        user_id=host.owner_id, host_id=host.id, _anchor='hosts'
-    ))
+    flash("Host erfolgreich erstellt.", "success")
+    return redirect(
+        url_for(
+            ".interface_create", user_id=host.owner_id, host_id=host.id, _anchor="hosts"
+        )
+    )
 
 
 @bp.route("/<int:host_id>/interfaces")
