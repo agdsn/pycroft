@@ -24,7 +24,7 @@ def owner(module_session) -> User:
 
 @pytest.fixture(scope="module")
 def host(module_session, owner) -> Host:
-    return f.HostFactory(owner=owner)
+    return f.HostFactory(owner=owner, room__patched_with_subnet=True)
 
 
 @pytest.mark.usefixtures("admin_logged_in")
@@ -138,3 +138,31 @@ class TestHostCreate:
         )
         session.refresh(owner)
         assert len(owner.hosts) == 1
+
+
+def test_user_hosts(client, host):
+    resp = client.assert_url_ok(url_for("host.user_hosts_json", user_id=host.owner.id))
+
+    assert "items" in resp.json
+    items = resp.json["items"]
+    assert len(items) == 1
+    [item] = items
+    assert item["switch"]
+    assert item["port"]
+    assert item["id"] == host.id
+    assert len(item["actions"]) == 2
+
+
+@pytest.fixture()
+def host_without_room(session):
+    return f.HostFactory(room=None)
+
+
+def test_user_host_without_room(client, host_without_room):
+    resp = client.assert_url_ok(
+        url_for("host.user_hosts_json", user_id=host_without_room.owner.id)
+    )
+    assert len(resp.json["items"]) == 1
+    [it] = resp.json["items"]
+    assert it["switch"] is None
+    assert it["port"] is None
