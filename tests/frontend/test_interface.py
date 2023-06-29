@@ -83,3 +83,31 @@ class TestInterfaceEdit:
         session.refresh(interface)
         assert interface.mac == "00:11:22:33:44:55"
         assert interface.name == "new name"
+
+
+@pytest.mark.usefixtures("session")
+class TestInterfaceCreate:
+    def test_create_interface_nonexistent_host(self, client, host):
+        client.assert_url_response_code(
+            url_for("host.interface_create", host_id=999), code=404
+        )
+
+    def test_create_interface_get(self, client, host):
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(url_for("host.interface_create", host_id=host.id))
+
+    def test_create_interface_post_invalid_data(self, client, host):
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(
+                url_for("host.interface_create", host_id=host.id),
+                method="POST",
+                data={"mac": "invalid"},
+            )
+
+    def test_create_interface_success(self, client, host):
+        with client.flashes_message("Interface.*erstellt", category="success"):
+            client.assert_url_redirects(
+                url_for("host.interface_create", host_id=host.id),
+                method="POST",
+                data={"mac": "00:11:22:33:44:55", "name": "new name"},
+            )

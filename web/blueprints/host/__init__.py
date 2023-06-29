@@ -338,7 +338,7 @@ def interface_create(host_id):
             current_user
         )
         session.session.commit()
-    except PycroftException:
+    except PycroftException:  # pragma: no cover
         return default_response()
 
     flash("Interface erfolgreich erstellt.", 'success')
