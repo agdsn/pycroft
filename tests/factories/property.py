@@ -59,12 +59,21 @@ class PropertyGroupFactory(BaseFactory):
 
 class AdminPropertyGroupFactory(PropertyGroupFactory):
     name = factory.Sequence(partial(_maybe_append_seq, prefix="Admin-Gruppe"))
-    granted = frozenset((
-        'user_show', 'user_change', 'user_mac_change',
-        'infrastructure_show', 'infrastructure_change',
-        'facilities_show', 'facilities_change',
-        'groups_show', 'groups_change_membership', 'groups_change',
-    ))
+    granted = frozenset(
+        (
+            "user_show",
+            "user_change",
+            "user_mac_change",
+            "hosts_change",
+            "infrastructure_show",
+            "infrastructure_change",
+            "facilities_show",
+            "facilities_change",
+            "groups_show",
+            "groups_change_membership",
+            "groups_change",
+        )
+    )
     permission_level = 10
 
 

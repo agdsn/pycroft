@@ -55,7 +55,7 @@ def host_delete(host_id):
         with handle_errors(session.session):
             lib_host.host_delete(host, current_user)
             session.session.commit()
-    except PycroftException:
+    except PycroftException:  # pragma: no cover
         return default_response()
 
     flash("Host erfolgreich gelöscht.", 'success')
