@@ -55,7 +55,7 @@ def host_delete(host_id):
         with handle_errors(session.session):
             lib_host.host_delete(host, current_user)
             session.session.commit()
-    except PycroftException:
+    except PycroftException:  # pragma: no cover
         return default_response()
 
     flash("Host erfolgreich gelöscht.", 'success')
@@ -105,7 +105,7 @@ def host_edit(host_id):
                 processor=current_user
             )
             session.session.commit()
-    except PycroftException:
+    except PycroftException:  # pragma: no cover
         return default_response()
 
     flash("Host erfolgreich bearbeitet.", 'success')
@@ -157,13 +157,15 @@ def host_create():
                 owner, room, form.name.data, processor=current_user
             )
             session.session.commit()
-    except PycroftException:
+    except PycroftException:  # pragma: no cover
         return default_response()
 
-    return redirect(url_for(
-        '.interface_create',
-        user_id=host.owner_id, host_id=host.id, _anchor='hosts'
-    ))
+    flash("Host erfolgreich erstellt.", "success")
+    return redirect(
+        url_for(
+            ".interface_create", user_id=host.owner_id, host_id=host.id, _anchor="hosts"
+        )
+    )
 
 
 @bp.route("/<int:host_id>/interfaces")
@@ -240,7 +242,7 @@ def interface_delete(interface_id):
         with handle_errors(session.session):
             lib_host.interface_delete(interface, current_user)
             session.session.commit()
-    except PycroftException:
+    except PycroftException:  # pragma: no cover
         return default_response()
 
     flash("Interface erfolgreich gelöscht.", 'success')
@@ -278,7 +280,7 @@ def interface_edit(interface_id):
     if not form.is_submitted():
         form.ips.process_data(ip for ip in current_ips)
         return default_response()
-    if not form.validate:
+    if not form.validate():
         return default_response()
 
     ips = {IPv4Address(ip) for ip in form.ips.data}
@@ -290,7 +292,7 @@ def interface_edit(interface_id):
                 processor=current_user
             )
             session.session.commit()
-    except PycroftException:
+    except PycroftException:  # pragma: no cover
         return default_response()
 
     flash("Interface erfolgreich bearbeitet.", 'success')
@@ -336,7 +338,7 @@ def interface_create(host_id):
             current_user
         )
         session.session.commit()
-    except PycroftException:
+    except PycroftException:  # pragma: no cover
         return default_response()
 
     flash("Interface erfolgreich erstellt.", 'success')
@@ -356,7 +358,9 @@ def user_hosts_json(user_id):
         if host.room:
             patch_ports = host.room.connected_patch_ports
             switches = ', '.join(
-                p.switch_port.switch.host.name for p in patch_ports)
+                p.switch_port.switch.host.name or "<unnamed switch>"
+                for p in patch_ports
+            )
             ports = ', '.join(p.switch_port.name for p in patch_ports)
         else:
             switches = None
