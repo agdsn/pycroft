@@ -49,6 +49,11 @@ class TestInterfacesJson:
         assert item["ips"] != ""
 
 
+def test_interface_table(client, interface):
+    with client.renders_template("host/interface_table.html"):
+        client.assert_url_ok(url_for("host.interface_table", host_id=interface.host_id))
+
+
 @pytest.mark.usefixtures("session")
 class TestInterfaceDelete:
     def test_delete_nonexistent_interface(self, client):
