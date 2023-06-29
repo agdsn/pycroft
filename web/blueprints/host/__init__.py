@@ -105,7 +105,7 @@ def host_edit(host_id):
                 processor=current_user
             )
             session.session.commit()
-    except PycroftException:
+    except PycroftException:  # pragma: no cover
         return default_response()
 
     flash("Host erfolgreich bearbeitet.", 'success')
