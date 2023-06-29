@@ -136,3 +136,19 @@ class TestInterfaceCreate:
                 method="POST",
                 data={"mac": "00:11:22:33:44:55", "name": "new name"},
             )
+
+
+class TestManufacturer:
+    def test_manufacturer_invalid_mac(self, client):
+        client.assert_url_response_code(
+            url_for("host.interface_manufacturer_json", mac="invalid"), code=400
+        )
+
+    def test_manufacturer_valid_mac(self, client, monkeypatch):
+        monkeypatch.setattr(
+            "web.blueprints.host.get_interface_manufacturer", lambda mac: "AG DSN"
+        )
+        resp = client.assert_url_ok(
+            url_for("host.interface_manufacturer_json", mac="00:11:22:33:44:55")
+        )
+        assert resp.json["manufacturer"] == "AG DSN"
