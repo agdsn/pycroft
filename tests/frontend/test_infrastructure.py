@@ -57,11 +57,24 @@ class TestSwitch:
         with client.renders_template("infrastructure/switches_list.html"):
             client.assert_url_ok(url_for("infrastructure.switches"))
 
+    def test_show_nonexistent_switch(self, client: TestClient):
+        with client.flashes_message("nicht gefunden", "error"):
+            client.assert_url_redirects(
+                url_for("infrastructure.switch_show", switch_id=999),
+                expected_location=url_for("infrastructure.switches"),
+            )
+
     def test_show_switch(self, client: TestClient, switch: Switch):
         with client.renders_template("infrastructure/switch_show.html"):
             client.assert_url_ok(
                 url_for("infrastructure.switch_show", switch_id=switch.host_id)
             )
+
+    def test_show_nonexistent_switch_table(self, client: TestClient):
+        client.assert_url_response_code(
+            url_for("infrastructure.switch_show_json", switch_id=999),
+            code=404,
+        )
 
     def test_show_switch_table(self, client: TestClient, switch: Switch):
         response = client.assert_url_ok(
