@@ -57,6 +57,15 @@ class TestSwitch:
         with client.renders_template("infrastructure/switches_list.html"):
             client.assert_url_ok(url_for("infrastructure.switches"))
 
+    def test_switches_json(self, client: TestClient, switch):
+        response = client.assert_url_ok(url_for("infrastructure.switches_json"))
+        assert "items" in (j := response.json)
+        assert len(j["items"]) == 1
+        [it] = j["items"]
+        assert it["id"] == switch.host_id
+        assert "edit_link" in it
+        assert "delete_link" in it
+
     def test_show_nonexistent_switch(self, client: TestClient):
         with client.flashes_message("nicht gefunden", "error"):
             client.assert_url_redirects(
