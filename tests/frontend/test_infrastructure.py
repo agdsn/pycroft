@@ -7,6 +7,7 @@ from ipaddr import IPv4Network, IPv4Address
 from sqlalchemy.orm import Session
 from flask import url_for
 
+from pycroft.model.facilities import Room
 from pycroft.model.host import Switch
 from pycroft.model.net import Subnet
 from tests import factories as f
@@ -91,3 +92,50 @@ class TestSwitch:
         )
         assert "items" in (j := response.json)
         assert len(j["items"]) == 1
+
+
+@pytest.mark.usefixtures("admin_logged_in", "session")
+class TestCreateSwitch:
+    @pytest.fixture(scope="class")
+    def room(self, class_session: Session) -> Room:
+        return f.RoomFactory()
+
+    def test_create_switch_get(self, client):
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(url_for("infrastructure.switch_create"))
+
+    def test_create_switch_post_no_data(self, client):
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(
+                url_for("infrastructure.switch_create"),
+                data={},
+                method="POST",
+            )
+
+    def test_create_switch_post_invalid_data(self, client):
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(
+                url_for("infrastructure.switch_create"),
+                # data according to `class SwitchForm`
+                data={
+                    "name": "Test Switch",
+                    "management_ip": "10.10.10.2",
+                    # room number missing
+                },
+                method="POST",
+            )
+
+    def test_create_switch_post_valid_data(self, client, room):
+        with client.flashes_message("erfolgreich erstellt", "success"):
+            client.assert_url_redirects(
+                url_for("infrastructure.switch_create"),
+                # data according to `class SwitchForm`
+                data={
+                    "name": "Test Switch",
+                    "management_ip": "10.10.10.2",
+                    "room_number": room.number,
+                    "level": room.level,
+                    "building": room.building_id,
+                },
+                method="POST",
+            )
