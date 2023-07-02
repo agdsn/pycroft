@@ -1,10 +1,13 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+import typing as t
 
 import pytest
 from flask import url_for
 
+import web.blueprints.host
+from pycroft.exc import PycroftException
 from pycroft.model.host import Host
 from pycroft.model.user import User
 from tests import factories as f
@@ -29,48 +32,61 @@ def host(module_session, owner) -> Host:
 
 @pytest.mark.usefixtures("admin_logged_in")
 class TestHostDelete:
-    def test_delete_nonexistent_host(self, client):
-        client.assert_url_response_code(
-            url_for("host.host_delete", host_id=999), code=404
-        )
+    @pytest.fixture(scope="class")
+    def url(self) -> t.Callable[[int], str]:
+        def _url(host_id: int) -> str:
+            return url_for("host.host_delete", host_id=host_id)
 
-    def test_host_delete_successful(self, session, client, host, owner):
+        return _url
+
+    def test_delete_nonexistent_host(self, client, url):
+        client.assert_url_response_code(url(999), code=404)
+
+    def test_host_delete_successful(self, session, client, host, owner, url):
         with client.flashes_message("Host.*gelöscht", category="success"):
-            client.assert_url_redirects(
-                url_for("host.host_delete", host_id=host.id),
-                method="POST",
-            )
+            client.assert_url_redirects(url(host.id), method="POST")
         session.refresh(owner)
         assert owner.hosts == []
 
-    def test_host_get_returns_form(self, client, host):
+    def test_host_get_returns_form(self, client, host, url):
         with client.renders_template("generic_form.html"):
-            client.assert_url_ok(url_for("host.host_delete", host_id=host.id))
+            client.assert_url_ok(url(host.id))
+
+    def test_host_delete_exception(self, client, host, url, monkeypatch):
+        def _r(*a, **kw):
+            raise PycroftException
+
+        monkeypatch.setattr(web.blueprints.host.lib_host, "host_delete", _r)
+
+        with client.flashes_message("Fehler aufgetreten", category="error"):
+            client.assert_url_ok(url(host.id), method="POST")
 
 
 @pytest.mark.usefixtures("admin_logged_in")
 class TestHostEdit:
-    def test_edit_nonexistent_host(self, client):
-        client.assert_url_response_code(
-            url_for("host.host_edit", host_id=999), code=404
-        )
+    @pytest.fixture(scope="class")
+    def url(self) -> t.Callable[[int], str]:
+        def _url(host_id: int) -> str:
+            return url_for("host.host_edit", host_id=host_id)
 
-    def test_edit_host_get(self, client, host):
+        return _url
+
+    def test_edit_nonexistent_host(self, client, url):
+        client.assert_url_response_code(url(999), code=404)
+
+    def test_edit_host_get(self, client, host, url):
         with client.renders_template("generic_form.html"):
-            client.assert_url_ok(url_for("host.host_edit", host_id=host.id))
+            client.assert_url_ok(url(host.id))
 
-    def test_post_without_data(self, client, host):
+    def test_post_without_data(self, client, host, url):
         """works because the room data is automatically derived from the host"""
         # HTTP 200 OK although form invalid
-        client.assert_url_ok(
-            url_for("host.host_edit", host_id=host.id),
-            method="POST",
-        )
+        client.assert_url_ok(url(host.id), method="POST")
 
-    def test_post_with_data(self, client, host):
+    def test_post_with_data(self, client, host, url):
         with client.flashes_message("Host.*bearbeitet", category="success"):
             client.assert_url_redirects(
-                url_for("host.host_edit", host_id=host.id),
+                url(host.id),
                 method="POST",
                 data={
                     "owner": host.owner.id,
@@ -81,9 +97,9 @@ class TestHostEdit:
                 },
             )
 
-    def test_post_with_invalid_data(self, client, host):
+    def test_post_with_invalid_data(self, client, host, url):
         client.assert_url_ok(
-            url_for("host.host_edit", host_id=host.id),
+            url(host.id),
             method="POST",
             data={
                 "owner": host.owner.id,
@@ -97,19 +113,24 @@ class TestHostEdit:
 
 @pytest.mark.usefixtures("admin_logged_in")
 class TestHostCreate:
-    def test_create_host_nonexistent_owner(self, client):
-        client.assert_url_response_code(
-            url_for("host.host_create", user_id=999), code=404
-        )
+    @pytest.fixture(scope="class")
+    def url(self) -> t.Callable[[int], str]:
+        def _url(user_id: int) -> str:
+            return url_for("host.host_create", user_id=user_id)
 
-    def test_create_host_get(self, client, owner):
+        return _url
+
+    def test_create_host_nonexistent_owner(self, client, url):
+        client.assert_url_response_code(url(999), code=404)
+
+    def test_create_host_get(self, client, owner, url):
         with client.renders_template("generic_form.html"):
-            client.assert_url_ok(url_for("host.host_create", user_id=owner.id))
+            client.assert_url_ok(url(owner.id))
 
-    def test_create_host_post(self, session, client, owner, host):
+    def test_create_host_post(self, session, client, owner, host, url):
         with client.flashes_message("Host.*erstellt", category="success"):
             client.assert_url_redirects(
-                url_for("host.host_create", user_id=owner.id),
+                url(owner.id),
                 method="POST",
                 data={
                     "name": "test-host",
@@ -125,9 +146,9 @@ class TestHostCreate:
             assert len(new_hosts) == 1
             assert list(new_hosts)[0].name == "test-host"
 
-    def test_create_host_post_invalid_data(self, session, client, owner):
+    def test_create_host_post_invalid_data(self, session, client, owner, url):
         client.assert_url_ok(
-            url_for("host.host_create", user_id=owner.id),
+            url(owner.id),
             method="POST",
             data={
                 "name": "test-host",

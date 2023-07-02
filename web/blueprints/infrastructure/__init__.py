@@ -197,9 +197,8 @@ def switch_create():
 @bp.route('/switch/<int:switch_id>/edit', methods=['GET', 'POST'])
 @access.require('infrastructure_change')
 def switch_edit(switch_id):
-    switch = Switch.q.filter_by(host_id=switch_id).one()
-
-    if not switch:
+    sess = session.session
+    if not (switch := sess.get(Switch, switch_id)):
         flash(f"Switch mit ID {switch_id} nicht gefunden!", "error")
         return redirect(url_for('.switches'))
 
@@ -207,7 +206,6 @@ def switch_edit(switch_id):
                       level=switch.host.room.level, room_number=switch.host.room.number)
 
     if form.validate_on_submit():
-        sess = session.session
         room = Room.q.filter_by(number=form.room_number.data,
                                 level=form.level.data, building=form.building.data).one()
 
@@ -230,18 +228,16 @@ def switch_edit(switch_id):
 @bp.route('/switch/<int:switch_id>/delete', methods=['GET', 'POST'])
 @access.require('infrastructure_change')
 def switch_delete(switch_id):
-    switch = Switch.q.filter_by(host_id=switch_id).one()
-
-    if not switch:
+    sess = session.session
+    if not (switch := sess.get(Switch, switch_id)):
         flash(f"Switch mit ID {switch_id} nicht gefunden!", "error")
         return redirect(url_for('.switches'))
 
     form = Form()
 
     if form.validate_on_submit():
-        sess = session.session
-        with sess.begin():
-            delete_switch(sess, switch, current_user)
+        delete_switch(sess, switch, current_user)
+        sess.commit()
         flash("Die Switch wurde erfolgreich gelöscht.", "success")
 
         return redirect(url_for('.switches'))
@@ -277,6 +273,7 @@ def switch_port_create(switch_id):
     if form.validate_on_submit():
         error = False
 
+        nested = session.session.begin_nested()
         switch_port = create_switch_port(switch, form.name.data, form.default_vlans.data, current_user)
 
         if form.patch_port.data:
@@ -293,7 +290,8 @@ def switch_port_create(switch_id):
 
             return redirect(url_for('.switch_show', switch_id=switch.host_id))
         else:
-            session.session.rollback()
+            # we don't want to keep the `switch_port`
+            nested.rollback()
 
     form_args = {
         'form': form,
@@ -330,6 +328,8 @@ def switch_port_edit(switch_id, switch_port_id):
     if form.validate_on_submit():
         error = False
 
+        # TODO use `handle_errors` instead
+        nested = session.session.begin_nested()
         edit_switch_port(switch_port, form.name.data, form.default_vlans.data, current_user)
 
         if switch_port.patch_port != form.patch_port.data:
@@ -344,13 +344,14 @@ def switch_port_edit(switch_id, switch_port_id):
                     error = True
 
         if not error:
+            nested.commit()
             session.session.commit()
 
             flash("Der Switch-Port wurde erfolgreich bearbeitet.", "success")
 
             return redirect(url_for('.switch_show', switch_id=switch_port.switch_id))
         else:
-            session.session.rollback()
+            nested.rollback()
 
     form_args = {
         'form': form,

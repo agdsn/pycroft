@@ -4,13 +4,15 @@ import pytest
 
 from pycroft.helpers.interval import closedopen
 from pycroft.model import hades
+from pycroft.model.host import Switch
 from pycroft.model.net import VLAN
+from pycroft.model.user import PropertyGroup, User, Membership
 from tests.factories import PropertyGroupFactory, MembershipFactory, \
     SwitchFactory, PatchPortFactory, UserFactory
 
 
 @pytest.fixture(scope='module', autouse=True)
-def network_access_group(module_session):
+def network_access_group(module_session) -> PropertyGroup:
     return PropertyGroupFactory.create(
         name="Member",
         granted={'network_access'},
@@ -18,7 +20,7 @@ def network_access_group(module_session):
 
 
 @pytest.fixture(scope='module', autouse=True)
-def payment_in_default_group(module_session):
+def payment_in_default_group(module_session) -> PropertyGroup:
     return PropertyGroupFactory.create(
         name="Blocked (finance)",
         granted={'payment_in_default'},
@@ -27,7 +29,7 @@ def payment_in_default_group(module_session):
 
 
 @pytest.fixture(scope='module', autouse=True)
-def traffic_limit_exceeded_group(module_session):
+def traffic_limit_exceeded_group(module_session) -> PropertyGroup:
     return PropertyGroupFactory.create(
         name="Blocked (traffic)",
         granted={'traffic_limit_exceeded'},
@@ -36,12 +38,12 @@ def traffic_limit_exceeded_group(module_session):
 
 
 @pytest.fixture(scope='module', autouse=True)
-def user(module_session):
+def user(module_session) -> User:
     return UserFactory(with_host=True)
 
 
 @pytest.fixture(scope='module', autouse=True)
-def switch(module_session, user):
+def switch(module_session, user) -> Switch:
     # the user's room needs to be connected to provide `nasipaddress` and `nasportid`
     switch = SwitchFactory.create(host__owner=user)
     PatchPortFactory.create_batch(
@@ -53,12 +55,12 @@ def switch(module_session, user):
 
 
 @pytest.fixture(scope='module')
-def now():
+def now() -> datetime:
     return datetime.now()
 
 
 @pytest.fixture(scope='module', autouse=True)
-def membership(module_session, user, network_access_group, now):
+def membership(module_session, user, network_access_group, now) -> Membership:
     return MembershipFactory.create(
         user=user, group=network_access_group,
         active_during=closedopen(now + timedelta(-1), now + timedelta(1))
@@ -66,7 +68,7 @@ def membership(module_session, user, network_access_group, now):
 
 
 @pytest.fixture(scope='module', autouse=True)
-def mapped_radius_properties(module_session):
+def mapped_radius_properties(module_session) -> None:
     module_session.execute(hades.radius_property.insert().values([
         ('payment_in_default',),
         ('traffic_limit_exceeded',),
