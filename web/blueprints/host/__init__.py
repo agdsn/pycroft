@@ -20,7 +20,8 @@ from web.blueprints.helpers.exception import handle_errors
 from web.blueprints.helpers.form import refill_room_data
 from web.blueprints.helpers.user import get_user_or_404
 from web.blueprints.host.forms import InterfaceForm, HostForm
-from web.blueprints.host.tables import InterfaceTable, HostTable
+from web.blueprints.host.tables import InterfaceTable, HostTable, HostRow
+from web.table.table import TableResponse, BtnColResponse
 
 bp = Blueprint('host', __name__)
 access = BlueprintAccess(bp, required_properties=['user_show'])
@@ -348,47 +349,46 @@ def interface_create(host_id):
     ))
 
 
-@bp.route("/<int:user_id>")
-def user_hosts_json(user_id):
-    user = get_user_or_404(user_id)
-    T = HostTable
-
-    list_items = []
-    for host in user.hosts:
-        if host.room:
-            patch_ports = host.room.connected_patch_ports
-            switches = ', '.join(
-                p.switch_port.switch.host.name or "<unnamed switch>"
-                for p in patch_ports
-            )
-            ports = ', '.join(p.switch_port.name for p in patch_ports)
-        else:
-            switches = None
-            ports = None
-
-        list_items.append({
-            'id': host.id,
-            'name': host.name,
-            'switch': switches,
-            'port': ports,
-            'actions': [
-                T.actions.single_value(
+def _host_row(host, user_id) -> HostRow:
+    if host.room:
+        patch_ports = host.room.connected_patch_ports
+        switches = ", ".join(
+            p.switch_port.switch.host.name or "<unnamed switch>" for p in patch_ports
+        )
+        ports = ", ".join(p.switch_port.name for p in patch_ports)
+    else:
+        switches = None
+        ports = None
+    return HostRow(
+        id=host.id,
+        name=host.name,
+        switch=switches,
+        port=ports,
+        actions=[
+            BtnColResponse(
                     href=url_for('.host_edit', host_id=host.id, user_id=user_id),
                     title="Bearbeiten",
                     icon='fa-edit',
                     btn_class='btn-link'
                 ),
-                T.actions.single_value(
-                    href=url_for('.host_delete', host_id=host.id),
-                    title="Löschen",
-                    icon='fa-trash',
-                    btn_class='btn-link'
-                )
-            ],
-            'interfaces_table_link': url_for('.interface_table', host_id=host.id),
-            'interface_create_link': url_for('.interface_create', host_id=host.id),
-        })
-    return jsonify(items=list_items)
+            BtnColResponse(
+                href=url_for(".host_delete", host_id=host.id),
+                title="Löschen",
+                icon="fa-trash",
+                btn_class="btn-link",
+            ),
+        ],
+        interfaces_table_link=url_for(".interface_table", host_id=host.id),
+        interface_create_link=url_for(".interface_create", host_id=host.id),
+    )
+
+
+@bp.route("/<int:user_id>")
+def user_hosts_json(user_id):
+    user = get_user_or_404(user_id)
+    return TableResponse[HostRow](
+        items=[_host_row(host, user_id) for host in user.hosts]
+    ).model_dump()
 
 
 @bp.route("/interface-manufacturer/<string:mac>")
