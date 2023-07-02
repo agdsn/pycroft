@@ -409,3 +409,14 @@ class TestSwitchPortDelete:
         URL = url(switch.host_id, switch_port.id)
         with client.flashes_message("erfolgreich", category="success"):
             client.assert_url_redirects(URL, method="POST")
+
+
+def test_vlans(client, session):
+    with client.renders_template("infrastructure/vlan_list.html"):
+        client.assert_ok("infrastructure.vlans")
+
+
+def test_vlan_table(client, session):
+    resp = client.assert_ok("infrastructure.vlans_json")
+    assert "items" in resp.json
+    assert len(resp.json["items"]) >= 1
