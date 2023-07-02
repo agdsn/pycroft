@@ -2,6 +2,7 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import re
+import typing as t
 
 import pytest
 from ipaddr import IPv4Network, IPv4Address
@@ -99,6 +100,10 @@ class TestSwitch:
 @pytest.mark.usefixtures("admin_logged_in", "session")
 class TestCreateSwitch:
     @pytest.fixture(scope="class")
+    def url(self) -> str:
+        return url_for("infrastructure.switch_create")
+
+    @pytest.fixture(scope="class")
     def room(self, class_session: Session) -> Room:
         return f.RoomFactory()
 
@@ -106,18 +111,18 @@ class TestCreateSwitch:
         with client.renders_template("generic_form.html"):
             client.assert_url_ok(url_for("infrastructure.switch_create"))
 
-    def test_create_switch_post_no_data(self, client):
+    def test_create_switch_post_no_data(self, client, url):
         with client.renders_template("generic_form.html"):
             client.assert_url_ok(
-                url_for("infrastructure.switch_create"),
+                url,
                 data={},
                 method="POST",
             )
 
-    def test_create_switch_post_invalid_data(self, client):
+    def test_create_switch_post_invalid_data(self, client, url):
         with client.renders_template("generic_form.html"):
             client.assert_url_ok(
-                url_for("infrastructure.switch_create"),
+                url,
                 # data according to `class SwitchForm`
                 data={
                     "name": "Test Switch",
@@ -127,10 +132,10 @@ class TestCreateSwitch:
                 method="POST",
             )
 
-    def test_create_switch_post_valid_data(self, client, room):
+    def test_create_switch_post_valid_data(self, client, room, url):
         with client.flashes_message("erfolgreich erstellt", "success"):
             client.assert_url_redirects(
-                url_for("infrastructure.switch_create"),
+                url,
                 # data according to `class SwitchForm`
                 data={
                     "name": "Test Switch",
@@ -145,31 +150,29 @@ class TestCreateSwitch:
 
 @pytest.mark.usefixtures("admin_logged_in", "session")
 class TestSwitchEdit:
-    def test_edit_nonexistent_switch(self, client):
+    @pytest.fixture(scope="class")
+    def url(self) -> t.Callable[[int], str]:
+        def _url(switch_id):
+            return url_for("infrastructure.switch_edit", switch_id=switch_id)
+
+        return _url
+
+    def test_edit_nonexistent_switch(self, client, url):
         with client.flashes_message("nicht gefunden", category="error"):
-            client.assert_url_redirects(
-                url_for("infrastructure.switch_edit", switch_id=999),
-                expected_location=url_for("infrastructure.switches"),
-            )
+            client.assert_url_redirects(url(999), url_for("infrastructure.switches"))
 
-    def test_edit_switch_get(self, client, switch):
+    def test_edit_switch_get(self, client, switch, url):
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(url(switch.host_id))
+
+    def test_edit_switch_post_no_data(self, client, switch, url):
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(url(switch.host_id), data={}, method="POST")
+
+    def test_edit_switch_post_invalid_data(self, client, switch, url):
         with client.renders_template("generic_form.html"):
             client.assert_url_ok(
-                url_for("infrastructure.switch_edit", switch_id=switch.host_id),
-            )
-
-    def test_edit_switch_post_no_data(self, client, switch):
-        with client.renders_template("generic_form.html"):
-            client.assert_url_ok(
-                url_for("infrastructure.switch_edit", switch_id=switch.host_id),
-                data={},
-                method="POST",
-            )
-
-    def test_edit_switch_post_invalid_data(self, client, switch):
-        with client.renders_template("generic_form.html"):
-            client.assert_url_ok(
-                url_for("infrastructure.switch_edit", switch_id=switch.host_id),
+                url(switch.host_id),
                 # data according to `class SwitchForm`
                 data={
                     "name": "Test Switch",
@@ -179,10 +182,10 @@ class TestSwitchEdit:
                 method="POST",
             )
 
-    def test_edit_switch_post_valid_data(self, client, switch):
+    def test_edit_switch_post_valid_data(self, client, switch, url):
         with client.flashes_message("erfolgreich bearbeitet", "success"):
             client.assert_url_redirects(
-                url_for("infrastructure.switch_edit", switch_id=switch.host_id),
+                url(switch.host_id),
                 # data according to `class SwitchForm`
                 data={
                     "name": "Test Switch (now with new name)",
@@ -197,29 +200,35 @@ class TestSwitchEdit:
 
 @pytest.mark.usefixtures("admin_logged_in", "session")
 class TestSwitchDelete:
-    def test_delete_nonexistent_switch(self, client):
+    @pytest.fixture(scope="class")
+    def url(self) -> t.Callable[[int], str]:
+        def _url(switch_id):
+            return url_for("infrastructure.switch_delete", switch_id=switch_id)
+
+        return _url
+
+    def test_delete_nonexistent_switch(self, client, url):
         with client.flashes_message("nicht gefunden", category="error"):
-            client.assert_url_redirects(
-                url_for("infrastructure.switch_delete", switch_id=999),
-                expected_location=url_for("infrastructure.switches"),
-            )
+            client.assert_url_redirects(url(999), url_for("infrastructure.switches"))
 
-    def test_delete_switch_get(self, client, switch):
+    def test_delete_switch_get(self, client, switch, url):
         with client.renders_template("generic_form.html"):
-            client.assert_url_ok(
-                url_for("infrastructure.switch_delete", switch_id=switch.host_id),
-            )
+            client.assert_url_ok(url(switch.host_id))
 
-    def test_delete_switch_post(self, client, switch):
+    def test_delete_switch_post(self, client, switch, url):
         with client.flashes_message("erfolgreich gelöscht", "success"):
-            client.assert_url_redirects(
-                url_for("infrastructure.switch_delete", switch_id=switch.host_id),
-                method="POST",
-            )
+            client.assert_url_redirects(url(switch.host_id), method="POST")
 
 
 @pytest.mark.usefixtures("admin_logged_in", "session")
 class TestSwitchPortCreate:
+    @pytest.fixture(scope="class")
+    def url(self) -> t.Callable[[int], str]:
+        def _url(switch_id):
+            return url_for("infrastructure.switch_port_create", switch_id=switch_id)
+
+        return _url
+
     @pytest.fixture(scope="class")
     def patch_port(self, class_session, switch) -> PatchPort:
         return f.PatchPortFactory(switch_room=switch.host.room)
@@ -229,31 +238,22 @@ class TestSwitchPortCreate:
         # patch_port = f.PatchPortFactory(switch_room=switch.host.room, switch_port=sp)
         return f.PatchPortFactory(patched=True)
 
-    def test_create_port_at_nonexistent_switch(self, client):
+    def test_create_port_at_nonexistent_switch(self, client, url):
         with client.flashes_message("nicht gefunden", category="error"):
-            client.assert_url_redirects(
-                url_for("infrastructure.switch_port_create", switch_id=999),
-                expected_location=url_for("infrastructure.switches"),
-            )
+            client.assert_url_redirects(url(999), url_for("infrastructure.switches"))
 
-    def test_create_port_get(self, client, switch):
+    def test_create_port_get(self, client, switch, url):
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(url(switch.host_id))
+
+    def test_create_port_no_data(self, client, switch, url):
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(url(switch.host_id), data={}, method="POST")
+
+    def test_create_port_invalid_data(self, client, switch, url):
         with client.renders_template("generic_form.html"):
             client.assert_url_ok(
-                url_for("infrastructure.switch_port_create", switch_id=switch.host_id),
-            )
-
-    def test_create_port_no_data(self, client, switch):
-        with client.renders_template("generic_form.html"):
-            client.assert_url_ok(
-                url_for("infrastructure.switch_port_create", switch_id=switch.host_id),
-                data={},
-                method="POST",
-            )
-
-    def test_create_port_invalid_data(self, client, switch):
-        with client.renders_template("generic_form.html"):
-            client.assert_url_ok(
-                url_for("infrastructure.switch_port_create", switch_id=switch.host_id),
+                url(switch.host_id),
                 data={
                     "name": "Test Port",
                     "patch_port": "-1",  # bad id
@@ -261,10 +261,10 @@ class TestSwitchPortCreate:
                 method="POST",
             )
 
-    def test_create_port_valid_data(self, client, switch, patch_port):
+    def test_create_port_valid_data(self, client, switch, patch_port, url):
         with client.flashes_message("erfolgreich erstellt", "success"):
             client.assert_url_redirects(
-                url_for("infrastructure.switch_port_create", switch_id=switch.host_id),
+                url(switch.host_id),
                 data={
                     "name": "Test Port",
                     "patch_port": str(patch_port.id),
@@ -273,12 +273,11 @@ class TestSwitchPortCreate:
                 method="POST",
             )
 
-    def test_create_port_already_patched(self, client, switch, connected_patch_port):
+    def test_create_port_already_patched(
+        self, client, switch, connected_patch_port, url
+    ):
         resp = client.assert_url_ok(
-            url_for(
-                "infrastructure.switch_port_create",
-                switch_id=connected_patch_port.switch_port.switch.host_id,
-            ),
+            url(connected_patch_port.switch_port.switch.host_id),
             data={
                 "name": "Test Port",
                 "patch_port": str(connected_patch_port.id),
