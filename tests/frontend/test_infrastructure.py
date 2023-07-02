@@ -191,3 +191,26 @@ class TestSwitchEdit:
                 },
                 method="POST",
             )
+
+
+@pytest.mark.usefixtures("admin_logged_in", "session")
+class TestSwitchDelete:
+    def test_delete_nonexistent_switch(self, client):
+        with client.flashes_message("nicht gefunden", category="error"):
+            client.assert_url_redirects(
+                url_for("infrastructure.switch_delete", switch_id=999),
+                expected_location=url_for("infrastructure.switches"),
+            )
+
+    def test_delete_switch_get(self, client, switch):
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(
+                url_for("infrastructure.switch_delete", switch_id=switch.host_id),
+            )
+
+    def test_delete_switch_post(self, client, switch):
+        with client.flashes_message("erfolgreich gelöscht", "success"):
+            client.assert_url_redirects(
+                url_for("infrastructure.switch_delete", switch_id=switch.host_id),
+                method="POST",
+            )
