@@ -228,16 +228,14 @@ def switch_edit(switch_id):
 @bp.route('/switch/<int:switch_id>/delete', methods=['GET', 'POST'])
 @access.require('infrastructure_change')
 def switch_delete(switch_id):
-    switch = Switch.q.filter_by(host_id=switch_id).one()
-
-    if not switch:
+    sess = session.session
+    if not (switch := sess.get(Switch, switch_id)):
         flash(f"Switch mit ID {switch_id} nicht gefunden!", "error")
         return redirect(url_for('.switches'))
 
     form = Form()
 
     if form.validate_on_submit():
-        sess = session.session
         delete_switch(sess, switch, current_user)
         sess.commit()
         flash("Die Switch wurde erfolgreich gelöscht.", "success")
