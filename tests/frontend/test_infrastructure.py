@@ -11,9 +11,15 @@ from pycroft.model.facilities import Room
 from pycroft.model.host import Switch
 from pycroft.model.net import Subnet
 from tests import factories as f
-from tests.factories import SwitchFactory
 from web.blueprints.infrastructure import format_address_range
 from .assertions import TestClient
+
+
+@pytest.fixture(scope="module")
+def switch(module_session: Session) -> Switch:
+    switch = f.SwitchFactory()
+    module_session.flush()
+    return switch
 
 
 @pytest.fixture(scope="module")
@@ -48,12 +54,6 @@ class TestSubnets:
 
 @pytest.mark.usefixtures("admin_logged_in")
 class TestSwitch:
-    @pytest.fixture(scope="class")
-    def switch(self, class_session: Session) -> Switch:
-        switch = SwitchFactory()
-        class_session.flush()
-        return switch
-
     def test_list_switches(self, client: TestClient):
         with client.renders_template("infrastructure/switches_list.html"):
             client.assert_url_ok(url_for("infrastructure.switches"))
@@ -136,6 +136,58 @@ class TestCreateSwitch:
                     "room_number": room.number,
                     "level": room.level,
                     "building": room.building_id,
+                },
+                method="POST",
+            )
+
+
+@pytest.mark.usefixtures("admin_logged_in", "session")
+class TestSwitchEdit:
+    def test_edit_nonexistent_switch(self, client):
+        with client.flashes_message("nicht gefunden", category="error"):
+            client.assert_url_redirects(
+                url_for("infrastructure.switch_edit", switch_id=999),
+                expected_location=url_for("infrastructure.switches"),
+            )
+
+    def test_edit_switch_get(self, client, switch):
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(
+                url_for("infrastructure.switch_edit", switch_id=switch.host_id),
+            )
+
+    def test_edit_switch_post_no_data(self, client, switch):
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(
+                url_for("infrastructure.switch_edit", switch_id=switch.host_id),
+                data={},
+                method="POST",
+            )
+
+    def test_edit_switch_post_invalid_data(self, client, switch):
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(
+                url_for("infrastructure.switch_edit", switch_id=switch.host_id),
+                # data according to `class SwitchForm`
+                data={
+                    "name": "Test Switch",
+                    "management_ip": "This is not an IP",
+                    # room number missing
+                },
+                method="POST",
+            )
+
+    def test_edit_switch_post_valid_data(self, client, switch):
+        with client.flashes_message("erfolgreich bearbeitet", "success"):
+            client.assert_url_redirects(
+                url_for("infrastructure.switch_edit", switch_id=switch.host_id),
+                # data according to `class SwitchForm`
+                data={
+                    "name": "Test Switch (now with new name)",
+                    "management_ip": "10.10.10.3",
+                    "room_number": switch.host.room.number,
+                    "level": switch.host.room.level,
+                    "building": switch.host.room.building_id,
                 },
                 method="POST",
             )
