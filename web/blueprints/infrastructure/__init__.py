@@ -197,9 +197,8 @@ def switch_create():
 @bp.route('/switch/<int:switch_id>/edit', methods=['GET', 'POST'])
 @access.require('infrastructure_change')
 def switch_edit(switch_id):
-    switch = Switch.q.filter_by(host_id=switch_id).one()
-
-    if not switch:
+    sess = session.session
+    if not (switch := sess.get(Switch, switch_id)):
         flash(f"Switch mit ID {switch_id} nicht gefunden!", "error")
         return redirect(url_for('.switches'))
 
@@ -207,7 +206,6 @@ def switch_edit(switch_id):
                       level=switch.host.room.level, room_number=switch.host.room.number)
 
     if form.validate_on_submit():
-        sess = session.session
         room = Room.q.filter_by(number=form.room_number.data,
                                 level=form.level.data, building=form.building.data).one()
 
