@@ -30,6 +30,19 @@ class SubnetTable(BootstrapTable):
     })
 
 
+class SubnetRow(BaseModel):
+    id: int
+    description: str | None
+    address: str
+    gateway: str
+    reserved: list[str]
+    free_ips: str  # the sort name
+    free_ips_formatted: str
+
+    class Config:
+        from_attributes = True
+
+
 class SwitchTable(BootstrapTable):
     id = Column("#")
     name = LinkColumn("Name")
@@ -59,6 +72,15 @@ class VlanTable(BootstrapTable):
     vid = Column("VID")
 
 
+class VlanRow(BaseModel):
+    id: int
+    name: str
+    vid: int
+
+    class Config:
+        from_attributes = True
+
+
 class PortTable(BootstrapTable):
     class Meta:
         table_args = {
@@ -81,3 +103,11 @@ class PortTable(BootstrapTable):
             return
         href = url_for(".switch_port_create", switch_id=self.switch_id)
         return button_toolbar("Switch-Port", href)
+
+
+class PortRow(BaseModel):
+    switchport_name: str
+    patchport_name: str | None
+    room: LinkColResponse | None
+    edit_link: BtnColResponse
+    delete_link: BtnColResponse
