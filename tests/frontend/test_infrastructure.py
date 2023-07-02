@@ -367,3 +367,45 @@ class TestSwitchPortEdit:
         with client.renders_template("generic_form.html"):
             resp = client.assert_url_ok(URL, data=data, method="POST")
         assert re.search("bereits.*verbunden", string=(resp.data.decode()))
+
+
+@pytest.mark.usefixtures("admin_logged_in", "session")
+class TestSwitchPortDelete:
+    @pytest.fixture(scope="class")
+    def url(self) -> t.Callable[[int, int], str]:
+        def _url(switch_id: int, switch_port_id: int) -> str:
+            return url_for(
+                "infrastructure.switch_port_delete",
+                switch_id=switch_id,
+                switch_port_id=switch_port_id,
+            )
+
+        return _url
+
+    @pytest.fixture(scope="class")
+    def switch_port(self, class_session, switch):
+        return f.SwitchPortFactory(switch=switch)
+
+    @pytest.fixture(scope="class")
+    def switch_port_2(self, class_session, switch) -> SwitchPort:
+        return f.SwitchPortFactory(switch__host__room=switch.host.room)
+
+    def test_delete_nonexistent_switch(self, client, url):
+        with client.flashes_message("nicht gefunden", category="error"):
+            client.assert_url_redirects(url(999, 999))
+
+    def test_delete_nonexistent_switch_port(self, client, switch, url):
+        with client.flashes_message("nicht gefunden", category="error"):
+            client.assert_url_redirects(url(switch.host_id, 999))
+
+    def test_delete_switch_port_other_switch(self, client, switch_port_2, switch, url):
+        with client.flashes_message("SwitchPort.*gehört nicht zu", category="error"):
+            client.assert_url_redirects(url(switch.host_id, switch_port_2.id))
+
+    def test_delete_switch_port_get(self, client, switch, switch_port, url):
+        client.assert_url_ok(url(switch.host_id, switch_port.id))
+
+    def test_delete_switch_port_post(self, client, switch, switch_port, url):
+        URL = url(switch.host_id, switch_port.id)
+        with client.flashes_message("erfolgreich", category="success"):
+            client.assert_url_redirects(URL, method="POST")
