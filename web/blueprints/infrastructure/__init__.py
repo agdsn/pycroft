@@ -31,7 +31,8 @@ from pycroft.model.port import PatchPort
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.infrastructure.forms import SwitchForm, SwitchPortForm
 from web.blueprints.navigation import BlueprintNavigation
-from .tables import SubnetTable, SwitchTable, VlanTable, PortTable
+from web.table.table import LinkColResponse, TableResponse, BtnColResponse
+from .tables import SubnetTable, SwitchTable, VlanTable, PortTable, SwitchRow
 
 bp = Blueprint('infrastructure', __name__)
 access = BlueprintAccess(bp, required_properties=['infrastructure_show'])
@@ -93,27 +94,31 @@ def switches():
 
 @bp.route('/switches/json')
 def switches_json():
-    T = SwitchTable
-    return jsonify(items=[{
-        'id': switch.host_id,
-        'name': T.name.value(
-            title=switch.host.name,
-            href=url_for(".switch_show", switch_id=switch.host_id)
-        ),
-        'ip': str(switch.management_ip),
-        "edit_link": T.edit_link.value(
-            href=url_for(".switch_edit", switch_id=switch.host_id),
-            title="Bearbeiten",
-            icon='fa-edit',
-            btn_class='btn-link'
-        ),
-        "delete_link": T.delete_link.value(
-            href=url_for(".switch_delete", switch_id=switch.host_id),
-            title="Löschen",
-            icon='fa-trash',
-            btn_class='btn-link'
-        ),
-    } for switch in Switch.q.all()])
+    return TableResponse[SwitchRow](
+        items=[
+            SwitchRow(
+                id=switch.host_id,
+                name=LinkColResponse(
+                    title=switch.host.name,
+                    href=url_for(".switch_show", switch_id=switch.host_id),
+                ),
+                ip=str(switch.management_ip),
+                edit_link=BtnColResponse(
+                    href=url_for(".switch_edit", switch_id=switch.host_id),
+                    title="Bearbeiten",
+                    icon="fa-edit",
+                    btn_class="btn-link",
+                ),
+                delete_link=BtnColResponse(
+                    href=url_for(".switch_delete", switch_id=switch.host_id),
+                    title="Löschen",
+                    icon="fa-trash",
+                    btn_class="btn-link",
+                ),
+            )
+            for switch in Switch.q.all()
+        ]
+    ).model_dump()
 
 
 @bp.route('/switch/show/<int:switch_id>')

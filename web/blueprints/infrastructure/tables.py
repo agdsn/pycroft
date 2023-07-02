@@ -1,8 +1,17 @@
 from flask import url_for
 from flask_login import current_user
+from pydantic import BaseModel
 
-from web.table.table import BootstrapTable, Column, LinkColumn, \
-    BtnColumn, button_toolbar
+
+from web.table.table import (
+    BootstrapTable,
+    Column,
+    LinkColumn,
+    BtnColumn,
+    button_toolbar,
+    LinkColResponse,
+    BtnColResponse,
+)
 
 
 def no_inf_change():
@@ -34,6 +43,14 @@ class SwitchTable(BootstrapTable):
             return
 
         return button_toolbar("Switch", url_for(".switch_create"))
+
+
+class SwitchRow(BaseModel):
+    id: int
+    name: LinkColResponse
+    ip: str
+    edit_link: BtnColResponse
+    delete_link: BtnColResponse
 
 
 class VlanTable(BootstrapTable):

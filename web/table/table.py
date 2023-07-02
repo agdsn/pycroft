@@ -1,11 +1,17 @@
 import html
 import typing
+import typing as t
 from collections import OrderedDict
 from copy import copy
 from dataclasses import dataclass
 from datetime import date, datetime, time, timezone
+from functools import partial
+from operator import methodcaller
 from typing import Iterable, Any, Callable
 from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
+
+from pydantic import BaseModel, HttpUrl, AnyUrl, FilePath
+from annotated_types import Predicate
 
 from .lazy_join import lazy_join, LazilyJoined
 
@@ -148,12 +154,26 @@ class custom_formatter_column:
         return cls
 
 
+BtnClass = t.Annotated[str, Predicate(methodcaller("startswith", "btn-"))]
+IconClass = t.Annotated[str, Predicate(methodcaller("startswith", "fa-"))]
+
+
+class BtnColResponse(BaseModel):
+    btn_class: BtnClass
+    href: str
+    title: str
+    tooltip: str | None = None
+    new_tab: bool | None = None
+    icon: IconClass | Iterable[IconClass] | None = None
+
+
 @custom_formatter_column('table.btnFormatter')
 class BtnColumn(DictValueMixin, Column):
     def __init__(self, *a, **kw):
         super().__init__(*a, sortable=False, **kw)
 
     if typing.TYPE_CHECKING:
+        # TODO deprecate this!
         @classmethod
         def value(
             cls,
@@ -188,6 +208,13 @@ class MultiBtnColumn(DictListValueMixin, Column):
         ) -> dict:
             # for argument types, see `btnFormatter`
             ...
+
+
+class LinkColResponse(BaseModel):
+    href: str
+    title: str
+    glyphicon: IconClass | None = None
+    new_tab: bool | None = None
 
 
 @custom_formatter_column('table.linkFormatter')
@@ -571,3 +598,10 @@ def html_params(**kwargs):
         params.append(f'{str(k)}="{html.escape(str(v))}"')
 
     return ' '.join(params)
+
+
+TRow = t.TypeVar("TRow", bound=BaseModel)
+
+
+class TableResponse(BaseModel, t.Generic[TRow]):
+    items: list[TRow]
