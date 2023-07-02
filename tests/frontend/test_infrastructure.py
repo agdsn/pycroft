@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from flask import url_for
 
 from pycroft.model.facilities import Room
-from pycroft.model.host import Switch
+from pycroft.model.host import Switch, SwitchPort
 from pycroft.model.net import Subnet
 from pycroft.model.port import PatchPort
 from tests import factories as f
@@ -285,4 +285,85 @@ class TestSwitchPortCreate:
             },
             method="POST",
         )
+        assert re.search("bereits.*verbunden", string=(resp.data.decode()))
+
+
+@pytest.mark.usefixtures("admin_logged_in", "session")
+class TestSwitchPortEdit:
+    @pytest.fixture(scope="class")
+    def url(self) -> t.Callable[[int, int], str]:
+        def _url(switch_id: int, switch_port_id: int) -> str:
+            return url_for(
+                "infrastructure.switch_port_edit",
+                switch_id=switch_id,
+                switch_port_id=switch_port_id,
+            )
+
+        return _url
+
+    @pytest.fixture(scope="class")
+    def connected_patch_port(self, class_session, switch) -> PatchPort:
+        return f.PatchPortFactory(patched=True, switch_port__switch=switch)
+
+    @pytest.fixture(scope="class")
+    def switch_port(self, class_session, connected_patch_port) -> SwitchPort:
+        return connected_patch_port.switch_port
+
+    @pytest.fixture(scope="class")
+    def switch_port_2(self, class_session, switch) -> SwitchPort:
+        return f.SwitchPortFactory(switch__host__room=switch.host.room)
+
+    def test_get_nonexistent_switch(self, client, url):
+        with client.flashes_message("nicht gefunden", category="error"):
+            client.assert_url_redirects(url(999, 999))
+
+    def test_get_nonexistent_switch_port(self, client, switch, url):
+        with client.flashes_message("nicht gefunden", category="error"):
+            client.assert_url_redirects(url(switch.host_id, 999))
+
+    def test_get_switch_port_wrong_switch(self, client, switch, switch_port_2, url):
+        with client.flashes_message("SwitchPort.*gehört nicht zu", category="error"):
+            client.assert_url_redirects(url(switch.host_id, switch_port_2.id))
+
+    def test_get_switch_port(self, client, switch, switch_port, url):
+        client.assert_url_ok(url(switch.host_id, switch_port.id))
+
+    def test_post_switch_port_no_data(self, client, switch, switch_port, url):
+        URL = url(switch.host_id, switch_port.id)
+        with client.flashes_message("erfolgreich", category="success"):
+            client.assert_url_redirects(URL, data={}, method="POST")
+
+    def test_post_switch_port_invalid_data(self, client, switch, switch_port, url):
+        URL = url(switch.host_id, switch_port.id)
+        bad_data = {
+            "name": "Test Port",
+            "patch_port": "-1",  # bad id
+        }
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(URL, data=bad_data, method="POST")
+
+    def test_edit_switch_port_new_port(self, client, session, switch, switch_port, url):
+        URL = url(switch.host_id, switch_port.id)
+        new_port = f.PatchPortFactory(switch_room=switch.host.room)
+        session.flush()
+        good_data = {
+            "name": "Test Port",
+            "patch_port": str(new_port.id),
+            "vlan": None,
+        }
+        with client.flashes_message("erfolgreich", "success"):
+            client.assert_url_redirects(URL, data=good_data, method="POST")
+
+    def test_edit_switch_port_patched_port(
+        self, client, switch, switch_port_2, url, connected_patch_port
+    ):
+        # need `switch_port_2`, so patching actually does something
+        URL = url(switch_port_2.switch.host_id, switch_port_2.id)
+        data = {
+            "name": "Test Port",
+            "patch_port": str(connected_patch_port.id),
+            "vlan": None,
+        }
+        with client.renders_template("generic_form.html"):
+            resp = client.assert_url_ok(URL, data=data, method="POST")
         assert re.search("bereits.*verbunden", string=(resp.data.decode()))

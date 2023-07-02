@@ -328,6 +328,8 @@ def switch_port_edit(switch_id, switch_port_id):
     if form.validate_on_submit():
         error = False
 
+        # TODO use `handle_errors` instead
+        nested = session.session.begin_nested()
         edit_switch_port(switch_port, form.name.data, form.default_vlans.data, current_user)
 
         if switch_port.patch_port != form.patch_port.data:
@@ -342,13 +344,14 @@ def switch_port_edit(switch_id, switch_port_id):
                     error = True
 
         if not error:
+            nested.commit()
             session.session.commit()
 
             flash("Der Switch-Port wurde erfolgreich bearbeitet.", "success")
 
             return redirect(url_for('.switch_show', switch_id=switch_port.switch_id))
         else:
-            session.session.rollback()
+            nested.rollback()
 
     form_args = {
         'form': form,
