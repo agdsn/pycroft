@@ -70,3 +70,12 @@ class InterfaceTable(BootstrapTable):
 
         super().__init__(*a, **kw)
         self.host_id = host_id
+
+
+class InterfaceRow(BaseModel):
+    id: int  # TODO is this used?
+    host: str | None
+    name: str | None
+    mac: str
+    ips: str
+    actions: list[BtnColResponse]

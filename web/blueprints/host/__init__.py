@@ -20,7 +20,7 @@ from web.blueprints.helpers.exception import handle_errors
 from web.blueprints.helpers.form import refill_room_data
 from web.blueprints.helpers.user import get_user_or_404
 from web.blueprints.host.forms import InterfaceForm, HostForm
-from web.blueprints.host.tables import InterfaceTable, HostTable, HostRow
+from web.blueprints.host.tables import InterfaceTable, HostTable, HostRow, InterfaceRow
 from web.table.table import TableResponse, BtnColResponse
 
 bp = Blueprint('host', __name__)
@@ -175,33 +175,32 @@ def host_interfaces_json(host_id):
         flash("Host existiert nicht.", 'error')
         abort(404)
 
-    interfaces = []
-    T = InterfaceTable
-
-    for interface in host.interfaces:
-        interfaces.append({
-            'id': interface.id,
-            'host': host.name,
-            'name': interface.name,
-            'ips': ', '.join(str(ip.address) for ip in interface.ips),
-            'mac': interface.mac,
-            'actions': [
-                T.actions.single_value(
-                    href=url_for('.interface_edit', interface_id=interface.id),
-                    title="Bearbeiten",
-                    icon='fa-edit',
-                    btn_class='btn-link'
-                ),
-                T.actions.single_value(
-                    href=url_for('.interface_delete', interface_id=interface.id),
-                    title="Löschen",
-                    icon='fa-trash',
-                    btn_class='btn-link'
-                )
-            ]
-        })
-
-    return jsonify(items=interfaces)
+    return TableResponse[InterfaceRow](
+        items=[
+            InterfaceRow(
+                id=interface.id,
+                host=host.name,
+                name=interface.name,
+                ips=", ".join(str(ip.address) for ip in interface.ips),
+                mac=interface.mac,
+                actions=[
+                    BtnColResponse(
+                        href=url_for(".interface_edit", interface_id=interface.id),
+                        title="Bearbeiten",
+                        icon="fa-edit",
+                        btn_class="btn-link",
+                    ),
+                    BtnColResponse(
+                        href=url_for(".interface_delete", interface_id=interface.id),
+                        title="Löschen",
+                        icon="fa-trash",
+                        btn_class="btn-link",
+                    ),
+                ],
+            )
+            for interface in host.interfaces
+        ]
+    ).model_dump()
 
 
 @bp.route("/<int:host_id>/interfaces/table")

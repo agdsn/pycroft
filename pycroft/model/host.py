@@ -110,7 +110,7 @@ class Interface(IntegerIdModel):
     It has to be bound to a `UserHost`, not another kind of host (like `Switch`)
     """
 
-    name: Mapped[str] = mapped_column(String, nullable=True)
+    name: Mapped[str | None] = mapped_column(String, nullable=True)
     mac: Mapped[mac_address] = mapped_column(unique=True)
 
     host_id: Mapped[int] = mapped_column(
