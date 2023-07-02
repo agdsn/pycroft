@@ -5,6 +5,8 @@
 import pytest
 from flask import url_for
 
+import web.blueprints.host
+from pycroft.exc import PycroftException
 from pycroft.model.host import Host
 from pycroft.model.user import User
 from tests import factories as f
@@ -46,6 +48,15 @@ class TestHostDelete:
     def test_host_get_returns_form(self, client, host):
         with client.renders_template("generic_form.html"):
             client.assert_url_ok(url_for("host.host_delete", host_id=host.id))
+
+    def test_host_delete_exception(self, client, host, monkeypatch):
+        def _r(*a, **kw):
+            raise PycroftException
+        monkeypatch.setattr(web.blueprints.host.lib_host, "host_delete", _r)
+
+        with client.flashes_message("Fehler aufgetreten", category="error"):
+            client.assert_url_ok(url_for("host.host_delete", host_id=host.id), method="POST")
+
 
 
 @pytest.mark.usefixtures("admin_logged_in")
