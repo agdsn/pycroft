@@ -238,8 +238,8 @@ def switch_delete(switch_id):
 
     if form.validate_on_submit():
         sess = session.session
-        with sess.begin():
-            delete_switch(sess, switch, current_user)
+        delete_switch(sess, switch, current_user)
+        sess.commit()
         flash("Die Switch wurde erfolgreich gelöscht.", "success")
 
         return redirect(url_for('.switches'))
