@@ -17,6 +17,9 @@ jobs:
         # assuming no PR has more than 50 commits.
         fetch-depth: 50
     - uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+        cache: 'pip'
     - name: "Run pre-commit hooks for HEAD"
       uses: pre-commit/action@v3.0.0
       if: github.event_name != 'pull_request'
