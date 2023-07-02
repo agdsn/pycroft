@@ -55,11 +55,11 @@ class TestHostDelete:
     def test_host_delete_exception(self, client, host, url, monkeypatch):
         def _r(*a, **kw):
             raise PycroftException
+
         monkeypatch.setattr(web.blueprints.host.lib_host, "host_delete", _r)
 
         with client.flashes_message("Fehler aufgetreten", category="error"):
             client.assert_url_ok(url(host.id), method="POST")
-
 
 
 @pytest.mark.usefixtures("admin_logged_in")
