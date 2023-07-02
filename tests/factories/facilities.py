@@ -71,6 +71,8 @@ class PatchPortFactory(BaseFactory):
     @post_generation
     def post(obj: PatchPort, create, extracted, **kwargs):
         # Ensure that patched ports terminate in the switch room
+        if obj.switch_room:
+            return  # customly set
         if obj.switch_port:
             obj.switch_room = obj.switch_port.switch.host.room
         else:

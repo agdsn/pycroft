@@ -273,6 +273,7 @@ def switch_port_create(switch_id):
     if form.validate_on_submit():
         error = False
 
+        nested = session.session.begin_nested()
         switch_port = create_switch_port(switch, form.name.data, form.default_vlans.data, current_user)
 
         if form.patch_port.data:
@@ -289,7 +290,8 @@ def switch_port_create(switch_id):
 
             return redirect(url_for('.switch_show', switch_id=switch.host_id))
         else:
-            session.session.rollback()
+            # we don't want to keep the `switch_port`
+            nested.rollback()
 
     form_args = {
         'form': form,

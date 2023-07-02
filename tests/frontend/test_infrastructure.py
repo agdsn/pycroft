@@ -1,6 +1,7 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+import re
 
 import pytest
 from ipaddr import IPv4Network, IPv4Address
@@ -10,6 +11,7 @@ from flask import url_for
 from pycroft.model.facilities import Room
 from pycroft.model.host import Switch
 from pycroft.model.net import Subnet
+from pycroft.model.port import PatchPort
 from tests import factories as f
 from web.blueprints.infrastructure import format_address_range
 from .assertions import TestClient
@@ -214,3 +216,74 @@ class TestSwitchDelete:
                 url_for("infrastructure.switch_delete", switch_id=switch.host_id),
                 method="POST",
             )
+
+
+@pytest.mark.usefixtures("admin_logged_in", "session")
+class TestSwitchPortCreate:
+    @pytest.fixture(scope="class")
+    def patch_port(self, class_session, switch) -> PatchPort:
+        return f.PatchPortFactory(switch_room=switch.host.room)
+
+    @pytest.fixture(scope="class")
+    def connected_patch_port(self, class_session) -> PatchPort:
+        # patch_port = f.PatchPortFactory(switch_room=switch.host.room, switch_port=sp)
+        return f.PatchPortFactory(patched=True)
+
+    def test_create_port_at_nonexistent_switch(self, client):
+        with client.flashes_message("nicht gefunden", category="error"):
+            client.assert_url_redirects(
+                url_for("infrastructure.switch_port_create", switch_id=999),
+                expected_location=url_for("infrastructure.switches"),
+            )
+
+    def test_create_port_get(self, client, switch):
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(
+                url_for("infrastructure.switch_port_create", switch_id=switch.host_id),
+            )
+
+    def test_create_port_no_data(self, client, switch):
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(
+                url_for("infrastructure.switch_port_create", switch_id=switch.host_id),
+                data={},
+                method="POST",
+            )
+
+    def test_create_port_invalid_data(self, client, switch):
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(
+                url_for("infrastructure.switch_port_create", switch_id=switch.host_id),
+                data={
+                    "name": "Test Port",
+                    "patch_port": "-1",  # bad id
+                },
+                method="POST",
+            )
+
+    def test_create_port_valid_data(self, client, switch, patch_port):
+        with client.flashes_message("erfolgreich erstellt", "success"):
+            client.assert_url_redirects(
+                url_for("infrastructure.switch_port_create", switch_id=switch.host_id),
+                data={
+                    "name": "Test Port",
+                    "patch_port": str(patch_port.id),
+                    "vlan": None,
+                },
+                method="POST",
+            )
+
+    def test_create_port_already_patched(self, client, switch, connected_patch_port):
+        resp = client.assert_url_ok(
+            url_for(
+                "infrastructure.switch_port_create",
+                switch_id=connected_patch_port.switch_port.switch.host_id,
+            ),
+            data={
+                "name": "Test Port",
+                "patch_port": str(connected_patch_port.id),
+                "vlan": None,
+            },
+            method="POST",
+        )
+        assert re.search("bereits.*verbunden", string=(resp.data.decode()))
