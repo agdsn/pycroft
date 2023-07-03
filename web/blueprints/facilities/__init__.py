@@ -47,9 +47,16 @@ from web.blueprints.facilities.forms import (
 from web.blueprints.helpers.log import format_room_log_entry
 from web.blueprints.helpers.user import user_button
 from web.blueprints.navigation import BlueprintNavigation
+from web.table.table import TableResponse, LinkColResponse, BtnColResponse
 from .address import get_address_entity, address_entity_search_query
-from .tables import (BuildingLevelRoomTable, RoomLogTable, SiteTable,
-                     RoomOvercrowdedTable, PatchPortTable)
+from .tables import (
+    BuildingLevelRoomTable,
+    RoomLogTable,
+    SiteTable,
+    RoomOvercrowdedTable,
+    PatchPortTable,
+    SiteRow,
+)
 
 bp = Blueprint('facilities', __name__)
 access = BlueprintAccess(bp, required_properties=['facilities_show'])
@@ -69,18 +76,29 @@ def overview():
 
 @bp.route('/sites/json')
 def overview_json():
-    T = SiteTable
-    return jsonify(items=[{
-            'site': T.site.value(
-                title=site.name,
-                href=url_for("facilities.site_show", site_id=site.id)
-            ),
-            'buildings': [T.buildings.single_value(
-                href=url_for("facilities.building_levels",
-                             building_shortname=building.short_name),
-                title=building.street_and_number
-            ) for building in pycroft.lib.facilities.sort_buildings(site.buildings)]
-        } for site in Site.q.order_by(Site.name).all()])
+    return TableResponse[SiteRow](
+        items=[
+            SiteRow(
+                site=LinkColResponse(
+                    title=site.name,
+                    href=url_for("facilities.site_show", site_id=site.id),
+                ),
+                buildings=[
+                    BtnColResponse(
+                        href=url_for(
+                            "facilities.building_levels",
+                            building_shortname=building.short_name,
+                        ),
+                        title=building.street_and_number,
+                    )
+                    for building in pycroft.lib.facilities.sort_buildings(
+                        site.buildings
+                    )
+                ],
+            )
+            for site in Site.q.order_by(Site.name).all()
+        ]
+    ).model_dump()
 
 
 @bp.route('/site/<int:site_id>')

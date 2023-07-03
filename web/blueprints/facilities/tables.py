@@ -1,13 +1,29 @@
 from flask import url_for
+from pydantic import BaseModel
 
-from web.table.table import BootstrapTable, Column, LinkColumn, \
-    button_toolbar, toggle_button_toolbar, BtnColumn, MultiBtnColumn, DateColumn
+from web.table.table import (
+    BootstrapTable,
+    Column,
+    LinkColumn,
+    button_toolbar,
+    toggle_button_toolbar,
+    BtnColumn,
+    MultiBtnColumn,
+    DateColumn,
+    LinkColResponse,
+    BtnColResponse,
+)
 from web.blueprints.infrastructure.tables import no_inf_change
 
 
 class SiteTable(BootstrapTable):
     site = LinkColumn("Site")
     buildings = MultiBtnColumn("Buildings")
+
+
+class SiteRow(BaseModel):
+    site: LinkColResponse
+    buildings: list[BtnColResponse]
 
 
 class BuildingLevelRoomTable(BootstrapTable):

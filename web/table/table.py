@@ -5,12 +5,11 @@ from collections import OrderedDict
 from copy import copy
 from dataclasses import dataclass
 from datetime import date, datetime, time, timezone
-from functools import partial
 from operator import methodcaller
 from typing import Iterable, Any, Callable
 from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
 
-from pydantic import BaseModel, HttpUrl, AnyUrl, FilePath
+from pydantic import BaseModel
 from annotated_types import Predicate
 
 from .lazy_join import lazy_join, LazilyJoined
@@ -159,7 +158,7 @@ IconClass = t.Annotated[str, Predicate(methodcaller("startswith", "fa-"))]
 
 
 class BtnColResponse(BaseModel):
-    btn_class: BtnClass
+    btn_class: BtnClass | None = None
     href: str
     title: str
     tooltip: str | None = None
@@ -458,7 +457,7 @@ class SplittedTable(BootstrapTable):
     splits: Iterable[tuple[str, str]]
 
     def _iter_typed_splits(self):
-        for t in self.splits:
+        for t in self.splits:  # noqa[F402]
             yield TableSplit(*t)
 
     @property
