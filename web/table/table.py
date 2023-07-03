@@ -238,6 +238,11 @@ class DateColumn(Column):
     pass
 
 
+class DateColResponse(BaseModel):
+    formatted: str
+    timestamp: int | None
+
+
 @custom_formatter_column('table.relativeDateFormatter')
 class RelativeDateColumn(Column):
     pass
@@ -497,25 +502,29 @@ def iso_format(dt: datetime | date | None = None):
     return dt.isoformat(sep=' ')
 
 
+def date_format_pydantic(
+    dt: datetime | date | None,
+    default: str | None = None,
+    formatter: Callable = iso_format,
+) -> DateColResponse:
+    if not dt:
+        return DateColResponse(
+            formatted=default if default is not None else formatter(None),
+            timestamp=None,
+        )
+    return DateColResponse(
+        formatted=formatter(dt),
+        timestamp=int(
+            datetime.combine(dt, time.min.replace(tzinfo=timezone.utc)).timestamp()
+        ),
+    )
+
 def date_format(dt: datetime | date | None,
                 default: str | None = None, formatter: Callable = iso_format) -> dict:
-    """
-    Format date or datetime objects for `table.dateFormatter`.
-    :param dt: a date or datetime object or None
-    :param default: formatted value to use if `dt` is None
-    :param formatter:
-    :return:
-    """
-    if dt is not None:
-        return {
-            'formatted': formatter(dt),
-            'timestamp': int(datetime.combine(dt, time.min.replace(tzinfo=timezone.utc)).timestamp()),
-        }
-    else:
-        return {
-            'formatted': default if default is not None else formatter(None),
-            'timestamp': None,
-        }
+    import warnings
+
+    warnings.warn("use date_format_pydantic instead", DeprecationWarning, stacklevel=2)
+    return date_format_pydantic(dt, default, formatter).model_dump()
 
 
 def datetime_format(dt: datetime | None,

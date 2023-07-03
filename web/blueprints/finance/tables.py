@@ -1,10 +1,21 @@
 import typing
+from decimal import Decimal
 
 from flask import url_for
 from flask_babel import gettext
 from flask_login import current_user
+from pydantic import BaseModel
 
-from web.table.table import lazy_join, DictValueMixin, custom_formatter_column, IbanColumn
+from web.table.table import (
+    lazy_join,
+    DictValueMixin,
+    custom_formatter_column,
+    IbanColumn,
+    DateColResponse,
+    BtnColResponse,
+    TableResponse,
+    LinkColResponse,
+)
 
 from web.table.table import BootstrapTable, Column, SplittedTable, \
     BtnColumn, LinkColumn, button_toolbar, DateColumn, MultiBtnColumn
@@ -17,6 +28,11 @@ class ColoredColumn(DictValueMixin, Column):
         @classmethod
         def value(cls, value: str, is_positive: bool) -> dict:  # type: ignore[override]
             ...
+
+
+class ColoredColResponse(BaseModel):
+    value: str
+    is_positive: bool
 
 
 class FinanceTable(BootstrapTable):
@@ -126,6 +142,16 @@ class MembershipFeeTable(BootstrapTable):
         return button_toolbar(gettext("Beitrag erstellen"), href)
 
 
+class MembershipFeeRow(BaseModel):
+    name: str
+    regular_fee: str
+    payment_deadline: int
+    payment_deadline_final: int
+    begins_on: DateColResponse
+    ends_on: DateColResponse
+    actions: list[BtnColResponse]
+
+
 class UsersDueTable(BootstrapTable):
     """A table for displaying the users that """
     user_id = Column("Nutzer-ID")
@@ -134,6 +160,15 @@ class UsersDueTable(BootstrapTable):
     description = Column("Beschreibung")
     fee_account_id = LinkColumn("Beitragskonto")
     amount = Column("Betrag", formatter="table.coloredFormatter")
+
+
+class UsersDueRow(BaseModel):
+    user_id: int
+    user: LinkColResponse
+    valid_on: str
+    description: str
+    fee_account_id: LinkColResponse
+    amount: ColoredColResponse
 
 
 class BankAccountTable(BootstrapTable):
@@ -163,8 +198,19 @@ class BankAccountTable(BootstrapTable):
         return button_toolbar(gettext("Neues Bankkonto anlegen"), href)
 
 
+class BankAccountRow(BaseModel):
+    name: str
+    bank: str
+    iban: str
+    bic: str
+    kto: BtnColResponse
+    balance: str
+    last_imported_at: str  # TODO perhaps date
+
+
 class BankAccountActivityTable(BootstrapTable):
-    """A table for displaying bank account activities """
+    """A table for displaying bank account activities"""
+
     bank_account = Column("Bankkonto", width=1)
     name = Column("Name", width=2)
     valid_on = DateColumn("Gültig am", width=1)
@@ -190,6 +236,18 @@ class BankAccountActivityTable(BootstrapTable):
         }
 
 
+class BankAccountActivityRow(BaseModel):
+    bank_account: str
+    name: str
+    valid_on: DateColResponse
+    imported_at: DateColResponse
+    reference: str
+    iban: str
+    amount: Decimal
+    actions: list[BtnColResponse]
+    row_positive: bool
+
+
 class TransactionTable(BootstrapTable):
     """A table for displaying bank account activities """
     account = LinkColumn("Konto")
@@ -199,6 +257,16 @@ class TransactionTable(BootstrapTable):
         table_args = {
             'data-row-style': 'table.financeRowFormatter',
         }
+
+
+class TransactionSplitRow(BaseModel):
+    account: LinkColResponse
+    amount: str
+    row_positive: bool
+
+
+class TransactionSplitResponse(TableResponse[TransactionSplitRow]):
+    description: str
 
 
 class UnconfirmedTransactionsTable(BootstrapTable):
@@ -214,8 +282,25 @@ class UnconfirmedTransactionsTable(BootstrapTable):
     actions = MultiBtnColumn("Aktionen")
 
 
+class UnconfirmedTransactionsRow(BaseModel):
+    id: str | int
+    description: LinkColResponse
+    user: LinkColResponse | None
+    room: str | None
+    date: DateColResponse
+    amount: str
+    author: LinkColResponse
+    actions: list[BtnColResponse]
+
+
 class ImportErrorTable(BootstrapTable):
     """A table for displaying buggy mt940 imports"""
     name = Column("Bankkonto")
     imported_at = Column("Importiert am")
     fix = BtnColumn("Importieren")
+
+
+class ImportErrorRow(BaseModel):
+    name: str
+    imported_at: str
+    fix: BtnColResponse

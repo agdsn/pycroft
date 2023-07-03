@@ -39,7 +39,7 @@ class BankAccountFactory(BaseFactory):
     account_number = Faker('random_number', digits=10)
     routing_number = Faker('random_number', digits=8)
     iban = Faker('iban')
-    bic = Faker('random_number', digits=11)
+    bic = Faker("swift", length=11)
     fints_endpoint = Faker('url')
     account = SubFactory(AccountFactory, type='BANK_ASSET')
 
