@@ -163,7 +163,7 @@ class BtnColResponse(BaseModel):
     title: str
     tooltip: str | None = None
     new_tab: bool | None = None
-    icon: IconClass | Iterable[IconClass] | None = None
+    icon: IconClass | list[IconClass] | None = None
 
 
 @custom_formatter_column('table.btnFormatter')

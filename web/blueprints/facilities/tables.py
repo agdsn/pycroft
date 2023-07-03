@@ -45,6 +45,11 @@ class BuildingLevelRoomTable(BootstrapTable):
         )
 
 
+class BuildingLevelRoomRow(BaseModel):
+    room: LinkColResponse
+    inhabitants: list[BtnColResponse]
+
+
 class RoomLogTable(BootstrapTable):
     created_at = DateColumn("Erstellt um")
     user = LinkColumn("Nutzer")
@@ -57,6 +62,11 @@ class RoomOvercrowdedTable(BootstrapTable):
 
     class Meta:
         table_args = {'data-sort-name': 'room'}
+
+
+class RoomOvercrowdedRow(BaseModel):
+    room: LinkColResponse
+    inhabitants: list[BtnColResponse]
 
 
 class PatchPortTable(BootstrapTable):
@@ -82,3 +92,11 @@ class PatchPortTable(BootstrapTable):
             return
         href = url_for(".patch_port_create", switch_room_id=self.room_id)
         return button_toolbar("Patch-Port", href)
+
+
+class PatchPortRow(BaseModel):
+    name: str
+    room: LinkColResponse
+    switch_port: LinkColResponse
+    edit_link: BtnColResponse
+    delete_link: BtnColResponse

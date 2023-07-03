@@ -45,7 +45,7 @@ from web.blueprints.access import BlueprintAccess
 from web.blueprints.facilities.forms import (
     RoomLogEntry, PatchPortForm, CreateRoomForm, EditRoomForm)
 from web.blueprints.helpers.log import format_room_log_entry
-from web.blueprints.helpers.user import user_button
+from web.blueprints.helpers.user import user_button, user_btn_response
 from web.blueprints.navigation import BlueprintNavigation
 from web.table.table import TableResponse, LinkColResponse, BtnColResponse
 from .address import get_address_entity, address_entity_search_query
@@ -56,6 +56,9 @@ from .tables import (
     RoomOvercrowdedTable,
     PatchPortTable,
     SiteRow,
+    BuildingLevelRoomRow,
+    PatchPortRow,
+    RoomOvercrowdedRow,
 )
 
 bp = Blueprint('facilities', __name__)
@@ -313,14 +316,18 @@ def building_level_rooms_json(level, building_id=None, building_shortname=None):
             # Ensure room is in level_inhabitants
             level_inhabitants[room]
 
-    T = BuildingLevelRoomTable
-    return jsonify(items=[{
-            'room': T.room.value(
-                href=url_for(".room_show", room_id=room.id),
-                title=f"{level:02d} - {room.number}"
-            ),
-            'inhabitants': [user_button(i) for i in inhabitants]
-        } for room, inhabitants in level_inhabitants.items()])
+    return TableResponse[BuildingLevelRoomRow](
+        items=[
+            BuildingLevelRoomRow(
+                room=LinkColResponse(
+                    href=url_for(".room_show", room_id=room.id),
+                    title=f"{level:02d} - {room.number}",
+                ),
+                inhabitants=[user_btn_response(i) for i in inhabitants],
+            )
+            for room, inhabitants in level_inhabitants.items()
+        ]
+    ).model_dump()
 
 
 def get_switch_room_or_redirect(switch_room_id: int) -> Room:
@@ -492,6 +499,7 @@ def room_show(room_id):
 
 @bp.route('/room/<int:room_id>/logs/json')
 def room_logs_json(room_id):
+    # TODO migrate this with all the other tables
     return jsonify(items=[format_room_log_entry(entry) for entry in
                           reversed(Room.get(room_id).log_entries)])
 
@@ -508,38 +516,55 @@ def room_patchpanel_json(room_id):
 
     patch_ports = PatchPort.q.filter_by(switch_room=room).all()
     patch_ports = sort_ports(patch_ports)
-    T = PatchPortTable
 
-    return jsonify(items=[{
-        "name": port.name,
-        "room": T.room.value(
-            href=url_for(".room_show", room_id=port.room.id),
-            title=port.room.short_name
-        ),
-        "switch_port": T.switch_port.value(
-            href=url_for("infrastructure.switch_show",
-                         switch_id=port.switch_port.switch.host_id),
-            title=f"{port.switch_port.switch.host.name}/{port.switch_port.name}"
-        ) if port.switch_port else None,
-        'edit_link': T.edit_link.value(
-            hef=url_for(".patch_port_edit", switch_room_id=room.id, patch_port_id=port.id),
-            title="Bearbeiten",
-            icon='fa-edit',
-            # TODO decide on a convention here
-            btn_class='btn-link',
-        ),
-        'delete_link': T.delete_link.value(
-            href=url_for(".patch_port_delete", switch_room_id=room.id, patch_port_id=port.id),
-            title="Löschen",
-            icon='fa-trash',
-            btn_class='btn-link'
-        ),
-    } for port in patch_ports])
+    return TableResponse[PatchPortRow](
+        items=[
+            PatchPortRow(
+                name=port.name,
+                room=LinkColResponse(
+                    href=url_for(".room_show", room_id=port.room.id),
+                    title=port.room.short_name,
+                ),
+                switch_port=LinkColResponse(
+                    href=url_for(
+                        "infrastructure.switch_show",
+                        switch_id=port.switch_port.switch.host_id,
+                    ),
+                    title=f"{port.switch_port.switch.host.name}/{port.switch_port.name}",
+                )
+                if port.switch_port
+                else None,
+                edit_link=BtnColResponse(
+                    href=url_for(
+                        ".patch_port_edit",
+                        switch_room_id=room.id,
+                        patch_port_id=port.id,
+                    ),
+                    title="Bearbeiten",
+                    icon="fa-edit",
+                    # TODO decide on a convention here
+                    btn_class="btn-link",
+                ),
+                delete_link=BtnColResponse(
+                    href=url_for(
+                        ".patch_port_delete",
+                        switch_room_id=room.id,
+                        patch_port_id=port.id,
+                    ),
+                    title="Löschen",
+                    icon="fa-trash",
+                    btn_class="btn-link",
+                ),
+            )
+            for port in patch_ports
+        ]
+    ).model_dump()
 
 
 @bp.route('/json/levels')
 @access.require('facilities_show')
 def json_levels():
+    """Endpoint for the room <select> field"""
     building_id = request.args.get('building', 0, type=int)
     levels = session.session.query(Room.level.label('level')).filter_by(
         building_id=building_id).order_by(Room.level).distinct()
@@ -549,6 +574,7 @@ def json_levels():
 @bp.route('/json/rooms')
 @access.require('facilities_show')
 def json_rooms():
+    """Endpoint for the room <select> field"""
     building_id = request.args.get('building', 0, type=int)
     level = request.args.get('level', 0, type=int)
     rooms = session.session.query(
@@ -577,19 +603,24 @@ def overcrowded(building_id):
 @bp.route('/overcrowded/json', defaults={'building_id': None})
 @bp.route('/overcrowded/<int:building_id>/json')
 def overcrowded_json(building_id):
-    rooms = get_overcrowded_rooms(building_id)
-    T = RoomOvercrowdedTable
-
-    return jsonify(items=[{
-        'room': T.room.value(
-            title='{} / {:02d} / {}'.format(
-                inhabitants[0].room.building.short_name,
-                inhabitants[0].room.level, inhabitants[0].room.number),
-            href=url_for("facilities.room_show",
-                         room_id=inhabitants[0].room.id)
-        ),
-        'inhabitants': [user_button(user) for user in inhabitants]
-    } for inhabitants in rooms.values()])
+    return TableResponse[RoomOvercrowdedRow](
+        items=[
+            RoomOvercrowdedRow(
+                room=LinkColResponse(
+                    title="{} / {:02d} / {}".format(
+                        inhabitants[0].room.building.short_name,
+                        inhabitants[0].room.level,
+                        inhabitants[0].room.number,
+                    ),
+                    href=url_for(
+                        "facilities.room_show", room_id=inhabitants[0].room.id
+                    ),
+                ),
+                inhabitants=[user_btn_response(user) for user in inhabitants],
+            )
+            for inhabitants in get_overcrowded_rooms(building_id).values()
+        ]
+    ).model_dump()
 
 
 @bp.route('address/<string:type>')
