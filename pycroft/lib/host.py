@@ -18,6 +18,7 @@ from pycroft.lib.net import get_subnets_for_room, get_free_ip, delete_ip
 from pycroft.lib.user import migrate_user_host
 from pycroft.model.facilities import Room
 from pycroft.model.host import Interface, IP, Host, SwitchPort
+from pycroft.model.port import PatchPort
 from pycroft.model.session import with_transaction, session
 from pycroft.model.user import User
 
@@ -223,8 +224,11 @@ def interface_delete(interface: Interface, processor: User) -> None:
     session.delete(interface)
 
 
-def sort_ports(ports: t.Iterable[SwitchPort]) -> list[SwitchPort]:
-    def make_sort_key(port: SwitchPort) -> int:
+TPort = t.TypeVar("TPort", bound=SwitchPort | PatchPort)
+
+
+def sort_ports(ports: t.Iterable[TPort]) -> list[TPort]:
+    def make_sort_key(port: TPort) -> int:
         return port_name_sort_key(port.name)
 
     return sorted(ports, key=make_sort_key)
