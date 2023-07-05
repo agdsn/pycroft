@@ -1469,6 +1469,8 @@ def get_user_by_id_or_login(ident: str, email: str) -> User | None:
         user = user.filter_by(id=user_id)
     elif re.match(BaseUser.login_regex, ident):
         user = user.filter_by(login=ident)
+    else:
+        return None
 
     return t.cast(User | None, user.one_or_none())
 
