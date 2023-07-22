@@ -70,13 +70,28 @@ class TestBuilding:
         with client.renders_template("facilities/building_show.html"):
             client.assert_url_ok(f"/facilities/building/{building.id}/")
 
+    def test_show_nonexistent_building(self, client):
+        client.assert_url_response_code(
+            url_for("facilities.building_show", building_id=999), code=404
+        )
+
     def test_show_room(self, client: TestClient, room: Room):
         with client.renders_template("facilities/room_show.html"):
             client.assert_url_ok(f"/facilities/room/{room.id}")
 
+    def test_show_nonexistent_room(self, client):
+        client.assert_url_response_code(
+            url_for("facilities.room_show", room_id=999), code=404
+        )
+
     def test_building_levels(self, client: TestClient, building: Building):
         with client.renders_template("facilities/levels.html"):
             client.assert_url_ok(f"/facilities/building/{building.id}/levels/")
+
+    def test_nonexistent_building_levels(self, client):
+        client.assert_url_response_code(
+            url_for("facilities.building_levels", building_id=999), code=404
+        )
 
     def test_building_level_rooms(
         self, client: TestClient, building: Building, room: Room
