@@ -78,6 +78,10 @@ def overview_json():
 @bp.route('/site/<int:site_id>')
 def site_show(site_id):
     site = Site.get(site_id)
+    if not site:
+        flash("Site existiert nicht!", "error")
+        abort(404)
+
     buildings_list = pycroft.lib.facilities.sort_buildings(site.buildings)
     return render_template('facilities/site_show.html',
         buildings=buildings_list,
