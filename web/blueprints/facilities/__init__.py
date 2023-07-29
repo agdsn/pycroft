@@ -10,8 +10,7 @@
 """
 from collections import defaultdict
 
-from flask import (Blueprint, flash, jsonify, render_template, url_for,
-                   redirect, request, abort)
+from flask import Blueprint, flash, jsonify, render_template, url_for, redirect, request
 from flask_login import current_user
 from flask_wtf import FlaskForm as Form
 from sqlalchemy.orm import joinedload, aliased
@@ -39,6 +38,7 @@ from web.blueprints.facilities.forms import (
 from web.blueprints.helpers.log import format_room_log_entry
 from web.blueprints.helpers.user import user_button
 from web.blueprints.navigation import BlueprintNavigation
+from web.type_utils import abort
 from .address import get_address_entity, address_entity_search_query
 from .tables import (BuildingLevelRoomTable, RoomLogTable, SiteTable,
                      RoomOvercrowdedTable, PatchPortTable)
@@ -78,21 +78,31 @@ def overview_json():
 @bp.route('/site/<int:site_id>')
 def site_show(site_id):
     site = Site.get(site_id)
+    if not site:
+        flash("Site existiert nicht!", "error")
+        abort(404)
+
     buildings_list = pycroft.lib.facilities.sort_buildings(site.buildings)
     return render_template('facilities/site_show.html',
         buildings=buildings_list,
         page_title=site.name)
 
 
+def determine_building_or_404(
+    id: int | None = None,
+    shortname: int | None = None,
+) -> Building:
+    building = pycroft.lib.facilities.determine_building(id=id, shortname=shortname)
+    if building is None:
+        flash("Gebäude existiert nicht!", "error")
+        abort(404)
+    return building
+
+
 @bp.route('/building/<int:building_id>/')
 @bp.route('/building/<building_shortname>/')
 def building_show(building_id=None, building_shortname=None):
-    building = pycroft.lib.facilities.determine_building(id=building_id, shortname=building_shortname)
-
-    if building is None:
-        flash("Gebäude existiert nicht!", 'error')
-        abort(404)
-
+    building = determine_building_or_404(id=building_id, shortname=building_shortname)
     rooms_list = building.rooms
     return render_template('facilities/building_show.html',
         page_title="Wohnheim " + building.short_name, rooms=rooms_list)
@@ -102,15 +112,8 @@ def building_show(building_id=None, building_shortname=None):
 @bp.route('/building/<int:building_id>/levels/')
 @bp.route('/building/<building_shortname>/levels/')
 def building_levels(building_id=None, building_shortname=None):
-    building = pycroft.lib.facilities.determine_building(id=building_id, shortname=building_shortname)
-
-    if building is None:
-        flash("Gebäude existiert nicht!", 'error')
-        abort(404)
-
-    rooms_list = building.rooms
-    levels_list = [room.level for room in rooms_list]
-    levels_list = list(set(levels_list))
+    building = determine_building_or_404(id=building_id, shortname=building_shortname)
+    levels_list = list({room.level for room in building.rooms})
 
     return render_template(
         'facilities/levels.html',
@@ -137,20 +140,24 @@ def room_create():
     form = CreateRoomForm(building=building)
 
     if form.validate_on_submit():
+        sess = session.session
         try:
-            address = get_or_create_address(**form.address_kwargs)
-            room = create_room(form.building.data, form.level.data, form.number.data,
-                               address=address,
-                               processor=current_user, inhabitable=form.inhabitable.data)
-
-            session.session.commit()
-
-            flash(f"Der Raum {room.short_name} wurde erfolgreich erstellt.", "success")
-
-            return redirect(url_for('.room_show', room_id=room.id))
+            with sess.begin_nested():
+                address = get_or_create_address(**form.address_kwargs)
+                room = create_room(
+                    form.building.data,
+                    form.level.data,
+                    form.number.data,
+                    address=address,
+                    processor=current_user,
+                    inhabitable=form.inhabitable.data,
+                )
         except RoomAlreadyExistsException:
             form.number.errors.append("Ein Raum mit diesem Namen existiert bereits in dieser Etage!")
-            session.session.rollback()
+        else:
+            sess.commit()
+            flash(f"Der Raum {room.short_name} wurde erfolgreich erstellt.", "success")
+            return redirect(url_for(".room_show", room_id=room.id))
 
     form_args = {
         'form': form,
@@ -233,12 +240,7 @@ def room_edit(room_id):
 @bp.route('/building/<int:building_id>/level/<int:level>/rooms/')
 @bp.route('/building/<building_shortname>/level/<int:level>/rooms/')
 def building_level_rooms(level, building_id=None, building_shortname=None):
-    building = pycroft.lib.facilities.determine_building(building_shortname, building_id)
-
-    if building is None:
-        flash("Gebäude existiert nicht!", 'error')
-        abort(404)
-
+    building = determine_building_or_404(id=building_id, shortname=building_shortname)
     level_l0 = f"{level:02d}"
 
     room_table = BuildingLevelRoomTable(
@@ -256,11 +258,7 @@ def building_level_rooms(level, building_id=None, building_shortname=None):
 @bp.route('/building/<int:building_id>/level/<int:level>/rooms/json')
 @bp.route('/building/<building_shortname>/level/<int:level>/rooms/json')
 def building_level_rooms_json(level, building_id=None, building_shortname=None):
-    building = pycroft.lib.facilities.determine_building(id=building_id, shortname=building_shortname)
-
-    if building is None:
-        flash("Gebäude existiert nicht!", 'error')
-        abort(404)
+    building = determine_building_or_404(id=building_id, shortname=building_shortname)
 
     all_users = bool(request.args.get('all_users', 0, type=int))
     # We need to alias User, otherwise sqlalchemy selects User.id as user_id,
@@ -556,10 +554,7 @@ def json_rooms():
 def overcrowded(building_id):
     page_title = "Mehrfachbelegungen"
     if building_id:
-        building = pycroft.lib.facilities.determine_building(id=building_id)
-        if building is None:
-            flash("Gebäude existiert nicht!", 'error')
-            abort(404)
+        building = determine_building_or_404(id=building_id)
         page_title = f"Mehrfachbelegungen {building.short_name}"
 
     return render_template(

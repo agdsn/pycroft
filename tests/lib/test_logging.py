@@ -37,6 +37,7 @@ def room(module_session: Session) -> Room:
 
 def test_user_log_entry(session, utcnow, message, user):
     user_log_entry = log_user_event(message=message, author=user, user=user)
+    session.flush()
 
     assert_log_entry(user_log_entry, user, utcnow, message)
     assert user_log_entry.user == user
@@ -44,6 +45,7 @@ def test_user_log_entry(session, utcnow, message, user):
 
 def test_create_room_log_entry(session, utcnow, message, user, room):
     room_log_entry = log_room_event(message=message, author=user, room=room)
+    session.flush()
 
     assert_log_entry(room_log_entry, user, utcnow, message)
     assert room_log_entry.room == room

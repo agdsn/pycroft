@@ -15,8 +15,17 @@ from pycroft.model import drop_db_model, create_db_model
 from pycroft.model.session import set_scoped_session, Session as PycSessionProxy
 
 
+def pytest_addoption(parser):
+    parser.addoption(
+        "--echo",
+        action="store_true",
+        default=False,
+        help="print out sqlalchemy log messages",
+    )
+
+
 @pytest.fixture(scope='session')
-def engine():
+def engine(pytestconfig):
     try:
         uri = os.environ['PYCROFT_DB_URI']
     except KeyError:
@@ -24,7 +33,8 @@ def engine():
             "Environment variable PYCROFT_DB_URI must be "
             "set to an SQLalchemy connection string."
         ) from None
-    return create_engine(uri, poolclass=SingletonThreadPool, future=True)
+    echo: bool = pytestconfig.getoption("echo")
+    return create_engine(uri, poolclass=SingletonThreadPool, future=True, echo=echo)
 
 
 @pytest.fixture(scope='session')
