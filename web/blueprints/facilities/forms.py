@@ -5,7 +5,7 @@ from typing import Callable
 
 from flask import url_for
 from flask_wtf import FlaskForm as Form
-from wtforms.validators import Length, DataRequired, NumberRange, Optional
+from wtforms.validators import DataRequired, NumberRange, Optional
 from wtforms_widgets.base_form import BaseForm
 from wtforms_widgets.fields.core import TextField, BooleanField, TextAreaField, \
     QuerySelectField, IntegerField
@@ -106,12 +106,6 @@ class EditRoomForm(CreateAddressForm):
         'building', 'level', 'number', 'vo_suchname', 'inhabitable',
         *iter_prefixed_field_names(CreateAddressForm, 'address_')
     )
-
-
-class BuildingForm(Form):
-    short_name = TextField("Kürzel")
-    number = TextField("Nummer")
-    street = TextField("Straße", validators=[Length(min=5)])
 
 
 class RoomLogEntry(Form):
