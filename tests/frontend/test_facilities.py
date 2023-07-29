@@ -170,3 +170,72 @@ class TestRoomCreate:
         }
         with client.flashes_message("Raum.*erstellt", category="success"):
             client.assert_redirects(ep, method="POST", data=formdata)
+
+
+class TestRoomEdit:
+    @pytest.fixture(scope="session")
+    def ep(self):
+        return "facilities.room_edit"
+
+    @pytest.fixture(scope="class")
+    def room(self, class_session) -> Room:
+        return f.RoomFactory()
+
+    @pytest.fixture(scope="class")
+    def other_room(self, class_session, room) -> Room:
+        return f.RoomFactory(building=room.building, level=room.level)
+
+    @pytest.fixture(scope="class")
+    def url(self, room):
+        return url_for("facilities.room_edit", room_id=room.id)
+
+    @pytest.fixture(scope="class", autouse=True)
+    def used_address(self, class_session, room):
+        f.UserFactory(address=room.address, room=room)
+
+    def test_get_no_room(self, ep, client):
+        with client.flashes_message("Raum.*nicht gefunden", "error"):
+            client.assert_url_redirects(url_for(ep, room_id=999))
+
+    def test_get(self, url, client):
+        with client.renders_template("generic_form.html"), client.flashes_message(
+            "Adresse des Raums teilen", category="info"
+        ):
+            client.assert_url_ok(url)
+
+    def test_post_no_data(self, url, client):
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(url, method="POST", data={})
+
+    def test_post_wrong_data(self, url, client):
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(url, method="POST", data={"building": "999"})
+
+    def test_post_correct_data(self, url, client, room):
+        address = f.AddressFactory.build()
+        formdata = {
+            "building": room.building.id,
+            "level": room.level,
+            "number": room.number,
+            "address_street": address.street,
+            "address_number": address.number,
+            "address_zip_code": address.zip_code,
+            "address_addition": address.addition,
+            "address_city": address.city,
+            "address_country": address.country,
+        }
+        with client.flashes_message("erfolgreich bearbeitet", category="success"):
+            client.assert_url_redirects(url, method="POST", data=formdata)
+
+    def test_post_correct_data_ambiguous_name(self, url, client, room, other_room):
+        address = room.address
+        formdata = {
+            "building": room.building.id,
+            "level": room.level,
+            "number": other_room.number,
+            "address_street": address.street,
+            "address_number": address.number,
+            "address_zip_code": address.zip_code,
+        }
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(url, method="POST", data=formdata)
