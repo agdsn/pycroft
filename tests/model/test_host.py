@@ -95,9 +95,8 @@ class TestIpModel:
 
     def test_missing_subnet(self, session, interface, subnet):
         ip_address, _ = get_free_ip((subnet, ))
-        ip = IP(interface=interface, address=ip_address)
         with pytest.raises(IntegrityError), session.begin_nested():
-            session.add(ip)
+            session.add(IP(interface=interface, address=ip_address))
 
     def test_missing_ip(self, session, interface, subnet):
         with pytest.raises(IntegrityError), session.begin_nested():

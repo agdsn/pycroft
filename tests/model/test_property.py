@@ -23,13 +23,15 @@ PROP2 = 'test2'
 
 @pytest.fixture(scope='module')
 def property_group1(module_session):
-    with module_session.begin_nested():
-        return factories.PropertyGroupFactory(granted={PROP1})
+    group = factories.PropertyGroupFactory(granted={PROP1})
+    module_session.flush()
+    return group
 
 @pytest.fixture(scope='module')
 def property_group2(module_session):
-    with module_session.begin_nested():
-        return factories.PropertyGroupFactory(granted={PROP1, PROP2})
+    group = factories.PropertyGroupFactory(granted={PROP1, PROP2})
+    module_session.flush()
+    return group
 
 
 def test_fixtures_correct(session, user, property_group1, property_group2):
@@ -50,49 +52,57 @@ def test_fixtures_correct(session, user, property_group1, property_group2):
 class Test_PropertyResolving:
     def test_add_membership(self, session, utcnow, user, property_group1, property_group2):
         # add membership to group1
-        with session.begin_nested():
-            session.add(
-                Membership(
-                    active_during=starting_from(utcnow),
-                    user=user,
-                    group=property_group1,
-                )
+        session.add(
+            Membership(
+                active_during=starting_from(utcnow),
+                user=user,
+                group=property_group1,
             )
+        )
+        session.flush()
         session.refresh(user)
         assert user.has_property(PROP1)
         assert not user.has_property(PROP2)
 
         # add membership to group2
-        with session.begin_nested():
-            session.add(
-                Membership(
-                    active_during=starting_from(utcnow),
-                    user=user,
-                    group=property_group2,
-                )
+        session.add(
+            Membership(
+                active_during=starting_from(utcnow),
+                user=user,
+                group=property_group2,
             )
+        )
+        session.flush()
         session.refresh(user)
         assert user.has_property(PROP1)
         assert user.has_property(PROP2)
 
-    def test_add_timed_membership(self, session, utcnow, user, property_group1, property_group2):
-        with session.begin_nested():
-            session.add(Membership(
+    def test_add_timed_membership(
+        self, session, utcnow, user, property_group1, property_group2
+    ):
+        session.add(
+            Membership(
                 active_during=closedopen(utcnow, utcnow + timedelta(days=3)),
                 user=user,
-                group=property_group1
-            ))
+                group=property_group1,
+            )
+        )
+        session.flush()
         session.refresh(user)
         assert user.has_property(PROP1)
         assert not user.has_property(PROP2)
 
-        with session.begin_nested():
-            # add expired membership to group2
-            session.add(Membership(
-                active_during=closedopen(utcnow - timedelta(hours=2), utcnow - timedelta(hours=1)),
+        # add expired membership to group2
+        session.add(
+            Membership(
+                active_during=closedopen(
+                    utcnow - timedelta(hours=2), utcnow - timedelta(hours=1)
+                ),
                 user=user,
-                group=property_group2
-            ))
+                group=property_group2,
+            )
+        )
+        session.flush()
         session.refresh(user)
         assert user.has_property(PROP1)
         assert not user.has_property(PROP2)
@@ -104,26 +114,26 @@ class Test_PropertyResolving:
             user=user,
             group=property_group1
         )
-        with session.begin_nested():
-            session.add(membership)
+        session.add(membership)
+        session.flush()
         session.refresh(user)
         assert user.has_property(PROP1)
 
-        with session.begin_nested():
-            membership.disable(utcnow - timedelta(hours=1))
+        membership.disable(utcnow - timedelta(hours=1))
+        session.flush()
         session.refresh(user)
         assert property_group1 not in user.active_property_groups()
         assert not user.has_property(PROP1)
 
-        with session.begin_nested():
-            # add membership to group1
-            session.add(
-                Membership(
-                    active_during=starting_from(utcnow),
-                    user=user,
-                    group=property_group1,
-                )
+        # add membership to group1
+        session.add(
+            Membership(
+                active_during=starting_from(utcnow),
+                user=user,
+                group=property_group1,
             )
+        )
+        session.flush()
         session.refresh(user)
         assert user.has_property(PROP1)
 
@@ -133,15 +143,15 @@ class Test_PropertyResolving:
             user=user,
             group=property_group2
         )
-        with session.begin_nested():
-            session.add(membership)
+        session.add(membership)
+        session.flush()
         session.refresh(user)
         assert user.has_property(PROP1)
         assert user.has_property(PROP2)
 
         # disables membership in group2
-        with session.begin_nested():
-            membership.disable(utcnow - timedelta(hours=1))
+        membership.disable(utcnow - timedelta(hours=1))
+        session.flush()
         session.refresh(user)
         assert user.has_property(PROP1)
         assert not user.has_property(PROP2)
@@ -158,14 +168,14 @@ class Test_View_Only_Shortcut_Properties:
             user=user,
             group=property_group1,
         )
-        with session.begin_nested():
-            session.add(p1)
+        session.add(p1)
+        session.flush()
         session.refresh(property_group1)
         assert len(property_group1.users) == 1
         assert len(property_group1.active_users()) == 1
 
-        with session.begin_nested():
-            p1.disable(utcnow - timedelta(hours=1))
+        p1.disable(utcnow - timedelta(hours=1))
+        session.flush()
         session.refresh(property_group1)
         assert len(property_group1.users) == 1
         assert len(property_group1.active_users()) == 0
@@ -181,8 +191,8 @@ class Test_View_Only_Shortcut_Properties:
             user=user,
             group=property_group1,
         )
-        with session.begin_nested():
-            session.add(p1)
+        session.add(p1)
+        session.flush()
         session.refresh(user)
         f = Membership.q.first()
         assert utcnow in f.active_during
@@ -195,15 +205,15 @@ class Test_View_Only_Shortcut_Properties:
             user=user,
             group=property_group2,
         )
-        with session.begin_nested():
-            session.add(p1)
+        session.add(p1)
+        session.flush()
         session.refresh(user)
         assert len(user.property_groups) == 2
         assert len(user.active_property_groups()) == 2
 
         # disable the second group. active should be one, all 2
-        with session.begin_nested():
-            p1.disable(utcnow - timedelta(hours=1))
+        p1.disable(utcnow - timedelta(hours=1))
+        session.flush()
         session.refresh(user)
         assert len(user.property_groups) == 2
         assert len(user.active_property_groups()) == 1
@@ -217,9 +227,10 @@ class Test_View_Only_Shortcut_Properties:
         assert res == 2
 
         # reenable it - but with a deadline - both counts should be 2
-        with session.begin_nested():
-            p1.active_during = closedopen(p1.active_during.begin,
-                                          utcnow + timedelta(days=1))
+        p1.active_during = closedopen(
+            p1.active_during.begin, utcnow + timedelta(days=1)
+        )
+        session.flush()
         session.refresh(user)
         assert len(user.property_groups) == 2
         assert len(user.active_property_groups()) == 2
@@ -257,8 +268,8 @@ class Test_Membership:
     ):
         interval = closedopen(utcnow + rel_begin, rel_end and utcnow + rel_end)
         mem = Membership(active_during=interval, user=user, group=property_group1)
-        with session.begin_nested():
-            session.add(mem)
+        session.add(mem)
+        session.flush()
         session.refresh(mem)
         assert (utcnow in mem.active_during) == active_expected
 
@@ -268,13 +279,13 @@ class Test_Membership:
             user=user,
             group=property_group1,
         )
-        with session.begin_nested():
-            session.add(mem)
+        session.add(mem)
+        session.flush()
         assert utcnow in mem.active_during
 
         # disable: [NOW - 2h,) → [NOW - 2h, NOW - 1h)
-        with session.begin_nested():
-            mem.disable(utcnow - timedelta(hours=1))
+        mem.disable(utcnow - timedelta(hours=1))
+        session.flush()
         session.refresh(mem)
         assert utcnow not in mem.active_during
 
@@ -283,16 +294,18 @@ class TestGroup:
     @pytest.fixture(scope='class')
     def membership(self, class_session, user, utcnow, property_group1):
         return Membership(
-            user=user,
-            group=property_group1,
+            # use ids to avoid cascades, which causes a warning because this object
+            # is not attached to a session
+            user_id=user.id,
+            group_id=property_group1.id,
             active_during=starting_from(utcnow),
         )
 
     @pytest.fixture
     def add_membership(self, membership, session):
         def _add_membership():
-            with session.begin_nested():
-                session.add(membership)
+            session.add(membership)
+            session.flush()
         return _add_membership
 
     def test_active_users(self, session, user, add_membership, property_group1):
