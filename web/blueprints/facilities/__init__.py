@@ -141,20 +141,24 @@ def room_create():
     form = CreateRoomForm(building=building)
 
     if form.validate_on_submit():
+        sess = session.session
         try:
-            address = get_or_create_address(**form.address_kwargs)
-            room = create_room(form.building.data, form.level.data, form.number.data,
-                               address=address,
-                               processor=current_user, inhabitable=form.inhabitable.data)
-
-            session.session.commit()
-
-            flash(f"Der Raum {room.short_name} wurde erfolgreich erstellt.", "success")
-
-            return redirect(url_for('.room_show', room_id=room.id))
+            with sess.begin_nested():
+                address = get_or_create_address(**form.address_kwargs)
+                room = create_room(
+                    form.building.data,
+                    form.level.data,
+                    form.number.data,
+                    address=address,
+                    processor=current_user,
+                    inhabitable=form.inhabitable.data,
+                )
         except RoomAlreadyExistsException:
             form.number.errors.append("Ein Raum mit diesem Namen existiert bereits in dieser Etage!")
-            session.session.rollback()
+        else:
+            sess.commit()
+            flash(f"Der Raum {room.short_name} wurde erfolgreich erstellt.", "success")
+            return redirect(url_for(".room_show", room_id=room.id))
 
     form_args = {
         'form': form,
