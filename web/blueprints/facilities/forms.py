@@ -41,15 +41,19 @@ def create_address_field(name: str, *args, type: str, render_kw: dict | None = N
 
 
 class CreateAddressForm(BaseForm):
-    address_street = create_address_field("Straße", type='street')
-    address_number = create_address_field("Nummer", type='number')
-    address_addition = create_address_field("Adresszusatz", [Optional()], type='addition',
-                                            description="Der Adresszusatz; oft die Raumnummer."
-                                                        " Optional.")
-    address_zip_code = create_address_field("Postleitzahl", type='zip_code')
-    address_city = create_address_field("Stadt", [Optional()], type='city')
-    address_state = create_address_field("Bundesstaat", [Optional()], type='state')
-    address_country = create_address_field("Land", [Optional()], type='country')
+    address_street = create_address_field("Straße", [DataRequired()], type="street")
+    address_number = create_address_field("Nummer", [DataRequired()], type="number")
+    address_addition = create_address_field(
+        "Adresszusatz",
+        type="addition",
+        description="Der Adresszusatz; oft die Raumnummer." " Optional.",
+    )
+    address_zip_code = create_address_field(
+        "Postleitzahl", [DataRequired()], type="zip_code"
+    )
+    address_city = create_address_field("Stadt", type="city")
+    address_state = create_address_field("Bundesstaat", type="state")
+    address_country = create_address_field("Land", type="country")
 
     @property
     def address_kwargs(self):
