@@ -12,13 +12,11 @@ from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.logging import UserLogEntry, RoomLogEntry, LogEntry, \
     TaskLogEntry
-from pycroft.model.session import with_transaction
 from pycroft.model.task import Task
 from pycroft.model.user import User
 
 
 TLogEntry = t.TypeVar("TLogEntry", bound=LogEntry)
-@with_transaction
 def _create_log_entry(
     class_: t.Type[TLogEntry],
     message: str,
