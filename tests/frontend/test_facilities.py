@@ -109,3 +109,64 @@ class TestBuilding:
     ):
         with client.renders_template("facilities/room_overcrowded.html"):
             client.assert_url_ok(f"/facilities/overcrowded/{building.id}")
+
+
+class TestRoomCreate:
+    @pytest.fixture(scope="session")
+    def ep(self):
+        return "facilities.room_create"
+
+    @pytest.fixture(scope="class")
+    def room(self, class_session: Session) -> Room:
+        return f.RoomFactory()
+
+    @pytest.fixture(scope="class")
+    def building(self, class_session: Session, room) -> Building:
+        return room.building
+
+    def test_get_no_building(self, ep, client):
+        with client.renders_template("generic_form.html"):
+            client.assert_ok(ep)
+
+    def test_get_wrong_id(self, ep, client, building):
+        with client.flashes_message("Gebäude.*nicht gefunden", "error"):
+            client.assert_url_redirects(url_for(ep, building_id=999))
+
+    def test_get_correct_building_id(self, ep, client, building):
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(url_for(ep, building_id=building.id))
+
+    def test_post_no_data(self, ep, client):
+        with client.renders_template("generic_form.html"):
+            client.assert_ok(ep, method="POST", data={})
+
+    def test_post_wrong_data(self, ep, client):
+        with client.renders_template("generic_form.html"):
+            client.assert_ok(ep, method="POST", data={"building": "999"})
+
+    def test_post_correct_data_same_room(self, ep, client, room):
+        address = room.address
+        formdata = {
+            "building": room.building.id,
+            "level": room.level,
+            "number": room.number,
+            "address_street": address.street,
+            "address_number": address.number,
+            "address_zip_code": address.zip_code,
+            # addition, city, state, country optional
+        }
+        client.assert_ok(ep, method="POST", data=formdata)
+
+    def test_post_correct_data_new_room(self, ep, client, building):
+        address = f.AddressFactory.build()
+        formdata = {
+            "building": building.id,
+            "level": 1,
+            "number": 1,
+            "address_street": address.street,
+            "address_number": address.number,
+            "address_zip_code": address.zip_code,
+            # addition, city, state, country optional
+        }
+        with client.flashes_message("Raum.*erstellt", category="success"):
+            client.assert_redirects(ep, method="POST", data=formdata)
