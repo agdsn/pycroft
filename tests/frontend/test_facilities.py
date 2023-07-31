@@ -54,8 +54,9 @@ class TestSite:
 
 class TestBuilding:
     @pytest.fixture(scope="class")
-    def room(self, class_session: Session) -> Room:
+    def room(self, class_session, admin) -> Room:
         room = RoomFactory()
+        f.RoomLogEntryFactory(room=room, author=admin)
         class_session.flush()
         return room
 
@@ -84,6 +85,23 @@ class TestBuilding:
         client.assert_url_response_code(
             url_for("facilities.room_show", room_id=999), code=404
         )
+
+    def test_post_room_logs(self, client, room):
+        with client.renders_template(
+            "facilities/room_show.html"
+        ), client.flashes_message("Kommentar hinzugefügt", category="success"):
+            client.assert_url_ok(
+                url_for("facilities.room_show", room_id=room.id),
+                method="POST",
+                data={"message": "Dose zugeklebt"},
+            )
+
+    def test_room_logs_json(self, client, room):
+        resp = client.assert_url_ok(
+            url_for("facilities.room_logs_json", room_id=room.id)
+        )
+        assert "items" in (j := resp.json)
+        assert j["items"]
 
     def test_building_levels(self, client: TestClient, building: Building):
         with client.renders_template("facilities/levels.html"):
