@@ -7,6 +7,7 @@ from flask import url_for
 from sqlalchemy.orm import Session
 
 from pycroft.model.facilities import Building, Room, Site
+from pycroft.model.port import PatchPort
 from tests import factories as f
 from tests.factories import RoomFactory
 from .assertions import TestClient
@@ -275,3 +276,70 @@ class TestBuildingLevelRooms:
         assert "items" in (j := resp.json)
         assert len(j["items"]) == 2
         assert {len(r["inhabitants"]) for r in j["items"]} == {0, 1}
+
+
+class TestPatchPortCreate:
+    @pytest.fixture(scope="class")
+    def ep(self) -> str:
+        return "facilities.patch_port_create"
+
+    @pytest.fixture(scope="class")
+    def room(self, class_session) -> Room:
+        return f.RoomFactory()
+
+    @pytest.fixture(scope="class")
+    def switch_room(self, class_session) -> Room:
+        switch = f.SwitchFactory()
+        return switch.host.room
+
+    @pytest.fixture(scope="class")
+    def patch_port(self, switch_room) -> PatchPort:
+        return f.PatchPortFactory(switch_room=switch_room)
+
+    @pytest.fixture(scope="class")
+    def url(self, ep, switch_room) -> str:
+        """Endpoint URL for the patched room, where a POST makes sense"""
+        return url_for(ep, switch_room_id=switch_room.id)
+
+    def test_get_nonexistent_room(self, client, ep):
+        with client.flashes_message("Raum.*nicht gefunden", category="error"):
+            client.assert_url_redirects(url_for(ep, switch_room_id=999))
+
+    def test_get_non_switch_room(self, client, ep, room):
+        with client.flashes_message("kein Switchraum", category="error"):
+            client.assert_url_redirects(url_for(ep, switch_room_id=room.id))
+
+    def test_get_switch_room(self, client, url):
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(url)
+
+    def test_post_no_data(self, client, url):
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(url, method="POST", data={})
+
+    def test_post_wrong_data(self, client, url):
+        data = {"switch": "999"}
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(url, method="POST", data=data)
+
+    def test_post_existing_patch_port(self, client, url, switch_room, room, patch_port):
+        data = {
+            "name": patch_port.name,
+            "switch_room": switch_room.id,
+            "building": room.building.id,
+            "level": room.level,
+            "room_number": room.number,
+        }
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(url, method="POST", data=data)
+
+    def test_post_new_patch_port(self, client, url, patch_port, switch_room, room):
+        data = {
+            "name": f"{patch_port.name}-2",
+            "switch_room": switch_room.id,
+            "building": room.building.id,
+            "level": room.level,
+            "room_number": room.number,
+        }
+        with client.flashes_message("erfolgreich erstellt", category="success"):
+            client.assert_url_redirects(url, method="POST", data=data)
