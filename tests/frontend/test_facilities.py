@@ -493,6 +493,34 @@ class TestPatchPortDelete:
             client.assert_url_redirects(url, method="POST", data={})
 
 
+class TestPatchPanelJson:
+    @pytest.fixture(scope="class")
+    def switch_room(self, class_session) -> Room:
+        switch = f.SwitchFactory()
+        sp = f.SwitchPortFactory(switch=switch)
+        f.PatchPortFactory(switch_room=switch.host.room, switch_port=sp)
+        class_session.flush()
+        return switch.host.room
+
+    @pytest.fixture(scope="class")
+    def other_room(self) -> Room:
+        return f.RoomFactory()
+
+    @pytest.fixture(scope="class")
+    def ep(self) -> str:
+        return "facilities.room_patchpanel_json"
+
+    def test_get_nonexistent_room(self, client, ep):
+        client.assert_url_response_code(url_for(ep, room_id=999), 404)
+
+    def test_get_non_switch_room(self, client, ep, other_room):
+        client.assert_url_response_code(url_for(ep, room_id=other_room.id), 400)
+
+    def test_get_room_patchpanel_json(self, client, ep, switch_room):
+        resp = client.assert_url_ok(url_for(ep, room_id=switch_room.id))
+        assert resp.json.get("items")
+
+
 class TestAddresses:
     @pytest.fixture(scope="class", autouse=True)
     def addresses(self, class_session):
