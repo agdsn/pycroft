@@ -384,19 +384,18 @@ def patch_port_edit(switch_room_id, patch_port_id):
         room = Room.q.filter_by(building=form.building.data,
                                 level=form.level.data,
                                 number=form.room_number.data).one()
-
+        sess = session.session
         try:
-            edit_patch_port(patch_port, form.name.data, room,current_user)
-
-            session.session.commit()
-
-            flash("Der Patch-Port wurde erfolgreich bearbeitet.", "success")
-
-            return redirect(url_for('.room_show', room_id=switch_room_id, _anchor="patchpanel"))
+            with sess.begin_nested():
+                edit_patch_port(patch_port, form.name.data, room, current_user)
         except PatchPortAlreadyExistsException:
-            session.session.rollback()
-
-            form.name.errors.append("Ein Patch-Port mit dieser Bezeichnung existiert bereits in diesem Switchraum.")
+            form.name.errors.append(
+                "Ein Patch-Port mit dieser Bezeichnung existiert bereits in diesem Switchraum."
+            )
+        else:
+            sess.commit()
+            flash("Der Patch-Port wurde erfolgreich bearbeitet.", "success")
+            return redirect(url_for('.room_show', room_id=switch_room_id, _anchor="patchpanel"))
 
     form_args = {
         'form': form,
