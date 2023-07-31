@@ -318,20 +318,22 @@ def patch_port_create(switch_room_id):
         room = Room.q.filter_by(building=form.building.data,
                                 level=form.level.data,
                                 number=form.room_number.data).one()
+        sess = session.session
         try:
-            patch_port = create_patch_port(form.name.data, room, switch_room, current_user)
-
-            session.session.commit()
-
+            with sess.begin_nested():
+                patch_port = create_patch_port(
+                    form.name.data, room, switch_room, current_user
+                )
+        except PatchPortAlreadyExistsException:
+            form.name.errors.append(
+                "Ein Patch-Port mit dieser Bezeichnung existiert bereits in diesem Switchraum."
+            )
+        else:
+            sess.commit()
             flash(
                 f"Der Patch-Port {patch_port.name} zum Zimmer {patch_port.room.short_name} wurde erfolgreich erstellt.",
                   "success")
-
             return redirect(url_for('.room_show', room_id=switch_room_id, _anchor="patchpanel"))
-        except PatchPortAlreadyExistsException:
-            session.session.rollback()
-
-            form.name.errors.append("Ein Patch-Port mit dieser Bezeichnung existiert bereits in diesem Switchraum.")
 
     form_args = {
         'form': form,
