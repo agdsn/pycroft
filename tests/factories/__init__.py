@@ -20,7 +20,12 @@ from .host import (
     SwitchPortFactory,
 )
 from .net import SubnetFactory, VLANFactory
-from .property import PropertyGroupFactory, MembershipFactory, AdminPropertyGroupFactory
+from .property import (
+    PropertyGroupFactory,
+    MembershipFactory,
+    AdminPropertyGroupFactory,
+    MemberPropertyGroupFactory,
+)
 from .user import UserFactory, UnixAccountFactory
 from .traffic import TrafficDataFactory, TrafficVolumeFactory, TrafficVolumeLastWeekFactory
 from .log import RoomLogEntryFactory, UserLogEntryFactory

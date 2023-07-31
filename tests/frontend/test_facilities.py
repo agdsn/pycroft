@@ -239,3 +239,39 @@ class TestRoomEdit:
         }
         with client.renders_template("generic_form.html"):
             client.assert_url_ok(url, method="POST", data=formdata)
+
+
+class TestBuildingLevelRooms:
+    @pytest.fixture(scope="class")
+    def ep(self) -> str:
+        return "facilities.building_level_rooms_json"
+
+    @pytest.fixture(scope="class", autouse=True)
+    def building(self, class_session) -> Building:
+        return f.BuildingFactory()
+
+    @pytest.fixture(scope="class", autouse=True)
+    def inhabited_room(self, class_session, building) -> Room:
+        room = f.RoomFactory(level=1, building=building)
+        group = f.MemberPropertyGroupFactory()
+        f.UserFactory(room=room, with_membership=True, membership__group=group)
+        f.UserFactory(room=room)
+        return room
+
+    @pytest.fixture(scope="class", autouse=True)
+    def uninhabited_room(self, building):
+        return f.RoomFactory(level=1, building=building)
+
+    def test_all_users(self, client, ep, building):
+        url = url_for(ep, building_id=building.id, level=1, all_users=1)
+        resp = client.assert_url_ok(url)
+        assert "items" in (j := resp.json)
+        assert len(j["items"]) == 2
+        assert {len(r["inhabitants"]) for r in j["items"]} == {0, 2}
+
+    def test_not_all_users(self, client, ep, building):
+        url = url_for(ep, building_id=building.id, level=1)
+        resp = client.assert_url_ok(url)
+        assert "items" in (j := resp.json)
+        assert len(j["items"]) == 2
+        assert {len(r["inhabitants"]) for r in j["items"]} == {0, 1}
