@@ -344,3 +344,66 @@ class TestPatchPortCreate:
         }
         with client.flashes_message("erfolgreich erstellt", category="success"):
             client.assert_url_redirects(url, method="POST", data=data)
+
+
+class TestPatchPortEdit:
+    @pytest.fixture(scope="class")
+    def room(self, class_session) -> Room:
+        room = f.RoomFactory()
+        f.SwitchFactory(host__room=room)
+        return room
+
+    @pytest.fixture(scope="class")
+    def patch_port(self, class_session, room) -> PatchPort:
+        patch_port = f.PatchPortFactory(name="A01", switch_room=room)
+        class_session.flush()
+        return patch_port
+
+    @pytest.fixture(scope="class")
+    def patch_port2(self, class_session, room) -> PatchPort:
+        return f.PatchPortFactory(name="A02", switch_room=room)
+
+    @pytest.fixture(scope="class")
+    def patch_port_other_room(self) -> PatchPort:
+        return f.PatchPortFactory()
+
+    @pytest.fixture(scope="class")
+    def ep(self) -> str:
+        return "facilities.patch_port_edit"
+
+    @pytest.fixture(scope="class")
+    def url(self, ep, patch_port, room) -> str:
+        return url_for(ep, switch_room_id=room.id, patch_port_id=patch_port.id)
+
+    def test_get_nonexistent_patch_port(self, client, ep, room):
+        with client.flashes_message("nicht gefunden", category="error"):
+            client.assert_url_redirects(
+                url_for(ep, switch_room_id=room.id, patch_port_id=999)
+            )
+
+    def test_get_patch_port_wrong_room(self, client, ep, room, patch_port_other_room):
+        with client.flashes_message("ist nicht im .*raum", category="error"):
+            client.assert_url_redirects(
+                url_for(
+                    ep, switch_room_id=room.id, patch_port_id=patch_port_other_room.id
+                )
+            )
+
+    def test_get_correct_patch_port(self, client, url):
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(url)
+
+    @pytest.mark.parametrize("data", [{}, {"name": "foo"}])
+    def test_post_correct_data(self, client, url, data):
+        with client.flashes_message("erfolgreich bearbeitet", category="success"):
+            client.assert_url_redirects(url, method="POST", data=data)
+
+    def test_post_wrong_data(self, client, url):
+        data = {"building": "999"}
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(url, method="POST", data=data)
+
+    def test_post_existing_patch_port(self, client, url, patch_port2):
+        data = {"name": patch_port2.name}
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(url, method="POST", data=data)
