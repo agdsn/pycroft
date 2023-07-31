@@ -112,6 +112,20 @@ class TestBuilding:
             url_for("facilities.building_levels", building_id=999), code=404
         )
 
+    def test_building_levels_json(self, client, building):
+        resp = client.assert_url_ok(
+            url_for("facilities.json_levels", building=building.id)
+        )
+        assert resp.json.get("items")
+
+    def test_building_rooms_json(self, client, room):
+        resp = client.assert_url_ok(
+            url_for(
+                "facilities.json_rooms", building=room.building.id, level=room.level
+            )
+        )
+        assert resp.json.get("items")
+
     def test_building_level_rooms(
         self, client: TestClient, building: Building, room: Room
     ):
