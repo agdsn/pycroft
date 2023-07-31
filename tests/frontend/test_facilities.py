@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from pycroft.model.facilities import Building, Room, Site
 from pycroft.model.port import PatchPort
+from web.blueprints.facilities.address import ADDRESS_ENTITIES
 from tests import factories as f
 from tests.factories import RoomFactory
 from .assertions import TestClient
@@ -490,3 +491,27 @@ class TestPatchPortDelete:
     def test_post(self, client, url):
         with client.flashes_message("erfolgreich gelöscht", category="success"):
             client.assert_url_redirects(url, method="POST", data={})
+
+
+class TestAddresses:
+    @pytest.fixture(scope="class", autouse=True)
+    def addresses(self, class_session):
+        f.AddressFactory.create_batch(10)
+
+    @pytest.fixture(scope="class")
+    def ep(self) -> str:
+        return "facilities.addresses"
+
+    @pytest.mark.parametrize("type", ADDRESS_ENTITIES.keys())
+    def test_get_address_completion(self, client, ep, type):
+        resp = client.assert_url_ok(url_for(ep, type=type))
+        assert len(resp.json.get("items")) in range(1, 11)
+
+    @pytest.mark.parametrize("query", ["", "foo"])
+    @pytest.mark.parametrize("limit", [None, 5])
+    def test_get_address_completion_args(self, client, ep, query, limit):
+        resp = client.assert_url_ok(url_for(ep, type="city", query=query, limit=limit))
+        assert "items" in resp.json
+
+    def test_get_address_invalid_type(self, client, ep):
+        client.assert_url_response_code(url_for(ep, type="foo"), 404)
