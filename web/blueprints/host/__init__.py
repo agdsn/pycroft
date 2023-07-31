@@ -1,7 +1,6 @@
 import re
 
-from flask import Blueprint, flash, abort, redirect, url_for, render_template, \
-    jsonify, request
+from flask import Blueprint, flash, abort, redirect, url_for, render_template, request
 from flask_login import current_user
 from flask_wtf import FlaskForm
 from ipaddr import IPv4Address
@@ -394,5 +393,4 @@ def user_hosts_json(user_id):
 def interface_manufacturer_json(mac):
     if not re.match(mac_regex, mac):
         return abort(400)
-
-    return jsonify(manufacturer=get_interface_manufacturer(mac))
+    return {"manufacturer": get_interface_manufacturer(mac)}

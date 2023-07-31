@@ -669,7 +669,7 @@ def balance_json(account_id):
                     .where(Split.account_id == account_id))
 
     res = session.execute(json_agg_core(balance_json)).first()[0]
-    return jsonify(items=res)
+    return {"items": res}
 
 
 @bp.route('/accounts/<int:account_id>')
@@ -1426,14 +1426,17 @@ def json_accounts_user_search():
             func.lower(User.login).like(func.lower(f"%{query}%")),
             cast(User.id, Text).like(f"{query}%"))
     ).all()
-    accounts = [
-        {"account_id": account_id,
-         "user_id": user_id,
-         "user_login": user_login,
-         "user_name": user_name}
-        for account_id, user_id, user_login, user_name in results
-    ]
-    return jsonify(accounts=accounts)
+    return {
+        "accounts": [
+            {
+                "account_id": account_id,
+                "user_id": user_id,
+                "user_login": user_login,
+                "user_name": user_name,
+            }
+            for account_id, user_id, user_login, user_name in results
+        ]
+    }
 
 
 @bp.route('/membership_fees/payments_in_default_csv')

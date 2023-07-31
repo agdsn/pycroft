@@ -628,11 +628,11 @@ def addresses(type):
     try:
         entity = get_address_entity(type)
     except ValueError as e:
-        return jsonify(errors=[e.args[0]]), 404
+        return {"errors": [e.args[0]]}, 404
 
     query: str = request.args.get('query', '').replace('%', '%%')
     limit: int = request.args.get('limit', 10, type=int)
 
     address_q = address_entity_search_query(query, entity, session.session, limit)
 
-    return jsonify(items=[str(row[0]) for row in address_q.all()])
+    return {"items": [str(row[0]) for row in address_q.all()]}
