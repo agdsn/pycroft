@@ -10,7 +10,16 @@
 """
 from collections import defaultdict
 
-from flask import Blueprint, flash, jsonify, render_template, url_for, redirect, request
+from flask import (
+    Blueprint,
+    flash,
+    jsonify,
+    render_template,
+    url_for,
+    redirect,
+    request,
+    abort,
+)
 from flask_login import current_user
 from flask_wtf import FlaskForm as Form
 from sqlalchemy.orm import joinedload, aliased
@@ -38,7 +47,6 @@ from web.blueprints.facilities.forms import (
 from web.blueprints.helpers.log import format_room_log_entry
 from web.blueprints.helpers.user import user_button
 from web.blueprints.navigation import BlueprintNavigation
-from web.type_utils import abort
 from .address import get_address_entity, address_entity_search_query
 from .tables import (BuildingLevelRoomTable, RoomLogTable, SiteTable,
                      RoomOvercrowdedTable, PatchPortTable)
@@ -297,18 +305,21 @@ def building_level_rooms_json(level, building_id=None, building_shortname=None):
         } for room, inhabitants in level_inhabitants.items()])
 
 
+def get_switch_room_or_redirect(switch_room_id: int) -> Room:
+    switch_room = Room.get(switch_room_id)
+    if not switch_room:
+        flash(f"Raum mit ID {switch_room_id} nicht gefunden!", "error")
+        abort(redirect(url_for(".overview")))
+    if not switch_room.is_switch_room:
+        flash("Dieser Raum ist kein Switchraum!", "error")
+        abort(redirect(url_for(".room_show", room_id=switch_room_id)))
+    return switch_room
+
+
 @bp.route('/room/<int:switch_room_id>/patch-port/create', methods=['GET', 'POST'])
 @access.require('infrastructure_change')
 def patch_port_create(switch_room_id):
-    switch_room = Room.get(switch_room_id)
-
-    if not switch_room:
-        flash(f"Raum mit ID {switch_room_id} nicht gefunden!", "error")
-        return redirect(url_for('.overview'))
-
-    if not switch_room.is_switch_room:
-        flash("Dieser Raum ist kein Switchraum!", "error")
-        return redirect(url_for('.room_show', room_id=switch_room_id))
+    switch_room = get_switch_room_or_redirect(switch_room_id)
 
     form = PatchPortForm(switch_room=switch_room.short_name,
                          building=switch_room.building,
@@ -348,16 +359,8 @@ def patch_port_create(switch_room_id):
 @bp.route('/room/<int:switch_room_id>/patch-port/<int:patch_port_id>/edit', methods=['GET', 'POST'])
 @access.require('infrastructure_change')
 def patch_port_edit(switch_room_id, patch_port_id):
-    switch_room = Room.get(switch_room_id)
+    switch_room = get_switch_room_or_redirect(switch_room_id)
     patch_port = PatchPort.get(patch_port_id)
-
-    if not switch_room:
-        flash(f"Raum mit ID {switch_room_id} nicht gefunden!", "error")
-        return redirect(url_for('.overview'))
-
-    if not switch_room.is_switch_room:
-        flash("Dieser Raum ist kein Switchraum!", "error")
-        return redirect(url_for('.room_show', room_id=switch_room_id))
 
     if not patch_port:
         flash(f"Patch-Port mit ID {patch_port_id} nicht gefunden!", "error")
@@ -404,16 +407,8 @@ def patch_port_edit(switch_room_id, patch_port_id):
 @bp.route('/room/<int:switch_room_id>/patch-port/<int:patch_port_id>/delete', methods=['GET', 'POST'])
 @access.require('infrastructure_change')
 def patch_port_delete(switch_room_id, patch_port_id):
-    switch_room = Room.get(switch_room_id)
+    switch_room = get_switch_room_or_redirect(switch_room_id)
     patch_port = PatchPort.get(patch_port_id)
-
-    if not switch_room:
-        flash(f"Raum mit ID {switch_room_id} nicht gefunden!", "error")
-        return redirect(url_for('.overview'))
-
-    if not switch_room.is_switch_room:
-        flash("Dieser Raum ist kein Switchraum!", "error")
-        return redirect(url_for('.room_show', room_id=switch_room_id))
 
     if not patch_port:
         flash(f"Patch-Port mit ID {patch_port_id} nicht gefunden!", "error")
