@@ -407,3 +407,30 @@ class TestPatchPortEdit:
         data = {"name": patch_port2.name}
         with client.renders_template("generic_form.html"):
             client.assert_url_ok(url, method="POST", data=data)
+
+
+class TestPatchPortDelete:
+    @pytest.fixture(scope="class")
+    def ep(self) -> str:
+        return "facilities.patch_port_delete"
+
+    @pytest.fixture(scope="class")
+    def patch_port(self, class_session) -> PatchPort:
+        switch = f.SwitchFactory()
+        patch_port = f.PatchPortFactory(switch_room=switch.host.room)
+        class_session.flush()
+        return patch_port
+
+    @pytest.fixture(scope="class")
+    def url(self, ep, patch_port) -> str:
+        return url_for(
+            ep, switch_room_id=patch_port.switch_room_id, patch_port_id=patch_port.id
+        )
+
+    def test_get(self, client, url):
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(url)
+
+    def test_post(self, client, url):
+        with client.flashes_message("erfolgreich gelöscht", category="success"):
+            client.assert_url_redirects(url, method="POST", data={})
