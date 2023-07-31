@@ -356,20 +356,24 @@ def patch_port_create(switch_room_id):
                            form_args=form_args)
 
 
+def get_patch_port_or_redirect(
+    patch_port_id: int, in_switch_room: Room | None = None
+) -> PatchPort:
+    patch_port = PatchPort.get(patch_port_id)
+    if not patch_port:
+        flash(f"Patch-Port mit ID {patch_port_id} nicht gefunden!", "error")
+        abort(redirect(url_for(".overview")))
+    if in_switch_room and patch_port.switch_room != in_switch_room:
+        flash("Patch-Port ist nicht im Switchraum!", "error")
+        abort(redirect(url_for(".room_show", room_id=in_switch_room.id)))
+    return patch_port
+
+
 @bp.route('/room/<int:switch_room_id>/patch-port/<int:patch_port_id>/edit', methods=['GET', 'POST'])
 @access.require('infrastructure_change')
 def patch_port_edit(switch_room_id, patch_port_id):
     switch_room = get_switch_room_or_redirect(switch_room_id)
-    patch_port = PatchPort.get(patch_port_id)
-
-    if not patch_port:
-        flash(f"Patch-Port mit ID {patch_port_id} nicht gefunden!", "error")
-        return redirect(url_for('.room_show', room_id=switch_room_id))
-
-    if not patch_port.switch_room == switch_room:
-        flash("Patch-Port ist nicht im Switchraum!", "error")
-        return redirect(url_for('.room_show', room_id=switch_room_id))
-
+    patch_port = get_patch_port_or_redirect(patch_port_id, in_switch_room=switch_room)
     form = PatchPortForm(switch_room=switch_room.short_name,
                          name=patch_port.name,
                          building=patch_port.room.building,
@@ -408,15 +412,7 @@ def patch_port_edit(switch_room_id, patch_port_id):
 @access.require('infrastructure_change')
 def patch_port_delete(switch_room_id, patch_port_id):
     switch_room = get_switch_room_or_redirect(switch_room_id)
-    patch_port = PatchPort.get(patch_port_id)
-
-    if not patch_port:
-        flash(f"Patch-Port mit ID {patch_port_id} nicht gefunden!", "error")
-        return redirect(url_for('.room_show', room_id=switch_room_id))
-
-    if not patch_port.switch_room == switch_room:
-        flash("Patch-Port ist nicht im Switchraum!", "error")
-        return redirect(url_for('.room_show', room_id=switch_room_id))
+    patch_port = get_patch_port_or_redirect(patch_port_id, in_switch_room=switch_room)
 
     form = Form()
 
