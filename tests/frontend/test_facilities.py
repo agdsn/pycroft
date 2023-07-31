@@ -99,7 +99,8 @@ class TestBuilding:
     ):
         with client.renders_template("facilities/rooms.html"):
             client.assert_url_ok(
-                f"/facilities/building/{building.id}/level/{room.level}/rooms/")
+                f"/facilities/building/{building.id}/level/{room.level}/rooms/"
+            )
 
     def test_overcrowded_rooms(self, client: TestClient, building: Building):
         with client.renders_template("facilities/room_overcrowded.html"):
