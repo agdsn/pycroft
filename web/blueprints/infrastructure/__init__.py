@@ -99,7 +99,7 @@ def switches_json():
             SwitchRow(
                 id=switch.host_id,
                 name=LinkColResponse(
-                    title=switch.host.name,
+                    title=switch.host.name or "<unnamed>",
                     href=url_for(".switch_show", switch_id=switch.host_id),
                 ),
                 ip=str(switch.management_ip),
