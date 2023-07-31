@@ -134,15 +134,39 @@ class TestBuilding:
                 f"/facilities/building/{building.id}/level/{room.level}/rooms/"
             )
 
-    def test_overcrowded_rooms(self, client: TestClient, building: Building):
+
+class TestOvercrowdedRooms:
+    @pytest.fixture(scope="class", autouse=True)
+    def building(self, class_session) -> Building:
+        building = f.BuildingFactory()
+        room = f.RoomFactory(building=building, patched_with_subnet=True)
+        pg = f.MemberPropertyGroupFactory()
+        f.UserFactory.create_batch(
+            4,
+            room=room,
+            with_membership=True,
+            membership__group=pg,
+            with_host=True,
+        )
+        return building
+
+    def test_overcrowded_rooms(self, client, building):
         with client.renders_template("facilities/room_overcrowded.html"):
             client.assert_url_ok("/facilities/overcrowded")
 
-    def test_per_building_overcrowded_rooms(
-        self, client: TestClient, building: Building
-    ):
+    def test_overcrowded_rooms_json(self, client):
+        resp = client.assert_url_ok(url_for("facilities.overcrowded_json"))
+        assert len(resp.json.get("items")) == 1
+
+    def test_per_building_overcrowded_rooms(self, client, building):
         with client.renders_template("facilities/room_overcrowded.html"):
             client.assert_url_ok(f"/facilities/overcrowded/{building.id}")
+
+    def test_per_building_overcrowded_json(self, client, building):
+        resp = client.assert_url_ok(
+            url_for("facilities.overcrowded_json", building=building.id)
+        )
+        assert len(resp.json.get("items")) == 1
 
 
 class TestRoomCreate:
