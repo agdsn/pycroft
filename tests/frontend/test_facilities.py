@@ -7,6 +7,8 @@ from flask import url_for
 from sqlalchemy.orm import Session
 
 from pycroft.model.facilities import Building, Room, Site
+from pycroft.model.port import PatchPort
+from web.blueprints.facilities.address import ADDRESS_ENTITIES
 from tests import factories as f
 from tests.factories import RoomFactory
 from .assertions import TestClient
@@ -53,8 +55,9 @@ class TestSite:
 
 class TestBuilding:
     @pytest.fixture(scope="class")
-    def room(self, class_session: Session) -> Room:
+    def room(self, class_session, admin) -> Room:
         room = RoomFactory()
+        f.RoomLogEntryFactory(room=room, author=admin)
         class_session.flush()
         return room
 
@@ -84,6 +87,23 @@ class TestBuilding:
             url_for("facilities.room_show", room_id=999), code=404
         )
 
+    def test_post_room_logs(self, client, room):
+        with client.renders_template(
+            "facilities/room_show.html"
+        ), client.flashes_message("Kommentar hinzugefügt", category="success"):
+            client.assert_url_ok(
+                url_for("facilities.room_show", room_id=room.id),
+                method="POST",
+                data={"message": "Dose zugeklebt"},
+            )
+
+    def test_room_logs_json(self, client, room):
+        resp = client.assert_url_ok(
+            url_for("facilities.room_logs_json", room_id=room.id)
+        )
+        assert "items" in (j := resp.json)
+        assert j["items"]
+
     def test_building_levels(self, client: TestClient, building: Building):
         with client.renders_template("facilities/levels.html"):
             client.assert_url_ok(f"/facilities/building/{building.id}/levels/")
@@ -93,22 +113,61 @@ class TestBuilding:
             url_for("facilities.building_levels", building_id=999), code=404
         )
 
+    def test_building_levels_json(self, client, building):
+        resp = client.assert_url_ok(
+            url_for("facilities.json_levels", building=building.id)
+        )
+        assert resp.json.get("items")
+
+    def test_building_rooms_json(self, client, room):
+        resp = client.assert_url_ok(
+            url_for(
+                "facilities.json_rooms", building=room.building.id, level=room.level
+            )
+        )
+        assert resp.json.get("items")
+
     def test_building_level_rooms(
         self, client: TestClient, building: Building, room: Room
     ):
         with client.renders_template("facilities/rooms.html"):
             client.assert_url_ok(
-                f"/facilities/building/{building.id}/level/{room.level}/rooms/")
+                f"/facilities/building/{building.id}/level/{room.level}/rooms/"
+            )
 
-    def test_overcrowded_rooms(self, client: TestClient, building: Building):
+
+class TestOvercrowdedRooms:
+    @pytest.fixture(scope="class", autouse=True)
+    def building(self, class_session) -> Building:
+        building = f.BuildingFactory()
+        room = f.RoomFactory(building=building, patched_with_subnet=True)
+        pg = f.MemberPropertyGroupFactory()
+        f.UserFactory.create_batch(
+            4,
+            room=room,
+            with_membership=True,
+            membership__group=pg,
+            with_host=True,
+        )
+        return building
+
+    def test_overcrowded_rooms(self, client, building):
         with client.renders_template("facilities/room_overcrowded.html"):
             client.assert_url_ok("/facilities/overcrowded")
 
-    def test_per_building_overcrowded_rooms(
-        self, client: TestClient, building: Building
-    ):
+    def test_overcrowded_rooms_json(self, client):
+        resp = client.assert_url_ok(url_for("facilities.overcrowded_json"))
+        assert len(resp.json.get("items")) == 1
+
+    def test_per_building_overcrowded_rooms(self, client, building):
         with client.renders_template("facilities/room_overcrowded.html"):
             client.assert_url_ok(f"/facilities/overcrowded/{building.id}")
+
+    def test_per_building_overcrowded_json(self, client, building):
+        resp = client.assert_url_ok(
+            url_for("facilities.overcrowded_json", building=building.id)
+        )
+        assert len(resp.json.get("items")) == 1
 
 
 class TestRoomCreate:
@@ -239,3 +298,248 @@ class TestRoomEdit:
         }
         with client.renders_template("generic_form.html"):
             client.assert_url_ok(url, method="POST", data=formdata)
+
+
+class TestBuildingLevelRooms:
+    @pytest.fixture(scope="class")
+    def ep(self) -> str:
+        return "facilities.building_level_rooms_json"
+
+    @pytest.fixture(scope="class", autouse=True)
+    def building(self, class_session) -> Building:
+        return f.BuildingFactory()
+
+    @pytest.fixture(scope="class", autouse=True)
+    def inhabited_room(self, class_session, building) -> Room:
+        room = f.RoomFactory(level=1, building=building)
+        group = f.MemberPropertyGroupFactory()
+        f.UserFactory(room=room, with_membership=True, membership__group=group)
+        f.UserFactory(room=room)
+        return room
+
+    @pytest.fixture(scope="class", autouse=True)
+    def uninhabited_room(self, building):
+        return f.RoomFactory(level=1, building=building)
+
+    def test_all_users(self, client, ep, building):
+        url = url_for(ep, building_id=building.id, level=1, all_users=1)
+        resp = client.assert_url_ok(url)
+        assert "items" in (j := resp.json)
+        assert len(j["items"]) == 2
+        assert {len(r["inhabitants"]) for r in j["items"]} == {0, 2}
+
+    def test_not_all_users(self, client, ep, building):
+        url = url_for(ep, building_id=building.id, level=1)
+        resp = client.assert_url_ok(url)
+        assert "items" in (j := resp.json)
+        assert len(j["items"]) == 2
+        assert {len(r["inhabitants"]) for r in j["items"]} == {0, 1}
+
+
+class TestPatchPortCreate:
+    @pytest.fixture(scope="class")
+    def ep(self) -> str:
+        return "facilities.patch_port_create"
+
+    @pytest.fixture(scope="class")
+    def room(self, class_session) -> Room:
+        return f.RoomFactory()
+
+    @pytest.fixture(scope="class")
+    def switch_room(self, class_session) -> Room:
+        switch = f.SwitchFactory()
+        return switch.host.room
+
+    @pytest.fixture(scope="class")
+    def patch_port(self, switch_room) -> PatchPort:
+        return f.PatchPortFactory(switch_room=switch_room)
+
+    @pytest.fixture(scope="class")
+    def url(self, ep, switch_room) -> str:
+        """Endpoint URL for the patched room, where a POST makes sense"""
+        return url_for(ep, switch_room_id=switch_room.id)
+
+    def test_get_nonexistent_room(self, client, ep):
+        with client.flashes_message("Raum.*nicht gefunden", category="error"):
+            client.assert_url_redirects(url_for(ep, switch_room_id=999))
+
+    def test_get_non_switch_room(self, client, ep, room):
+        with client.flashes_message("kein Switchraum", category="error"):
+            client.assert_url_redirects(url_for(ep, switch_room_id=room.id))
+
+    def test_get_switch_room(self, client, url):
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(url)
+
+    def test_post_no_data(self, client, url):
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(url, method="POST", data={})
+
+    def test_post_wrong_data(self, client, url):
+        data = {"switch": "999"}
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(url, method="POST", data=data)
+
+    def test_post_existing_patch_port(self, client, url, switch_room, room, patch_port):
+        data = {
+            "name": patch_port.name,
+            "switch_room": switch_room.id,
+            "building": room.building.id,
+            "level": room.level,
+            "room_number": room.number,
+        }
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(url, method="POST", data=data)
+
+    def test_post_new_patch_port(self, client, url, patch_port, switch_room, room):
+        data = {
+            "name": f"{patch_port.name}-2",
+            "switch_room": switch_room.id,
+            "building": room.building.id,
+            "level": room.level,
+            "room_number": room.number,
+        }
+        with client.flashes_message("erfolgreich erstellt", category="success"):
+            client.assert_url_redirects(url, method="POST", data=data)
+
+
+class TestPatchPortEdit:
+    @pytest.fixture(scope="class")
+    def room(self, class_session) -> Room:
+        room = f.RoomFactory()
+        f.SwitchFactory(host__room=room)
+        return room
+
+    @pytest.fixture(scope="class")
+    def patch_port(self, class_session, room) -> PatchPort:
+        patch_port = f.PatchPortFactory(name="A01", switch_room=room)
+        class_session.flush()
+        return patch_port
+
+    @pytest.fixture(scope="class")
+    def patch_port2(self, class_session, room) -> PatchPort:
+        return f.PatchPortFactory(name="A02", switch_room=room)
+
+    @pytest.fixture(scope="class")
+    def patch_port_other_room(self) -> PatchPort:
+        return f.PatchPortFactory()
+
+    @pytest.fixture(scope="class")
+    def ep(self) -> str:
+        return "facilities.patch_port_edit"
+
+    @pytest.fixture(scope="class")
+    def url(self, ep, patch_port, room) -> str:
+        return url_for(ep, switch_room_id=room.id, patch_port_id=patch_port.id)
+
+    def test_get_nonexistent_patch_port(self, client, ep, room):
+        with client.flashes_message("nicht gefunden", category="error"):
+            client.assert_url_redirects(
+                url_for(ep, switch_room_id=room.id, patch_port_id=999)
+            )
+
+    def test_get_patch_port_wrong_room(self, client, ep, room, patch_port_other_room):
+        with client.flashes_message("ist nicht im .*raum", category="error"):
+            client.assert_url_redirects(
+                url_for(
+                    ep, switch_room_id=room.id, patch_port_id=patch_port_other_room.id
+                )
+            )
+
+    def test_get_correct_patch_port(self, client, url):
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(url)
+
+    @pytest.mark.parametrize("data", [{}, {"name": "foo"}])
+    def test_post_correct_data(self, client, url, data):
+        with client.flashes_message("erfolgreich bearbeitet", category="success"):
+            client.assert_url_redirects(url, method="POST", data=data)
+
+    def test_post_wrong_data(self, client, url):
+        data = {"building": "999"}
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(url, method="POST", data=data)
+
+    def test_post_existing_patch_port(self, client, url, patch_port2):
+        data = {"name": patch_port2.name}
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(url, method="POST", data=data)
+
+
+class TestPatchPortDelete:
+    @pytest.fixture(scope="class")
+    def ep(self) -> str:
+        return "facilities.patch_port_delete"
+
+    @pytest.fixture(scope="class")
+    def patch_port(self, class_session) -> PatchPort:
+        switch = f.SwitchFactory()
+        patch_port = f.PatchPortFactory(switch_room=switch.host.room)
+        class_session.flush()
+        return patch_port
+
+    @pytest.fixture(scope="class")
+    def url(self, ep, patch_port) -> str:
+        return url_for(
+            ep, switch_room_id=patch_port.switch_room_id, patch_port_id=patch_port.id
+        )
+
+    def test_get(self, client, url):
+        with client.renders_template("generic_form.html"):
+            client.assert_url_ok(url)
+
+    def test_post(self, client, url):
+        with client.flashes_message("erfolgreich gelöscht", category="success"):
+            client.assert_url_redirects(url, method="POST", data={})
+
+
+class TestPatchPanelJson:
+    @pytest.fixture(scope="class")
+    def switch_room(self, class_session) -> Room:
+        switch = f.SwitchFactory()
+        sp = f.SwitchPortFactory(switch=switch)
+        f.PatchPortFactory(switch_room=switch.host.room, switch_port=sp)
+        class_session.flush()
+        return switch.host.room
+
+    @pytest.fixture(scope="class")
+    def other_room(self) -> Room:
+        return f.RoomFactory()
+
+    @pytest.fixture(scope="class")
+    def ep(self) -> str:
+        return "facilities.room_patchpanel_json"
+
+    def test_get_nonexistent_room(self, client, ep):
+        client.assert_url_response_code(url_for(ep, room_id=999), 404)
+
+    def test_get_non_switch_room(self, client, ep, other_room):
+        client.assert_url_response_code(url_for(ep, room_id=other_room.id), 400)
+
+    def test_get_room_patchpanel_json(self, client, ep, switch_room):
+        resp = client.assert_url_ok(url_for(ep, room_id=switch_room.id))
+        assert resp.json.get("items")
+
+
+class TestAddresses:
+    @pytest.fixture(scope="class", autouse=True)
+    def addresses(self, class_session):
+        f.AddressFactory.create_batch(10)
+
+    @pytest.fixture(scope="class")
+    def ep(self) -> str:
+        return "facilities.addresses"
+
+    @pytest.mark.parametrize("type", ADDRESS_ENTITIES.keys())
+    def test_get_address_completion(self, client, ep, type):
+        resp = client.assert_url_ok(url_for(ep, type=type))
+        assert len(resp.json.get("items")) in range(1, 11)
+
+    @pytest.mark.parametrize("query", ["", "foo"])
+    @pytest.mark.parametrize("limit", [None, 5])
+    def test_get_address_completion_args(self, client, ep, query, limit):
+        resp = client.assert_url_ok(url_for(ep, type="city", query=query, limit=limit))
+        assert "items" in resp.json
+
+    def test_get_address_invalid_type(self, client, ep):
+        client.assert_url_response_code(url_for(ep, type="foo"), 404)
