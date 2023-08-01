@@ -83,7 +83,6 @@ from web.blueprints.user.forms import (
     GroupMailForm,
 )
 from web.table.table import (
-    date_format,
     TableResponse,
     LinkColResponse,
     datetime_format_pydantic,
@@ -106,6 +105,7 @@ from .tables import (
     RoomHistoryRow,
     PreMemberRow,
     TextWithBooleanColResponse,
+    ArchivableMemberRow,
 )
 from ..helpers.log_tables import (
     LogTableExtended,
@@ -1384,25 +1384,29 @@ def archivable_users():
 
 @bp.route('/archivable_users_table')
 def archivable_users_json():
-    T = ArchivableMembersTable
-    return {'items': [
-        T.row(
-            id=info.User.id,
-            user=T.user.value(
-                title=info.User.name,
-                href=url_for('user.user_show', user_id=info.User.id)
-            ),
-            room_shortname=info.User.room and T.room_shortname.value(
-                title=info.User.room.short_name,
-                href=url_for('facilities.room_show', room_id=info.User.room.id)
-            ),
-            current_properties=" ".join(("~" if p.denied else "") + p.property_name
-                                        for p in info.User.current_properties_maybe_denied),
-            num_hosts=len(info.User.hosts),
-            # TODO better: `DateColumn.value`
-            end_of_membership=date_format(info.mem_end.date())
-        ) for info in get_archivable_members(session.session)
-    ]}
+    return TableResponse[ArchivableMemberRow](
+        items=[
+            ArchivableMemberRow(
+                id=info.User.id,
+                user=LinkColResponse(
+                    title=info.User.name,
+                    href=url_for("user.user_show", user_id=info.User.id),
+                ),
+                room_shortname=info.User.room
+                and LinkColResponse(
+                    title=info.User.room.short_name,
+                    href=url_for("facilities.room_show", room_id=info.User.room.id),
+                ),
+                current_properties=" ".join(
+                    ("~" if p.denied else "") + p.property_name
+                    for p in info.User.current_properties_maybe_denied
+                ),
+                num_hosts=len(info.User.hosts),
+                end_of_membership=date_format_pydantic(info.mem_end.date()),
+            )
+            for info in get_archivable_members(session.session)
+        ]
+    ).model_dump()
 
 
 @nav.navigate('Rundmail', weight=10, icon='fa-envelope')

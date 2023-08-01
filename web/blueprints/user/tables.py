@@ -180,3 +180,11 @@ class ArchivableMembersTable(RefreshableTableMixin, BootstrapTable):
         ) -> dict:
             ...
 
+
+class ArchivableMemberRow(BaseModel):
+    id: int
+    user: LinkColResponse
+    room_shortname: LinkColResponse
+    num_hosts: int
+    current_properties: str
+    end_of_membership: DateColResponse
