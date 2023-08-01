@@ -4,7 +4,6 @@
  * Licensed under the Creative Commons Attribution 3.0 Unported License.
  */
 
-console.error("test!");
 const getStoredTheme = () => localStorage.getItem('theme')
 const setStoredTheme = (theme: string) => localStorage.setItem('theme', theme)
 
@@ -25,7 +24,10 @@ const setTheme = (theme: string) => {
     }
 }
 
-setTheme(getPreferredTheme())
+const preferredTheme = getPreferredTheme();
+console.debug(`setting preferred theme: ${preferredTheme}`);
+setTheme(preferredTheme)
+console.debug("…done")
 
 const showActiveTheme = (theme: string, focus = false) => {
     console.debug("showing active theme: " + theme)
