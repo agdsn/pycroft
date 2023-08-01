@@ -20,16 +20,33 @@ class UnexpectedException(PycroftException):
     pass
 
 
+def flash_handler(e: PycroftException) -> None:
+    flash(exception_flash_message(e), "error")
+
+
+ErrorHandler = t.Callable[[PycroftException], None]
+
+
 @contextmanager
-def flash_and_wrap_errors() -> t.Iterator[None]:
+def flash_and_wrap_errors(
+    handler_map: dict[type[PycroftException], ErrorHandler] | None = None,
+) -> t.Iterator[None]:
     """Flash a message, roll back the session, and wrap unknown errors in a ``PycroftException``
+
+    :param handler_map: specifies what to do with exception types.
+        The default is to flash a message, but other actions may be desired instead
+        (such as appending the error to a form).
 
     :raises PycroftException:
     """
     try:
         yield
     except PycroftException as e:
-        flash(exception_flash_message(e), 'error')
+        handlers = handler_map or {}
+        handler = next(
+            (h for type_, h in handlers.items() if isinstance(e, type_)), flash_handler
+        )
+        handler(e)
         raise
     except Exception as e:
         traceback.print_exc()
@@ -44,6 +61,7 @@ def handle_errors(
     error_response: t.Callable[[], ResponseReturnValue]
     | ResponseReturnValue
     | None = None,
+    handler_map: dict[type[PycroftException], ErrorHandler] | None = None,
 ) -> t.Iterator[SessionTransaction]:
     """Wraps errors as `PycroftErrors` and turns them into a flash message.
 
@@ -57,8 +75,9 @@ def handle_errors(
 
     :param error_response: if given, this will be called when a `PycroftException` is caught
         and the return value is used as the response via :py:function:`flask.abort`.
+    :param handler_map: specifies what to do with certain exception types.
     """
-    cm = flash_and_wrap_errors()
+    cm = flash_and_wrap_errors(handler_map)
 
     if error_response is None:
         with cm as n:

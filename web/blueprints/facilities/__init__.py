@@ -26,6 +26,7 @@ from sqlalchemy.sql import and_, select, exists
 
 import pycroft.lib.facilities
 from pycroft import lib
+from pycroft.exc import PycroftException
 from pycroft.helpers.i18n import gettext
 from pycroft.lib.host import sort_ports
 from pycroft.lib.address import get_or_create_address
@@ -59,6 +60,7 @@ from .tables import (
     PatchPortRow,
     RoomOvercrowdedRow,
 )
+from ..helpers.exception import handle_errors
 from ..helpers.log_tables import LogTableRow
 
 bp = Blueprint('facilities', __name__)
@@ -168,43 +170,52 @@ def room_create():
 
     form = CreateRoomForm(building=building)
 
-    if form.validate_on_submit():
-        sess = session.session
-        try:
-            with sess.begin_nested():
-                address = get_or_create_address(**form.address_kwargs)
-                room = create_room(
-                    form.building.data,
-                    form.level.data,
-                    form.number.data,
-                    address=address,
-                    processor=current_user,
-                    inhabitable=form.inhabitable.data,
-                )
-        except RoomAlreadyExistsException:
-            form.number.errors.append("Ein Raum mit diesem Namen existiert bereits in dieser Etage!")
-        else:
-            sess.commit()
-            flash(f"Der Raum {room.short_name} wurde erfolgreich erstellt.", "success")
-            return redirect(url_for(".room_show", room_id=room.id))
+    def default_response():
+        form_args = {"form": form, "cancel_to": url_for(".overview")}
 
-    form_args = {
-        'form': form,
-        'cancel_to': url_for('.overview')
-    }
+        suggestion = suggest_room_address_data(building)
+        if suggestion and not form.is_submitted():
+            form.address_street.data = suggestion.street
+            form.address_number.data = suggestion.number
+            form.address_zip_code.data = suggestion.zip_code
+            form.address_city.data = suggestion.city
+            form.address_state.data = suggestion.state
+            form.address_country.data = suggestion.country
 
-    suggestion = suggest_room_address_data(building)
-    if suggestion and not form.is_submitted():
-        form.address_street.data = suggestion.street
-        form.address_number.data = suggestion.number
-        form.address_zip_code.data = suggestion.zip_code
-        form.address_city.data = suggestion.city
-        form.address_state.data = suggestion.state
-        form.address_country.data = suggestion.country
+        return render_template(
+            "generic_form.html", page_title="Raum erstellen", form_args=form_args
+        )
 
-    return render_template('generic_form.html',
-                           page_title="Raum erstellen",
-                           form_args=form_args)
+    if not form.is_submitted():
+        return default_response()
+
+    if not form.validate():
+        return default_response()
+
+    sess = session.session
+
+    def _append_err(_):
+        form.number.errors.append(
+            "Ein Raum mit diesem Namen existiert bereits in dieser Etage!"
+        )
+
+    _handlers = {RoomAlreadyExistsException: _append_err}
+    with handle_errors(
+        error_response=default_response, handler_map=_handlers
+    ), sess.begin_nested():
+        address = get_or_create_address(**form.address_kwargs)
+        room = create_room(
+            form.building.data,
+            form.level.data,
+            form.number.data,
+            address=address,
+            processor=current_user,
+            inhabitable=form.inhabitable.data,
+        )
+    sess.commit()
+
+    flash(f"Der Raum {room.short_name} wurde erfolgreich erstellt.", "success")
+    return redirect(url_for(".room_show", room_id=room.id))
 
 
 @bp.route('/room/<int:room_id>/create', methods=['GET', 'POST'])
