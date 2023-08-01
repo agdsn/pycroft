@@ -106,6 +106,14 @@ class FinanceTable(BootstrapTable):
         yield "</tfoot>"
 
 
+class FinanceRow(BaseModel):
+    posted_at: str
+    valid_on: str
+    description: LinkColResponse
+    amount: ColoredColResponse
+    row_positive: bool
+
+
 class FinanceTableSplitted(FinanceTable, SplittedTable):
     class Meta:
         table_args = {

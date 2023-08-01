@@ -25,8 +25,15 @@ from fints.exceptions import (
 )
 from fints.utils import mt940_to_array
 from flask import (
-    Blueprint, abort, flash, jsonify, redirect, render_template, request,
-    url_for, make_response)
+    Blueprint,
+    abort,
+    flash,
+    redirect,
+    render_template,
+    request,
+    url_for,
+    make_response,
+)
 from flask_login import current_user
 from flask_wtf import FlaskForm
 from mt940.models import Transaction as MT940Transaction
@@ -99,6 +106,7 @@ from web.blueprints.finance.tables import (
     UsersDueRow,
     ColoredColResponse,
     MembershipFeeRow,
+    FinanceRow,
 )
 from web.blueprints.helpers.api import json_agg_core
 from web.blueprints.helpers.exception import handle_errors
@@ -712,25 +720,24 @@ def accounts_show(account_id):
 
 
 def _format_row(split, style, prefix=None):
-    T = FinanceTable
-    row = {
-        'posted_at': datetime_filter(split.transaction.posted_at),
+    inverted = style == "inverted"
+    row = FinanceRow(
+        posted_at=datetime_filter(split.transaction.posted_at),
         # 'posted_by': (split.transaction.author.id, split.transaction.author.name),
-        'valid_on': date_filter(split.transaction.valid_on),
-        'description': T.description.value(
+        valid_on=date_filter(split.transaction.valid_on),
+        description=LinkColResponse(
             href=url_for("finance.transactions_show",
                          transaction_id=split.transaction_id),
             title=localized(split.transaction.description)
             if split.transaction.description
             else 'Keine Beschreibung'
         ),
-        'amount': T.amount.value(
-            value=money_filter(-split.amount) if (style == "inverted") else money_filter(
-                split.amount),
-            is_positive=(split.amount > 0) ^ (style == "inverted"),
+        amount=ColoredColResponse(
+            value=money_filter(-split.amount if inverted else split.amount),
+            is_positive=(split.amount > 0) ^ inverted,
         ),
-        'row_positive': (split.amount > 0) ^ (style == "inverted"),
-    }
+        row_positive=(split.amount > 0) ^ inverted,
+    ).model_dump()
     if prefix is None:
         return row
     return {f'{prefix}_{key}': val for key, val in row.items()}
@@ -792,13 +799,8 @@ def accounts_show_json(account_id):
         query = build_this_query()
         rows = rows_from_query(query)
 
-    items = {'total': total, 'rows': rows}
-
-    # TODO create pydantic model for this
-    return jsonify(
-        name=account.name,
-        items=items
-    )
+    # note: this is so hacky that a pydantic model wouldn't be worth it due to its complexity
+    return {"name": account.name, "items": {"total": total, "rows": rows}}
 
 
 @bp.route('/transactions/<int:transaction_id>')
@@ -1111,7 +1113,7 @@ def transactions_all_json():
         q = q.where(Transaction.valid_on <= upper)
 
     res = session.execute(json_agg_core(q)).fetchone()[0] or []
-    return jsonify(items=res)
+    return {"items": res}
 
 
 @bp.route('/transactions/create', methods=['GET', 'POST'])
