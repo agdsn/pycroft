@@ -44,7 +44,7 @@ from web.blueprints.access import BlueprintAccess
 from web.blueprints.facilities.forms import (
     RoomLogEntry, PatchPortForm, CreateRoomForm, EditRoomForm)
 from web.blueprints.helpers.log import format_room_log_entry
-from web.blueprints.helpers.user import user_button, user_btn_response
+from web.blueprints.helpers.user import user_btn_response
 from web.blueprints.navigation import BlueprintNavigation
 from web.table.table import TableResponse, LinkColResponse, BtnColResponse
 from .address import get_address_entity, address_entity_search_query
@@ -482,19 +482,24 @@ def room_show(room_id):
     patch_port_table = PatchPortTable(data_url=url_for(".room_patchpanel_json", room_id=room.id),
                                       room_id=room_id)
 
-    return render_template('facilities/room_show.html',
-                           page_title=f"Raum {room.short_name}",
-                           room=room,
-                           ports=room.patch_ports,
-                           user_buttons=list(map(user_button, room.users)),
-                           user_histories=[(user_button(room_history_entry.user),
-                                            room_history_entry.active_during.begin,
-                                            room_history_entry.active_during.end)
-                                           for room_history_entry
-                                           in room.room_history_entries],
-                           room_log_table=room_log_table,
-                           patch_port_table=patch_port_table,
-                           form=form, )
+    return render_template(
+        "facilities/room_show.html",
+        page_title=f"Raum {room.short_name}",
+        room=room,
+        ports=room.patch_ports,
+        user_buttons=[user_btn_response(user).model_dump() for user in room.users],
+        user_histories=[
+            (
+                user_btn_response(room_history_entry.user).model_dump(),
+                room_history_entry.active_during.begin,
+                room_history_entry.active_during.end,
+            )
+            for room_history_entry in room.room_history_entries
+        ],
+        room_log_table=room_log_table,
+        patch_port_table=patch_port_table,
+        form=form,
+    )
 
 
 @bp.route('/room/<int:room_id>/logs/json')

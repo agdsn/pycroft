@@ -79,13 +79,6 @@ def user_btn_response(user: User) -> BtnColResponse:
     )
 
 
-def user_button(user: User) -> dict:
-    import warnings
-
-    warnings.warn("use user_btn_response instead", DeprecationWarning, stacklevel=2)
-    return user_btn_response(user).model_dump()
-
-
 def get_user_or_404(user_id: int) -> User | NoReturn:
     user = User.get(user_id)
     if user is None:
