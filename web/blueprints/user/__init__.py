@@ -9,19 +9,16 @@
 
     :copyright: (c) 2012 by AG DSN.
 """
-import operator
 import re
 import typing as t
 from datetime import timedelta
 from functools import partial
-from itertools import chain
 from typing import TypeVar, Callable, cast
 
 from flask import (
     Blueprint,
     abort,
     flash,
-    jsonify,
     redirect,
     render_template,
     request,

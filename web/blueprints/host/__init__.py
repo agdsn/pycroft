@@ -11,7 +11,6 @@ from pycroft.lib import host as lib_host
 from pycroft.lib.net import get_subnets_for_room, get_unused_ips
 from pycroft.lib.facilities import get_room
 from pycroft.model import session
-from pycroft.model.facilities import Room
 from pycroft.model.host import Host, Interface
 from pycroft.model.user import User
 from web.blueprints.access import BlueprintAccess
