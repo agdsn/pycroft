@@ -4,6 +4,7 @@ from flask import url_for, flash, abort
 from flask_login import current_user
 
 from pycroft.model.user import User, PreMember
+from web.table.table import BtnColResponse
 
 
 def user_btn_style(user):
@@ -66,15 +67,15 @@ def user_btn_style(user):
     return btn_class, glyphicons, tooltip
 
 
-def user_button(user):
+def user_button(user: User) -> BtnColResponse:
     btn_class, glyphicons, tooltip = user_btn_style(user)
-    return {
-        'href': url_for("user.user_show", user_id=user.id),
-        'title': user.name,
-        'icon': glyphicons,
-        'btn_class': btn_class,
-        'tooltip': tooltip
-    }
+    return BtnColResponse(
+        href=url_for("user.user_show", user_id=user.id),
+        title=user.name,
+        icon=glyphicons,
+        btn_class=btn_class,
+        tooltip=tooltip,
+    )
 
 
 def get_user_or_404(user_id: int) -> User | NoReturn:

@@ -1,7 +1,6 @@
 import re
 
-from flask import Blueprint, flash, abort, redirect, url_for, render_template, \
-    jsonify, request
+from flask import Blueprint, flash, abort, redirect, url_for, render_template, request
 from flask_login import current_user
 from flask_wtf import FlaskForm
 from ipaddr import IPv4Address
@@ -12,7 +11,6 @@ from pycroft.lib import host as lib_host
 from pycroft.lib.net import get_subnets_for_room, get_unused_ips
 from pycroft.lib.facilities import get_room
 from pycroft.model import session
-from pycroft.model.facilities import Room
 from pycroft.model.host import Host, Interface
 from pycroft.model.user import User
 from web.blueprints.access import BlueprintAccess
@@ -20,7 +18,8 @@ from web.blueprints.helpers.exception import handle_errors
 from web.blueprints.helpers.form import refill_room_data
 from web.blueprints.helpers.user import get_user_or_404
 from web.blueprints.host.forms import InterfaceForm, HostForm
-from web.blueprints.host.tables import InterfaceTable, HostTable
+from web.blueprints.host.tables import InterfaceTable, HostTable, HostRow, InterfaceRow
+from web.table.table import TableResponse, BtnColResponse
 
 bp = Blueprint('host', __name__)
 access = BlueprintAccess(bp, required_properties=['user_show'])
@@ -174,33 +173,32 @@ def host_interfaces_json(host_id):
         flash("Host existiert nicht.", 'error')
         abort(404)
 
-    interfaces = []
-    T = InterfaceTable
-
-    for interface in host.interfaces:
-        interfaces.append({
-            'id': interface.id,
-            'host': host.name,
-            'name': interface.name,
-            'ips': ', '.join(str(ip.address) for ip in interface.ips),
-            'mac': interface.mac,
-            'actions': [
-                T.actions.single_value(
-                    href=url_for('.interface_edit', interface_id=interface.id),
-                    title="Bearbeiten",
-                    icon='fa-edit',
-                    btn_class='btn-link'
-                ),
-                T.actions.single_value(
-                    href=url_for('.interface_delete', interface_id=interface.id),
-                    title="Löschen",
-                    icon='fa-trash',
-                    btn_class='btn-link'
-                )
-            ]
-        })
-
-    return jsonify(items=interfaces)
+    return TableResponse[InterfaceRow](
+        items=[
+            InterfaceRow(
+                id=interface.id,
+                host=host.name,
+                name=interface.name,
+                ips=", ".join(str(ip.address) for ip in interface.ips),
+                mac=interface.mac,
+                actions=[
+                    BtnColResponse(
+                        href=url_for(".interface_edit", interface_id=interface.id),
+                        title="Bearbeiten",
+                        icon="fa-edit",
+                        btn_class="btn-link",
+                    ),
+                    BtnColResponse(
+                        href=url_for(".interface_delete", interface_id=interface.id),
+                        title="Löschen",
+                        icon="fa-trash",
+                        btn_class="btn-link",
+                    ),
+                ],
+            )
+            for interface in host.interfaces
+        ]
+    ).model_dump()
 
 
 @bp.route("/<int:host_id>/interfaces/table")
@@ -348,52 +346,50 @@ def interface_create(host_id):
     ))
 
 
-@bp.route("/<int:user_id>")
-def user_hosts_json(user_id):
-    user = get_user_or_404(user_id)
-    T = HostTable
-
-    list_items = []
-    for host in user.hosts:
-        if host.room:
-            patch_ports = host.room.connected_patch_ports
-            switches = ', '.join(
-                p.switch_port.switch.host.name or "<unnamed switch>"
-                for p in patch_ports
-            )
-            ports = ', '.join(p.switch_port.name for p in patch_ports)
-        else:
-            switches = None
-            ports = None
-
-        list_items.append({
-            'id': host.id,
-            'name': host.name,
-            'switch': switches,
-            'port': ports,
-            'actions': [
-                T.actions.single_value(
+def _host_row(host, user_id) -> HostRow:
+    if host.room:
+        patch_ports = host.room.connected_patch_ports
+        switches = ", ".join(
+            p.switch_port.switch.host.name or "<unnamed switch>" for p in patch_ports
+        )
+        ports = ", ".join(p.switch_port.name for p in patch_ports)
+    else:
+        switches = None
+        ports = None
+    return HostRow(
+        id=host.id,
+        name=host.name,
+        switch=switches,
+        port=ports,
+        actions=[
+            BtnColResponse(
                     href=url_for('.host_edit', host_id=host.id, user_id=user_id),
                     title="Bearbeiten",
                     icon='fa-edit',
                     btn_class='btn-link'
                 ),
-                T.actions.single_value(
-                    href=url_for('.host_delete', host_id=host.id),
-                    title="Löschen",
-                    icon='fa-trash',
-                    btn_class='btn-link'
-                )
-            ],
-            'interfaces_table_link': url_for('.interface_table', host_id=host.id),
-            'interface_create_link': url_for('.interface_create', host_id=host.id),
-        })
-    return jsonify(items=list_items)
+            BtnColResponse(
+                href=url_for(".host_delete", host_id=host.id),
+                title="Löschen",
+                icon="fa-trash",
+                btn_class="btn-link",
+            ),
+        ],
+        interfaces_table_link=url_for(".interface_table", host_id=host.id),
+        interface_create_link=url_for(".interface_create", host_id=host.id),
+    )
+
+
+@bp.route("/<int:user_id>")
+def user_hosts_json(user_id):
+    user = get_user_or_404(user_id)
+    return TableResponse[HostRow](
+        items=[_host_row(host, user_id) for host in user.hosts]
+    ).model_dump()
 
 
 @bp.route("/interface-manufacturer/<string:mac>")
 def interface_manufacturer_json(mac):
     if not re.match(mac_regex, mac):
         return abort(400)
-
-    return jsonify(manufacturer=get_interface_manufacturer(mac))
+    return {"manufacturer": get_interface_manufacturer(mac)}

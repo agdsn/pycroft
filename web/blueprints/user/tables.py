@@ -1,39 +1,22 @@
 import typing
 
 from flask import url_for
+from pydantic import BaseModel
 
-from web.table.table import BootstrapTable, Column, \
-    LinkColumn, button_toolbar, MultiBtnColumn, DateColumn, RelativeDateColumn, \
-    TextWithBooleanColumn, UserColumn
+from web.blueprints.helpers.log_tables import RefreshableTableMixin
+from web.table.table import (
+    BootstrapTable,
+    Column,
+    LinkColumn,
+    button_toolbar,
+    MultiBtnColumn,
+    DateColumn,
+    TextWithBooleanColumn,
+    LinkColResponse,
+    DateColResponse,
+    BtnColResponse,
+)
 from web.blueprints.helpers.user import no_membership_change
-
-
-class RefreshableTableMixin:
-    """A mixin class showing the refresh button by default.
-
-    In :py:meth:`__init__`s ``table_args`` argument, a default of
-    ``{'data-show-refresh': "true"}`` is established.
-    """
-    def __init__(self, *a, **kw):
-        table_args = kw.pop('table_args', {})
-        table_args.setdefault('data-show-refresh', "true")
-        kw['table_args'] = table_args
-        super().__init__(*a, **kw)
-
-
-class LogTableExtended(RefreshableTableMixin, BootstrapTable):
-    """A table for displaying logs, with a ``type`` column"""
-    created_at = RelativeDateColumn("Erstellt um", width=2)
-    type_ = Column("Logtyp", name='type', sortable=False)
-    user = UserColumn("Nutzer")
-    message = Column("Nachricht", formatter='table.withMagicLinksFormatter')
-
-
-class LogTableSpecific(RefreshableTableMixin, BootstrapTable):
-    """A table for displaying logs"""
-    created_at = RelativeDateColumn("Erstellt um", width=2)
-    user = UserColumn("Nutzer")
-    message = Column("Nachricht", formatter='table.withMagicLinksFormatter')
 
 
 class MembershipTable(BootstrapTable):
@@ -69,11 +52,37 @@ class MembershipTable(BootstrapTable):
         }
 
 
+class MembershipRow(BaseModel):
+    group_name: str
+    begins_at: DateColResponse
+    ends_at: DateColResponse
+    actions: list[BtnColResponse]
+    # used by membershipRowAttributes
+    grants: list[str]
+    denies: list[str]
+    # used by membershipRowFormatter
+    active: bool
+
+
 class SearchTable(BootstrapTable):
     """A table for displaying search results"""
     id = Column("ID")
     url = LinkColumn("Name")
     login = Column("Login")
+
+
+class UserSearchRow(BaseModel):
+    """note: contains more columns than just the response for the table.
+
+    specific search and quick search are actually different concerns,
+    but noone has separated this yet.
+    """
+
+    id: int
+    name: str
+    url: LinkColResponse
+    login: str
+    room_id: int | None
 
 
 class TrafficTopTable(BootstrapTable):
@@ -82,10 +91,23 @@ class TrafficTopTable(BootstrapTable):
     traffic_for_days = Column("Traffic", formatter='table.byteFormatterBinary')
 
 
+class TrafficTopRow(BaseModel):
+    id: int
+    name: str
+    traffic_for_days: int
+    url: LinkColResponse
+
+
 class RoomHistoryTable(BootstrapTable):
     room = LinkColumn("Wohnort")
     begins_at = DateColumn("Von")
     ends_at = DateColumn("Bis")
+
+
+class RoomHistoryRow(BaseModel):
+    room: LinkColResponse
+    begins_at: DateColResponse
+    ends_at: DateColResponse
 
 
 class TenancyTable(BootstrapTable):
@@ -93,6 +115,13 @@ class TenancyTable(BootstrapTable):
     begins_at = DateColumn("Von")
     ends_at = DateColumn("Bis")
     status = Column("Status")
+
+
+class TenancyRow(BaseModel):
+    room: LinkColResponse
+    begins_at: DateColResponse
+    ends_at: DateColResponse
+    status: str
 
 
 class PreMemberTable(BootstrapTable):
@@ -107,6 +136,24 @@ class PreMemberTable(BootstrapTable):
         table_args = {
             'data-row-style': 'table.membershipRequestRowFormatter',
         }
+
+
+class TextWithBooleanColResponse(BaseModel):
+    text: str
+    bool: bool
+    icon_true: str | None
+    icon_false: str | None
+
+
+class PreMemberRow(BaseModel):
+    prm_id: int | str
+    name: TextWithBooleanColResponse
+    login: str
+    email: TextWithBooleanColResponse
+    # email_confirmed?
+    move_in_date: DateColResponse
+    actions: list[BtnColResponse]
+    action_required: bool  # used by membershipRequestRowFormatter
 
 
 class ArchivableMembersTable(RefreshableTableMixin, BootstrapTable):
@@ -133,3 +180,11 @@ class ArchivableMembersTable(RefreshableTableMixin, BootstrapTable):
         ) -> dict:
             ...
 
+
+class ArchivableMemberRow(BaseModel):
+    id: int
+    user: LinkColResponse
+    room_shortname: LinkColResponse
+    num_hosts: int
+    current_properties: str
+    end_of_membership: DateColResponse

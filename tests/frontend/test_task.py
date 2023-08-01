@@ -32,5 +32,5 @@ def task_request_ctx(app):
 ])
 def test_task_object_creation(app, task: UserTask, session, task_request_ctx):
     object = task_row(task)
-    assert object['user']['title'] is not None
-    assert object['user']['href'] is not None
+    assert object.user.title is not None
+    assert object.user.href is not None

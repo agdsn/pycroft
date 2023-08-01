@@ -25,8 +25,15 @@ from fints.exceptions import (
 )
 from fints.utils import mt940_to_array
 from flask import (
-    Blueprint, abort, flash, jsonify, redirect, render_template, request,
-    url_for, make_response)
+    Blueprint,
+    abort,
+    flash,
+    redirect,
+    render_template,
+    request,
+    url_for,
+    make_response,
+)
 from flask_login import current_user
 from flask_wtf import FlaskForm
 from mt940.models import Transaction as MT940Transaction
@@ -66,19 +73,50 @@ from pycroft.model.session import session, utcnow
 from pycroft.model.user import User
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.finance.forms import (
-    AccountCreateForm, BankAccountCreateForm, BankAccountActivityEditForm,
-    BankAccountActivitiesImportForm, TransactionCreateForm,
-    MembershipFeeCreateForm, MembershipFeeEditForm, FeeApplyForm,
-    HandlePaymentsInDefaultForm, FixMT940Form, BankAccountActivityReadForm,
-    BankAccountActivitiesImportManualForm, ConfirmPaymentReminderMail)
-from web.blueprints.finance.tables import FinanceTable, FinanceTableSplitted, \
-    MembershipFeeTable, UsersDueTable, BankAccountTable, \
-    BankAccountActivityTable, TransactionTable, ImportErrorTable, \
-    UnconfirmedTransactionsTable
+    AccountCreateForm,
+    BankAccountCreateForm,
+    BankAccountActivityEditForm,
+    BankAccountActivitiesImportForm,
+    TransactionCreateForm,
+    MembershipFeeCreateForm,
+    MembershipFeeEditForm,
+    FeeApplyForm,
+    HandlePaymentsInDefaultForm,
+    FixMT940Form,
+    BankAccountActivityReadForm,
+    BankAccountActivitiesImportManualForm,
+    ConfirmPaymentReminderMail,
+)
+from web.blueprints.finance.tables import (
+    FinanceTable,
+    FinanceTableSplitted,
+    MembershipFeeTable,
+    UsersDueTable,
+    BankAccountTable,
+    BankAccountActivityTable,
+    TransactionTable,
+    ImportErrorTable,
+    UnconfirmedTransactionsTable,
+    BankAccountRow,
+    BankAccountActivityRow,
+    ImportErrorRow,
+    TransactionSplitResponse,
+    TransactionSplitRow,
+    UnconfirmedTransactionsRow,
+    UsersDueRow,
+    ColoredColResponse,
+    MembershipFeeRow,
+    FinanceRow,
+)
 from web.blueprints.helpers.api import json_agg_core
 from web.blueprints.helpers.exception import handle_errors
 from web.blueprints.navigation import BlueprintNavigation
-from web.table.table import date_format
+from web.table.table import (
+    TableResponse,
+    date_format,
+    BtnColResponse,
+    LinkColResponse,
+)
 from web.template_filters import date_filter, money_filter, datetime_filter
 from web.template_tests import privilege_check
 
@@ -110,83 +148,82 @@ def bank_accounts_list():
 
 @bp.route('/bank-accounts/list/json')
 def bank_accounts_list_json():
-    return jsonify(
+    return TableResponse[BankAccountRow](
         items=[
-            {
-                "name": bank_account.name,
-                "bank": bank_account.bank,
-                "ktonr": bank_account.account_number,
-                "blz": bank_account.routing_number,
-                "iban": bank_account.iban,
-                "bic": bank_account.bic,
-                "kto": BankAccountTable.kto.value(
+            BankAccountRow(
+                name=bank_account.name,
+                bank=bank_account.bank,
+                iban=bank_account.iban,
+                bic=bank_account.bic,
+                kto=BtnColResponse(
                     href=url_for(".accounts_show", account_id=bank_account.account_id),
                     title="Konto anzeigen",
                     btn_class="btn-primary",
                 ),
-                "balance": money_filter(bank_account.balance),
-                "last_imported_at": (
+                balance=money_filter(bank_account.balance),
+                last_imported_at=(
                     str(datetime.date(i))
                     if (i := bank_account.last_imported_at) is not None
                     else "nie"
                 ),
-            }
+            )
             for bank_account in get_all_bank_accounts(session)
         ]
-    )
+    ).model_dump()
 
 
 @bp.route('/bank-accounts/activities/json')
 def bank_accounts_activities_json():
-    def actions(activity_id):
-        return [BankAccountActivityTable.actions.single_value(
-            href=url_for('.bank_account_activities_edit', activity_id=activity_id),
-            title='',
-            btn_class='btn-primary',
-            icon='fa-edit'
-        )]
+    def actions(activity_id) -> list[BtnColResponse]:
+        return [
+            BtnColResponse(
+                href=url_for(".bank_account_activities_edit", activity_id=activity_id),
+                title="",
+                btn_class="btn-primary",
+                icon="fa-edit",
+            )
+        ]
 
     activity_q = get_unassigned_bank_account_activities(session)
 
-    return jsonify(
+    return TableResponse[BankAccountActivityRow](
         items=[
-            {
-                "bank_account": activity.bank_account.name,
-                "name": activity.other_name,
-                "valid_on": date_format(activity.valid_on, formatter=date_filter),
-                "imported_at": date_format(activity.imported_at, formatter=date_filter),
-                "reference": activity.reference,
-                "amount": activity.amount,
-                "iban": activity.other_account_number,
-                "actions": actions(activity.id),
-                "row_positive": activity.amount >= 0,
-            }
+            BankAccountActivityRow(
+                bank_account=activity.bank_account.name,
+                name=activity.other_name,
+                valid_on=date_format(activity.valid_on, formatter=date_filter),
+                imported_at=date_format(activity.imported_at, formatter=date_filter),
+                reference=activity.reference,
+                amount=activity.amount,
+                iban=activity.other_account_number,
+                actions=actions(activity.id),
+                row_positive=activity.amount >= 0,
+            )
             for activity in activity_q
         ]
-    )
+    ).model_dump()
 
 
 @bp.route('/bank-accounts/import/errors/json')
 def bank_accounts_errors_json():
-    T = ImportErrorTable
-    return jsonify(
+    return TableResponse[ImportErrorRow](
         items=[
-            {
-                "name": error.bank_account.name,
-                "fix": T.fix.value(
+            ImportErrorRow(
+                name=error.bank_account.name,
+                fix=BtnColResponse(
                     href=url_for(".fix_import_error", error_id=error.id),
                     title="korrigieren",
                     btn_class="btn-primary",
                 ),
-                "imported_at": (
+                imported_at=(
                     str(datetime.date(i))
                     if (i := error.imported_at) is not None
                     else "nie"
                 ),
-            }
+            )
             for error in get_all_mt940_errors(session)
         ]
-    )
+    ).model_dump()
 
 
 from contextlib import contextmanager
@@ -637,7 +674,7 @@ def balance_json(account_id):
                     .where(Split.account_id == account_id))
 
     res = session.execute(json_agg_core(balance_json)).first()[0]
-    return jsonify(items=res)
+    return {"items": res}
 
 
 @bp.route('/accounts/<int:account_id>')
@@ -680,25 +717,24 @@ def accounts_show(account_id):
 
 
 def _format_row(split, style, prefix=None):
-    T = FinanceTable
-    row = {
-        'posted_at': datetime_filter(split.transaction.posted_at),
+    inverted = style == "inverted"
+    row = FinanceRow(
+        posted_at=datetime_filter(split.transaction.posted_at),
         # 'posted_by': (split.transaction.author.id, split.transaction.author.name),
-        'valid_on': date_filter(split.transaction.valid_on),
-        'description': T.description.value(
+        valid_on=date_filter(split.transaction.valid_on),
+        description=LinkColResponse(
             href=url_for("finance.transactions_show",
                          transaction_id=split.transaction_id),
             title=localized(split.transaction.description)
             if split.transaction.description
             else 'Keine Beschreibung'
         ),
-        'amount': T.amount.value(
-            value=money_filter(-split.amount) if (style == "inverted") else money_filter(
-                split.amount),
-            is_positive=(split.amount > 0) ^ (style == "inverted"),
+        amount=ColoredColResponse(
+            value=money_filter(-split.amount if inverted else split.amount),
+            is_positive=(split.amount > 0) ^ inverted,
         ),
-        'row_positive': (split.amount > 0) ^ (style == "inverted"),
-    }
+        row_positive=(split.amount > 0) ^ inverted,
+    ).model_dump()
     if prefix is None:
         return row
     return {f'{prefix}_{key}': val for key, val in row.items()}
@@ -760,12 +796,8 @@ def accounts_show_json(account_id):
         query = build_this_query()
         rows = rows_from_query(query)
 
-    items = {'total': total, 'rows': rows}
-
-    return jsonify(
-        name=account.name,
-        items=items
-    )
+    # note: this is so hacky that a pydantic model wouldn't be worth it due to its complexity
+    return {"name": account.name, "items": {"total": total, "rows": rows}}
 
 
 @bp.route('/transactions/<int:transaction_id>')
@@ -789,17 +821,20 @@ def transactions_show(transaction_id):
 @bp.route('/transactions/<int:transaction_id>/json')
 def transactions_show_json(transaction_id):
     transaction = Transaction.get(transaction_id)
-    return jsonify(
+    return TransactionSplitResponse(
         description=transaction.description,
         items=[
-            {
-                'account': TransactionTable.account.value(
+            TransactionSplitRow(
+                account=LinkColResponse(
                     href=url_for(".accounts_show", account_id=split.account_id),
                     title=localized(split.account.name, {int: {'insert_commas': False}})
                 ),
-                'amount': money_filter(split.amount),
-                'row_positive': split.amount > 0
-            } for split in transaction.splits])
+                amount=money_filter(split.amount),
+                row_positive=split.amount > 0,
+            )
+            for split in transaction.splits
+        ],
+    ).model_dump()
 
 
 @bp.route('/transactions/unconfirmed')
@@ -812,70 +847,96 @@ def transactions_unconfirmed():
             data_url=url_for(".transactions_unconfirmed_json"))
     )
 
-@bp.route('/transactions/unconfirmed/json')
-def transactions_unconfirmed_json():
-    transactions = Transaction.q.filter_by(confirmed=False).order_by(Transaction.posted_at).limit(
-        100).all()
 
-    items = []
-    T = UnconfirmedTransactionsTable
+def _iter_transaction_buttons(bank_acc_act, transaction) -> t.Iterator[BtnColResponse]:
+    if not privilege_check(current_user, "finance_change"):
+        return
 
-    for transaction in transactions:
-        user_account = next(
-            (a for a in transaction.accounts if a.type == "USER_ASSET"), None
+    if bank_acc_act is not None:
+        yield BtnColResponse(
+            href=url_for(".bank_account_activities_edit", activity_id=bank_acc_act.id),
+            title="Bankbewegung",
+            icon="fa-credit-card",
+            btn_class="btn-info btn-sm",
+            new_tab=True,
         )
-        bank_acc_act = BankAccountActivity.q.filter_by(
-            transaction_id=transaction.id
-        ).first()
+    yield BtnColResponse(
+        href=url_for(".transaction_confirm", transaction_id=transaction.id),
+        title="Bestätigen",
+        icon="fa-check",
+        btn_class="btn-success btn-sm",
+    )
+    yield BtnColResponse(
+        href=url_for(".transaction_delete", transaction_id=transaction.id),
+        title="Löschen",
+        icon="fa-trash",
+        btn_class="btn-danger btn-sm",
+    )
 
-        items.append(
-            {
-                "id": transaction.id,
-                "description": T.description.value(
-                    href=url_for(".transactions_show", transaction_id=transaction.id),
-                    title=transaction.description,
-                    new_tab=True,
-                    glyphicon='fa-external-link-alt'
-                ),
-                'user': T.user.value(
-                    href=url_for("user.user_show", user_id=user_account.user.id),
-                    title="{} ({})".format(user_account.user.name,
-                                           encode_type2_user_id(user_account.user.id)),
-                    new_tab=True
-                ) if user_account else None,
-                'room': user_account.user.room.short_name if user_account and user_account.user.room else None,
-                'author': T.author.value(
-                    href=url_for("user.user_show", user_id=transaction.author.id),
-                    title=transaction.author.name,
-                    new_tab=True
-                ),
-                'date': date_format(transaction.posted_at, formatter=date_filter),
-                'amount': money_filter(transaction.amount),
-                'actions': [
-                    T.actions.single_value(
-                        href=url_for(".bank_account_activities_edit",
-                                     activity_id=bank_acc_act.id),
-                        title='Bankbewegung', icon='fa-credit-card',
-                        btn_class='btn-info btn-sm',
-                        new_tab=True
-                    ) if bank_acc_act is not None else {},
-                    T.actions.single_value(
-                        href=url_for(".transaction_confirm",
-                                     transaction_id=transaction.id), title='Bestätigen',
-                        icon='fa-check', btn_class='btn-success btn-sm'
-                    ),
-                    T.actions.single_value(
-                        href=url_for(".transaction_delete",
-                                     transaction_id=transaction.id), title='Löschen',
-                        icon='fa-trash',
-                        btn_class='btn-danger btn-sm'
-                    )
-                ]
-                if privilege_check(current_user, "finance_change")
-                else [],
-            })
 
-    return jsonify(items=items)
+def _format_transaction_row(
+    transaction: Transaction,
+    user_account: Account,
+    bank_acc_act: BankAccountActivity,
+) -> UnconfirmedTransactionsRow:
+    return UnconfirmedTransactionsRow(
+        id=transaction.id,
+        description=LinkColResponse(
+            href=url_for(".transactions_show", transaction_id=transaction.id),
+            title=transaction.description,
+            new_tab=True,
+            glyphicon="fa-external-link-alt",
+        ),
+        user=LinkColResponse(
+            href=url_for("user.user_show", user_id=user_account.user.id),
+            title="{} ({})".format(
+                user_account.user.name,
+                encode_type2_user_id(user_account.user.id),
+            ),
+            new_tab=True,
+        )
+        if user_account
+        else None,
+        room=user_account.user.room.short_name
+        if user_account and user_account.user.room
+        else None,
+        author=LinkColResponse(
+            href=url_for("user.user_show", user_id=transaction.author.id),
+            title=transaction.author.name,
+            new_tab=True,
+        ),
+        date=date_format(transaction.posted_at, formatter=date_filter),
+        amount=money_filter(transaction.amount),
+        actions=list(_iter_transaction_buttons(bank_acc_act, transaction)),
+    )
+
+
+@bp.route("/transactions/unconfirmed/json")
+def transactions_unconfirmed_json():
+    # TODO extract transaction fetch (with user/bank account) to lib function
+    transactions = (
+        Transaction.q.filter_by(confirmed=False)
+        .order_by(Transaction.posted_at)
+        .limit(100)
+        .all()
+    )
+    return TableResponse[UnconfirmedTransactionsRow](
+        items=[
+            _format_transaction_row(
+                transaction,
+                user_account=next(
+                    (a for a in transaction.accounts if a.type == "USER_ASSET"), None
+                ),
+                bank_acc_act=(
+                    # TODO do eager load
+                    BankAccountActivity.q.filter_by(
+                        transaction_id=transaction.id
+                    ).first()
+                ),
+            )
+            for transaction in transactions
+        ]
+    ).model_dump()
 
 
 @bp.route('/transaction/<int:transaction_id>/confirm', methods=['GET', 'POST'])
@@ -1049,7 +1110,7 @@ def transactions_all_json():
         q = q.where(Transaction.valid_on <= upper)
 
     res = session.execute(json_agg_core(q)).fetchone()[0] or []
-    return jsonify(items=res)
+    return {"items": res}
 
 
 @bp.route('/transactions/create', methods=['GET', 'POST'])
@@ -1132,26 +1193,30 @@ def membership_fee_users_due_json(fee_id):
     affected_users = post_transactions_for_membership_fee(
         fee, current_user, simulate=True)
 
-    fee_amount = {'value': str(fee.regular_fee) + '€',
-                  'is_positive': (fee.regular_fee < 0)}
     fee_description = localized(
         finance.membership_fee_description.format(fee_name=fee.name).to_json())
 
-    T = UsersDueTable
-    return jsonify(items=[{
-        'user_id': user['id'],
-        'user': T.user.value(
-            title=str(user['name']),
-            href=url_for("user.user_show", user_id=user['id'])
-        ),
-        'amount': fee_amount,
-        'description': fee_description,
-        'valid_on': fee.ends_on,
-        'fee_account_id': T.fee_account_id.value(
-            title=str(user['fee_account_id']),
-            href=url_for(".accounts_show", account_id=user['fee_account_id'])
-        ),
-    } for user in affected_users])
+    return TableResponse[UsersDueRow](
+        items=[
+            UsersDueRow(
+                user_id=user["id"],
+                user=LinkColResponse(
+                    title=str(user["name"]),
+                    href=url_for("user.user_show", user_id=user["id"]),
+                ),
+                amount=ColoredColResponse(
+                    value=str(fee.regular_fee) + "€", is_positive=(fee.regular_fee < 0)
+                ),
+                description=fee_description,
+                valid_on=str(fee.ends_on),  # TODO use proper date column
+                fee_account_id=LinkColResponse(
+                    title=str(user["fee_account_id"]),
+                    href=url_for(".accounts_show", account_id=user["fee_account_id"]),
+                ),
+            )
+            for user in affected_users
+        ]
+    ).model_dump()
 
 
 @bp.route("/membership_fees", methods=['GET', 'POST'])
@@ -1164,36 +1229,46 @@ def membership_fees():
 @bp.route("/membership_fees/json")
 @access.require('finance_change')
 def membership_fees_json():
-    T = MembershipFeeTable
-    return jsonify(items=[
-        {
-            'name': localized(membership_fee.name),
-            'regular_fee': money_filter(
-                membership_fee.regular_fee),
-            'payment_deadline': membership_fee.payment_deadline.days,
-            'payment_deadline_final': membership_fee.payment_deadline_final.days,
-            'begins_on': date_format(membership_fee.begins_on, formatter=date_filter),
-            'ends_on': date_format(membership_fee.ends_on, formatter=date_filter),
-            'actions': [
-                T.actions.single_value(
-                    href=url_for(".transactions_all",
-                                 filter="all",
-                                 after=membership_fee.begins_on,
-                                 before=membership_fee.ends_on),
-                    title='Finanzübersicht',
-                    icon='fa-euro-sign', btn_class='btn-success btn-sm'
-                ),
-                T.actions.single_value(
-                    href=url_for(".membership_fee_book", fee_id=membership_fee.id),
-                    title='Buchen', icon='fa-book', btn_class='btn-warning btn-sm'
-                ),
-                T.actions.single_value(
-                    href=url_for(".membership_fee_edit", fee_id=membership_fee.id),
-                    title='Bearbeiten', icon='fa-edit', btn_class='btn-primary btn-sm'
-                )
-            ]
-        } for membership_fee in
-        MembershipFee.q.order_by(MembershipFee.begins_on.desc()).all()])
+    return TableResponse[MembershipFeeRow](
+        items=[
+            MembershipFeeRow(
+                name=localized(membership_fee.name),
+                regular_fee=money_filter(membership_fee.regular_fee),
+                payment_deadline=membership_fee.payment_deadline.days,
+                payment_deadline_final=membership_fee.payment_deadline_final.days,
+                begins_on=date_format(membership_fee.begins_on, formatter=date_filter),
+                ends_on=date_format(membership_fee.ends_on, formatter=date_filter),
+                actions=[
+                    BtnColResponse(
+                        href=url_for(
+                            ".transactions_all",
+                            filter="all",
+                            after=membership_fee.begins_on,
+                            before=membership_fee.ends_on,
+                        ),
+                        title="Finanzübersicht",
+                        icon="fa-euro-sign",
+                        btn_class="btn-success btn-sm",
+                    ),
+                    BtnColResponse(
+                        href=url_for(".membership_fee_book", fee_id=membership_fee.id),
+                        title="Buchen",
+                        icon="fa-book",
+                        btn_class="btn-warning btn-sm",
+                    ),
+                    BtnColResponse(
+                        href=url_for(".membership_fee_edit", fee_id=membership_fee.id),
+                        title="Bearbeiten",
+                        icon="fa-edit",
+                        btn_class="btn-primary btn-sm",
+                    ),
+                ],
+            )
+            for membership_fee in MembershipFee.q.order_by(
+                MembershipFee.begins_on.desc()
+            ).all()
+        ]
+    ).model_dump()
 
 
 @bp.route('/membership_fee/create', methods=("GET", "POST"))
@@ -1346,14 +1421,17 @@ def json_accounts_user_search():
             func.lower(User.login).like(func.lower(f"%{query}%")),
             cast(User.id, Text).like(f"{query}%"))
     ).all()
-    accounts = [
-        {"account_id": account_id,
-         "user_id": user_id,
-         "user_login": user_login,
-         "user_name": user_name}
-        for account_id, user_id, user_login, user_name in results
-    ]
-    return jsonify(accounts=accounts)
+    return {
+        "accounts": [
+            {
+                "account_id": account_id,
+                "user_id": user_id,
+                "user_login": user_login,
+                "user_name": user_name,
+            }
+            for account_id, user_id, user_login, user_name in results
+        ]
+    }
 
 
 @bp.route('/membership_fees/payments_in_default_csv')

@@ -11,8 +11,7 @@
 """
 from itertools import chain
 
-from flask import Blueprint, flash, jsonify, redirect, render_template, url_for, \
-    abort
+from flask import Blueprint, flash, redirect, render_template, url_for, abort
 from flask_login import current_user
 from flask_wtf import FlaskForm
 
@@ -175,11 +174,3 @@ def property_group_delete(group_id):
                            page_title=f"Eigenschaftsgruppe '{group.name}' löschen",
                            form_args=form_args,
                            form=form)
-
-
-@bp.route('/json/propertygroups')
-def json_propertygroups():
-    groups = [(entry.id, entry.name) for entry in PropertyGroup.q.all()]
-
-    return jsonify(dict(items=groups))
-

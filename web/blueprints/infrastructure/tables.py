@@ -1,8 +1,16 @@
 from flask import url_for
 from flask_login import current_user
+from pydantic import BaseModel, ConfigDict
 
-from web.table.table import BootstrapTable, Column, LinkColumn, \
-    BtnColumn, button_toolbar
+from web.table.table import (
+    BootstrapTable,
+    Column,
+    LinkColumn,
+    BtnColumn,
+    button_toolbar,
+    LinkColResponse,
+    BtnColResponse,
+)
 
 
 def no_inf_change():
@@ -21,6 +29,17 @@ class SubnetTable(BootstrapTable):
     })
 
 
+class SubnetRow(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    description: str | None
+    address: str
+    gateway: str
+    reserved: list[str]
+    free_ips: str  # the sort name
+    free_ips_formatted: str
+
+
 class SwitchTable(BootstrapTable):
     id = Column("#")
     name = LinkColumn("Name")
@@ -36,10 +55,25 @@ class SwitchTable(BootstrapTable):
         return button_toolbar("Switch", url_for(".switch_create"))
 
 
+class SwitchRow(BaseModel):
+    id: int
+    name: LinkColResponse
+    ip: str
+    edit_link: BtnColResponse
+    delete_link: BtnColResponse
+
+
 class VlanTable(BootstrapTable):
     id = Column("#")
     name = Column("Name")
     vid = Column("VID")
+
+
+class VlanRow(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    name: str
+    vid: int
 
 
 class PortTable(BootstrapTable):
@@ -64,3 +98,11 @@ class PortTable(BootstrapTable):
             return
         href = url_for(".switch_port_create", switch_id=self.switch_id)
         return button_toolbar("Switch-Port", href)
+
+
+class PortRow(BaseModel):
+    switchport_name: str
+    patchport_name: str | None
+    room: LinkColResponse | None
+    edit_link: BtnColResponse
+    delete_link: BtnColResponse

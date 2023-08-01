@@ -1,13 +1,29 @@
 from flask import url_for
+from pydantic import BaseModel
 
-from web.table.table import BootstrapTable, Column, LinkColumn, \
-    button_toolbar, toggle_button_toolbar, BtnColumn, MultiBtnColumn, DateColumn
+from web.table.table import (
+    BootstrapTable,
+    Column,
+    LinkColumn,
+    button_toolbar,
+    toggle_button_toolbar,
+    BtnColumn,
+    MultiBtnColumn,
+    DateColumn,
+    LinkColResponse,
+    BtnColResponse,
+)
 from web.blueprints.infrastructure.tables import no_inf_change
 
 
 class SiteTable(BootstrapTable):
     site = LinkColumn("Site")
     buildings = MultiBtnColumn("Buildings")
+
+
+class SiteRow(BaseModel):
+    site: LinkColResponse
+    buildings: list[BtnColResponse]
 
 
 class BuildingLevelRoomTable(BootstrapTable):
@@ -29,7 +45,13 @@ class BuildingLevelRoomTable(BootstrapTable):
         )
 
 
+class BuildingLevelRoomRow(BaseModel):
+    room: LinkColResponse
+    inhabitants: list[BtnColResponse]
+
+
 class RoomLogTable(BootstrapTable):
+    """Like a log table, just with absolute date column"""
     created_at = DateColumn("Erstellt um")
     user = LinkColumn("Nutzer")
     message = Column("Nachricht")
@@ -41,6 +63,11 @@ class RoomOvercrowdedTable(BootstrapTable):
 
     class Meta:
         table_args = {'data-sort-name': 'room'}
+
+
+class RoomOvercrowdedRow(BaseModel):
+    room: LinkColResponse
+    inhabitants: list[BtnColResponse]
 
 
 class PatchPortTable(BootstrapTable):
@@ -66,3 +93,11 @@ class PatchPortTable(BootstrapTable):
             return
         href = url_for(".patch_port_create", switch_room_id=self.room_id)
         return button_toolbar("Patch-Port", href)
+
+
+class PatchPortRow(BaseModel):
+    name: str
+    room: LinkColResponse
+    switch_port: LinkColResponse
+    edit_link: BtnColResponse
+    delete_link: BtnColResponse

@@ -1,8 +1,14 @@
 from flask import url_for
+from pydantic import BaseModel
 
 from web.blueprints.helpers.user import no_hosts_change
-from web.table.table import BootstrapTable, Column, button_toolbar, \
-    MultiBtnColumn
+from web.table.table import (
+    BootstrapTable,
+    Column,
+    button_toolbar,
+    MultiBtnColumn,
+    BtnColResponse,
+)
 
 
 class HostTable(BootstrapTable):
@@ -38,6 +44,16 @@ class HostTable(BootstrapTable):
         return button_toolbar("Host", href)
 
 
+class HostRow(BaseModel):
+    name: str | None
+    switch: str | None
+    port: str | None
+    actions: list[BtnColResponse]
+    interfaces_table_link: str
+    interface_create_link: str
+    id: int
+
+
 class InterfaceTable(BootstrapTable):
     """A table for displaying interfaces
     """
@@ -54,3 +70,12 @@ class InterfaceTable(BootstrapTable):
 
         super().__init__(*a, **kw)
         self.host_id = host_id
+
+
+class InterfaceRow(BaseModel):
+    id: int  # TODO is this used?
+    host: str | None
+    name: str | None
+    mac: str
+    ips: str
+    actions: list[BtnColResponse]

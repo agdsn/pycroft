@@ -1,5 +1,16 @@
-from web.table.table import BootstrapTable, Column, DateColumn, \
-    MultiBtnColumn, LinkColumn
+import typing as t
+from pydantic import BaseModel
+
+from web.table.table import (
+    BootstrapTable,
+    Column,
+    DateColumn,
+    MultiBtnColumn,
+    LinkColumn,
+    LinkColResponse,
+    DateColResponse,
+    BtnColResponse,
+)
 from web.blueprints.helpers.user import no_membership_change
 
 
@@ -34,3 +45,17 @@ class TaskTable(BootstrapTable):
         kw['table_args'] = table_args
 
         super().__init__(*a, **kw)
+
+
+class TaskRow(BaseModel):
+    id: int  # seems unused, not sure
+    user: LinkColResponse
+    name: str
+    type: str
+    due: DateColResponse
+    creator: LinkColResponse
+    status: str  # used by taskRowFormatter
+    actions: list[BtnColResponse]
+    created: str
+    parameters: dict[str, t.Any]
+    errors: list[str]  # used by taskDetailFormatter

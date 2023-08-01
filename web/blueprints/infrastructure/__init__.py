@@ -10,8 +10,7 @@
     :copyright: (c) 2012 by AG DSN.
 """
 
-from flask import (
-    Blueprint, abort, flash, jsonify, redirect, render_template, url_for)
+from flask import Blueprint, abort, flash, redirect, render_template, url_for
 from flask_login import current_user
 from flask_wtf import FlaskForm as Form
 from ipaddr import IPAddress
@@ -31,7 +30,17 @@ from pycroft.model.port import PatchPort
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.infrastructure.forms import SwitchForm, SwitchPortForm
 from web.blueprints.navigation import BlueprintNavigation
-from .tables import SubnetTable, SwitchTable, VlanTable, PortTable
+from web.table.table import LinkColResponse, TableResponse, BtnColResponse
+from .tables import (
+    SubnetTable,
+    SwitchTable,
+    VlanTable,
+    PortTable,
+    SwitchRow,
+    PortRow,
+    VlanRow,
+    SubnetRow,
+)
 
 bp = Blueprint('infrastructure', __name__)
 access = BlueprintAccess(bp, required_properties=['infrastructure_show'])
@@ -71,16 +80,20 @@ def format_reserved_addresses(subnet):
 
 @bp.route('/subnets/json')
 def subnets_json():
-    subnets_list = get_subnets_with_usage()
-    return jsonify(items=[{
-            'id': subnet.id,
-            'description': subnet.description,
-            'address': str(subnet.address),
-            'gateway': str(subnet.gateway),
-            'reserved': format_reserved_addresses(subnet),
-            'free_ips': f'{subnet.max_ips - subnet.used_ips}',
-            'free_ips_formatted': f'{subnet.max_ips - subnet.used_ips} (von {subnet.max_ips})',
-        } for subnet in subnets_list])
+    return TableResponse[SubnetRow](
+        items=[
+            SubnetRow(
+                id=subnet.id,
+                description=subnet.description,
+                address=str(subnet.address),
+                gateway=str(subnet.gateway),
+                reserved=format_reserved_addresses(subnet),
+                free_ips=f"{subnet.max_ips - subnet.used_ips}",
+                free_ips_formatted=f"{subnet.max_ips - subnet.used_ips} (von {subnet.max_ips})",
+            )
+            for subnet in get_subnets_with_usage()
+        ]
+    ).model_dump()
 
 
 @bp.route('/switches')
@@ -93,27 +106,31 @@ def switches():
 
 @bp.route('/switches/json')
 def switches_json():
-    T = SwitchTable
-    return jsonify(items=[{
-        'id': switch.host_id,
-        'name': T.name.value(
-            title=switch.host.name,
-            href=url_for(".switch_show", switch_id=switch.host_id)
-        ),
-        'ip': str(switch.management_ip),
-        "edit_link": T.edit_link.value(
-            href=url_for(".switch_edit", switch_id=switch.host_id),
-            title="Bearbeiten",
-            icon='fa-edit',
-            btn_class='btn-link'
-        ),
-        "delete_link": T.delete_link.value(
-            href=url_for(".switch_delete", switch_id=switch.host_id),
-            title="Löschen",
-            icon='fa-trash',
-            btn_class='btn-link'
-        ),
-    } for switch in Switch.q.all()])
+    return TableResponse[SwitchRow](
+        items=[
+            SwitchRow(
+                id=switch.host_id,
+                name=LinkColResponse(
+                    title=switch.host.name or "<unnamed>",
+                    href=url_for(".switch_show", switch_id=switch.host_id),
+                ),
+                ip=str(switch.management_ip),
+                edit_link=BtnColResponse(
+                    href=url_for(".switch_edit", switch_id=switch.host_id),
+                    title="Bearbeiten",
+                    icon="fa-edit",
+                    btn_class="btn-link",
+                ),
+                delete_link=BtnColResponse(
+                    href=url_for(".switch_delete", switch_id=switch.host_id),
+                    title="Löschen",
+                    icon="fa-trash",
+                    btn_class="btn-link",
+                ),
+            )
+            for switch in Switch.q.all()
+        ]
+    ).model_dump()
 
 
 @bp.route('/switch/show/<int:switch_id>')
@@ -140,29 +157,44 @@ def switch_show_json(switch_id):
         abort(404)
     switch_port_list = switch.ports
     switch_port_list = sort_ports(switch_port_list)
-    T = PortTable
-    return jsonify(items=[{
-            "switchport_name": port.name,
-            "patchport_name": port.patch_port.name if port.patch_port else None,
-            "room": T.room.value(
-                href=url_for("facilities.room_show", room_id=port.patch_port.room.id),
-                title=port.patch_port.room.short_name
-            ) if port.patch_port else None,
-            "edit_link": T.edit_link.value(
-                href=url_for(".switch_port_edit",
-                             switch_id=switch.host.id, switch_port_id=port.id),
-                title="Bearbeiten",
-                icon='fa-edit',
-                btn_class='btn-link'
-            ),
-            "delete_link": T.delete_link.value(
-                href=url_for(".switch_port_delete",
-                             switch_id=switch.host.id, switch_port_id=port.id),
-                title="Löschen",
-                icon='fa-trash',
-                btn_class='btn-link'
-            ),
-        } for port in switch_port_list])
+
+    return TableResponse[PortRow](
+        items=[
+            PortRow(
+                switchport_name=port.name,
+                patchport_name=port.patch_port.name if port.patch_port else None,
+                room=LinkColResponse(
+                    href=url_for(
+                        "facilities.room_show", room_id=port.patch_port.room.id
+                    ),
+                    title=port.patch_port.room.short_name,
+                )
+                if port.patch_port
+                else None,
+                edit_link=BtnColResponse(
+                    href=url_for(
+                        ".switch_port_edit",
+                        switch_id=switch.host.id,
+                        switch_port_id=port.id,
+                    ),
+                    title="Bearbeiten",
+                    icon="fa-edit",
+                    btn_class="btn-link",
+                ),
+                delete_link=BtnColResponse(
+                    href=url_for(
+                        ".switch_port_delete",
+                        switch_id=switch.host.id,
+                        switch_port_id=port.id,
+                    ),
+                    title="Löschen",
+                    icon="fa-trash",
+                    btn_class="btn-link",
+                ),
+            )
+            for port in switch_port_list
+        ]
+    ).model_dump()
 
 
 @bp.route('/switch/create', methods=['GET', 'POST'])
@@ -414,8 +446,6 @@ def vlans():
 
 @bp.route('/vlans/json')
 def vlans_json():
-    return jsonify(items=[{
-            'id': vlan.id,
-            'name': vlan.name,
-            'vid': vlan.vid,
-        } for vlan in VLAN.q.all()])
+    return TableResponse[VlanRow](
+        items=[VlanRow.model_validate(vlan) for vlan in VLAN.q.all()]
+    ).model_dump()

@@ -1,11 +1,16 @@
 import html
 import typing
+import typing as t
 from collections import OrderedDict
 from copy import copy
 from dataclasses import dataclass
 from datetime import date, datetime, time, timezone
+from operator import methodcaller
 from typing import Iterable, Any, Callable
 from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
+
+from pydantic import BaseModel, Field
+from annotated_types import Predicate
 
 from .lazy_join import lazy_join, LazilyJoined
 
@@ -148,12 +153,26 @@ class custom_formatter_column:
         return cls
 
 
+BtnClass = t.Annotated[str, Predicate(methodcaller("startswith", "btn-"))]
+IconClass = t.Annotated[str, Predicate(methodcaller("startswith", "fa-"))]
+
+
+class BtnColResponse(BaseModel):
+    btn_class: BtnClass | None = None
+    href: str
+    title: str
+    tooltip: str | None = None
+    new_tab: bool | None = None
+    icon: IconClass | list[IconClass] | None = None
+
+
 @custom_formatter_column('table.btnFormatter')
 class BtnColumn(DictValueMixin, Column):
     def __init__(self, *a, **kw):
         super().__init__(*a, sortable=False, **kw)
 
     if typing.TYPE_CHECKING:
+        # TODO deprecate this!
         @classmethod
         def value(
             cls,
@@ -190,6 +209,13 @@ class MultiBtnColumn(DictListValueMixin, Column):
             ...
 
 
+class LinkColResponse(BaseModel):
+    href: str
+    title: str
+    glyphicon: IconClass | None = None
+    new_tab: bool | None = None
+
+
 @custom_formatter_column('table.linkFormatter')
 class LinkColumn(DictValueMixin, Column):
     if typing.TYPE_CHECKING:
@@ -212,9 +238,19 @@ class DateColumn(Column):
     pass
 
 
+class DateColResponse(BaseModel):
+    """Response for pre-formatted date or datetime data"""
+
+    formatted: str
+    timestamp: int | None
+
+
 @custom_formatter_column('table.relativeDateFormatter')
 class RelativeDateColumn(Column):
     pass
+
+
+RelativeDateResponse = DateColResponse
 
 
 @custom_formatter_column('table.textWithBooleanFormatter')
@@ -245,6 +281,19 @@ class UserColumn(Column):
         return DictValueMixin.value(
             type='native', href=href, title=title, glyphicon=glyphicon,
         )
+
+
+class UserColResponsePlain(BaseModel):
+    type: t.Annotated[t.Literal["plain"], Field(init_var=False)] = "plain"
+    title: str
+
+
+class UserColResponseNative(LinkColResponse):
+    type: t.Annotated[t.Literal["native"], Field(init_var=False)] = "native"
+
+
+UserColResponse = UserColResponsePlain | UserColResponseNative
+
 
 @custom_formatter_column('table.ibanFormatter')
 class IbanColumn(Column):
@@ -431,7 +480,7 @@ class SplittedTable(BootstrapTable):
     splits: Iterable[tuple[str, str]]
 
     def _iter_typed_splits(self):
-        for t in self.splits:
+        for t in self.splits:  # noqa: F402
             yield TableSplit(*t)
 
     @property
@@ -471,48 +520,38 @@ def iso_format(dt: datetime | date | None = None):
     return dt.isoformat(sep=' ')
 
 
-def date_format(dt: datetime | date | None,
-                default: str | None = None, formatter: Callable = iso_format) -> dict:
-    """
-    Format date or datetime objects for `table.dateFormatter`.
-    :param dt: a date or datetime object or None
-    :param default: formatted value to use if `dt` is None
-    :param formatter:
-    :return:
-    """
-    if dt is not None:
-        return {
-            'formatted': formatter(dt),
-            'timestamp': int(datetime.combine(dt, time.min.replace(tzinfo=timezone.utc)).timestamp()),
-        }
-    else:
-        return {
-            'formatted': default if default is not None else formatter(None),
-            'timestamp': None,
-        }
+def date_format(
+    dt: datetime | date | None,
+    default: str | None = None,
+    formatter: Callable = iso_format,
+) -> DateColResponse:
+    if not dt:
+        return DateColResponse(
+            formatted=default if default is not None else formatter(None),
+            timestamp=None,
+        )
+    return DateColResponse(
+        formatted=formatter(dt),
+        timestamp=int(
+            datetime.combine(dt, time.min.replace(tzinfo=timezone.utc)).timestamp()
+        ),
+    )
 
 
-def datetime_format(dt: datetime | None,
-                    default: str | None = None,
-                    formatter: Callable = iso_format) -> dict:
-    """
-    Format datetime objects for `table.dateFormatter`.
-    :param dt: a datetime object or None
-    :param default: formatted value to use if `dt` is None
-    :param formatter:
-    :return:
-    """
-    # TODO turn this into a `DateTimeColumn` method
-    if dt is not None:
-        return {
-            'formatted': formatter(dt),
-            'timestamp': int(dt.timestamp()),
-        }
-    else:
-        return {
-            'formatted': default if default is not None else formatter(None),
-            'timestamp': None,
-        }
+def datetime_format(
+    dt: datetime | None,
+    default: str | None = None,
+    formatter: Callable = iso_format,
+) -> DateColResponse:
+    if dt is None:
+        return DateColResponse(
+            formatted=default if default is not None else formatter(None),
+            timestamp=None,
+        )
+    return DateColResponse(
+        formatted=formatter(dt),
+        timestamp=int(dt.timestamp()),
+    )
 
 
 def enforce_url_params(url, params):
@@ -571,3 +610,10 @@ def html_params(**kwargs):
         params.append(f'{str(k)}="{html.escape(str(v))}"')
 
     return ' '.join(params)
+
+
+TRow = t.TypeVar("TRow", bound=BaseModel)
+
+
+class TableResponse(BaseModel, t.Generic[TRow]):
+    items: list[TRow]

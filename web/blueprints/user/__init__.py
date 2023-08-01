@@ -9,18 +9,16 @@
 
     :copyright: (c) 2012 by AG DSN.
 """
-import operator
 import re
+import typing as t
 from datetime import timedelta
 from functools import partial
-from itertools import chain
 from typing import TypeVar, Callable, cast
 
 from flask import (
     Blueprint,
     abort,
     flash,
-    jsonify,
     redirect,
     render_template,
     request,
@@ -61,18 +59,57 @@ from web.blueprints.helpers.user import get_user_or_404, get_pre_member_or_404
 from web.blueprints.host.tables import HostTable
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.task.tables import TaskTable
-from web.blueprints.user.forms import UserSearchForm, UserCreateForm, \
-    UserLogEntry, UserAddGroupMembership, UserMoveForm, \
-    UserEditForm, UserSuspendForm, UserMoveOutForm, \
-    UserEditGroupMembership, \
-    UserResetPasswordForm, UserMoveInForm, PreMemberEditForm, PreMemberDenyForm, \
-    PreMemberMergeForm, PreMemberMergeConfirmForm, UserEditAddressForm, \
-    NonResidentUserCreateForm, GroupMailForm
-from web.table.table import datetime_format, date_format
+from web.blueprints.user.forms import (
+    UserSearchForm,
+    UserCreateForm,
+    UserLogEntry,
+    UserAddGroupMembership,
+    UserMoveForm,
+    UserEditForm,
+    UserSuspendForm,
+    UserMoveOutForm,
+    UserEditGroupMembership,
+    UserResetPasswordForm,
+    UserMoveInForm,
+    PreMemberEditForm,
+    PreMemberDenyForm,
+    PreMemberMergeForm,
+    PreMemberMergeConfirmForm,
+    UserEditAddressForm,
+    NonResidentUserCreateForm,
+    GroupMailForm,
+)
+from web.table.table import (
+    TableResponse,
+    LinkColResponse,
+    datetime_format,
+    BtnColResponse,
+    date_format,
+)
 from .log import formatted_user_hades_logs
-from .tables import (LogTableExtended, LogTableSpecific, MembershipTable,
-                     SearchTable, TrafficTopTable, RoomHistoryTable,
-                     PreMemberTable, TenancyTable, ArchivableMembersTable)
+from .tables import (
+    MembershipTable,
+    SearchTable,
+    TrafficTopTable,
+    RoomHistoryTable,
+    PreMemberTable,
+    TenancyTable,
+    ArchivableMembersTable,
+    TrafficTopRow,
+    UserSearchRow,
+    MembershipRow,
+    TenancyRow,
+    RoomHistoryRow,
+    PreMemberRow,
+    TextWithBooleanColResponse,
+    ArchivableMemberRow,
+)
+from ..helpers.log_tables import (
+    LogTableExtended,
+    LogTableSpecific,
+    LogType,
+    LogTableRow,
+)
 from ..finance.tables import FinanceTable, FinanceTableSplitted
 from ..helpers.log import format_user_log_entry, format_room_log_entry, \
     format_task_log_entry
@@ -158,13 +195,19 @@ def static_datasheet(user_id):
 
 @bp.route('/json/traffic-usage')
 def json_users_highest_traffic():
-    T = TrafficTopTable
-    return jsonify(items=[{
-        'id': user.id,
-        'name': user.name,
-        'traffic_for_days': user.traffic_for_days,
-        'url': T.url.value(href=url_for('.user_show', user_id=user.id), title=user.name)
-    } for user in get_users_with_highest_traffic(7, 20)])
+    return TableResponse[TrafficTopRow](
+        items=[
+            TrafficTopRow(
+                id=user.id,
+                name=user.name,
+                traffic_for_days=user.traffic_for_days,
+                url=LinkColResponse(
+                    href=url_for(".user_show", user_id=user.id), title=user.name
+                ),
+            )
+            for user in get_users_with_highest_traffic(7, 20)
+        ]
+    ).model_dump()
 
 
 T = TypeVar('T')
@@ -203,20 +246,23 @@ def json_search():
         query
     )
 
-    return jsonify(items=[{
-        'id': found_user.id,
-        'name': found_user.name,
-        'url': SearchTable.url.value(
-            href=url_for('.user_show', user_id=found_user.id),
-            title=found_user.name
-        ),
-        'login': found_user.login,
-        'room_id': found_user.room_id if found_user.room_id is not None else None
-    } for found_user in (
-        search_query.all()
-        if search_query.count() < User.q.count()
-        else []
-    )])
+    return TableResponse[UserSearchRow](
+        items=[
+            UserSearchRow(
+                id=found_user.id,
+                name=found_user.name,
+                url=LinkColResponse(
+                    href=url_for(".user_show", user_id=found_user.id),
+                    title=found_user.name,
+                ),
+                login=found_user.login,
+                room_id=found_user.room_id if found_user.room_id is not None else None,
+            )
+            for found_user in (
+                search_query.all() if search_query.count() < User.q.count() else []
+            )
+        ]
+    ).model_dump()
 
 
 def infoflags(user):
@@ -376,25 +422,30 @@ def user_account(user_id):
                             account_id=user.account_id))
 
 
+def _iter_user_logs(user: User, logtype: LogType) -> t.Iterator[LogTableRow]:
+    if logtype in ["user", "all"]:
+        yield from (format_user_log_entry(e) for e in user.log_entries)
+    if logtype in ["room", "all"] and user.room:
+        yield from (format_room_log_entry(e) for e in user.room.log_entries)
+    if logtype in ["tasks", "all"]:
+        yield from (format_task_log_entry(e) for e in user.task_log_entries)
+    if logtype in ["hades", "all"]:
+        yield from formatted_user_hades_logs(user)
+
+
 @bp.route("/<int:user_id>/logs")
 @bp.route("/<int:user_id>/logs/<logtype>")
 def user_show_logs_json(user_id, logtype="all"):
     user = get_user_or_404(user_id)
 
-    log_sources = []  # list of iterators
+    logs = _iter_user_logs(user, logtype)
 
-    if logtype in ["user", "all"]:
-        log_sources.append(format_user_log_entry(e) for e in user.log_entries)
-    if logtype in ["room", "all"] and user.room:
-        log_sources.append(format_room_log_entry(e) for e in user.room.log_entries)
-    if logtype in ["tasks", "all"]:
-        log_sources.append(format_task_log_entry(e) for e in user.task_log_entries)
-    if logtype in ["hades", "all"]:
-        log_sources.append(formatted_user_hades_logs(user))
+    def sort_key(l: LogTableRow) -> int | None:
+        return l.created_at.timestamp
 
-    return jsonify(items=list(sorted(chain(*log_sources),
-                                     key=operator.itemgetter('raw_created_at'),
-                                     reverse=True)))
+    return TableResponse[LogTableRow](
+        items=sorted(logs, key=sort_key, reverse=True)
+    ).model_dump()
 
 
 @bp.route("/<int:user_id>/groups")
@@ -404,31 +455,49 @@ def user_show_groups_json(user_id, group_filter="all"):
     memberships: list[tuple[Membership, list[str], list[str]]] = \
         lib.membership.user_memberships_query(user_id, active_groups_only)
 
-    T = MembershipTable
-    return jsonify(items=[{
-            'group_name': membership.group.name,
-            'begins_at': datetime_format(membership.active_during.begin,
-                                         default='',
-                                         formatter=datetime_filter),
-            'ends_at': datetime_format(membership.active_during.end, default='', formatter=datetime_filter),
-            'grants': granted,
-            'denies': denied,
-            'active': (active := (session.utcnow() in membership.active_during)),
-            'actions': [
-                T.actions.single_value(
-                    href=url_for(".edit_membership", user_id=user_id, membership_id=membership.id),
-                    title='Bearbeiten',
-                    icon='fa-edit',
-                    btn_class='btn-link',
+    return TableResponse[MembershipRow](
+        items=[
+            MembershipRow(
+                group_name=membership.group.name,
+                begins_at=datetime_format(
+                    membership.active_during.begin,
+                    default="",
+                    formatter=datetime_filter,
                 ),
-                T.actions.single_value(
-                    href=url_for(".end_membership", user_id=user_id, membership_id=membership.id),
-                    title="Beenden",
-                    icon='fa-power-off',
-                    btn_class='btn-link',
-                ) if active else {}
-            ],
-        } for membership, granted, denied in memberships])
+                ends_at=datetime_format(
+                    membership.active_during.end, default="", formatter=datetime_filter
+                ),
+                grants=granted,
+                denies=denied,
+                active=(active := (session.utcnow() in membership.active_during)),
+                actions=[
+                    BtnColResponse(
+                        href=url_for(
+                            ".edit_membership",
+                            user_id=user_id,
+                            membership_id=membership.id,
+                        ),
+                        title="Bearbeiten",
+                        icon="fa-edit",
+                        btn_class="btn-link",
+                    ),
+                    BtnColResponse(
+                        href=url_for(
+                            ".end_membership",
+                            user_id=user_id,
+                            membership_id=membership.id,
+                        ),
+                        title="Beenden",
+                        icon="fa-power-off",
+                        btn_class="btn-link",
+                    )
+                    if active
+                    else {},
+                ],
+            )
+            for membership, granted, denied in memberships
+        ]
+    ).model_dump()
 
 
 @bp.route('/<int:user_id>/add_membership', methods=['GET', 'Post'])
@@ -503,38 +572,14 @@ def json_trafficdata(user_id, days=7):
 
     :param user_id:
     :param days: optional amount of days to be included
-    :return: JSON with traffic and credit data formatted according to the following schema
-    {
-        "type": "object",
-        "properties": {
-            "items": {
-                "type": "object",
-                "properties": {
-                    "traffic": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "egress": { "type": "integer" },
-                                "ingress": { "type": "integer" },
-                                "timestamp": { "type": "string" }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
+    :return:
     """
     interval = timedelta(days=days)
-    result = traffic_history(user_id, session.utcnow() - interval + timedelta(days=1), session.utcnow())
-
-    return jsonify(
-        items={
-            'traffic': [e.__dict__ for e in result]
-        }
-    )
+    utcnow = session.utcnow()
+    return [
+        e.__dict__
+        for e in traffic_history(user_id, utcnow - interval + timedelta(days=1), utcnow)
+    ]
 
 
 @bp.route('/create', methods=['GET', 'POST'])
@@ -1031,31 +1076,46 @@ def move_in(user_id):
 @bp.route('<int:user_id>/json/room-history')
 def room_history_json(user_id):
     user = get_user_or_404(user_id)
-
-    T = RoomHistoryTable
-    return jsonify(items=[{
-        'begins_at': date_format(history_entry.active_during.begin, formatter=date_filter),
-        'ends_at': date_format(history_entry.active_during.end, formatter=date_filter),
-        'room': T.room.value(
-            href=url_for('facilities.room_show', room_id=history_entry.room_id),
-            title=history_entry.room.short_name
-        )
-    } for history_entry in cast(list[RoomHistoryEntry], user.room_history_entries)])
+    return TableResponse[RoomHistoryRow](
+        items=[
+            RoomHistoryRow(
+                begins_at=date_format(
+                    history_entry.active_during.begin, formatter=date_filter
+                ),
+                ends_at=date_format(
+                    history_entry.active_during.end, formatter=date_filter
+                ),
+                room=T.room.value(
+                    href=url_for("facilities.room_show", room_id=history_entry.room_id),
+                    title=history_entry.room.short_name,
+                ),
+            )
+            for history_entry in cast(list[RoomHistoryEntry], user.room_history_entries)
+        ]
+    ).model_dump()
 
 
 @bp.route('<int:user_id>/json/tenancies')
 def tenancies_json(user_id):
     user = get_user_or_404(user_id)
-    T = TenancyTable
-    return jsonify(items=[{
-        'begins_at': date_format(tenancy.mietbeginn, formatter=date_filter),
-        'ends_at': date_format(tenancy.mietende, formatter=date_filter),
-        'room': T.room.value(
-            href=url_for('facilities.room_show', room_id=tenancy.room.id) if tenancy.room else '#',
-            title=tenancy.room.short_name if tenancy.room else tenancy.vo_suchname
-        ),
-        'status': tenancy.status.name
-    } for tenancy in user.tenancies])
+    return TableResponse[TenancyRow](
+        items=[
+            TenancyRow(
+                begins_at=date_format(tenancy.mietbeginn, formatter=date_filter),
+                ends_at=date_format(tenancy.mietende, formatter=date_filter),
+                room=LinkColResponse(
+                    href=url_for("facilities.room_show", room_id=tenancy.room.id)
+                    if tenancy.room
+                    else "#",
+                    title=tenancy.room.short_name
+                    if tenancy.room
+                    else tenancy.vo_suchname,
+                ),
+                status=tenancy.status.name,
+            )
+            for tenancy in user.tenancies
+        ]
+    ).model_dump()
 
 
 @bp.route('member-requests')
@@ -1242,32 +1302,43 @@ def member_request_merge_confirm(pre_member_id: int, user_id: int):
 def member_requests_json():
     prms = get_member_requests()
 
-    T = PreMemberTable
-    return jsonify(items=[{
-        'id': prm.id,
-        'prm_id': encode_type2_user_id(prm.id),
-        'name': T.name.value(
-            text=prm.name, bool=prm.swdd_person_id is not None,
-            icon_true='fas fa-address-card', icon_false='far fa-address-card'
-        ),
-        'login': prm.login,
-        'email': T.email.value(text=prm.email, bool=prm.email_confirmed),
-        'email_confirmed': prm.email_confirmed,
-        'move_in_date': date_format(prm.move_in_date, formatter=date_filter),
-        'action_required': prm.room is not None and prm.email_confirmed and prm.is_adult,
-        'actions': [
-            T.actions.single_value(
-                href=url_for(".member_request_edit", pre_member_id=prm.id),
-                title='Bearbeiten', icon='fa-edit',
-                btn_class='btn-info btn-sm', new_tab=True
-            ),
-            T.actions.single_value(
-                href=url_for(".member_request_delete", pre_member_id=prm.id),
-                title='Löschen', icon='fa-trash',
-                btn_class='btn-danger btn-sm'
-            ),
-        ],
-    } for prm in prms])
+    return TableResponse[PreMemberRow](
+        items=[
+            PreMemberRow(
+                prm_id=encode_type2_user_id(prm.id),
+                name=TextWithBooleanColResponse(
+                    text=prm.name,
+                    bool=prm.swdd_person_id is not None,
+                    icon_true="fas fa-address-card",
+                    icon_false="far fa-address-card",
+                ),
+                login=prm.login,
+                email=TextWithBooleanColResponse(
+                    text=prm.email, bool=prm.email_confirmed
+                ),
+                move_in_date=date_format(prm.move_in_date, formatter=date_filter),
+                action_required=prm.room is not None
+                and prm.email_confirmed
+                and prm.is_adult,
+                actions=[
+                    T.actions.single_value(
+                        href=url_for(".member_request_edit", pre_member_id=prm.id),
+                        title="Bearbeiten",
+                        icon="fa-edit",
+                        btn_class="btn-info btn-sm",
+                        new_tab=True,
+                    ),
+                    T.actions.single_value(
+                        href=url_for(".member_request_delete", pre_member_id=prm.id),
+                        title="Löschen",
+                        icon="fa-trash",
+                        btn_class="btn-danger btn-sm",
+                    ),
+                ],
+            )
+            for prm in prms
+        ]
+    ).model_dump()
 
 
 @bp.route('/resend-confirmation-mail')
@@ -1306,25 +1377,29 @@ def archivable_users():
 
 @bp.route('/archivable_users_table')
 def archivable_users_json():
-    T = ArchivableMembersTable
-    return {'items': [
-        T.row(
-            id=info.User.id,
-            user=T.user.value(
-                title=info.User.name,
-                href=url_for('user.user_show', user_id=info.User.id)
-            ),
-            room_shortname=info.User.room and T.room_shortname.value(
-                title=info.User.room.short_name,
-                href=url_for('facilities.room_show', room_id=info.User.room.id)
-            ),
-            current_properties=" ".join(("~" if p.denied else "") + p.property_name
-                                        for p in info.User.current_properties_maybe_denied),
-            num_hosts=len(info.User.hosts),
-            # TODO better: `DateColumn.value`
-            end_of_membership=date_format(info.mem_end.date())
-        ) for info in get_archivable_members(session.session)
-    ]}
+    return TableResponse[ArchivableMemberRow](
+        items=[
+            ArchivableMemberRow(
+                id=info.User.id,
+                user=LinkColResponse(
+                    title=info.User.name,
+                    href=url_for("user.user_show", user_id=info.User.id),
+                ),
+                room_shortname=info.User.room
+                and LinkColResponse(
+                    title=info.User.room.short_name,
+                    href=url_for("facilities.room_show", room_id=info.User.room.id),
+                ),
+                current_properties=" ".join(
+                    ("~" if p.denied else "") + p.property_name
+                    for p in info.User.current_properties_maybe_denied
+                ),
+                num_hosts=len(info.User.hosts),
+                end_of_membership=date_format(info.mem_end.date()),
+            )
+            for info in get_archivable_members(session.session)
+        ]
+    ).model_dump()
 
 
 @nav.navigate('Rundmail', weight=10, icon='fa-envelope')
