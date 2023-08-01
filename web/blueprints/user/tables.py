@@ -111,6 +111,13 @@ class TenancyTable(BootstrapTable):
     status = Column("Status")
 
 
+class TenancyRow(BaseModel):
+    room: LinkColResponse
+    begins_at: DateColResponse
+    ends_at: DateColResponse
+    status: str
+
+
 class PreMemberTable(BootstrapTable):
     prm_id = Column("ID")
     name = TextWithBooleanColumn("Name")

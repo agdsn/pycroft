@@ -88,6 +88,7 @@ from web.table.table import (
     LinkColResponse,
     datetime_format_pydantic,
     BtnColResponse,
+    date_format_pydantic,
 )
 from .log import formatted_user_hades_logs
 from .tables import (
@@ -101,6 +102,7 @@ from .tables import (
     TrafficTopRow,
     UserSearchRow,
     MembershipRow,
+    TenancyRow,
 )
 from ..helpers.log_tables import (
     LogTableExtended,
@@ -1089,16 +1091,26 @@ def room_history_json(user_id):
 @bp.route('<int:user_id>/json/tenancies')
 def tenancies_json(user_id):
     user = get_user_or_404(user_id)
-    T = TenancyTable
-    return jsonify(items=[{
-        'begins_at': date_format(tenancy.mietbeginn, formatter=date_filter),
-        'ends_at': date_format(tenancy.mietende, formatter=date_filter),
-        'room': T.room.value(
-            href=url_for('facilities.room_show', room_id=tenancy.room.id) if tenancy.room else '#',
-            title=tenancy.room.short_name if tenancy.room else tenancy.vo_suchname
-        ),
-        'status': tenancy.status.name
-    } for tenancy in user.tenancies])
+    return TableResponse[TenancyRow](
+        items=[
+            TenancyRow(
+                begins_at=date_format_pydantic(
+                    tenancy.mietbeginn, formatter=date_filter
+                ),
+                ends_at=date_format_pydantic(tenancy.mietende, formatter=date_filter),
+                room=LinkColResponse(
+                    href=url_for("facilities.room_show", room_id=tenancy.room.id)
+                    if tenancy.room
+                    else "#",
+                    title=tenancy.room.short_name
+                    if tenancy.room
+                    else tenancy.vo_suchname,
+                ),
+                status=tenancy.status.name,
+            )
+            for tenancy in user.tenancies
+        ]
+    )
 
 
 @bp.route('member-requests')
