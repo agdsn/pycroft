@@ -157,16 +157,10 @@ def building_levels(building_id=None, building_shortname=None):
 @bp.route('/room/create', methods=['GET', 'POST'])
 @access.require('facilities_change')
 def room_create():
-    building_id = request.args.get("building_id")
-
+    building_id: int | None = request.args.get("building_id", type=int)
     building = None
-
     if building_id:
-        building = Building.get(building_id)
-
-        if not building:
-            flash(f"Gebäude mit ID {building_id} nicht gefunden!", "error")
-            return redirect(url_for('.overview'))
+        building = determine_building_or_404(id=building_id)
 
     form = CreateRoomForm(building=building)
 
