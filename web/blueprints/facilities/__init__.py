@@ -13,7 +13,6 @@ from collections import defaultdict
 from flask import (
     Blueprint,
     flash,
-    jsonify,
     render_template,
     url_for,
     redirect,
@@ -569,23 +568,29 @@ def room_patchpanel_json(room_id):
 @access.require('facilities_show')
 def json_levels():
     """Endpoint for the room <select> field"""
-    building_id = request.args.get('building', 0, type=int)
-    levels = session.session.query(Room.level.label('level')).filter_by(
-        building_id=building_id).order_by(Room.level).distinct()
-    return jsonify(dict(items=[entry.level for entry in levels]))
+    building_id = request.args.get("building", 0, type=int)
+    levels = (
+        session.session.query(Room.level.label("level"))
+        .filter_by(building_id=building_id)
+        .order_by(Room.level)
+        .distinct()
+    )
+    return {"items": [entry.level for entry in levels]}
 
 
 @bp.route('/json/rooms')
 @access.require('facilities_show')
 def json_rooms():
     """Endpoint for the room <select> field"""
-    building_id = request.args.get('building', 0, type=int)
-    level = request.args.get('level', 0, type=int)
-    rooms = session.session.query(
-        Room.number.label("room_num")).filter_by(
-        building_id=building_id, level=level).order_by(
-        Room.number).distinct()
-    return jsonify(dict(items=[entry.room_num for entry in rooms]))
+    building_id = request.args.get("building", 0, type=int)
+    level = request.args.get("level", 0, type=int)
+    rooms = (
+        session.session.query(Room.number.label("room_num"))
+        .filter_by(building_id=building_id, level=level)
+        .order_by(Room.number)
+        .distinct()
+    )
+    return {"items": [entry.room_num for entry in rooms]}
 
 
 @bp.route('/overcrowded', defaults={'building_id': None})
