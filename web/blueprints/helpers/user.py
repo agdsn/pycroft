@@ -67,8 +67,7 @@ def user_btn_style(user):
     return btn_class, glyphicons, tooltip
 
 
-def user_btn_response(user: User) -> BtnColResponse:
-    # TODO rename this to `user_button` after adoption
+def user_button(user: User) -> BtnColResponse:
     btn_class, glyphicons, tooltip = user_btn_style(user)
     return BtnColResponse(
         href=url_for("user.user_show", user_id=user.id),

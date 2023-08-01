@@ -44,7 +44,7 @@ from web.blueprints.access import BlueprintAccess
 from web.blueprints.facilities.forms import (
     RoomLogEntry, PatchPortForm, CreateRoomForm, EditRoomForm)
 from web.blueprints.helpers.log import format_room_log_entry
-from web.blueprints.helpers.user import user_btn_response
+from web.blueprints.helpers.user import user_button
 from web.blueprints.navigation import BlueprintNavigation
 from web.table.table import TableResponse, LinkColResponse, BtnColResponse
 from .address import get_address_entity, address_entity_search_query
@@ -323,7 +323,7 @@ def building_level_rooms_json(level, building_id=None, building_shortname=None):
                     href=url_for(".room_show", room_id=room.id),
                     title=f"{level:02d} - {room.number}",
                 ),
-                inhabitants=[user_btn_response(i) for i in inhabitants],
+                inhabitants=[user_button(i) for i in inhabitants],
             )
             for room, inhabitants in level_inhabitants.items()
         ]
@@ -487,10 +487,10 @@ def room_show(room_id):
         page_title=f"Raum {room.short_name}",
         room=room,
         ports=room.patch_ports,
-        user_buttons=[user_btn_response(user).model_dump() for user in room.users],
+        user_buttons=[user_button(user).model_dump() for user in room.users],
         user_histories=[
             (
-                user_btn_response(room_history_entry.user).model_dump(),
+                user_button(room_history_entry.user).model_dump(),
                 room_history_entry.active_during.begin,
                 room_history_entry.active_during.end,
             )
@@ -630,7 +630,7 @@ def overcrowded_json(building_id):
                         "facilities.room_show", room_id=inhabitants[0].room.id
                     ),
                 ),
-                inhabitants=[user_btn_response(user) for user in inhabitants],
+                inhabitants=[user_button(user) for user in inhabitants],
             )
             for inhabitants in get_overcrowded_rooms(building_id).values()
         ]
