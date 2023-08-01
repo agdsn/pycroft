@@ -351,17 +351,17 @@ input.money-amount {
 /* User card */
 .card {
     /*margin: 0 20px;*/
-    background-color: hsl(200, 50%, 98%);
+    background-color: var(--bs-body-bg);
     border-radius: 10px;
     overflow: hidden;  /* To crop the corners from the children's background */
     box-shadow: 0 4px 6px hsla(0, 0%, 0%, 0.2);
-    color: hsl(0, 0%, 35%)
+    color: var(--bs-secondary-text-emphasis);
 }
 
 .card .card-top {
     overflow: auto;  /* To set block context */
     margin-bottom: 10px;
-    background-color: hsl(200, 70%, 95%);
+    background-color: var(--bs-secondary-bg);
     padding: 10px 15px 5px 20px;
 }
 
