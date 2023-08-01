@@ -9,7 +9,7 @@ from operator import methodcaller
 from typing import Iterable, Any, Callable
 from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from annotated_types import Predicate
 
 from .lazy_join import lazy_join, LazilyJoined
@@ -239,6 +239,8 @@ class DateColumn(Column):
 
 
 class DateColResponse(BaseModel):
+    """Response for pre-formatted date or datetime data"""
+
     formatted: str
     timestamp: int | None
 
@@ -246,6 +248,9 @@ class DateColResponse(BaseModel):
 @custom_formatter_column('table.relativeDateFormatter')
 class RelativeDateColumn(Column):
     pass
+
+
+RelativeDateResponse = DateColResponse
 
 
 @custom_formatter_column('table.textWithBooleanFormatter')
@@ -276,6 +281,19 @@ class UserColumn(Column):
         return DictValueMixin.value(
             type='native', href=href, title=title, glyphicon=glyphicon,
         )
+
+
+class UserColResponsePlain(BaseModel):
+    type: t.Annotated[t.Literal["plain"], Field(init_var=False)] = "plain"
+    title: str
+
+
+class UserColResponseNative(LinkColResponse):
+    type: t.Annotated[t.Literal["native"], Field(init_var=False)] = "native"
+
+
+UserColResponse = UserColResponsePlain | UserColResponseNative
+
 
 @custom_formatter_column('table.ibanFormatter')
 class IbanColumn(Column):
@@ -527,28 +545,31 @@ def date_format(dt: datetime | date | None,
     return date_format_pydantic(dt, default, formatter).model_dump()
 
 
+def datetime_format_pydantic(
+    dt: datetime | None,
+    default: str | None = None,
+    formatter: Callable = iso_format,
+) -> DateColResponse:
+    if dt is None:
+        return DateColResponse(
+            formatted=default if default is not None else formatter(None),
+            timestamp=None,
+        )
+    return DateColResponse(
+        formatted=formatter(dt),
+        timestamp=int(dt.timestamp()),
+    )
+
+
 def datetime_format(dt: datetime | None,
                     default: str | None = None,
                     formatter: Callable = iso_format) -> dict:
-    """
-    Format datetime objects for `table.dateFormatter`.
-    :param dt: a datetime object or None
-    :param default: formatted value to use if `dt` is None
-    :param formatter:
-    :return:
-    """
-    # TODO turn this into a `DateTimeColumn` method
-    if dt is not None:
-        return {
-            'formatted': formatter(dt),
-            'timestamp': int(dt.timestamp()),
-        }
-    else:
-        return {
-            'formatted': default if default is not None else formatter(None),
-            'timestamp': None,
-        }
+    import warnings
 
+    warnings.warn(
+        "use datetime_format_pydantic instead", DeprecationWarning, stacklevel=2
+    )
+    return datetime_format_pydantic(dt, default, formatter).model_dump()
 
 def enforce_url_params(url, params):
     """Safely enforce query values in an url

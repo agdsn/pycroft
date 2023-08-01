@@ -51,6 +51,7 @@ class BuildingLevelRoomRow(BaseModel):
 
 
 class RoomLogTable(BootstrapTable):
+    """Like a log table, just with absolute date column"""
     created_at = DateColumn("Erstellt um")
     user = LinkColumn("Nutzer")
     message = Column("Nachricht")

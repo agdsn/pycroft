@@ -60,6 +60,7 @@ from .tables import (
     PatchPortRow,
     RoomOvercrowdedRow,
 )
+from ..helpers.log_tables import LogTableRow
 
 bp = Blueprint('facilities', __name__)
 access = BlueprintAccess(bp, required_properties=['facilities_show'])
@@ -499,9 +500,12 @@ def room_show(room_id):
 
 @bp.route('/room/<int:room_id>/logs/json')
 def room_logs_json(room_id):
-    # TODO migrate this with all the other tables
-    return jsonify(items=[format_room_log_entry(entry) for entry in
-                          reversed(Room.get(room_id).log_entries)])
+    return TableResponse[LogTableRow](
+        items=[
+            format_room_log_entry(entry)
+            for entry in reversed(Room.get(room_id).log_entries)
+        ]
+    ).model_dump()
 
 
 @bp.route('/room/<int:room_id>/patchpanel/json')

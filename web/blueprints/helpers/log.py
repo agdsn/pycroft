@@ -11,29 +11,31 @@ from functools import partial
 
 from flask import url_for
 
+from hades_logs import RadiusLogEntry
 from pycroft.helpers.i18n import Message
-from web.table.table import datetime_format, UserColumn
+from pycroft.model.logging import LogEntry
+from web.table.table import (
+    datetime_format_pydantic,
+    UserColResponseNative,
+    UserColResponsePlain,
+)
+from .log_tables import LogType, LogTableRow
 
 from web.template_filters import datetime_filter
 
 
-def format_log_entry(entry, log_type):
-    """Format a logentry in correct json
-
-    :param LogEntry entry:
-    :param log_type: The logtype to include, currently ``'user'`` or
-        ``'room'``.
-    """
-    return {
-        'created_at': datetime_format(entry.created_at, formatter=datetime_filter),
-        'raw_created_at': entry.created_at,
-        'user': UserColumn.value_native(
-            title=entry.author.name,
-            href=url_for("user.user_show", user_id=entry.author.id)
+def format_log_entry(entry: LogEntry, log_type: LogType) -> LogTableRow:
+    return LogTableRow(
+        created_at=datetime_format_pydantic(
+            entry.created_at, formatter=datetime_filter
         ),
-        'message': Message.from_json(entry.message).localize(),
-        'type': log_type
-    }
+        user=UserColResponseNative(
+            title=entry.author.name,
+            href=url_for("user.user_show", user_id=entry.author.id),
+        ),
+        message=Message.from_json(entry.message).localize(),
+        type=log_type,
+    )
 
 
 format_user_log_entry = partial(format_log_entry, log_type='user')
@@ -61,7 +63,7 @@ def radius_description(interface, entry):
     return prefix + msg
 
 
-def format_hades_log_entry(interface, entry):
+def format_hades_log_entry(interface: str, entry: RadiusLogEntry) -> LogTableRow:
     """Turn Radius Log entry information into a canonical form
 
     This utilizes :py:func:`radius_description` but returns a dict in
@@ -73,30 +75,22 @@ def format_hades_log_entry(interface, entry):
     """
     date = entry.time
     desc = radius_description(interface, entry)
-    return {
-        'created_at': datetime_format(date, formatter=datetime_filter),
-        'raw_created_at': date,
-        'user': {
-            'type': 'plain',  # (w/o link) vs. 'native' (w/ link)
-            'title': "Radius",  # or switch name?
-        },
-        'message': desc,
-        'type': 'hades'
-    }
+    return LogTableRow(
+        created_at=datetime_format_pydantic(date, formatter=datetime_filter),
+        user=UserColResponsePlain(title="Radius"),
+        message=desc,
+        type="hades",
+    )
 
 
-def format_custom_hades_message(message):
+def format_custom_hades_message(message: str) -> LogTableRow:
     date = datetime.now(tz=timezone.utc)
-    return {
-        'created_at': datetime_format(date, formatter=datetime_filter),
-        'raw_created_at': date,
-        'user': {
-            'type': 'plain',
-            'title': "Radius",
-        },
-        'message': message,
-        'type': 'hades'
-    }
+    return LogTableRow(
+        created_at=datetime_format_pydantic(date, formatter=datetime_filter),
+        user=UserColResponsePlain(title="Radius"),
+        message=message,
+        type="hades",
+    )
 
 
 _msg_disabled = ("WARNING: The HadesLogs extension is not configured properly. "

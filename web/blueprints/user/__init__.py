@@ -11,6 +11,7 @@
 """
 import operator
 import re
+import typing as t
 from datetime import timedelta
 from functools import partial
 from itertools import chain
@@ -61,18 +62,43 @@ from web.blueprints.helpers.user import get_user_or_404, get_pre_member_or_404
 from web.blueprints.host.tables import HostTable
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.task.tables import TaskTable
-from web.blueprints.user.forms import UserSearchForm, UserCreateForm, \
-    UserLogEntry, UserAddGroupMembership, UserMoveForm, \
-    UserEditForm, UserSuspendForm, UserMoveOutForm, \
-    UserEditGroupMembership, \
-    UserResetPasswordForm, UserMoveInForm, PreMemberEditForm, PreMemberDenyForm, \
-    PreMemberMergeForm, PreMemberMergeConfirmForm, UserEditAddressForm, \
-    NonResidentUserCreateForm, GroupMailForm
-from web.table.table import datetime_format, date_format
+from web.blueprints.user.forms import (
+    UserSearchForm,
+    UserCreateForm,
+    UserLogEntry,
+    UserAddGroupMembership,
+    UserMoveForm,
+    UserEditForm,
+    UserSuspendForm,
+    UserMoveOutForm,
+    UserEditGroupMembership,
+    UserResetPasswordForm,
+    UserMoveInForm,
+    PreMemberEditForm,
+    PreMemberDenyForm,
+    PreMemberMergeForm,
+    PreMemberMergeConfirmForm,
+    UserEditAddressForm,
+    NonResidentUserCreateForm,
+    GroupMailForm,
+)
+from web.table.table import datetime_format, date_format, TableResponse, LinkColResponse
 from .log import formatted_user_hades_logs
-from .tables import (LogTableExtended, LogTableSpecific, MembershipTable,
-                     SearchTable, TrafficTopTable, RoomHistoryTable,
-                     PreMemberTable, TenancyTable, ArchivableMembersTable)
+from .tables import (
+    MembershipTable,
+    SearchTable,
+    TrafficTopTable,
+    RoomHistoryTable,
+    PreMemberTable,
+    TenancyTable,
+    ArchivableMembersTable,
+)
+from ..helpers.log_tables import (
+    LogTableExtended,
+    LogTableSpecific,
+    LogType,
+    LogTableRow,
+)
 from ..finance.tables import FinanceTable, FinanceTableSplitted
 from ..helpers.log import format_user_log_entry, format_room_log_entry, \
     format_task_log_entry
@@ -376,25 +402,30 @@ def user_account(user_id):
                             account_id=user.account_id))
 
 
+def _iter_user_logs(user: User, logtype: LogType) -> t.Iterator[LogTableRow]:
+    if logtype in ["user", "all"]:
+        yield from (format_user_log_entry(e) for e in user.log_entries)
+    if logtype in ["room", "all"] and user.room:
+        yield from (format_room_log_entry(e) for e in user.room.log_entries)
+    if logtype in ["tasks", "all"]:
+        yield from (format_task_log_entry(e) for e in user.task_log_entries)
+    if logtype in ["hades", "all"]:
+        yield from formatted_user_hades_logs(user)
+
+
 @bp.route("/<int:user_id>/logs")
 @bp.route("/<int:user_id>/logs/<logtype>")
 def user_show_logs_json(user_id, logtype="all"):
     user = get_user_or_404(user_id)
 
-    log_sources = []  # list of iterators
+    logs = _iter_user_logs(user, logtype)
 
-    if logtype in ["user", "all"]:
-        log_sources.append(format_user_log_entry(e) for e in user.log_entries)
-    if logtype in ["room", "all"] and user.room:
-        log_sources.append(format_room_log_entry(e) for e in user.room.log_entries)
-    if logtype in ["tasks", "all"]:
-        log_sources.append(format_task_log_entry(e) for e in user.task_log_entries)
-    if logtype in ["hades", "all"]:
-        log_sources.append(formatted_user_hades_logs(user))
+    def sort_key(l: LogTableRow) -> int | None:
+        return l.created_at.timestamp
 
-    return jsonify(items=list(sorted(chain(*log_sources),
-                                     key=operator.itemgetter('raw_created_at'),
-                                     reverse=True)))
+    return TableResponse[LogTableRow](
+        items=sorted(logs, key=sort_key, reverse=True)
+    ).model_dump()
 
 
 @bp.route("/<int:user_id>/groups")

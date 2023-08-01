@@ -1,39 +1,17 @@
 import typing
 
 from flask import url_for
-
-from web.table.table import BootstrapTable, Column, \
-    LinkColumn, button_toolbar, MultiBtnColumn, DateColumn, RelativeDateColumn, \
-    TextWithBooleanColumn, UserColumn
+from web.blueprints.helpers.log_tables import RefreshableTableMixin
+from web.table.table import (
+    BootstrapTable,
+    Column,
+    LinkColumn,
+    button_toolbar,
+    MultiBtnColumn,
+    DateColumn,
+    TextWithBooleanColumn,
+)
 from web.blueprints.helpers.user import no_membership_change
-
-
-class RefreshableTableMixin:
-    """A mixin class showing the refresh button by default.
-
-    In :py:meth:`__init__`s ``table_args`` argument, a default of
-    ``{'data-show-refresh': "true"}`` is established.
-    """
-    def __init__(self, *a, **kw):
-        table_args = kw.pop('table_args', {})
-        table_args.setdefault('data-show-refresh', "true")
-        kw['table_args'] = table_args
-        super().__init__(*a, **kw)
-
-
-class LogTableExtended(RefreshableTableMixin, BootstrapTable):
-    """A table for displaying logs, with a ``type`` column"""
-    created_at = RelativeDateColumn("Erstellt um", width=2)
-    type_ = Column("Logtyp", name='type', sortable=False)
-    user = UserColumn("Nutzer")
-    message = Column("Nachricht", formatter='table.withMagicLinksFormatter')
-
-
-class LogTableSpecific(RefreshableTableMixin, BootstrapTable):
-    """A table for displaying logs"""
-    created_at = RelativeDateColumn("Erstellt um", width=2)
-    user = UserColumn("Nutzer")
-    message = Column("Nachricht", formatter='table.withMagicLinksFormatter')
 
 
 class MembershipTable(BootstrapTable):
