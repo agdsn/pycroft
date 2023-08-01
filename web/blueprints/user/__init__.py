@@ -82,7 +82,13 @@ from web.blueprints.user.forms import (
     NonResidentUserCreateForm,
     GroupMailForm,
 )
-from web.table.table import datetime_format, date_format, TableResponse, LinkColResponse
+from web.table.table import (
+    date_format,
+    TableResponse,
+    LinkColResponse,
+    datetime_format_pydantic,
+    BtnColResponse,
+)
 from .log import formatted_user_hades_logs
 from .tables import (
     MembershipTable,
@@ -94,6 +100,7 @@ from .tables import (
     ArchivableMembersTable,
     TrafficTopRow,
     UserSearchRow,
+    MembershipRow,
 )
 from ..helpers.log_tables import (
     LogTableExtended,
@@ -446,31 +453,49 @@ def user_show_groups_json(user_id, group_filter="all"):
     memberships: list[tuple[Membership, list[str], list[str]]] = \
         lib.membership.user_memberships_query(user_id, active_groups_only)
 
-    T = MembershipTable
-    return jsonify(items=[{
-            'group_name': membership.group.name,
-            'begins_at': datetime_format(membership.active_during.begin,
-                                         default='',
-                                         formatter=datetime_filter),
-            'ends_at': datetime_format(membership.active_during.end, default='', formatter=datetime_filter),
-            'grants': granted,
-            'denies': denied,
-            'active': (active := (session.utcnow() in membership.active_during)),
-            'actions': [
-                T.actions.single_value(
-                    href=url_for(".edit_membership", user_id=user_id, membership_id=membership.id),
-                    title='Bearbeiten',
-                    icon='fa-edit',
-                    btn_class='btn-link',
+    return TableResponse[MembershipRow](
+        items=[
+            MembershipRow(
+                group_name=membership.group.name,
+                begins_at=datetime_format_pydantic(
+                    membership.active_during.begin,
+                    default="",
+                    formatter=datetime_filter,
                 ),
-                T.actions.single_value(
-                    href=url_for(".end_membership", user_id=user_id, membership_id=membership.id),
-                    title="Beenden",
-                    icon='fa-power-off',
-                    btn_class='btn-link',
-                ) if active else {}
-            ],
-        } for membership, granted, denied in memberships])
+                ends_at=datetime_format_pydantic(
+                    membership.active_during.end, default="", formatter=datetime_filter
+                ),
+                grants=granted,
+                denies=denied,
+                active=(active := (session.utcnow() in membership.active_during)),
+                actions=[
+                    BtnColResponse(
+                        href=url_for(
+                            ".edit_membership",
+                            user_id=user_id,
+                            membership_id=membership.id,
+                        ),
+                        title="Bearbeiten",
+                        icon="fa-edit",
+                        btn_class="btn-link",
+                    ),
+                    BtnColResponse(
+                        href=url_for(
+                            ".end_membership",
+                            user_id=user_id,
+                            membership_id=membership.id,
+                        ),
+                        title="Beenden",
+                        icon="fa-power-off",
+                        btn_class="btn-link",
+                    )
+                    if active
+                    else {},
+                ],
+            )
+            for membership, granted, denied in memberships
+        ]
+    ).model_dump()
 
 
 @bp.route('/<int:user_id>/add_membership', methods=['GET', 'Post'])

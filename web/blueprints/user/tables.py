@@ -13,6 +13,8 @@ from web.table.table import (
     DateColumn,
     TextWithBooleanColumn,
     LinkColResponse,
+    DateColResponse,
+    BtnColResponse,
 )
 from web.blueprints.helpers.user import no_membership_change
 
@@ -48,6 +50,18 @@ class MembershipTable(BootstrapTable):
             'data-row-style': 'table.membershipRowFormatter',
             'class': 'membership-table'
         }
+
+
+class MembershipRow(BaseModel):
+    group_name: str
+    begins_at: DateColResponse
+    ends_at: DateColResponse
+    actions: list[BtnColResponse]
+    # used by membershipRowAttributes
+    grants: list[str]
+    denies: list[str]
+    # used by membershipRowFormatter
+    active: bool
 
 
 class SearchTable(BootstrapTable):
