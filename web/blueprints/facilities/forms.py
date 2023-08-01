@@ -13,7 +13,8 @@ from wtforms_widgets.fields.custom import LazyLoadSelectField, static, \
     TypeaheadField
 from wtforms_widgets.fields.filters import to_uppercase, empty_to_none
 
-from pycroft.lib.facilities import sort_buildings
+from pycroft.lib.facilities import sort_buildings, RoomAddressSuggestion
+from pycroft.model.address import Address
 from pycroft.model.facilities import Building
 from .address import ADDRESS_ENTITIES
 from ..helpers.form import iter_prefixed_field_names
@@ -59,6 +60,19 @@ class CreateAddressForm(BaseForm):
     def address_kwargs(self):
         return {key: getattr(self, f'address_{key}').data
                 for key in 'street number addition zip_code city state country'.split()}
+
+    def set_address_fields(self, obj: RoomAddressSuggestion | Address | None):
+        if not obj:
+            return
+        self.address_street.data = obj.street
+        self.address_number.data = obj.number
+        self.address_zip_code.data = obj.zip_code
+        self.address_city.data = obj.city
+        self.address_state.data = obj.state
+        self.address_country.data = obj.country
+        match obj:
+            case Address(addition=addition):
+                self.address_addition.data = addition
 
 
 def building_query():

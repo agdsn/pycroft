@@ -30,9 +30,13 @@ from pycroft.exc import PycroftException
 from pycroft.helpers.i18n import gettext
 from pycroft.lib.host import sort_ports
 from pycroft.lib.address import get_or_create_address
-from pycroft.lib.facilities import get_overcrowded_rooms, create_room, \
-    edit_room, \
-    RoomAlreadyExistsException, suggest_room_address_data
+from pycroft.lib.facilities import (
+    get_overcrowded_rooms,
+    create_room,
+    edit_room,
+    RoomAlreadyExistsException,
+    suggest_room_address_data,
+)
 from pycroft.lib.infrastructure import create_patch_port, edit_patch_port, \
     delete_patch_port, \
     PatchPortAlreadyExistsException
@@ -43,7 +47,12 @@ from pycroft.model.property import CurrentProperty
 from pycroft.model.user import User
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.facilities.forms import (
-    RoomLogEntry, PatchPortForm, CreateRoomForm, EditRoomForm)
+    RoomLogEntry,
+    PatchPortForm,
+    CreateRoomForm,
+    EditRoomForm,
+    CreateAddressForm,
+)
 from web.blueprints.helpers.log import format_room_log_entry
 from web.blueprints.helpers.user import user_button
 from web.blueprints.navigation import BlueprintNavigation
@@ -165,22 +174,14 @@ def room_create():
     form = CreateRoomForm(building=building)
 
     def default_response():
-        form_args = {"form": form, "cancel_to": url_for(".overview")}
-
-        suggestion = suggest_room_address_data(building)
-        if suggestion and not form.is_submitted():
-            form.address_street.data = suggestion.street
-            form.address_number.data = suggestion.number
-            form.address_zip_code.data = suggestion.zip_code
-            form.address_city.data = suggestion.city
-            form.address_state.data = suggestion.state
-            form.address_country.data = suggestion.country
-
         return render_template(
-            "generic_form.html", page_title="Raum erstellen", form_args=form_args
+            "generic_form.html",
+            page_title="Raum erstellen",
+            form_args={"form": form, "cancel_to": url_for(".overview")},
         )
 
     if not form.is_submitted():
+        form.set_address_fields(suggest_room_address_data(building))
         return default_response()
 
     if not form.validate():
@@ -243,15 +244,8 @@ def room_edit(room_id):
         except RoomAlreadyExistsException:
             form.number.errors.append("Ein Raum mit diesem Namen existiert bereits in dieser Etage!")
 
-    old_addr = room.address
     if not form.is_submitted():
-        form.address_street.data = old_addr.street
-        form.address_number.data = old_addr.number
-        form.address_addition.data = old_addr.addition
-        form.address_zip_code.data = old_addr.zip_code
-        form.address_city.data = old_addr.city
-        form.address_state.data = old_addr.state
-        form.address_country.data = old_addr.country
+        form.set_address_fields(room.address)
 
     if room.users_sharing_address:
         flash(gettext("Dieser Raum hat {} bewohner ({}), die die Adresse des Raums teilen."
