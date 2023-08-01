@@ -88,10 +88,12 @@ def task_row(task: UserTask) -> TaskRow:
                     redirect=url_for('user.user_show', user_id=task.user.id, _anchor='tasks')
                 ),
                 title="Sofort ausführen",
-                icon='fa-fast-forward',
-                btn_class='btn-link'
-            )
-        ] if task.status == TaskStatus.OPEN else None,
+                icon="fa-fast-forward",
+                btn_class="btn-link",
+            ),
+        ]
+        if task.status == TaskStatus.OPEN
+        else [],
     )
 
 

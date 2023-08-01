@@ -467,8 +467,8 @@ def user_show_groups_json(user_id, group_filter="all"):
                 ends_at=datetime_format(
                     membership.active_during.end, default="", formatter=datetime_filter
                 ),
-                grants=granted,
-                denies=denied,
+                grants=granted or [],
+                denies=denied or [],
                 active=(active := (session.utcnow() in membership.active_during)),
                 actions=[
                     BtnColResponse(
