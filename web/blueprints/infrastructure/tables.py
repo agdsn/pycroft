@@ -1,7 +1,6 @@
 from flask import url_for
 from flask_login import current_user
-from pydantic import BaseModel
-
+from pydantic import BaseModel, ConfigDict
 
 from web.table.table import (
     BootstrapTable,
@@ -31,6 +30,7 @@ class SubnetTable(BootstrapTable):
 
 
 class SubnetRow(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: int
     description: str | None
     address: str
@@ -38,9 +38,6 @@ class SubnetRow(BaseModel):
     reserved: list[str]
     free_ips: str  # the sort name
     free_ips_formatted: str
-
-    class Config:
-        from_attributes = True
 
 
 class SwitchTable(BootstrapTable):
@@ -73,12 +70,10 @@ class VlanTable(BootstrapTable):
 
 
 class VlanRow(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: int
     name: str
     vid: int
-
-    class Config:
-        from_attributes = True
 
 
 class PortTable(BootstrapTable):
