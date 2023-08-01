@@ -43,7 +43,10 @@ ul.nav li.dropdown:hover > ul.dropdown-menu {
     display: block;
     margin: 0;
 }
-
+ul.nav li.dropdown:hover > ul.dropdown-menu.dropdown-menu-end {
+    right: 0;
+    left: auto;
+}
 .navbar {
     position: -webkit-sticky;
     position: sticky;

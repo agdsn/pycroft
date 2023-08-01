@@ -87,6 +87,45 @@
                             </li>
                       </ul>
                     {% endif %}
+
+                    <ul class="nav navbar-nav me-auto">
+                       <li class="nav-item dropdown">
+                       <button
+                           class="btn btn-link nav-link dropdown-toggle"
+                           id="bd-theme" type="button" aria-expanded="false"
+                           data-bs-toggle="dropdown">
+                           <span class="theme-icon-active"><i class="fa-solid fa-moon"></i></span>
+                           <span class="d-lg-none ms-2" id="bd-theme-text">Toggle theme</span>
+                       </button>
+                       <ul class="dropdown-menu dropdown-menu-end"
+                           aria-labelledby="bd-theme-text">
+                           <li>
+                               <button type="button"
+                                       class="dropdown-item d-flex align-items-center"
+                                       data-bs-theme-value="light">
+                                   <span class="text-secondary theme-icon"><i class="fa-solid fa-sun"></i></span>
+                                   <span>Light</span>
+                               </button>
+                           </li>
+                           <li>
+                               <button type="button"
+                                       class="dropdown-item d-flex align-items-center"
+                                       data-bs-theme-value="dark">
+                                   <span class="text-secondary theme-icon"><i class="fa-solid fa-moon"></i></span>
+                                   <span>Dark</span>
+                               </button>
+                           </li>
+                           <li>
+                               <button type="button"
+                                       class="dropdown-item d-flex align-items-center"
+                                       data-bs-theme-value="auto">
+                                   <span class="text-secondary theme-icon"><i class="fa-solid fa-circle-half-stroke"></i></span>
+                                   <span>Auto</span>
+                               </button>
+                           </li>
+                       </ul>
+                   </li>
+                    </ul>
                   </div>
                 </div><!--/.nav-collapse -->
             </div>
