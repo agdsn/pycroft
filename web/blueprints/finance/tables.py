@@ -251,7 +251,7 @@ class BankAccountActivityRow(BaseModel):
     imported_at: DateColResponse
     reference: str
     iban: str
-    amount: Decimal
+    amount: Decimal | int
     actions: list[BtnColResponse]
     row_positive: bool
 
