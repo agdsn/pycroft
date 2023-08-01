@@ -103,6 +103,9 @@ from .tables import (
     UserSearchRow,
     MembershipRow,
     TenancyRow,
+    RoomHistoryRow,
+    PreMemberRow,
+    TextWithBooleanColResponse,
 )
 from ..helpers.log_tables import (
     LogTableExtended,
@@ -1076,16 +1079,23 @@ def move_in(user_id):
 @bp.route('<int:user_id>/json/room-history')
 def room_history_json(user_id):
     user = get_user_or_404(user_id)
-
-    T = RoomHistoryTable
-    return jsonify(items=[{
-        'begins_at': date_format(history_entry.active_during.begin, formatter=date_filter),
-        'ends_at': date_format(history_entry.active_during.end, formatter=date_filter),
-        'room': T.room.value(
-            href=url_for('facilities.room_show', room_id=history_entry.room_id),
-            title=history_entry.room.short_name
-        )
-    } for history_entry in cast(list[RoomHistoryEntry], user.room_history_entries)])
+    return TableResponse[RoomHistoryRow](
+        items=[
+            RoomHistoryRow(
+                begins_at=date_format_pydantic(
+                    history_entry.active_during.begin, formatter=date_filter
+                ),
+                ends_at=date_format_pydantic(
+                    history_entry.active_during.end, formatter=date_filter
+                ),
+                room=T.room.value(
+                    href=url_for("facilities.room_show", room_id=history_entry.room_id),
+                    title=history_entry.room.short_name,
+                ),
+            )
+            for history_entry in cast(list[RoomHistoryEntry], user.room_history_entries)
+        ]
+    )
 
 
 @bp.route('<int:user_id>/json/tenancies')
@@ -1297,32 +1307,45 @@ def member_request_merge_confirm(pre_member_id: int, user_id: int):
 def member_requests_json():
     prms = get_member_requests()
 
-    T = PreMemberTable
-    return jsonify(items=[{
-        'id': prm.id,
-        'prm_id': encode_type2_user_id(prm.id),
-        'name': T.name.value(
-            text=prm.name, bool=prm.swdd_person_id is not None,
-            icon_true='fas fa-address-card', icon_false='far fa-address-card'
-        ),
-        'login': prm.login,
-        'email': T.email.value(text=prm.email, bool=prm.email_confirmed),
-        'email_confirmed': prm.email_confirmed,
-        'move_in_date': date_format(prm.move_in_date, formatter=date_filter),
-        'action_required': prm.room is not None and prm.email_confirmed and prm.is_adult,
-        'actions': [
-            T.actions.single_value(
-                href=url_for(".member_request_edit", pre_member_id=prm.id),
-                title='Bearbeiten', icon='fa-edit',
-                btn_class='btn-info btn-sm', new_tab=True
-            ),
-            T.actions.single_value(
-                href=url_for(".member_request_delete", pre_member_id=prm.id),
-                title='Löschen', icon='fa-trash',
-                btn_class='btn-danger btn-sm'
-            ),
-        ],
-    } for prm in prms])
+    return TableResponse[PreMemberRow](
+        items=[
+            PreMemberRow(
+                prm_id=encode_type2_user_id(prm.id),
+                name=TextWithBooleanColResponse(
+                    text=prm.name,
+                    bool=prm.swdd_person_id is not None,
+                    icon_true="fas fa-address-card",
+                    icon_false="far fa-address-card",
+                ),
+                login=prm.login,
+                email=TextWithBooleanColResponse(
+                    text=prm.email, bool=prm.email_confirmed
+                ),
+                move_in_date=date_format_pydantic(
+                    prm.move_in_date, formatter=date_filter
+                ),
+                action_required=prm.room is not None
+                and prm.email_confirmed
+                and prm.is_adult,
+                actions=[
+                    T.actions.single_value(
+                        href=url_for(".member_request_edit", pre_member_id=prm.id),
+                        title="Bearbeiten",
+                        icon="fa-edit",
+                        btn_class="btn-info btn-sm",
+                        new_tab=True,
+                    ),
+                    T.actions.single_value(
+                        href=url_for(".member_request_delete", pre_member_id=prm.id),
+                        title="Löschen",
+                        icon="fa-trash",
+                        btn_class="btn-danger btn-sm",
+                    ),
+                ],
+            )
+            for prm in prms
+        ]
+    ).model_dump()
 
 
 @bp.route('/resend-confirmation-mail')

@@ -104,6 +104,12 @@ class RoomHistoryTable(BootstrapTable):
     ends_at = DateColumn("Bis")
 
 
+class RoomHistoryRow(BaseModel):
+    room: LinkColResponse
+    begins_at: DateColResponse
+    ends_at: DateColResponse
+
+
 class TenancyTable(BootstrapTable):
     room = LinkColumn("Zimmer")
     begins_at = DateColumn("Von")
@@ -130,6 +136,24 @@ class PreMemberTable(BootstrapTable):
         table_args = {
             'data-row-style': 'table.membershipRequestRowFormatter',
         }
+
+
+class TextWithBooleanColResponse(BaseModel):
+    text: str
+    bool: bool
+    icon_true: str | None
+    icon_false: str | None
+
+
+class PreMemberRow(BaseModel):
+    prm_id: int | str
+    name: TextWithBooleanColResponse
+    login: str
+    email: TextWithBooleanColResponse
+    # email_confirmed?
+    move_in_date: DateColResponse
+    actions: list[BtnColResponse]
+    action_required: bool  # used by membershipRequestRowFormatter
 
 
 class ArchivableMembersTable(RefreshableTableMixin, BootstrapTable):
