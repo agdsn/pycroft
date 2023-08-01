@@ -100,7 +100,7 @@ def json_tasks_for_user(user_id):
     user = get_user_or_404(user_id)
     return TableResponse[TaskRow](
         items=[task_row(t.cast(UserTask, task)) for task in user.tasks]
-    )
+    ).model_dump()
 
 
 @bp.route("/user/json")
@@ -119,7 +119,7 @@ def json_user_tasks():
 
     return TableResponse[TaskRow](
         items=[task_row(t.cast(UserTask, task)) for task in tasks]
-    )
+    ).model_dump()
 
 
 def get_task_or_404(task_id) -> Task | NoReturn:

@@ -1095,7 +1095,7 @@ def room_history_json(user_id):
             )
             for history_entry in cast(list[RoomHistoryEntry], user.room_history_entries)
         ]
-    )
+    ).model_dump()
 
 
 @bp.route('<int:user_id>/json/tenancies')
@@ -1120,7 +1120,7 @@ def tenancies_json(user_id):
             )
             for tenancy in user.tenancies
         ]
-    )
+    ).model_dump()
 
 
 @bp.route('member-requests')
