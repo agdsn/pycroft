@@ -92,6 +92,8 @@ from .tables import (
     PreMemberTable,
     TenancyTable,
     ArchivableMembersTable,
+    TrafficTopRow,
+    UserSearchRow,
 )
 from ..helpers.log_tables import (
     LogTableExtended,
@@ -184,13 +186,19 @@ def static_datasheet(user_id):
 
 @bp.route('/json/traffic-usage')
 def json_users_highest_traffic():
-    T = TrafficTopTable
-    return jsonify(items=[{
-        'id': user.id,
-        'name': user.name,
-        'traffic_for_days': user.traffic_for_days,
-        'url': T.url.value(href=url_for('.user_show', user_id=user.id), title=user.name)
-    } for user in get_users_with_highest_traffic(7, 20)])
+    return TableResponse[TrafficTopRow](
+        items=[
+            TrafficTopRow(
+                id=user.id,
+                name=user.name,
+                traffic_for_days=user.traffic_for_days,
+                url=LinkColResponse(
+                    href=url_for(".user_show", user_id=user.id), title=user.name
+                ),
+            )
+            for user in get_users_with_highest_traffic(7, 20)
+        ]
+    ).model_dump()
 
 
 T = TypeVar('T')
@@ -229,20 +237,23 @@ def json_search():
         query
     )
 
-    return jsonify(items=[{
-        'id': found_user.id,
-        'name': found_user.name,
-        'url': SearchTable.url.value(
-            href=url_for('.user_show', user_id=found_user.id),
-            title=found_user.name
-        ),
-        'login': found_user.login,
-        'room_id': found_user.room_id if found_user.room_id is not None else None
-    } for found_user in (
-        search_query.all()
-        if search_query.count() < User.q.count()
-        else []
-    )])
+    return TableResponse[UserSearchRow](
+        items=[
+            UserSearchRow(
+                id=found_user.id,
+                name=found_user.name,
+                url=LinkColResponse(
+                    href=url_for(".user_show", user_id=found_user.id),
+                    title=found_user.name,
+                ),
+                login=found_user.login,
+                room_id=found_user.room_id if found_user.room_id is not None else None,
+            )
+            for found_user in (
+                search_query.all() if search_query.count() < User.q.count() else []
+            )
+        ]
+    ).model_dump()
 
 
 def infoflags(user):

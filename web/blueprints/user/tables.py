@@ -1,6 +1,8 @@
 import typing
 
 from flask import url_for
+from pydantic import BaseModel
+
 from web.blueprints.helpers.log_tables import RefreshableTableMixin
 from web.table.table import (
     BootstrapTable,
@@ -10,6 +12,7 @@ from web.table.table import (
     MultiBtnColumn,
     DateColumn,
     TextWithBooleanColumn,
+    LinkColResponse,
 )
 from web.blueprints.helpers.user import no_membership_change
 
@@ -54,10 +57,31 @@ class SearchTable(BootstrapTable):
     login = Column("Login")
 
 
+class UserSearchRow(BaseModel):
+    """note: contains more columns than just the response for the table.
+
+    specific search and quick search are actually different concerns,
+    but noone has separated this yet.
+    """
+
+    id: int
+    name: str
+    url: LinkColResponse
+    login: str
+    room_id: int | None
+
+
 class TrafficTopTable(BootstrapTable):
     """A table for displaying the users with the highest traffic usage"""
     url = LinkColumn("Name")
     traffic_for_days = Column("Traffic", formatter='table.byteFormatterBinary')
+
+
+class TrafficTopRow(BaseModel):
+    id: int
+    name: str
+    traffic_for_days: int
+    url: LinkColResponse
 
 
 class RoomHistoryTable(BootstrapTable):
