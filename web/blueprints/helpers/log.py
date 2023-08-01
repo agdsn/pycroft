@@ -15,7 +15,7 @@ from hades_logs import RadiusLogEntry
 from pycroft.helpers.i18n import Message
 from pycroft.model.logging import LogEntry
 from web.table.table import (
-    datetime_format_pydantic,
+    datetime_format,
     UserColResponseNative,
     UserColResponsePlain,
 )
@@ -26,9 +26,7 @@ from web.template_filters import datetime_filter
 
 def format_log_entry(entry: LogEntry, log_type: LogType) -> LogTableRow:
     return LogTableRow(
-        created_at=datetime_format_pydantic(
-            entry.created_at, formatter=datetime_filter
-        ),
+        created_at=datetime_format(entry.created_at, formatter=datetime_filter),
         user=UserColResponseNative(
             title=entry.author.name,
             href=url_for("user.user_show", user_id=entry.author.id),
@@ -76,7 +74,7 @@ def format_hades_log_entry(interface: str, entry: RadiusLogEntry) -> LogTableRow
     date = entry.time
     desc = radius_description(interface, entry)
     return LogTableRow(
-        created_at=datetime_format_pydantic(date, formatter=datetime_filter),
+        created_at=datetime_format(date, formatter=datetime_filter),
         user=UserColResponsePlain(title="Radius"),
         message=desc,
         type="hades",
@@ -86,7 +84,7 @@ def format_hades_log_entry(interface: str, entry: RadiusLogEntry) -> LogTableRow
 def format_custom_hades_message(message: str) -> LogTableRow:
     date = datetime.now(tz=timezone.utc)
     return LogTableRow(
-        created_at=datetime_format_pydantic(date, formatter=datetime_filter),
+        created_at=datetime_format(date, formatter=datetime_filter),
         user=UserColResponsePlain(title="Radius"),
         message=message,
         type="hades",

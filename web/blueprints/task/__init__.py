@@ -20,7 +20,7 @@ from web.blueprints.task.tables import TaskTable, TaskRow
 from web.table.table import (
     BtnColResponse,
     TableResponse,
-    datetime_format_pydantic,
+    datetime_format,
     LinkColResponse,
 )
 from web.template_filters import datetime_filter
@@ -54,7 +54,7 @@ def task_row(task: UserTask) -> TaskRow:
         status=task.status.name,
         parameters=format_parameters(asdict(task.parameters)),
         errors=task.errors if task.errors is not None else list(),
-        due=datetime_format_pydantic(task.due, default="", formatter=datetime_filter),
+        due=datetime_format(task.due, default="", formatter=datetime_filter),
         created=f"{task.created:%Y-%m-%d %H:%M:%S}",
         creator=LinkColResponse(
             href=url_for('user.user_show', user_id=task.creator.id),

@@ -520,7 +520,7 @@ def iso_format(dt: datetime | date | None = None):
     return dt.isoformat(sep=' ')
 
 
-def date_format_pydantic(
+def date_format(
     dt: datetime | date | None,
     default: str | None = None,
     formatter: Callable = iso_format,
@@ -538,7 +538,7 @@ def date_format_pydantic(
     )
 
 
-def datetime_format_pydantic(
+def datetime_format(
     dt: datetime | None,
     default: str | None = None,
     formatter: Callable = iso_format,

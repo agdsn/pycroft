@@ -85,9 +85,9 @@ from web.blueprints.user.forms import (
 from web.table.table import (
     TableResponse,
     LinkColResponse,
-    datetime_format_pydantic,
+    datetime_format,
     BtnColResponse,
-    date_format_pydantic,
+    date_format,
 )
 from .log import formatted_user_hades_logs
 from .tables import (
@@ -462,12 +462,12 @@ def user_show_groups_json(user_id, group_filter="all"):
         items=[
             MembershipRow(
                 group_name=membership.group.name,
-                begins_at=datetime_format_pydantic(
+                begins_at=datetime_format(
                     membership.active_during.begin,
                     default="",
                     formatter=datetime_filter,
                 ),
-                ends_at=datetime_format_pydantic(
+                ends_at=datetime_format(
                     membership.active_during.end, default="", formatter=datetime_filter
                 ),
                 grants=granted,
@@ -1082,10 +1082,10 @@ def room_history_json(user_id):
     return TableResponse[RoomHistoryRow](
         items=[
             RoomHistoryRow(
-                begins_at=date_format_pydantic(
+                begins_at=date_format(
                     history_entry.active_during.begin, formatter=date_filter
                 ),
-                ends_at=date_format_pydantic(
+                ends_at=date_format(
                     history_entry.active_during.end, formatter=date_filter
                 ),
                 room=T.room.value(
@@ -1104,10 +1104,8 @@ def tenancies_json(user_id):
     return TableResponse[TenancyRow](
         items=[
             TenancyRow(
-                begins_at=date_format_pydantic(
-                    tenancy.mietbeginn, formatter=date_filter
-                ),
-                ends_at=date_format_pydantic(tenancy.mietende, formatter=date_filter),
+                begins_at=date_format(tenancy.mietbeginn, formatter=date_filter),
+                ends_at=date_format(tenancy.mietende, formatter=date_filter),
                 room=LinkColResponse(
                     href=url_for("facilities.room_show", room_id=tenancy.room.id)
                     if tenancy.room
@@ -1321,9 +1319,7 @@ def member_requests_json():
                 email=TextWithBooleanColResponse(
                     text=prm.email, bool=prm.email_confirmed
                 ),
-                move_in_date=date_format_pydantic(
-                    prm.move_in_date, formatter=date_filter
-                ),
+                move_in_date=date_format(prm.move_in_date, formatter=date_filter),
                 action_required=prm.room is not None
                 and prm.email_confirmed
                 and prm.is_adult,
@@ -1402,7 +1398,7 @@ def archivable_users_json():
                     for p in info.User.current_properties_maybe_denied
                 ),
                 num_hosts=len(info.User.hosts),
-                end_of_membership=date_format_pydantic(info.mem_end.date()),
+                end_of_membership=date_format(info.mem_end.date()),
             )
             for info in get_archivable_members(session.session)
         ]

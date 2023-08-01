@@ -113,7 +113,7 @@ from web.blueprints.helpers.exception import handle_errors
 from web.blueprints.navigation import BlueprintNavigation
 from web.table.table import (
     TableResponse,
-    date_format_pydantic,
+    date_format,
     BtnColResponse,
     LinkColResponse,
 )
@@ -191,10 +191,8 @@ def bank_accounts_activities_json():
             BankAccountActivityRow(
                 bank_account=activity.bank_account.name,
                 name=activity.other_name,
-                valid_on=date_format_pydantic(activity.valid_on, formatter=date_filter),
-                imported_at=date_format_pydantic(
-                    activity.imported_at, formatter=date_filter
-                ),
+                valid_on=date_format(activity.valid_on, formatter=date_filter),
+                imported_at=date_format(activity.imported_at, formatter=date_filter),
                 reference=activity.reference,
                 amount=activity.amount,
                 iban=activity.other_account_number,
@@ -907,7 +905,7 @@ def _format_transaction_row(
             title=transaction.author.name,
             new_tab=True,
         ),
-        date=date_format_pydantic(transaction.posted_at, formatter=date_filter),
+        date=date_format(transaction.posted_at, formatter=date_filter),
         amount=money_filter(transaction.amount),
         actions=list(_iter_transaction_buttons(bank_acc_act, transaction)),
     )
@@ -1238,12 +1236,8 @@ def membership_fees_json():
                 regular_fee=money_filter(membership_fee.regular_fee),
                 payment_deadline=membership_fee.payment_deadline.days,
                 payment_deadline_final=membership_fee.payment_deadline_final.days,
-                begins_on=date_format_pydantic(
-                    membership_fee.begins_on, formatter=date_filter
-                ),
-                ends_on=date_format_pydantic(
-                    membership_fee.ends_on, formatter=date_filter
-                ),
+                begins_on=date_format(membership_fee.begins_on, formatter=date_filter),
+                ends_on=date_format(membership_fee.ends_on, formatter=date_filter),
                 actions=[
                     BtnColResponse(
                         href=url_for(
