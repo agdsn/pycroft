@@ -480,7 +480,7 @@ class SplittedTable(BootstrapTable):
     splits: Iterable[tuple[str, str]]
 
     def _iter_typed_splits(self):
-        for t in self.splits:  # noqa[F402]
+        for t in self.splits:  # noqa: F402
             yield TableSplit(*t)
 
     @property
