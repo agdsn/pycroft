@@ -74,7 +74,7 @@ $(() => {
             if (error) throw error;
 
             // Normalize data
-            const traffic = resp.items.traffic;
+            const traffic = resp;
             traffic.forEach(d => {
                 d.timestamp = d3.time.format.iso.parse(d.timestamp);
             });

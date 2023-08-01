@@ -570,38 +570,14 @@ def json_trafficdata(user_id, days=7):
 
     :param user_id:
     :param days: optional amount of days to be included
-    :return: JSON with traffic and credit data formatted according to the following schema
-    {
-        "type": "object",
-        "properties": {
-            "items": {
-                "type": "object",
-                "properties": {
-                    "traffic": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "egress": { "type": "integer" },
-                                "ingress": { "type": "integer" },
-                                "timestamp": { "type": "string" }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
+    :return:
     """
     interval = timedelta(days=days)
-    result = traffic_history(user_id, session.utcnow() - interval + timedelta(days=1), session.utcnow())
-
-    return jsonify(
-        items={
-            'traffic': [e.__dict__ for e in result]
-        }
-    )
+    utcnow = session.utcnow()
+    return [
+        e.__dict__
+        for e in traffic_history(user_id, utcnow - interval + timedelta(days=1), utcnow)
+    ]
 
 
 @bp.route('/create', methods=['GET', 'POST'])
