@@ -112,7 +112,6 @@ from web.blueprints.helpers.api import json_agg_core
 from web.blueprints.helpers.exception import handle_errors
 from web.blueprints.navigation import BlueprintNavigation
 from web.table.table import (
-    date_format,
     TableResponse,
     date_format_pydantic,
     BtnColResponse,

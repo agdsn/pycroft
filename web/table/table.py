@@ -537,13 +537,6 @@ def date_format_pydantic(
         ),
     )
 
-def date_format(dt: datetime | date | None,
-                default: str | None = None, formatter: Callable = iso_format) -> dict:
-    import warnings
-
-    warnings.warn("use date_format_pydantic instead", DeprecationWarning, stacklevel=2)
-    return date_format_pydantic(dt, default, formatter).model_dump()
-
 
 def datetime_format_pydantic(
     dt: datetime | None,
@@ -560,16 +553,6 @@ def datetime_format_pydantic(
         timestamp=int(dt.timestamp()),
     )
 
-
-def datetime_format(dt: datetime | None,
-                    default: str | None = None,
-                    formatter: Callable = iso_format) -> dict:
-    import warnings
-
-    warnings.warn(
-        "use datetime_format_pydantic instead", DeprecationWarning, stacklevel=2
-    )
-    return datetime_format_pydantic(dt, default, formatter).model_dump()
 
 def enforce_url_params(url, params):
     """Safely enforce query values in an url
