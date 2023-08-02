@@ -214,3 +214,19 @@ rules:
     severity: ERROR
     paths:
       include: ["web", "pycroft"]
+
+  - id: untyped-flask-endpount
+    patterns:
+      - pattern: |
+          @$APP.route($...ROUTEARGS)
+          def $EP($...ARGS): ...
+      - pattern-not: |
+          @$APP.route($...ROUTEARGS)
+          def $EP($...ARGS) -> $RET: ...
+      - focus-metavariable: "$EP"
+    # no fix, because we would lose the decorator (and I can't make `pattern-inside` work correctly)
+    message:  blueprint functions should be annotated with `ResponseReturnValue`
+    languages: [ python ]
+    severity: ERROR
+    paths:
+      include: ["web"]
