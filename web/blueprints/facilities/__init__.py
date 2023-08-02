@@ -78,19 +78,19 @@ access = BlueprintAccess(bp, required_properties=['facilities_show'])
 nav = BlueprintNavigation(bp, "Wohnheime", icon='fa-building', blueprint_access=access)
 
 @bp.route('/')
-def root():
+def root() -> ResponseReturnValue:
     return redirect(url_for(".overview"))
 
 @nav.navigate("Wohnheime", icon='fa-building')
 @bp.route('/sites/')
-def overview():
+def overview() -> ResponseReturnValue:
     return render_template(
         'facilities/site_overview.html',
         site_table=SiteTable(data_url=url_for('.overview_json')),
     )
 
 @bp.route('/sites/json')
-def overview_json():
+def overview_json() -> ResponseReturnValue:
     return TableResponse[SiteRow](
         items=[
             SiteRow(
@@ -117,7 +117,7 @@ def overview_json():
 
 
 @bp.route('/site/<int:site_id>')
-def site_show(site_id):
+def site_show(site_id) -> ResponseReturnValue:
     site = Site.get(site_id)
     if not site:
         flash("Site existiert nicht!", "error")
@@ -142,7 +142,7 @@ def determine_building_or_404(
 
 @bp.route('/building/<int:building_id>/')
 @bp.route('/building/<building_shortname>/')
-def building_show(building_id=None, building_shortname=None):
+def building_show(building_id=None, building_shortname=None) -> ResponseReturnValue:
     building = determine_building_or_404(id=building_id, shortname=building_shortname)
     rooms_list = building.rooms
     return render_template('facilities/building_show.html',
@@ -152,7 +152,7 @@ def building_show(building_id=None, building_shortname=None):
 # ToDo: Review this!
 @bp.route('/building/<int:building_id>/levels/')
 @bp.route('/building/<building_shortname>/levels/')
-def building_levels(building_id=None, building_shortname=None):
+def building_levels(building_id=None, building_shortname=None) -> ResponseReturnValue:
     building = determine_building_or_404(id=building_id, shortname=building_shortname)
     levels_list = list({room.level for room in building.rooms})
 
@@ -166,7 +166,7 @@ def building_levels(building_id=None, building_shortname=None):
 
 @bp.route('/room/create', methods=['GET', 'POST'])
 @access.require('facilities_change')
-def room_create():
+def room_create() -> ResponseReturnValue:
     building_id: int | None = request.args.get("building_id", type=int)
     building = None
     if building_id:
@@ -216,7 +216,7 @@ def room_create():
 
 @bp.route('/room/<int:room_id>/create', methods=['GET', 'POST'])
 @access.require('facilities_change')
-def room_edit(room_id):
+def room_edit(room_id) -> ResponseReturnValue:
     room = Room.get(room_id)
 
     if not room:
@@ -279,9 +279,11 @@ def room_edit(room_id):
 
 
 # ToDo: Review this!
-@bp.route('/building/<int:building_id>/level/<int:level>/rooms/')
-@bp.route('/building/<building_shortname>/level/<int:level>/rooms/')
-def building_level_rooms(level, building_id=None, building_shortname=None):
+@bp.route("/building/<int:building_id>/level/<int:level>/rooms/")
+@bp.route("/building/<building_shortname>/level/<int:level>/rooms/")
+def building_level_rooms(
+    level, building_id=None, building_shortname=None
+) -> ResponseReturnValue:
     building = determine_building_or_404(id=building_id, shortname=building_shortname)
     level_l0 = f"{level:02d}"
 
@@ -297,9 +299,11 @@ def building_level_rooms(level, building_id=None, building_shortname=None):
     )
 
 
-@bp.route('/building/<int:building_id>/level/<int:level>/rooms/json')
-@bp.route('/building/<building_shortname>/level/<int:level>/rooms/json')
-def building_level_rooms_json(level, building_id=None, building_shortname=None):
+@bp.route("/building/<int:building_id>/level/<int:level>/rooms/json")
+@bp.route("/building/<building_shortname>/level/<int:level>/rooms/json")
+def building_level_rooms_json(
+    level, building_id=None, building_shortname=None
+) -> ResponseReturnValue:
     building = determine_building_or_404(id=building_id, shortname=building_shortname)
 
     all_users = bool(request.args.get('all_users', 0, type=int))
@@ -356,7 +360,7 @@ def get_switch_room_or_redirect(switch_room_id: int) -> Room:
 
 @bp.route('/room/<int:switch_room_id>/patch-port/create', methods=['GET', 'POST'])
 @access.require('infrastructure_change')
-def patch_port_create(switch_room_id):
+def patch_port_create(switch_room_id) -> ResponseReturnValue:
     switch_room = get_switch_room_or_redirect(switch_room_id)
 
     form = PatchPortForm(switch_room=switch_room.short_name,
@@ -409,7 +413,7 @@ def get_patch_port_or_redirect(
 
 @bp.route('/room/<int:switch_room_id>/patch-port/<int:patch_port_id>/edit', methods=['GET', 'POST'])
 @access.require('infrastructure_change')
-def patch_port_edit(switch_room_id, patch_port_id):
+def patch_port_edit(switch_room_id, patch_port_id) -> ResponseReturnValue:
     switch_room = get_switch_room_or_redirect(switch_room_id)
     patch_port = get_patch_port_or_redirect(patch_port_id, in_switch_room=switch_room)
     form = PatchPortForm(switch_room=switch_room.short_name,
@@ -447,7 +451,7 @@ def patch_port_edit(switch_room_id, patch_port_id):
 
 @bp.route('/room/<int:switch_room_id>/patch-port/<int:patch_port_id>/delete', methods=['GET', 'POST'])
 @access.require('infrastructure_change')
-def patch_port_delete(switch_room_id, patch_port_id):
+def patch_port_delete(switch_room_id, patch_port_id) -> ResponseReturnValue:
     switch_room = get_switch_room_or_redirect(switch_room_id)
     patch_port = get_patch_port_or_redirect(patch_port_id, in_switch_room=switch_room)
 
@@ -475,7 +479,7 @@ def patch_port_delete(switch_room_id, patch_port_id):
 
 
 @bp.route('/room/<int:room_id>', methods=['GET', 'POST'])
-def room_show(room_id):
+def room_show(room_id) -> ResponseReturnValue:
     room = Room.get(room_id)
 
     if room is None:
@@ -516,7 +520,7 @@ def room_show(room_id):
 
 
 @bp.route('/room/<int:room_id>/logs/json')
-def room_logs_json(room_id):
+def room_logs_json(room_id) -> ResponseReturnValue:
     return TableResponse[LogTableRow](
         items=[
             format_room_log_entry(entry)
@@ -526,7 +530,7 @@ def room_logs_json(room_id):
 
 
 @bp.route('/room/<int:room_id>/patchpanel/json')
-def room_patchpanel_json(room_id):
+def room_patchpanel_json(room_id) -> ResponseReturnValue:
     room = Room.get(room_id)
 
     if not room:
@@ -584,7 +588,7 @@ def room_patchpanel_json(room_id):
 
 @bp.route('/json/levels')
 @access.require('facilities_show')
-def json_levels():
+def json_levels() -> ResponseReturnValue:
     """Endpoint for the room <select> field"""
     building_id = request.args.get("building", 0, type=int)
     levels = (
@@ -598,7 +602,7 @@ def json_levels():
 
 @bp.route('/json/rooms')
 @access.require('facilities_show')
-def json_rooms():
+def json_rooms() -> ResponseReturnValue:
     """Endpoint for the room <select> field"""
     building_id = request.args.get("building", 0, type=int)
     level = request.args.get("level", 0, type=int)
@@ -614,7 +618,7 @@ def json_rooms():
 @bp.route('/overcrowded', defaults={'building_id': None})
 @bp.route('/overcrowded/<int:building_id>')
 @nav.navigate("Mehrfachbelegungen", icon='fa-people-arrows')
-def overcrowded(building_id):
+def overcrowded(building_id) -> ResponseReturnValue:
     page_title = "Mehrfachbelegungen"
     if building_id:
         building = determine_building_or_404(id=building_id)
@@ -629,7 +633,7 @@ def overcrowded(building_id):
 
 @bp.route('/overcrowded/json', defaults={'building_id': None})
 @bp.route('/overcrowded/<int:building_id>/json')
-def overcrowded_json(building_id):
+def overcrowded_json(building_id) -> ResponseReturnValue:
     return TableResponse[RoomOvercrowdedRow](
         items=[
             RoomOvercrowdedRow(
@@ -651,7 +655,7 @@ def overcrowded_json(building_id):
 
 
 @bp.route('address/<string:type>')
-def addresses(type):
+def addresses(type) -> ResponseReturnValue:
     try:
         entity = get_address_entity(type)
     except ValueError as e:
