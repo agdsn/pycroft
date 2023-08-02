@@ -184,7 +184,7 @@ class ArchivableMembersTable(RefreshableTableMixin, BootstrapTable):
 class ArchivableMemberRow(BaseModel):
     id: int
     user: LinkColResponse
-    room_shortname: LinkColResponse
+    room_shortname: LinkColResponse | None = None
     num_hosts: int
     current_properties: str
     end_of_membership: DateColResponse

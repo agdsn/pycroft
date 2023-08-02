@@ -1394,11 +1394,12 @@ def archivable_users_json():
                     title=info.User.name,
                     href=url_for("user.user_show", user_id=info.User.id),
                 ),
-                room_shortname=info.User.room
-                and LinkColResponse(
-                    title=info.User.room.short_name,
-                    href=url_for("facilities.room_show", room_id=info.User.room.id),
-                ),
+                room_shortname=LinkColResponse(
+                    title=r.short_name,
+                    href=url_for("facilities.room_show", room_id=r.id),
+                )
+                if (r := info.User.room)
+                else None,
                 current_properties=" ".join(
                     ("~" if p.denied else "") + p.property_name
                     for p in info.User.current_properties_maybe_denied
