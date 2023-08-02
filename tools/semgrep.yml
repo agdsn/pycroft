@@ -167,3 +167,15 @@ rules:
     paths:
       include:
         - "pycroft/model"
+
+  - id: pydantic-models-set-default-for-optional
+    patterns:
+      - pattern: "$FIELD: $TYPE | None"
+      - pattern-inside: "class $CLASS(pydantic.BaseModel): ..."
+    fix: "$FIELD: $TYPE | None = None"
+    message: |
+      Use a default value (`= None`) for optional fields in pydantic models
+    languages: [ python ]
+    severity: ERROR
+    paths:
+      include: ["web"]
