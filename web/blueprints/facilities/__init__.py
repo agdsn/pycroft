@@ -19,6 +19,7 @@ from flask import (
     request,
     abort,
 )
+from flask.typing import ResponseReturnValue
 from flask_login import current_user
 from flask_wtf import FlaskForm as Form
 from sqlalchemy.orm import joinedload, aliased
@@ -228,40 +229,53 @@ def room_edit(room_id):
                         inhabitable=room.inhabitable,
                         vo_suchname=room.swdd_vo_suchname)
 
-    if form.validate_on_submit():
-        try:
-            with session.session.no_autoflush:
-                address = get_or_create_address(**form.address_kwargs)
-                edit_room(room, form.number.data, form.inhabitable.data, form.vo_suchname.data,
-                          address=address, processor=current_user)
+    def default_response() -> ResponseReturnValue:
+        if users := room.users_sharing_address:
+            flash(
+                gettext(
+                    "Dieser Raum hat {} bewohner ({}), die die Adresse des Raums teilen."
+                    " Ihre Adresse wird beim Ändern automatisch angepasst."
+                ).format(len(users), ", ".join(u.name for u in users)),
+                "info",
+            )
 
-            session.session.commit()
-
-            flash(f"Der Raum {room.short_name} wurde erfolgreich bearbeitet.",
-                  "success")
-
-            return redirect(url_for('.room_show', room_id=room.id))
-        except RoomAlreadyExistsException:
-            form.number.errors.append("Ein Raum mit diesem Namen existiert bereits in dieser Etage!")
+        return render_template(
+            "generic_form.html",
+            page_title="Raum bearbeiten",
+            form_args={
+                "form": form,
+                "cancel_to": url_for(".room_show", room_id=room.id),
+            },
+        )
 
     if not form.is_submitted():
         form.set_address_fields(room.address)
+        return default_response()
 
-    if room.users_sharing_address:
-        flash(gettext("Dieser Raum hat {} bewohner ({}), die die Adresse des Raums teilen."
-                      " Ihre Adresse wird beim Ändern automatisch angepasst.")
-              .format(len(room.users_sharing_address),
-                      ', '.join(u.name for u in room.users_sharing_address)),
-              'info')
+    if not form.validate():
+        return default_response()
 
-    form_args = {
-        'form': form,
-        'cancel_to': url_for('.room_show', room_id=room.id)
-    }
+    sess = session.session
 
-    return render_template('generic_form.html',
-                           page_title="Raum bearbeiten",
-                           form_args=form_args)
+    def _append_err(_):
+        form.number.errors.append(
+            "Ein Raum mit diesem Namen existiert bereits in dieser Etage!"
+        )
+
+    _handlers = {RoomAlreadyExistsException: _append_err}
+    with handle_errors(default_response, _handlers), sess.begin_nested():
+        address = get_or_create_address(**form.address_kwargs)
+        edit_room(
+            room,
+            form.number.data,
+            form.inhabitable.data,
+            form.vo_suchname.data,
+            address=address,
+            processor=current_user,
+        )
+
+    flash(f"Der Raum {room.short_name} wurde erfolgreich bearbeitet.", "success")
+    return redirect(url_for(".room_show", room_id=room.id))
 
 
 # ToDo: Review this!
