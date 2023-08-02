@@ -483,20 +483,22 @@ def user_show_groups_json(user_id, group_filter="all"):
                         btn_class="btn-link",
                     )
                 ]
-                + [
-                    BtnColResponse(
-                        href=url_for(
-                            ".end_membership",
-                            user_id=user_id,
-                            membership_id=membership.id,
-                        ),
-                        title="Beenden",
-                        icon="fa-power-off",
-                        btn_class="btn-link",
-                    )
-                ]
-                if active
-                else [],
+                + (
+                    [
+                        BtnColResponse(
+                            href=url_for(
+                                ".end_membership",
+                                user_id=user_id,
+                                membership_id=membership.id,
+                            ),
+                            title="Beenden",
+                            icon="fa-power-off",
+                            btn_class="btn-link",
+                        )
+                    ]
+                    if active
+                    else []
+                ),
             )
             for membership, granted, denied in memberships
         ]
