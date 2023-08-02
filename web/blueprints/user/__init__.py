@@ -1330,14 +1330,14 @@ def member_requests_json():
                 and prm.email_confirmed
                 and prm.is_adult,
                 actions=[
-                    T.actions.single_value(
+                    BtnColResponse(
                         href=url_for(".member_request_edit", pre_member_id=prm.id),
                         title="Bearbeiten",
                         icon="fa-edit",
                         btn_class="btn-info btn-sm",
                         new_tab=True,
                     ),
-                    T.actions.single_value(
+                    BtnColResponse(
                         href=url_for(".member_request_delete", pre_member_id=prm.id),
                         title="Löschen",
                         icon="fa-trash",
