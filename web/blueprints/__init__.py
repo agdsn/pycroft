@@ -4,11 +4,9 @@
 import typing as t
 from typing import NoReturn
 
-from flask import Blueprint
+from flask import Blueprint, abort
 from werkzeug import Response
 from werkzeug.utils import redirect
-
-from ..type_utils import abort
 
 
 def bake_endpoint(blueprint: Blueprint, fn: t.Callable) -> str:

@@ -4,12 +4,11 @@
 import typing as t
 from itertools import chain
 from flask.globals import current_app
-from flask import request, Blueprint
+from flask import request, Blueprint, abort
 from flask_login import current_user
 from werkzeug.wrappers import BaseResponse
 
 from web.blueprints import bake_endpoint
-from ..type_utils import abort
 
 
 TFun = t.TypeVar("TFun", bound=t.Callable)
