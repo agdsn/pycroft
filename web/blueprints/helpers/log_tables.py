@@ -52,6 +52,6 @@ LogType = t.Literal["user", "room", "hades", "task", "all"]
 
 class LogTableRow(BaseModel):
     created_at: DateColResponse
-    type: LogType | None
+    type: LogType | None = None
     user: UserColResponse
     message: str

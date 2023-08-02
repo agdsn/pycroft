@@ -242,7 +242,7 @@ class DateColResponse(BaseModel):
     """Response for pre-formatted date or datetime data"""
 
     formatted: str
-    timestamp: int | None
+    timestamp: int | None = None
 
 
 @custom_formatter_column('table.relativeDateFormatter')

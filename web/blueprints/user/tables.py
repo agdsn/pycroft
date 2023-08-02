@@ -82,7 +82,7 @@ class UserSearchRow(BaseModel):
     name: str
     url: LinkColResponse
     login: str
-    room_id: int | None
+    room_id: int | None = None
 
 
 class TrafficTopTable(BootstrapTable):
@@ -141,8 +141,8 @@ class PreMemberTable(BootstrapTable):
 class TextWithBooleanColResponse(BaseModel):
     text: str
     bool: bool
-    icon_true: str | None
-    icon_false: str | None
+    icon_true: str | None = None
+    icon_false: str | None = None
 
 
 class PreMemberRow(BaseModel):

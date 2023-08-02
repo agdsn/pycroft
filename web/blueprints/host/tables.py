@@ -45,9 +45,9 @@ class HostTable(BootstrapTable):
 
 
 class HostRow(BaseModel):
-    name: str | None
-    switch: str | None
-    port: str | None
+    name: str | None = None
+    switch: str | None = None
+    port: str | None = None
     actions: list[BtnColResponse]
     interfaces_table_link: str
     interface_create_link: str
@@ -74,8 +74,8 @@ class InterfaceTable(BootstrapTable):
 
 class InterfaceRow(BaseModel):
     id: int  # TODO is this used?
-    host: str | None
-    name: str | None
+    host: str | None = None
+    name: str | None = None
     mac: str
     ips: str
     actions: list[BtnColResponse]

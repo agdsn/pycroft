@@ -293,8 +293,8 @@ class UnconfirmedTransactionsTable(BootstrapTable):
 class UnconfirmedTransactionsRow(BaseModel):
     id: str | int
     description: LinkColResponse
-    user: LinkColResponse | None
-    room: str | None
+    user: LinkColResponse | None = None
+    room: str | None = None
     date: DateColResponse
     amount: str
     author: LinkColResponse

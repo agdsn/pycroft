@@ -32,7 +32,7 @@ class SubnetTable(BootstrapTable):
 class SubnetRow(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
-    description: str | None
+    description: str | None = None
     address: str
     gateway: str
     reserved: list[str]
@@ -102,7 +102,7 @@ class PortTable(BootstrapTable):
 
 class PortRow(BaseModel):
     switchport_name: str
-    patchport_name: str | None
-    room: LinkColResponse | None
+    patchport_name: str | None = None
+    room: LinkColResponse | None = None
     edit_link: BtnColResponse
     delete_link: BtnColResponse
