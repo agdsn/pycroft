@@ -58,8 +58,8 @@ class MembershipRow(BaseModel):
     ends_at: DateColResponse
     actions: list[BtnColResponse]
     # used by membershipRowAttributes
-    grants: list[str]
-    denies: list[str]
+    grants: list[str | None]
+    denies: list[str | None]
     # used by membershipRowFormatter
     active: bool
 

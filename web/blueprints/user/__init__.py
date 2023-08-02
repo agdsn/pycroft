@@ -25,6 +25,7 @@ from flask import (
     url_for,
     session as flask_session,
     make_response,
+    jsonify,
 )
 from flask_login import current_user
 from markupsafe import Markup
@@ -576,10 +577,14 @@ def json_trafficdata(user_id, days=7):
     """
     interval = timedelta(days=days)
     utcnow = session.utcnow()
-    return [
-        e.__dict__
-        for e in traffic_history(user_id, utcnow - interval + timedelta(days=1), utcnow)
-    ]
+    return jsonify(
+        [
+            e.__dict__
+            for e in traffic_history(
+                user_id, utcnow - interval + timedelta(days=1), utcnow
+            )
+        ]
+    )
 
 
 @bp.route('/create', methods=['GET', 'POST'])
@@ -1085,7 +1090,7 @@ def room_history_json(user_id):
                 ends_at=date_format(
                     history_entry.active_during.end, formatter=date_filter
                 ),
-                room=T.room.value(
+                room=LinkColResponse(
                     href=url_for("facilities.room_show", room_id=history_entry.room_id),
                     title=history_entry.room.short_name,
                 ),
