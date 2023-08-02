@@ -481,7 +481,9 @@ def user_show_groups_json(user_id, group_filter="all"):
                         title="Bearbeiten",
                         icon="fa-edit",
                         btn_class="btn-link",
-                    ),
+                    )
+                ]
+                + [
                     BtnColResponse(
                         href=url_for(
                             ".end_membership",
@@ -492,9 +494,9 @@ def user_show_groups_json(user_id, group_filter="all"):
                         icon="fa-power-off",
                         btn_class="btn-link",
                     )
-                    if active
-                    else {},
-                ],
+                ]
+                if active
+                else [],
             )
             for membership, granted, denied in memberships
         ]
