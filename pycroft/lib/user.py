@@ -454,7 +454,6 @@ def migrate_user_host(host: Host, new_room: Room, processor: User) -> None:
 
 
 #TODO ensure serializability
-@with_transaction
 def move(
     user: User,
     building_id: int,

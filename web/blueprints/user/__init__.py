@@ -721,10 +721,12 @@ def move(user_id):
         flash("Nutzer muss in anderes Zimmer umgezogen werden!", "error")
         return default_response(refill_form_data=True)
 
-    when = form.get_execution_time(now=session.utcnow())
+    utcnow = session.utcnow()
+    when = form.get_execution_time(now=utcnow)
 
+    sess = session.session
     try:
-        with handle_errors(session.session):
+        with handle_errors(sess):
             lib.user.move(
                 user=user,
                 building_id=form.building.data.id,
@@ -734,20 +736,29 @@ def move(user_id):
                 comment=form.comment.data,
                 when=when
             )
-            session.session.commit()
-            if when > session.utcnow():
-                flash('Der Umzug wurde vorgemerkt.', 'success')
-                return redirect(url_for('.user_show', user_id=user.id))
-            flash('Benutzer umgezogen', 'success')
-
-            sheet = lib.user.store_user_sheet(True, False, user=user,
-                                              plain_user_password='********',
-                                              generation_purpose='user moved')
-            session.session.commit()
-            flask_session['user_sheet'] = sheet.id
-            return redirect(url_for('.user_show', user_id=user.id))
+            sess.commit()
     except PycroftException:
         return default_response()
+
+    if when > utcnow:
+        flash("Der Umzug wurde vorgemerkt.", "success")
+        return redirect(url_for(".user_show", user_id=user.id))
+
+    flash("Benutzer umgezogen", "success")
+    try:
+        with handle_errors(sess):
+            sheet = lib.user.store_user_sheet(
+                True,
+                False,
+                user=user,
+                plain_user_password="********",
+                generation_purpose="user moved",
+            )
+            sess.commit()
+    except PycroftException:
+        return default_response()
+    flask_session["user_sheet"] = sheet.id
+    return redirect(url_for(".user_show", user_id=user.id))
 
 
 @bp.route('/<int:user_id>/edit_membership/<int:membership_id>', methods=['GET', 'POST'])
