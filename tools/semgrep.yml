@@ -179,3 +179,38 @@ rules:
     severity: ERROR
     paths:
       include: ["web"]
+
+  - id: explicit-session-begin_nested
+    patterns:
+      - pattern: |
+          with $CM: ...
+      - metavariable-pattern:
+          metavariable: "$CM"
+          pattern: handle_errors($SESS, $...ARGS)
+      - focus-metavariable: "$CM"
+    message: "Use `session.begin` explicitly instead of passing the session to `handle_errors`"
+    fix: |
+      handle_errors($...ARGS), $SESS.begin_nested()
+    languages: [python]
+    severity: ERROR
+    paths:
+      include: ["web"]
+
+  - id: commit-in-context-manager
+    patterns:
+      - pattern: |
+          with $CM:
+              $BODY
+      - metavariable-pattern:
+          metavariable: "$CM"
+          pattern: $SESS.begin_nested()
+      - metavariable-pattern:
+          metavariable: "$BODY"
+          pattern: |
+              <... $SESS.commit() ...>
+      - focus-metavariable: ["$CM", "$SESS"]
+    message: "Don't commit the session in a `.begin_nested()` context manager"
+    languages: [python]
+    severity: ERROR
+    paths:
+      include: ["web", "pycroft"]

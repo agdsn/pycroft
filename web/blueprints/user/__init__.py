@@ -611,42 +611,40 @@ def create():
         flash("Raum scheint nicht zu existieren…", 'error')
         return default_response()
 
-    try:
-        with handle_errors(session.session):
-            new_user, plain_password = lib.user.create_user(
-                name=form.name.data,
-                login=form.login.data,
-                processor=current_user,
-                email=form.email.data,
-                birthdate=form.birthdate.data,
-                groups=form.property_groups.data,
-                address=room.address,
-                send_confirm_mail=True,
-            )
-            lib.user.move_in(
-                user=new_user,
-                building_id=form.building.data.id, level=form.level.data,
-                room_number=form.room_number.data,
-                mac=form.mac.data,
-                processor=current_user,
-                host_annex=form.annex.data,
-                # memberships have already been initiated by `create_user`
-                # (`form.property_groups`)
-                begin_membership=False,
-            )
-            plain_wifi_password = lib.user.maybe_setup_wifi(
-                new_user,
-                processor=current_user
-            )
-            sheet = lib.user.store_user_sheet(
-                True, wifi=(plain_wifi_password is not None),
-                user=new_user,
-                plain_user_password=plain_password,
-                plain_wifi_password=plain_wifi_password or ''
-            )
-            session.session.commit()
-    except PycroftException:
-        return default_response()
+    with handle_errors(error_response=default_response), session.session.begin_nested():
+        new_user, plain_password = lib.user.create_user(
+            name=form.name.data,
+            login=form.login.data,
+            processor=current_user,
+            email=form.email.data,
+            birthdate=form.birthdate.data,
+            groups=form.property_groups.data,
+            address=room.address,
+            send_confirm_mail=True,
+        )
+        lib.user.move_in(
+            user=new_user,
+            building_id=form.building.data.id,
+            level=form.level.data,
+            room_number=form.room_number.data,
+            mac=form.mac.data,
+            processor=current_user,
+            host_annex=form.annex.data,
+            # memberships have already been initiated by `create_user`
+            # (`form.property_groups`)
+            begin_membership=False,
+        )
+        plain_wifi_password = lib.user.maybe_setup_wifi(
+            new_user, processor=current_user
+        )
+        sheet = lib.user.store_user_sheet(
+            True,
+            wifi=(plain_wifi_password is not None),
+            user=new_user,
+            plain_user_password=plain_password,
+            plain_wifi_password=plain_wifi_password or "",
+        )
+    session.session.commit()
 
     flask_session['user_sheet'] = sheet.id
     flash(Markup('Benutzer angelegt.'), 'success')
@@ -667,30 +665,29 @@ def create_non_resident():
 
     if not form.validate_on_submit():
         return default_response()
-    try:
-        with handle_errors(session.session):
-            address = lib.user.get_or_create_address(**form.address_kwargs)
-            new_user, plain_password = lib.user.create_user(
-                name=form.name.data,
-                login=form.login.data,
-                processor=current_user,
-                email=form.email.data,
-                birthdate=form.birthdate.data,
-                groups=form.property_groups.data,
-                address=address,
-                send_confirm_mail=True,
-            )
-            plain_wifi_password = lib.user.maybe_setup_wifi(new_user, processor=current_user)
-            sheet = lib.user.store_user_sheet(
-                True,
-                wifi=(plain_wifi_password is not None),
-                user=new_user,
-                plain_user_password=plain_password,
-                plain_wifi_password=plain_wifi_password or ''
-            )
-            session.session.commit()
-    except PycroftException:
-        return default_response()
+    with handle_errors(error_response=default_response), session.session.begin_nested():
+        address = lib.user.get_or_create_address(**form.address_kwargs)
+        new_user, plain_password = lib.user.create_user(
+            name=form.name.data,
+            login=form.login.data,
+            processor=current_user,
+            email=form.email.data,
+            birthdate=form.birthdate.data,
+            groups=form.property_groups.data,
+            address=address,
+            send_confirm_mail=True,
+        )
+        plain_wifi_password = lib.user.maybe_setup_wifi(
+            new_user, processor=current_user
+        )
+        sheet = lib.user.store_user_sheet(
+            True,
+            wifi=(plain_wifi_password is not None),
+            user=new_user,
+            plain_user_password=plain_password,
+            plain_wifi_password=plain_wifi_password or "",
+        )
+    session.session.commit()
 
     flask_session['user_sheet'] = sheet.id
     flash(Markup('Benutzer angelegt.'), 'success')
@@ -725,38 +722,32 @@ def move(user_id):
     when = form.get_execution_time(now=utcnow)
 
     sess = session.session
-    try:
-        with handle_errors(sess):
-            lib.user.move(
-                user=user,
-                building_id=form.building.data.id,
-                level=form.level.data,
-                room_number=form.room_number.data,
-                processor=current_user,
-                comment=form.comment.data,
-                when=when
-            )
-            sess.commit()
-    except PycroftException:
-        return default_response()
+    with handle_errors(error_response=default_response), sess.begin_nested():
+        lib.user.move(
+            user=user,
+            building_id=form.building.data.id,
+            level=form.level.data,
+            room_number=form.room_number.data,
+            processor=current_user,
+            comment=form.comment.data,
+            when=when,
+        )
+    sess.commit()
 
     if when > utcnow:
         flash("Der Umzug wurde vorgemerkt.", "success")
         return redirect(url_for(".user_show", user_id=user.id))
 
     flash("Benutzer umgezogen", "success")
-    try:
-        with handle_errors(sess):
-            sheet = lib.user.store_user_sheet(
-                True,
-                False,
-                user=user,
-                plain_user_password="********",
-                generation_purpose="user moved",
-            )
-            sess.commit()
-    except PycroftException:
-        return default_response()
+    with handle_errors(error_response=default_response), sess.begin_nested():
+        sheet = lib.user.store_user_sheet(
+            True,
+            False,
+            user=user,
+            plain_user_password="********",
+            generation_purpose="user moved",
+        )
+    sess.commit()
     flask_session["user_sheet"] = sheet.id
     return redirect(url_for(".user_show", user_id=user.id))
 
@@ -1026,18 +1017,17 @@ def move_out(user_id):
         return default_response()
 
     when = session.utcnow() if form.now.data else utc.with_min_time(form.when.data)
-    try:
-        with handle_errors(session.session):
-            lib.user.move_out(
-                user=user,
-                comment=form.comment.data,
-                processor=current_user,
-                when=session.utcnow() if form.now.data else utc.with_min_time(form.when.data),
-                end_membership=form.end_membership.data
-            )
-            session.session.commit()
-    except PycroftException:
-        return default_response()
+    with handle_errors(error_response=default_response), session.session.begin_nested():
+        lib.user.move_out(
+            user=user,
+            comment=form.comment.data,
+            processor=current_user,
+            when=session.utcnow()
+            if form.now.data
+            else utc.with_min_time(form.when.data),
+            end_membership=form.end_membership.data,
+        )
+    session.session.commit()
 
     if when > session.utcnow():
         flash("Der Auszug wurde vorgemerkt.", "success")
@@ -1053,8 +1043,10 @@ def move_in(user_id):
     user = get_user_or_404(user_id)
 
     def default_response():
-        return render_template('user/user_move_in.html', form=form, user_id=user_id), \
-               400 if form.is_submitted() else 200
+        return (
+            render_template("user/user_move_in.html", form=form, user_id=user_id),
+            400 if form.is_submitted() else 200,
+        )
 
     if user.room is not None:
         flash(f"Nutzer {user_id} ist nicht ausgezogen!", 'error')
@@ -1069,22 +1061,19 @@ def move_in(user_id):
         return default_response()
 
     when = session.utcnow() if form.now.data else utc.with_min_time(form.when.data)
-    try:
-        with handle_errors(session.session):
-            lib.user.move_in(
-                user=user,
-                building_id=form.building.data.id,
-                level=form.level.data,
-                room_number=form.room_number.data,
-                mac=form.mac.data,
-                birthdate=form.birthdate.data,
-                begin_membership=form.begin_membership.data,
-                processor=current_user,
-                when=when,
-            )
-            session.session.commit()
-    except PycroftException:
-        return default_response()
+    with handle_errors(error_response=default_response), session.session.begin_nested():
+        lib.user.move_in(
+            user=user,
+            building_id=form.building.data.id,
+            level=form.level.data,
+            room_number=form.room_number.data,
+            mac=form.mac.data,
+            birthdate=form.birthdate.data,
+            begin_membership=form.begin_membership.data,
+            processor=current_user,
+            when=when,
+        )
+    session.session.commit()
 
     if when > session.utcnow():
         flash("Der Einzug wurde vorgemerkt.", 'success')
@@ -1240,12 +1229,14 @@ def member_request_delete(pre_member_id: int):
 @access.require('user_change')
 def member_request_finish(pre_member_id: int):
     prm = get_pre_member_or_404(pre_member_id)
-    try:
-        with handle_errors(session.session):
-            user = finish_member_request(prm, processor=current_user, ignore_similar_name=True)
-            session.session.commit()
-    except PycroftException:
-        return redirect(url_for(".member_request_edit", pre_member_id=prm.id))
+
+    default_response = redirect(url_for(".member_request_edit", pre_member_id=prm.id))
+
+    with handle_errors(error_response=default_response), session.session.begin_nested():
+        user = finish_member_request(
+            prm, processor=current_user, ignore_similar_name=True
+        )
+    session.session.commit()
 
     flash("Nutzer erfolgreich erstellt.", 'success')
     return redirect(url_for(".user_show", user_id=user.id))

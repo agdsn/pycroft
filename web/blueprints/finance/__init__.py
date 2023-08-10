@@ -1007,12 +1007,9 @@ def transaction_confirm_all():
     if not form.is_submitted():
         return default_response()
 
-    try:
-        with handle_errors(session):
-            lib.finance.transaction_confirm_all(current_user)
-            session.commit()
-    except PycroftException:  # pragma: no cover
-        return default_response()
+    with handle_errors(error_response=default_response), session.begin_nested():
+        lib.finance.transaction_confirm_all(current_user)
+    session.commit()
 
     flash("Alle Transaktionen wurden bestätigt.", "success")
     return redirect(url_for(".transactions_unconfirmed"))
