@@ -612,7 +612,7 @@ def create():
         return default_response()
 
     try:
-        with handle_errors(session.session):
+        with handle_errors(), session.session.begin_nested():
             new_user, plain_password = lib.user.create_user(
                 name=form.name.data,
                 login=form.login.data,
@@ -668,7 +668,7 @@ def create_non_resident():
     if not form.validate_on_submit():
         return default_response()
     try:
-        with handle_errors(session.session):
+        with handle_errors(), session.session.begin_nested():
             address = lib.user.get_or_create_address(**form.address_kwargs)
             new_user, plain_password = lib.user.create_user(
                 name=form.name.data,
@@ -726,7 +726,7 @@ def move(user_id):
 
     sess = session.session
     try:
-        with handle_errors(sess):
+        with handle_errors(), sess.begin_nested():
             lib.user.move(
                 user=user,
                 building_id=form.building.data.id,
@@ -746,7 +746,7 @@ def move(user_id):
 
     flash("Benutzer umgezogen", "success")
     try:
-        with handle_errors(sess):
+        with handle_errors(), sess.begin_nested():
             sheet = lib.user.store_user_sheet(
                 True,
                 False,
@@ -1027,7 +1027,7 @@ def move_out(user_id):
 
     when = session.utcnow() if form.now.data else utc.with_min_time(form.when.data)
     try:
-        with handle_errors(session.session):
+        with handle_errors(), session.session.begin_nested():
             lib.user.move_out(
                 user=user,
                 comment=form.comment.data,
@@ -1070,7 +1070,7 @@ def move_in(user_id):
 
     when = session.utcnow() if form.now.data else utc.with_min_time(form.when.data)
     try:
-        with handle_errors(session.session):
+        with handle_errors(), session.session.begin_nested():
             lib.user.move_in(
                 user=user,
                 building_id=form.building.data.id,
@@ -1241,7 +1241,7 @@ def member_request_delete(pre_member_id: int):
 def member_request_finish(pre_member_id: int):
     prm = get_pre_member_or_404(pre_member_id)
     try:
-        with handle_errors(session.session):
+        with handle_errors(), session.session.begin_nested():
             user = finish_member_request(prm, processor=current_user, ignore_similar_name=True)
             session.session.commit()
     except PycroftException:

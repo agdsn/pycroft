@@ -51,7 +51,7 @@ def host_delete(host_id):
         return default_response()
 
     try:
-        with handle_errors(session.session):
+        with handle_errors(), session.session.begin_nested():
             lib_host.host_delete(host, current_user)
             session.session.commit()
     except PycroftException:  # pragma: no cover
@@ -89,7 +89,7 @@ def host_edit(host_id):
     # existence guaranteed by validator
     owner = User.get(form.owner_id.data)
     try:
-        with handle_errors(session.session):
+        with handle_errors(), session.session.begin_nested():
             if not (
                 room := get_room(
                     building_id=form.building.data.id,
@@ -139,7 +139,7 @@ def host_create():
     # existence verified by validator
     owner = User.get(form.owner_id.data)
     try:
-        with handle_errors(session.session):
+        with handle_errors(), session.session.begin_nested():
             if not (
                 room := get_room(
                     # TODO I know this is a double query,
@@ -237,7 +237,7 @@ def interface_delete(interface_id):
         return default_response()
 
     try:
-        with handle_errors(session.session):
+        with handle_errors(), session.session.begin_nested():
             lib_host.interface_delete(interface, current_user)
             session.session.commit()
     except PycroftException:  # pragma: no cover
@@ -284,7 +284,7 @@ def interface_edit(interface_id):
     ips = {IPv4Address(ip) for ip in form.ips.data}
 
     try:
-        with handle_errors(session.session):
+        with handle_errors(), session.session.begin_nested():
             lib_host.interface_edit(
                 interface, form.name.data, form.mac.data, ips,
                 processor=current_user
