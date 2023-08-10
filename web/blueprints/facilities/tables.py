@@ -82,7 +82,7 @@ class PatchPortTable(BootstrapTable):
     edit_link = BtnColumn('Editieren', hide_if=no_inf_change)
     delete_link = BtnColumn('Löschen', hide_if=no_inf_change)
 
-    def __init__(self, *a, room_id=None, **kw):
+    def __init__(self, *a, room_id=None, **kw) -> None:
         super().__init__(*a, **kw)
 
         self.room_id = room_id

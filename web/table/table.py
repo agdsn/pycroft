@@ -380,7 +380,7 @@ class BootstrapTable(metaclass=BootstrapTableMeta):
     class Meta:
         table_args = {'data-toggle': "table", "data-icons-prefix": "fa"}
 
-    def __init__(self, data_url, table_args=None):
+    def __init__(self, data_url, table_args=None) -> None:
         self.data_url = enforce_url_params(data_url, dict(self._enforced_url_params))
         # un-freeze the classes table args so it can be modified on the instance
         self.table_args = dict(self._table_args)
