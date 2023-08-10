@@ -426,31 +426,37 @@ def patch_port_edit(switch_room_id, patch_port_id) -> ResponseReturnValue:
                          level=patch_port.room.level,
                          room_number=patch_port.room.number)
 
-    if form.validate_on_submit():
-        room = Room.q.filter_by(building=form.building.data,
-                                level=form.level.data,
-                                number=form.room_number.data).one()
-        sess = session.session
-        try:
-            with sess.begin_nested():
-                edit_patch_port(patch_port, form.name.data, room, current_user)
-        except PatchPortAlreadyExistsException:
-            form.name.errors.append(
-                "Ein Patch-Port mit dieser Bezeichnung existiert bereits in diesem Switchraum."
-            )
-        else:
-            sess.commit()
-            flash("Der Patch-Port wurde erfolgreich bearbeitet.", "success")
-            return redirect(url_for('.room_show', room_id=switch_room_id, _anchor="patchpanel"))
+    def default_response():
+        form_args = {
+            "form": form,
+            "cancel_to": url_for(
+                ".room_show", room_id=switch_room_id, _anchor="patchpanel"
+            ),
+        }
+        return render_template(
+            "generic_form.html",
+            page_title="Patch-Port bearbeiten",
+            form_args=form_args,
+        )
 
-    form_args = {
-        'form': form,
-        'cancel_to': url_for('.room_show', room_id=switch_room_id, _anchor="patchpanel")
+    if not form.validate_on_submit():
+        return default_response()
+
+    room = Room.q.filter_by(
+        building=form.building.data, level=form.level.data, number=form.room_number.data
+    ).one()
+    sess = session.session
+    _handlers = {
+        PatchPortAlreadyExistsException: lambda _: form.name.errors.append(
+            "Ein Patch-Port mit dieser Bezeichnung existiert bereits in diesem Switchraum."
+        )
     }
+    with handle_errors(default_response, _handlers), sess.begin_nested():
+        edit_patch_port(patch_port, form.name.data, room, current_user)
+    sess.commit()
 
-    return render_template('generic_form.html',
-                           page_title="Patch-Port bearbeiten",
-                           form_args=form_args)
+    flash("Der Patch-Port wurde erfolgreich bearbeitet.", "success")
+    return redirect(url_for(".room_show", room_id=switch_room_id, _anchor="patchpanel"))
 
 
 @bp.route('/room/<int:switch_room_id>/patch-port/<int:patch_port_id>/delete', methods=['GET', 'POST'])
