@@ -8,6 +8,7 @@ from flask import (
     g,
     make_response,
 )
+from flask.typing import ResponseValue
 from flask_babel import Babel
 from flask_login import current_user
 from jinja2 import select_autoescape
@@ -146,11 +147,11 @@ def make_app(debug=False, hades_logs=True):
         return render_template('error.html', error=message), code
 
     @app.route('/')
-    def redirect_to_index():
+    def redirect_to_index() -> ResponseValue:
         return redirect(url_for('user.overview'))
 
     @app.route('/debug-sentry')
-    def debug_sentry():
+    def debug_sentry() -> ResponseValue:  # type: ignore
         app.logger.warning("Someone used the debug-sentry endpoint! Also, this is a test warning.")
         app.logger.info("An info log for inbetween")
         app.logger.error("Someone used the debug-sentry endpoint! Also, this is a test error.",
