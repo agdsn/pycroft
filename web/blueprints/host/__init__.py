@@ -1,6 +1,7 @@
 import re
 
 from flask import Blueprint, flash, abort, redirect, url_for, render_template, request
+from flask.typing import ResponseValue
 from flask_login import current_user
 from flask_wtf import FlaskForm
 from ipaddr import IPv4Address
@@ -27,7 +28,7 @@ access = BlueprintAccess(bp, required_properties=['user_show'])
 
 @bp.route('/<int:host_id>/delete', methods=['GET', 'POST'])
 @access.require('hosts_change')
-def host_delete(host_id):
+def host_delete(host_id) -> ResponseValue:
     if (host := Host.get(host_id)) is None:
         flash("Host existiert nicht.", 'error')
         abort(404)
@@ -60,7 +61,7 @@ def host_delete(host_id):
 
 @bp.route('/<int:host_id>/edit', methods=['GET', 'POST'])
 @access.require('hosts_change')
-def host_edit(host_id):
+def host_edit(host_id) -> ResponseValue:
     if (host := Host.get(host_id)) is None:
         flash("Host existiert nicht.", 'error')
         abort(404)
@@ -107,7 +108,7 @@ def host_edit(host_id):
 
 @bp.route('/create', methods=['GET', 'POST'])
 @access.require('hosts_change')
-def host_create():
+def host_create() -> ResponseValue:
     user = get_user_or_404(request.args.get('user_id', None))
     form = HostForm(owner_id=user.id)
 
@@ -154,7 +155,7 @@ def host_create():
 
 
 @bp.route("/<int:host_id>/interfaces")
-def host_interfaces_json(host_id):
+def host_interfaces_json(host_id) -> ResponseValue:
     if (host := Host.get(host_id)) is None:
         flash("Host existiert nicht.", 'error')
         abort(404)
@@ -188,7 +189,7 @@ def host_interfaces_json(host_id):
 
 
 @bp.route("/<int:host_id>/interfaces/table")
-def interface_table(host_id):
+def interface_table(host_id) -> ResponseValue:
     return render_template('host/interface_table.html',
                            interface_table=InterfaceTable(
                                data_url=url_for(".host_interfaces_json",
@@ -199,7 +200,7 @@ def interface_table(host_id):
 
 @bp.route('/interface/<int:interface_id>/delete', methods=['GET', 'POST'])
 @access.require('hosts_change')
-def interface_delete(interface_id):
+def interface_delete(interface_id) -> ResponseValue:
     if (interface := Interface.get(interface_id)) is None:
         flash("Interface existiert nicht.", 'error')
         abort(404)
@@ -235,7 +236,7 @@ def interface_delete(interface_id):
 
 @bp.route('/interface/<int:interface_id>/edit', methods=['GET', 'POST'])
 @access.require('hosts_change')
-def interface_edit(interface_id):
+def interface_edit(interface_id) -> ResponseValue:
     if (interface := Interface.get(interface_id)) is None:
         flash("Interface existiert nicht.", 'error')
         abort(404)
@@ -278,7 +279,7 @@ def interface_edit(interface_id):
 
 @bp.route('/<int:host_id>/interface/create', methods=['GET', 'POST'])
 @access.require('hosts_change')
-def interface_create(host_id):
+def interface_create(host_id) -> ResponseValue:
     if (host := Host.get(host_id)) is None:
         flash("Host existiert nicht.", 'error')
         abort(404)
@@ -360,7 +361,7 @@ def _host_row(host, user_id) -> HostRow:
 
 
 @bp.route("/<int:user_id>")
-def user_hosts_json(user_id):
+def user_hosts_json(user_id) -> ResponseValue:
     user = get_user_or_404(user_id)
     return TableResponse[HostRow](
         items=[_host_row(host, user_id) for host in user.hosts]
@@ -368,7 +369,7 @@ def user_hosts_json(user_id):
 
 
 @bp.route("/interface-manufacturer/<string:mac>")
-def interface_manufacturer_json(mac):
+def interface_manufacturer_json(mac) -> ResponseValue:
     if not re.match(mac_regex, mac):
         return abort(400)
     return {"manufacturer": get_interface_manufacturer(mac)}
