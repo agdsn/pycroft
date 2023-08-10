@@ -16,7 +16,7 @@ repos:
   hooks:
     - id: ruff
 - repo: https://github.com/returntocorp/semgrep
-  rev: 'v0.91.0'
+  rev: 'v1.31.2'
   hooks:
   - id: semgrep
     # See semgrep.dev/rulesets to select a ruleset and copy its URL
