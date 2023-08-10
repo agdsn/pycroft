@@ -50,12 +50,9 @@ def host_delete(host_id):
     if not form.is_submitted():
         return default_response()
 
-    try:
-        with handle_errors(), session.session.begin_nested():
-            lib_host.host_delete(host, current_user)
-        session.session.commit()
-    except PycroftException:  # pragma: no cover
-        return default_response()
+    with handle_errors(error_response=default_response), session.session.begin_nested():
+        lib_host.host_delete(host, current_user)
+    session.session.commit()
 
     flash("Host erfolgreich gelöscht.", 'success')
     return redirect(url_for('user.user_show', user_id=owner.id, _anchor='hosts'))
@@ -88,24 +85,18 @@ def host_edit(host_id):
 
     # existence guaranteed by validator
     owner = User.get(form.owner_id.data)
-    try:
-        with handle_errors(), session.session.begin_nested():
-            if not (
-                room := get_room(
-                    building_id=form.building.data.id,
-                    level=form.level.data,
-                    room_number=form.room_number.data,
-                )
-            ):
-                form.room_number.errors.append("room does not exist")
-                return default_response()
-            lib_host.host_edit(
-                host, owner, room, form.name.data,
-                processor=current_user
+    with handle_errors(error_response=default_response), session.session.begin_nested():
+        if not (
+            room := get_room(
+                building_id=form.building.data.id,
+                level=form.level.data,
+                room_number=form.room_number.data,
             )
-        session.session.commit()
-    except PycroftException:  # pragma: no cover
-        return default_response()
+        ):
+            form.room_number.errors.append("room does not exist")
+            return default_response()
+        lib_host.host_edit(host, owner, room, form.name.data, processor=current_user)
+    session.session.commit()
 
     flash("Host erfolgreich bearbeitet.", 'success')
     return redirect(url_for(
@@ -138,26 +129,21 @@ def host_create():
 
     # existence verified by validator
     owner = User.get(form.owner_id.data)
-    try:
-        with handle_errors(), session.session.begin_nested():
-            if not (
-                room := get_room(
-                    # TODO I know this is a double query,
-                    # but we should fix this on the `get_room` side.
-                    building_id=form.building.data.id,
-                    level=form.level.data,
-                    room_number=form.room_number.data,
-                )
-            ):
-                form.room_number.errors.append("room does not exist")
-                return default_response()
-
-            host = lib_host.host_create(
-                owner, room, form.name.data, processor=current_user
+    with handle_errors(error_response=default_response), session.session.begin_nested():
+        if not (
+            room := get_room(
+                # TODO I know this is a double query,
+                # but we should fix this on the `get_room` side.
+                building_id=form.building.data.id,
+                level=form.level.data,
+                room_number=form.room_number.data,
             )
-        session.session.commit()
-    except PycroftException:  # pragma: no cover
-        return default_response()
+        ):
+            form.room_number.errors.append("room does not exist")
+            return default_response()
+
+        host = lib_host.host_create(owner, room, form.name.data, processor=current_user)
+    session.session.commit()
 
     flash("Host erfolgreich erstellt.", "success")
     return redirect(
@@ -236,12 +222,9 @@ def interface_delete(interface_id):
     if not form.is_submitted():
         return default_response()
 
-    try:
-        with handle_errors(), session.session.begin_nested():
-            lib_host.interface_delete(interface, current_user)
-        session.session.commit()
-    except PycroftException:  # pragma: no cover
-        return default_response()
+    with handle_errors(error_response=default_response), session.session.begin_nested():
+        lib_host.interface_delete(interface, current_user)
+    session.session.commit()
 
     flash("Interface erfolgreich gelöscht.", 'success')
     return redirect(url_for(
@@ -283,15 +266,11 @@ def interface_edit(interface_id):
 
     ips = {IPv4Address(ip) for ip in form.ips.data}
 
-    try:
-        with handle_errors(), session.session.begin_nested():
-            lib_host.interface_edit(
-                interface, form.name.data, form.mac.data, ips,
-                processor=current_user
-            )
-        session.session.commit()
-    except PycroftException:  # pragma: no cover
-        return default_response()
+    with handle_errors(error_response=default_response), session.session.begin_nested():
+        lib_host.interface_edit(
+            interface, form.name.data, form.mac.data, ips, processor=current_user
+        )
+    session.session.commit()
 
     flash("Interface erfolgreich bearbeitet.", 'success')
     return redirect(url_for('user.user_show', user_id=interface.host.owner_id, _anchor='hosts'))
