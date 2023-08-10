@@ -17,28 +17,6 @@ from pycroft.model.types import InvalidMACAddressException
 logger = logging.getLogger('web.exc')
 
 
-def web_execute(function, success_message, *args, **kwargs):
-    from warnings import warn
-    warn("Use `handle_errors` context manager instead.", DeprecationWarning)
-    try:
-        result = function(*args, **kwargs)
-
-        if success_message:
-            flash(success_message, 'success')
-
-        return result, True
-    except PycroftException as e:
-        flash(exception_flash_message(e), 'error')
-        session.session.rollback()
-    except Exception as e:
-        traceback.print_exc()
-        flash(f"Es ist ein unerwarteter Fehler aufgetreten: {e}", "error")
-
-    session.session.rollback()
-
-    return None, False
-
-
 class UnexpectedException(PycroftException):
     pass
 
