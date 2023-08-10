@@ -1230,10 +1230,8 @@ def member_request_delete(pre_member_id: int):
 def member_request_finish(pre_member_id: int):
     prm = get_pre_member_or_404(pre_member_id)
 
-    def default_response():
-        return redirect(url_for(".member_request_edit", pre_member_id=prm.id))
+    default_response = redirect(url_for(".member_request_edit", pre_member_id=prm.id))
 
-    # TODO make `error_response` accept non-callable instead
     with handle_errors(error_response=default_response), session.session.begin_nested():
         user = finish_member_request(
             prm, processor=current_user, ignore_similar_name=True

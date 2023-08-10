@@ -42,7 +42,9 @@ def flash_and_wrap_errors() -> t.Iterator[None]:
 @contextmanager
 # TODO rename to „wrap_errors“; `handle` suggests „I'll deal with everything“, which is incorrect
 def handle_errors(
-    error_response: t.Callable[[], ResponseReturnValue] | None = None,
+    error_response: t.Callable[[], ResponseReturnValue]
+    | ResponseReturnValue
+    | None = None,
 ) -> t.Iterator[SessionTransaction]:
     """Wraps errors as `PycroftErrors` and turns them into a flash message.
 
@@ -68,7 +70,8 @@ def handle_errors(
         with cm as n:
             yield n
     except PycroftException:
-        abort(make_response(error_response()))
+        resp = error_response() if callable(error_response) else error_response
+        abort(make_response(resp))
 
 
 def exception_flash_message(e: PycroftException) -> str:
