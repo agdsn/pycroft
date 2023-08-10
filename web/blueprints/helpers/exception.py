@@ -62,40 +62,24 @@ def flash_and_wrap_errors() -> t.Iterator[None]:
 
 
 @contextmanager
-def flash_and_wrap_errors_in_transaction(
-    session: Session,
-) -> t.Iterator[SessionTransaction]:
-    with flash_and_wrap_errors():
-        with session.begin_nested() as n:
-            yield n
-
-
-@contextmanager
 # TODO rename to „wrap_errors“; `handle` suggests „I'll deal with everything“, which is incorrect
 def handle_errors(
-    session: Session | None = None,
     error_response: t.Callable[[], ResponseReturnValue] | None = None,
 ) -> t.Iterator[SessionTransaction]:
     """Wraps errors as `PycroftErrors` and turns them into a flash message.
 
-    :param session: DEPRECATED – if given, invokes `session.begin_nested()`,
-        causing a rollback on error.  This exists for compatibility reasons;
-        it is generally best to invoke `begin_nested` explicitly.
+    Example:
+
+        def default_response(): return render_template("template.html")
+
+        with handle_errors(error_response=default_response), session.begin_nested():
+            ... # call some `lib` functions
+        session.commit()
+
     :param error_response: if given, this will be called when a `PycroftException` is caught
         and the return value is used as the response via :py:function:`flask.abort`.
     """
-    if session:
-        import warnings
-
-        warnings.warn(
-            "Use `session.begin_nested()` explicitly instead of passing the session "
-            "parameter to `handle_errors`.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        cm = flash_and_wrap_errors_in_transaction(session)
-    else:
-        cm = flash_and_wrap_errors()
+    cm = flash_and_wrap_errors()
 
     if error_response is None:
         with cm as n:
