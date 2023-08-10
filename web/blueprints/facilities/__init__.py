@@ -467,25 +467,30 @@ def patch_port_delete(switch_room_id, patch_port_id) -> ResponseReturnValue:
 
     form = Form()
 
-    if form.validate_on_submit():
+    def default_response():
+        form_args = {
+            "form": form,
+            "cancel_to": url_for(
+                ".room_show", room_id=switch_room_id, _anchor="patchpanel"
+            ),
+            "submit_text": "Löschen",
+            "actions_offset": 0,
+        }
+        return render_template(
+            "generic_form.html", page_title="Patch-Port löschen", form_args=form_args
+        )
+
+    if not form.validate_on_submit():
+        return default_response()
+
+    with handle_errors(default_response), session.session.begin_nested():
         delete_patch_port(patch_port, current_user)
+    session.session.commit()
 
-        session.session.commit()
+    flash("Der Patch-Port wurde erfolgreich gelöscht.", "success")
+    return redirect(url_for(".room_show", room_id=switch_room_id, _anchor="patchpanel"))
 
-        flash("Der Patch-Port wurde erfolgreich gelöscht.", "success")
 
-        return redirect(url_for('.room_show', room_id=switch_room_id, _anchor="patchpanel"))
-
-    form_args = {
-        'form': form,
-        'cancel_to': url_for('.room_show', room_id=switch_room_id, _anchor="patchpanel"),
-        'submit_text': 'Löschen',
-        'actions_offset': 0
-    }
-
-    return render_template('generic_form.html',
-                           page_title="Patch-Port löschen",
-                           form_args=form_args)
 
 
 @bp.route('/room/<int:room_id>', methods=['GET', 'POST'])
