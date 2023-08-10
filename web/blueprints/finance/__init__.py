@@ -1010,7 +1010,7 @@ def transaction_confirm_all():
     try:
         with handle_errors(), session.begin_nested():
             lib.finance.transaction_confirm_all(current_user)
-            session.commit()
+        session.commit()
     except PycroftException:  # pragma: no cover
         return default_response()
 

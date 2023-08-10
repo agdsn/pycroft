@@ -53,7 +53,7 @@ def host_delete(host_id):
     try:
         with handle_errors(), session.session.begin_nested():
             lib_host.host_delete(host, current_user)
-            session.session.commit()
+        session.session.commit()
     except PycroftException:  # pragma: no cover
         return default_response()
 
@@ -103,7 +103,7 @@ def host_edit(host_id):
                 host, owner, room, form.name.data,
                 processor=current_user
             )
-            session.session.commit()
+        session.session.commit()
     except PycroftException:  # pragma: no cover
         return default_response()
 
@@ -155,7 +155,7 @@ def host_create():
             host = lib_host.host_create(
                 owner, room, form.name.data, processor=current_user
             )
-            session.session.commit()
+        session.session.commit()
     except PycroftException:  # pragma: no cover
         return default_response()
 
@@ -239,7 +239,7 @@ def interface_delete(interface_id):
     try:
         with handle_errors(), session.session.begin_nested():
             lib_host.interface_delete(interface, current_user)
-            session.session.commit()
+        session.session.commit()
     except PycroftException:  # pragma: no cover
         return default_response()
 
@@ -289,7 +289,7 @@ def interface_edit(interface_id):
                 interface, form.name.data, form.mac.data, ips,
                 processor=current_user
             )
-            session.session.commit()
+        session.session.commit()
     except PycroftException:  # pragma: no cover
         return default_response()
 

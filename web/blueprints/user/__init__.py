@@ -644,7 +644,7 @@ def create():
                 plain_user_password=plain_password,
                 plain_wifi_password=plain_wifi_password or ''
             )
-            session.session.commit()
+        session.session.commit()
     except PycroftException:
         return default_response()
 
@@ -688,7 +688,7 @@ def create_non_resident():
                 plain_user_password=plain_password,
                 plain_wifi_password=plain_wifi_password or ''
             )
-            session.session.commit()
+        session.session.commit()
     except PycroftException:
         return default_response()
 
@@ -736,7 +736,7 @@ def move(user_id):
                 comment=form.comment.data,
                 when=when
             )
-            sess.commit()
+        sess.commit()
     except PycroftException:
         return default_response()
 
@@ -754,7 +754,7 @@ def move(user_id):
                 plain_user_password="********",
                 generation_purpose="user moved",
             )
-            sess.commit()
+        sess.commit()
     except PycroftException:
         return default_response()
     flask_session["user_sheet"] = sheet.id
@@ -1035,7 +1035,7 @@ def move_out(user_id):
                 when=session.utcnow() if form.now.data else utc.with_min_time(form.when.data),
                 end_membership=form.end_membership.data
             )
-            session.session.commit()
+        session.session.commit()
     except PycroftException:
         return default_response()
 
@@ -1082,7 +1082,7 @@ def move_in(user_id):
                 processor=current_user,
                 when=when,
             )
-            session.session.commit()
+        session.session.commit()
     except PycroftException:
         return default_response()
 
@@ -1243,7 +1243,7 @@ def member_request_finish(pre_member_id: int):
     try:
         with handle_errors(), session.session.begin_nested():
             user = finish_member_request(prm, processor=current_user, ignore_similar_name=True)
-            session.session.commit()
+        session.session.commit()
     except PycroftException:
         return redirect(url_for(".member_request_edit", pre_member_id=prm.id))
 
