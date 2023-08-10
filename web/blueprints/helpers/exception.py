@@ -55,13 +55,16 @@ def flash_and_wrap_errors(
         raise UnexpectedException from e
 
 
+ErrorHandlerMap = dict[type[PycroftException], ErrorHandler]
+
+
 @contextmanager
 # TODO rename to „wrap_errors“; `handle` suggests „I'll deal with everything“, which is incorrect
 def handle_errors(
     error_response: t.Callable[[], ResponseReturnValue]
     | ResponseReturnValue
     | None = None,
-    handler_map: dict[type[PycroftException], ErrorHandler] | None = None,
+    handler_map: ErrorHandlerMap | None = None,
 ) -> t.Iterator[SessionTransaction]:
     """Wraps errors as `PycroftErrors` and turns them into a flash message.
 

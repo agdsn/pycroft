@@ -9,6 +9,7 @@
     :copyright: (c) 2012 by AG DSN.
 """
 from collections import defaultdict
+import typing as t
 
 from flask import (
     Blueprint,
@@ -70,7 +71,7 @@ from .tables import (
     PatchPortRow,
     RoomOvercrowdedRow,
 )
-from ..helpers.exception import handle_errors
+from ..helpers.exception import handle_errors, ErrorHandlerMap
 from ..helpers.log_tables import LogTableRow
 
 bp = Blueprint('facilities', __name__)
@@ -131,7 +132,7 @@ def site_show(site_id) -> ResponseReturnValue:
 
 def determine_building_or_404(
     id: int | None = None,
-    shortname: int | None = None,
+    shortname: str | None = None,
 ) -> Building:
     building = pycroft.lib.facilities.determine_building(id=id, shortname=shortname)
     if building is None:
@@ -195,7 +196,7 @@ def room_create() -> ResponseReturnValue:
             "Ein Raum mit diesem Namen existiert bereits in dieser Etage!"
         )
 
-    _handlers = {RoomAlreadyExistsException: _append_err}
+    _handlers: ErrorHandlerMap = {RoomAlreadyExistsException: _append_err}
     with handle_errors(
         error_response=default_response, handler_map=_handlers
     ), sess.begin_nested():
@@ -262,7 +263,7 @@ def room_edit(room_id) -> ResponseReturnValue:
             "Ein Raum mit diesem Namen existiert bereits in dieser Etage!"
         )
 
-    _handlers = {RoomAlreadyExistsException: _append_err}
+    _handlers: ErrorHandlerMap = {RoomAlreadyExistsException: _append_err}
     with handle_errors(default_response, _handlers), sess.begin_nested():
         address = get_or_create_address(**form.address_kwargs)
         edit_room(
@@ -320,15 +321,16 @@ def building_level_rooms_json(
                      CurrentProperty.property_name == 'network_access')))
         )
 
+    # TODO remove mypy suppression below if moved to `select`
     rooms_users_q = (session.session.query(Room, user)
                      .options(joinedload(user.current_properties))
                      .filter(and_(Room.building == building, Room.level == level))
                      .outerjoin(user, user_join_condition))
 
-    level_inhabitants = defaultdict(lambda: [])
+    level_inhabitants: dict[Room, list[User]] = defaultdict(lambda: [])
     for room, user in rooms_users_q.all():
         if user is not None:
-            level_inhabitants[room].append(user)
+            level_inhabitants[room].append(t.cast(User, user))
         else:
             # Ensure room is in level_inhabitants
             level_inhabitants[room]
@@ -348,8 +350,8 @@ def building_level_rooms_json(
 
 
 def get_switch_room_or_redirect(switch_room_id: int) -> Room:
-    switch_room = Room.get(switch_room_id)
-    if not switch_room:
+    switch_room = session.session.get(Room, switch_room_id)
+    if switch_room is None:
         flash(f"Raum mit ID {switch_room_id} nicht gefunden!", "error")
         abort(redirect(url_for(".overview")))
     if not switch_room.is_switch_room:
@@ -385,7 +387,7 @@ def patch_port_create(switch_room_id) -> ResponseReturnValue:
         building=form.building.data, level=form.level.data, number=form.room_number.data
     ).one()
     sess = session.session
-    _handlers = {
+    _handlers: ErrorHandlerMap = {
         PatchPortAlreadyExistsException: lambda _: form.name.errors.append(
             "Ein Patch-Port mit dieser Bezeichnung existiert bereits in diesem Zimmer."
         )
@@ -405,8 +407,8 @@ def patch_port_create(switch_room_id) -> ResponseReturnValue:
 def get_patch_port_or_redirect(
     patch_port_id: int, in_switch_room: Room | None = None
 ) -> PatchPort:
-    patch_port = PatchPort.get(patch_port_id)
-    if not patch_port:
+    patch_port = session.session.get(PatchPort, patch_port_id)
+    if patch_port is None:
         flash(f"Patch-Port mit ID {patch_port_id} nicht gefunden!", "error")
         abort(redirect(url_for(".overview")))
     if in_switch_room and patch_port.switch_room != in_switch_room:
@@ -446,7 +448,7 @@ def patch_port_edit(switch_room_id, patch_port_id) -> ResponseReturnValue:
         building=form.building.data, level=form.level.data, number=form.room_number.data
     ).one()
     sess = session.session
-    _handlers = {
+    _handlers: ErrorHandlerMap = {
         PatchPortAlreadyExistsException: lambda _: form.name.errors.append(
             "Ein Patch-Port mit dieser Bezeichnung existiert bereits in diesem Switchraum."
         )
