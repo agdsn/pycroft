@@ -11,6 +11,7 @@
 """
 
 from flask import Blueprint, render_template, flash, redirect, url_for, request
+from flask.typing import ResponseValue
 from flask_login import (
     AnonymousUserMixin, LoginManager, current_user, login_required, login_user,
     logout_user)
@@ -38,7 +39,7 @@ def load_user(userid):
 
 
 @bp.route("/login", methods=("GET", "POST"))
-def login():
+def login() -> ResponseValue:
     if current_user is not None and current_user.is_authenticated:
         flash(f'Sie sind bereits als "{current_user.name}" angemeldet!', "warning")
         return redirect(url_for('user.overview'))
@@ -55,7 +56,7 @@ def login():
 
 @bp.route("/logout")
 @login_required
-def logout():
+def logout() -> ResponseValue:
     logout_user()
     flash("Sie sind jetzt abgemeldet!", "info")
     return redirect(url_for(".login"))
