@@ -1,8 +1,10 @@
 import logging
 import traceback
+import typing as t
 from contextlib import contextmanager
 
-from flask import flash
+from flask import flash, abort, make_response
+from flask.typing import ResponseReturnValue
 from sqlalchemy.orm import Session, SessionTransaction
 
 from pycroft.exc import PycroftException
@@ -42,14 +44,13 @@ class UnexpectedException(PycroftException):
 
 
 @contextmanager
-def handle_errors(session: Session) -> SessionTransaction:
+def flash_and_wrap_errors() -> t.Iterator[None]:
     """Flash a message, roll back the session, and wrap unknown errors in a ``PycroftException``
 
     :raises PycroftException:
     """
     try:
-        with session.begin_nested() as n:
-            yield n
+        yield
     except PycroftException as e:
         flash(exception_flash_message(e), 'error')
         raise
@@ -58,6 +59,54 @@ def handle_errors(session: Session) -> SessionTransaction:
         logger.exception("Unexpected error when handling web response", stack_info=True)
         flash(f"Es ist ein unerwarteter Fehler aufgetreten: {e}", "error")
         raise UnexpectedException from e
+
+
+@contextmanager
+def flash_and_wrap_errors_in_transaction(
+    session: Session,
+) -> t.Iterator[SessionTransaction]:
+    with flash_and_wrap_errors():
+        with session.begin_nested() as n:
+            yield n
+
+
+@contextmanager
+# TODO rename to „wrap_errors“; `handle` suggests „I'll deal with everything“, which is incorrect
+def handle_errors(
+    session: Session | None = None,
+    error_response: t.Callable[[], ResponseReturnValue] | None = None,
+) -> t.Iterator[SessionTransaction]:
+    """Wraps errors as `PycroftErrors` and turns them into a flash message.
+
+    :param session: DEPRECATED – if given, invokes `session.begin_nested()`,
+        causing a rollback on error.  This exists for compatibility reasons;
+        it is generally best to invoke `begin_nested` explicitly.
+    :param error_response: if given, this will be called when a `PycroftException` is caught
+        and the return value is used as the response via :py:function:`flask.abort`.
+    """
+    if session:
+        import warnings
+
+        warnings.warn(
+            "Use `session.begin_nested()` explicitly instead of passing the session "
+            "parameter to `handle_errors`.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        cm = flash_and_wrap_errors_in_transaction(session)
+    else:
+        cm = flash_and_wrap_errors()
+
+    if error_response is None:
+        with cm as n:
+            yield n
+        return
+
+    try:
+        with cm as n:
+            yield n
+    except PycroftException:
+        abort(make_response(error_response()))
 
 
 def exception_flash_message(e: PycroftException) -> str:
