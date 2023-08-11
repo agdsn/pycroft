@@ -47,8 +47,8 @@ if TYPE_CHECKING:
 
 def set_scoped_session(scoped_session: orm.Session) -> None:
     Session.remove()
-    # noinspection PyCallByClass
-    object.__setattr__(Session, '_LocalProxy__local', lambda: scoped_session)
+    object.__setattr__(Session, "_LocalProxy__wrapped", lambda: scoped_session)
+    object.__setattr__(Session, "_get_current_object", lambda: scoped_session)
 
 
 F = TypeVar('F', bound=Callable[..., Any])
