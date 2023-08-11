@@ -3,7 +3,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from collections import OrderedDict, namedtuple
 
-from flask import _request_ctx_stack
+from flask.globals import request_ctx
 
 LinkedScript = namedtuple("LinkedScript", ("url", "mime_type"))
 PageResources = namedtuple("PageResources", ("script_files", "ready_scripts",
@@ -16,7 +16,7 @@ class PageResourceRegistry:
     @property
     def page_resources(self):
         """Page resources are attached to Flask's current request context."""
-        ctx = _request_ctx_stack.top
+        ctx = request_ctx
         if not hasattr(ctx, "page_resources"):
             ctx.page_resources = PageResources(OrderedDict(), list(),
                                                OrderedDict())

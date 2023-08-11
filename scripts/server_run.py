@@ -11,7 +11,8 @@ import time
 from typing import Callable
 
 from babel.support import Translations
-from flask import _request_ctx_stack, g, request
+from flask import g, request
+from flask.globals import request_ctx
 from sqlalchemy.orm import scoped_session, sessionmaker
 from werkzeug.middleware.profiler import ProfilerMiddleware
 
@@ -71,11 +72,15 @@ def prepare_server(args) -> tuple[PycroftFlask, Callable]:
     connection, engine = try_create_connection(connection_string, wait_for_db, app.logger,
                                                args.profile)
 
-    set_scoped_session(scoped_session(sessionmaker(bind=engine),
-                                      scopefunc=lambda: _request_ctx_stack.top))
+    set_scoped_session(
+        scoped_session(
+            sessionmaker(bind=engine),
+            scopefunc=lambda: request_ctx._get_current_object(),
+        )
+    )
 
     def lookup_translation():
-        ctx = _request_ctx_stack.top
+        ctx = request_ctx
         if ctx is None:
             return None
         translations = getattr(ctx, 'pycroft_translations', None)
