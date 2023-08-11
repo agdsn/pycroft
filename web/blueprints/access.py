@@ -6,7 +6,7 @@ from itertools import chain
 from flask.globals import current_app
 from flask import request, Blueprint, abort
 from flask_login import current_user
-from werkzeug.wrappers import BaseResponse
+from werkzeug import Response
 
 from web.blueprints import bake_endpoint
 
@@ -83,9 +83,9 @@ class BlueprintAccess:
             return f
         return decorator
 
-    def _check_access(self) -> BaseResponse | None:
+    def _check_access(self) -> Response | None:
         if not current_user.is_authenticated:
-            return t.cast(BaseResponse, current_app.login_manager.unauthorized())  # type: ignore[attr-defined]
+            return t.cast(Response, current_app.login_manager.unauthorized())  # type: ignore[attr-defined]
         endpoint = request.endpoint
         properties = chain(self.required_properties,
                            self.endpoint_properties_map.get(endpoint, ()))
