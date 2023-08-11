@@ -1,4 +1,5 @@
 import os
+import typing as t
 
 import jinja2.ext
 import logging
@@ -151,7 +152,7 @@ def make_app(debug=False, hades_logs=True):
         return redirect(url_for('user.overview'))
 
     @app.route('/debug-sentry')
-    def debug_sentry() -> ResponseValue:  # type: ignore
+    def debug_sentry() -> t.NoReturn:
         app.logger.warning("Someone used the debug-sentry endpoint! Also, this is a test warning.")
         app.logger.info("An info log for inbetween")
         app.logger.error("Someone used the debug-sentry endpoint! Also, this is a test error.",
