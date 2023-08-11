@@ -31,7 +31,7 @@ from ..concepts.record import UserRecord, GroupRecord
 
 def establish_and_return_session(connection_string: str) -> Session:
     engine = create_engine(connection_string)
-    set_scoped_session(typing.cast(Session, scoped_session(sessionmaker(bind=engine))))
+    set_scoped_session(scoped_session(sessionmaker(bind=engine)))
     return typing.cast(Session, global_session)  # from pycroft.model.session
 
 

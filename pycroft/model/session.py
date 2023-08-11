@@ -9,8 +9,10 @@
 
     :copyright: (c) 2011 by AG DSN.
 """
-from typing import overload, TypeVar, Callable, Any, TYPE_CHECKING, cast
+import typing as t
+from typing import overload, TypeVar, Callable, Any, TYPE_CHECKING
 
+from sqlalchemy.orm import scoped_session
 from werkzeug.local import LocalProxy
 import wrapt
 
@@ -30,8 +32,10 @@ class NullScopedSession:
         pass
 
 
-Session = LocalProxy(lambda: NullScopedSession())
-session: orm.Session = cast(orm.Session, LocalProxy(lambda: Session()))
+Session: scoped_session[orm.Session] = t.cast(
+    scoped_session[orm.Session], LocalProxy(lambda: NullScopedSession())
+)
+session: orm.Session = t.cast(orm.Session, LocalProxy(lambda: Session()))
 
 if TYPE_CHECKING:
     def session():
@@ -45,7 +49,7 @@ if TYPE_CHECKING:
         )
 
 
-def set_scoped_session(scoped_session: orm.Session) -> None:
+def set_scoped_session(scoped_session: scoped_session[orm.Session]) -> None:
     Session.remove()
     object.__setattr__(Session, "_LocalProxy__wrapped", lambda: scoped_session)
     object.__setattr__(Session, "_get_current_object", lambda: scoped_session)
