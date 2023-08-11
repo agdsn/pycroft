@@ -252,7 +252,7 @@ class TestRoomEdit:
         f.UserFactory(address=room.address, room=room)
 
     def test_get_no_room(self, ep, client):
-        with client.flashes_message("Raum.*nicht gefunden", "error"):
+        with client.flashes_message("Raum.*existiert nicht", "error"):
             client.assert_url_response_code(url_for(ep, room_id=999), code=404)
 
     def test_get(self, url, client):

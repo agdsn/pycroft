@@ -219,11 +219,7 @@ def room_create() -> ResponseReturnValue:
 @bp.route('/room/<int:room_id>/create', methods=['GET', 'POST'])
 @access.require('facilities_change')
 def room_edit(room_id: int) -> ResponseReturnValue:
-    room = session.session.get(Room, room_id)
-
-    if not room:
-        flash(f"Raum mit ID {room_id} nicht gefunden!", "error")
-        return redirect(url_for('.overview'))
+    room = get_room_or_404(room_id)
 
     form = EditRoomForm(building=room.building.short_name,
                         level=room.level,
@@ -498,15 +494,18 @@ def patch_port_delete(switch_room_id: int, patch_port_id: int) -> ResponseReturn
 
 
 
+def get_room_or_404(room_id: int) -> Room:
+    room = session.session.get(Room, room_id)
+    if room is None:
+        flash(f"Raum mit id {room_id} existiert nicht", "error")
+        abort(404)
+    return room
+
+
 
 @bp.route('/room/<int:room_id>', methods=['GET', 'POST'])
 def room_show(room_id: int) -> ResponseReturnValue:
-    room = session.session.get(Room, room_id)
-
-    if room is None:
-        flash("Zimmer existiert nicht!", 'error')
-        abort(404)
-
+    room = get_room_or_404(room_id)
     form = RoomLogEntry()
 
     if form.validate_on_submit():
@@ -542,9 +541,7 @@ def room_show(room_id: int) -> ResponseReturnValue:
 
 @bp.route('/room/<int:room_id>/logs/json')
 def room_logs_json(room_id: int) -> ResponseReturnValue:
-    room = session.session.get(Room, room_id)
-    if room is None:
-        abort(404)
+    room = get_room_or_404(room_id)
     return TableResponse[LogTableRow](
         items=[format_room_log_entry(entry) for entry in reversed(room.log_entries)]
     ).model_dump()
@@ -552,11 +549,7 @@ def room_logs_json(room_id: int) -> ResponseReturnValue:
 
 @bp.route('/room/<int:room_id>/patchpanel/json')
 def room_patchpanel_json(room_id: int) -> ResponseReturnValue:
-    room = session.session.get(Room, room_id)
-
-    if not room:
-        abort(404)
-
+    room = get_room_or_404(room_id)
     if not room.is_switch_room:
         abort(400)
 
