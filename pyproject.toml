@@ -84,6 +84,7 @@ filterwarnings = [
     "ignore::DeprecationWarning:flask_wtf.recaptcha.widgets",
     # fixed once this PR goes through: https://github.com/python-babel/flask-babel/pull/230
     "ignore:'locked_cached_property' is deprecated:DeprecationWarning:flask_babel",
+    "ignore:pkg_resources is deprecated:DeprecationWarning:passlib",
 ]
 timeout = "10"
 
