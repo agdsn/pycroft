@@ -81,7 +81,9 @@ filterwarnings = [
     "ignore:.*load_module.*:DeprecationWarning:importlib._bootstrap",
     # fixed in v1.1.2 (unreleased):
     # https://github.com/wtforms/flask-wtf/blob/main/docs/changes.rst#version-112
-    "ignore::DeprecationWarning:flask_wtf.recaptcha.widgets"
+    "ignore::DeprecationWarning:flask_wtf.recaptcha.widgets",
+    # fixed once this PR goes through: https://github.com/python-babel/flask-babel/pull/230
+    "ignore:'locked_cached_property' is deprecated:DeprecationWarning:flask_babel",
 ]
 timeout = "10"
 
