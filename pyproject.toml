@@ -79,6 +79,9 @@ filterwarnings = [
     "ignore::DeprecationWarning:kombu.utils.compat",
     # actually caused by reportlab.
     "ignore:.*load_module.*:DeprecationWarning:importlib._bootstrap",
+    # fixed in v1.1.2 (unreleased):
+    # https://github.com/wtforms/flask-wtf/blob/main/docs/changes.rst#version-112
+    "ignore::DeprecationWarning:flask_wtf.recaptcha.widgets"
 ]
 timeout = "10"
 
