@@ -71,7 +71,7 @@ from .tables import (
     PatchPortRow,
     RoomOvercrowdedRow,
 )
-from ..helpers.exception import handle_errors, ErrorHandlerMap
+from ..helpers.exception import abort_on_error, ErrorHandlerMap
 from ..helpers.log_tables import LogTableRow
 
 bp = Blueprint('facilities', __name__)
@@ -200,9 +200,7 @@ def room_create() -> ResponseReturnValue:
             "Ein Raum mit diesem Namen existiert bereits in dieser Etage!"
         )
     }
-    with handle_errors(
-        error_response=default_response, handler_map=_handlers
-    ), sess.begin_nested():
+    with abort_on_error(default_response, _handlers), sess.begin_nested():
         address = get_or_create_address(**form.address_kwargs)
         room = create_room(
             form.building.data,
@@ -266,7 +264,7 @@ def room_edit(room_id: int) -> ResponseReturnValue:
             "Ein Raum mit diesem Namen existiert bereits in dieser Etage!"
         )
     }
-    with handle_errors(default_response, _handlers), sess.begin_nested():
+    with abort_on_error(default_response, _handlers), sess.begin_nested():
         address = get_or_create_address(**form.address_kwargs)
         edit_room(
             room,
@@ -398,7 +396,7 @@ def patch_port_create(switch_room_id: int) -> ResponseReturnValue:
             "Ein Patch-Port mit dieser Bezeichnung existiert bereits in diesem Zimmer."
         )
     }
-    with handle_errors(default_response, _handlers), sess.begin_nested():
+    with abort_on_error(default_response, _handlers), sess.begin_nested():
         patch_port = create_patch_port(form.name.data, room, switch_room, current_user)
     sess.commit()
 
@@ -459,7 +457,7 @@ def patch_port_edit(switch_room_id: int, patch_port_id: int) -> ResponseReturnVa
             "Ein Patch-Port mit dieser Bezeichnung existiert bereits in diesem Switchraum."
         )
     }
-    with handle_errors(default_response, _handlers), sess.begin_nested():
+    with abort_on_error(default_response, _handlers), sess.begin_nested():
         edit_patch_port(patch_port, form.name.data, room, current_user)
     sess.commit()
 
@@ -491,7 +489,7 @@ def patch_port_delete(switch_room_id: int, patch_port_id: int) -> ResponseReturn
     if not form.validate_on_submit():
         return default_response()
 
-    with handle_errors(default_response), session.session.begin_nested():
+    with abort_on_error(default_response), session.session.begin_nested():
         delete_patch_port(patch_port, current_user)
     session.session.commit()
 

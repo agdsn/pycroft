@@ -110,7 +110,7 @@ from web.blueprints.finance.tables import (
     FinanceRow,
 )
 from web.blueprints.helpers.api import json_agg_core
-from web.blueprints.helpers.exception import handle_errors
+from web.blueprints.helpers.exception import abort_on_error
 from web.blueprints.navigation import BlueprintNavigation
 from web.table.table import (
     TableResponse,
@@ -1008,7 +1008,7 @@ def transaction_confirm_all() -> ResponseReturnValue:
     if not form.is_submitted():
         return default_response()
 
-    with handle_errors(error_response=default_response), session.begin_nested():
+    with abort_on_error(error_response=default_response), session.begin_nested():
         lib.finance.transaction_confirm_all(current_user)
     session.commit()
 

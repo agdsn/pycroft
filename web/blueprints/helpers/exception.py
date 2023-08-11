@@ -60,25 +60,26 @@ ErrorHandlerMap = dict[type[PycroftException], ErrorHandler]
 
 @contextmanager
 # TODO rename to „wrap_errors“; `handle` suggests „I'll deal with everything“, which is incorrect
-def handle_errors(
+def abort_on_error(
     error_response: t.Callable[[], ResponseReturnValue]
     | ResponseReturnValue
     | None = None,
     handler_map: ErrorHandlerMap | None = None,
-) -> t.Iterator[SessionTransaction]:
+) -> t.Iterator[None]:
     """Wraps errors as `PycroftErrors` and turns them into a flash message.
 
     Example:
 
         def default_response(): return render_template("template.html")
 
-        with handle_errors(error_response=default_response), session.begin_nested():
+        with abort_on_error(error_response=default_response), session.begin_nested():
             ... # call some `lib` functions
         session.commit()
 
     :param error_response: if given, this will be called when a `PycroftException` is caught
         and the return value is used as the response via :py:function:`flask.abort`.
-    :param handler_map: specifies what to do with certain exception types.
+    :param handler_map: allows a custom handler for given exception types
+        which will be applied instead of the flash message.
     """
     cm = flash_and_wrap_errors(handler_map)
 

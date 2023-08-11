@@ -56,7 +56,7 @@ from pycroft.model.facilities import Room
 from pycroft.model.swdd import Tenancy
 from pycroft.model.user import User, Membership, BaseUser, RoomHistoryEntry
 from web.blueprints.access import BlueprintAccess
-from web.blueprints.helpers.exception import handle_errors
+from web.blueprints.helpers.exception import abort_on_error
 from web.blueprints.helpers.form import refill_room_data
 from web.blueprints.helpers.user import get_user_or_404, get_pre_member_or_404
 from web.blueprints.host.tables import HostTable
@@ -613,7 +613,7 @@ def create() -> ResponseValue:
         flash("Raum scheint nicht zu existieren…", 'error')
         return default_response()
 
-    with handle_errors(error_response=default_response), session.session.begin_nested():
+    with abort_on_error(default_response), session.session.begin_nested():
         new_user, plain_password = lib.user.create_user(
             name=form.name.data,
             login=form.login.data,
@@ -667,7 +667,7 @@ def create_non_resident() -> ResponseValue:
 
     if not form.validate_on_submit():
         return default_response()
-    with handle_errors(error_response=default_response), session.session.begin_nested():
+    with abort_on_error(default_response), session.session.begin_nested():
         address = lib.user.get_or_create_address(**form.address_kwargs)
         new_user, plain_password = lib.user.create_user(
             name=form.name.data,
@@ -724,7 +724,7 @@ def move(user_id) -> ResponseValue:
     when = form.get_execution_time(now=utcnow)
 
     sess = session.session
-    with handle_errors(error_response=default_response), sess.begin_nested():
+    with abort_on_error(default_response), sess.begin_nested():
         lib.user.move(
             user=user,
             building_id=form.building.data.id,
@@ -741,7 +741,7 @@ def move(user_id) -> ResponseValue:
         return redirect(url_for(".user_show", user_id=user.id))
 
     flash("Benutzer umgezogen", "success")
-    with handle_errors(error_response=default_response), sess.begin_nested():
+    with abort_on_error(default_response), sess.begin_nested():
         sheet = lib.user.store_user_sheet(
             True,
             False,
@@ -1019,7 +1019,7 @@ def move_out(user_id) -> ResponseValue:
         return default_response()
 
     when = session.utcnow() if form.now.data else utc.with_min_time(form.when.data)
-    with handle_errors(error_response=default_response), session.session.begin_nested():
+    with abort_on_error(default_response), session.session.begin_nested():
         lib.user.move_out(
             user=user,
             comment=form.comment.data,
@@ -1063,7 +1063,7 @@ def move_in(user_id) -> ResponseValue:
         return default_response()
 
     when = session.utcnow() if form.now.data else utc.with_min_time(form.when.data)
-    with handle_errors(error_response=default_response), session.session.begin_nested():
+    with abort_on_error(default_response), session.session.begin_nested():
         lib.user.move_in(
             user=user,
             building_id=form.building.data.id,
@@ -1234,7 +1234,7 @@ def member_request_finish(pre_member_id: int) -> ResponseValue:
 
     default_response = redirect(url_for(".member_request_edit", pre_member_id=prm.id))
 
-    with handle_errors(error_response=default_response), session.session.begin_nested():
+    with abort_on_error(default_response), session.session.begin_nested():
         user = finish_member_request(
             prm, processor=current_user, ignore_similar_name=True
         )

@@ -15,7 +15,7 @@ from pycroft.model import session
 from pycroft.model.host import Host, Interface
 from pycroft.model.user import User
 from web.blueprints.access import BlueprintAccess
-from web.blueprints.helpers.exception import handle_errors
+from web.blueprints.helpers.exception import abort_on_error
 from web.blueprints.helpers.form import refill_room_data
 from web.blueprints.helpers.user import get_user_or_404
 from web.blueprints.host.forms import InterfaceForm, HostForm
@@ -51,7 +51,7 @@ def host_delete(host_id) -> ResponseValue:
     if not form.is_submitted():
         return default_response()
 
-    with handle_errors(error_response=default_response), session.session.begin_nested():
+    with abort_on_error(default_response), session.session.begin_nested():
         lib_host.host_delete(host, current_user)
     session.session.commit()
 
@@ -86,7 +86,7 @@ def host_edit(host_id) -> ResponseValue:
 
     # existence guaranteed by validator
     owner = User.get(form.owner_id.data)
-    with handle_errors(error_response=default_response), session.session.begin_nested():
+    with abort_on_error(default_response), session.session.begin_nested():
         if not (
             room := get_room(
                 building_id=form.building.data.id,
@@ -130,7 +130,7 @@ def host_create() -> ResponseValue:
 
     # existence verified by validator
     owner = User.get(form.owner_id.data)
-    with handle_errors(error_response=default_response), session.session.begin_nested():
+    with abort_on_error(default_response), session.session.begin_nested():
         if not (
             room := get_room(
                 # TODO I know this is a double query,
@@ -223,7 +223,7 @@ def interface_delete(interface_id) -> ResponseValue:
     if not form.is_submitted():
         return default_response()
 
-    with handle_errors(error_response=default_response), session.session.begin_nested():
+    with abort_on_error(default_response), session.session.begin_nested():
         lib_host.interface_delete(interface, current_user)
     session.session.commit()
 
@@ -267,7 +267,7 @@ def interface_edit(interface_id) -> ResponseValue:
 
     ips = {IPv4Address(ip) for ip in form.ips.data}
 
-    with handle_errors(error_response=default_response), session.session.begin_nested():
+    with abort_on_error(default_response), session.session.begin_nested():
         lib_host.interface_edit(
             interface, form.name.data, form.mac.data, ips, processor=current_user
         )
