@@ -259,7 +259,7 @@ def bank_accounts_import() -> ResponseReturnValue:
 
     def display_form_response(
         imported: ImportedTransactions,
-    ):
+    ) -> str:
         return render_template(
             'finance/bank_accounts_import.html', form=form,
             transactions=imported.new,
@@ -383,7 +383,7 @@ def fix_import_error(error_id) -> ResponseReturnValue:
     imported = ImportedTransactions([], [], [])
     new_exception = None
 
-    def default_response():
+    def default_response() -> str:
         return render_template(
             "finance/bank_accounts_error_fix.html",
             error_id=error_id,
@@ -993,7 +993,7 @@ def transactions_confirm_selected() -> ResponseReturnValue:
 def transaction_confirm_all() -> ResponseReturnValue:
     form = FlaskForm()
 
-    def default_response():
+    def default_response() -> str:
         form_args = {
             'form': form,
             'cancel_to': url_for('.transactions_unconfirmed'),
