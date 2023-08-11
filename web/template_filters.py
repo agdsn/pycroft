@@ -55,6 +55,7 @@ def require(ctx: Context, asset: str, **kwargs) -> str:
     To prevent Jinja2 from inlining the calls of this filter with constant
     parameters, this filter needs to be declared as a context filter. The
     context is not actually used.
+
     :param ctx: Template context
     :param asset: Name of the
     :param kwargs: Kwargs for :func:`url_for`
@@ -99,6 +100,7 @@ def pretty_category_filter(category):
 @template_filter("date")
 def date_filter(dt, format=None):
     """Format date or datetime objects using Flask-Babel
+
     :param datetime|date|None dt: a datetime object or None
     :param str format: format as understood by Flask-Babel's format_datetime
     :rtype: unicode
@@ -111,6 +113,7 @@ def date_filter(dt, format=None):
 @template_filter("datetime")
 def datetime_filter(dt, format=None):
     """Format datetime objects using Flask-Babel
+
     :param datetime|None dt: a datetime object or None
     :param str format: format as understood by Flask-Babel's format_datetime
     :rtype: unicode
