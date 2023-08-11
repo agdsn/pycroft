@@ -85,6 +85,11 @@ filterwarnings = [
     # fixed once this PR goes through: https://github.com/python-babel/flask-babel/pull/230
     "ignore:'locked_cached_property' is deprecated:DeprecationWarning:flask_babel",
     "ignore:pkg_resources is deprecated:DeprecationWarning:passlib",
+
+    # TODO this probably comes from the `sphinxcontrib` packages.
+    # however, e.g. `sphinxcontrib-fulltoc` is unmaintained (last commit 2017).
+    # we probably need to start forking before updating to py3.12.
+    # "error:.*Deprecated call.*:DeprecationWarning:",
 ]
 timeout = "10"
 
