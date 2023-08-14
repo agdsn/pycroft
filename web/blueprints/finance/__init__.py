@@ -967,7 +967,7 @@ def transactions_confirm_selected():
     Confirms the unconfirmed transactions that where selected by the user in the frontend
     Javascript is used to post
     """
-    if not request.json:
+    if not request.is_json:
         return redirect(url_for(".transactions_unconfirmed"))
 
     ids = request.json.get("ids", [])
@@ -1055,9 +1055,8 @@ def transaction_delete(transaction_id):
 @access.require('finance_show')
 @bp.route('/transactions')
 def transactions_all():
-    return render_template('finance/transactions_overview.html',
-                           api_endpoint=url_for(".transactions_all_json",
-                                                **request.args))
+    url = url_for(".transactions_all_json", **request.args)  # type: ignore[arg-type]
+    return render_template("finance/transactions_overview.html", api_endpoint=url)
 
 
 @access.require('finance_show')

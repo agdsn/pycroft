@@ -1,17 +1,17 @@
 babel>=2.12.1
 Click~=8.0
 #MySQL-python==1.2.5
-Flask-Babel~=2.0.0
+Flask-Babel~=3.1.0
 Flask-Login~=0.6.2
 Flask-Testing~=0.8.1
-Flask-WTF~=1.0.0
+Flask-WTF~=1.1.1
 Flask-RESTful~=0.3.7
-Flask~=2.0.0
+Flask~=2.3.2
 Jinja2~=3.0
 MarkupSafe~=2.0
 SQLAlchemy>=2.0.1
-WTForms~=2.2.1
-Werkzeug~=2.0.0
+WTForms~=2.3.3
+Werkzeug~=2.3.6
 blinker~=1.4
 ipaddr~=2.2.0
 jsonschema~=3.2.0
@@ -33,9 +33,9 @@ uwsgi~=2.0.21
 uwsgitop~=0.11
 GitPython~=2.1.7
 mac-vendor-lookup~=0.1.11
-marshmallow~=3.11.1
+marshmallow~=3.20.1
 email-validator~=1.1.1
-sentry-sdk[Flask]~=1.0.0
+sentry-sdk[Flask]~=1.29.2
 -e ./deps/wtforms-widgets/
 python-dotenv~=0.21.0
 pydantic~=2.0.0

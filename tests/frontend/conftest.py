@@ -2,7 +2,7 @@ import contextlib
 import typing as t
 
 import pytest
-from flask import _request_ctx_stack
+from flask.globals import request_ctx
 from sqlalchemy.orm import Session
 
 from pycroft import Config
@@ -74,7 +74,7 @@ def config(module_session: Session) -> Config:
 def blueprint_urls(app: PycroftFlask) -> BlueprintUrls:
     def _blueprint_urls(blueprint_name: str) -> list[str]:
         return [
-            _build_rule(_request_ctx_stack.top.url_adapter, rule)
+            _build_rule(request_ctx.url_adapter, rule)
             for rule in app.url_map.iter_rules()
             if rule.endpoint.startswith(f"{blueprint_name}.")
         ]

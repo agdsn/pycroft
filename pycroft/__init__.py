@@ -29,4 +29,4 @@ def _get_config():
     return config
 
 
-config: Config = typing.cast(Config, LocalProxy(_get_config, "config"))
+config: Config = typing.cast(Config, LocalProxy(_get_config))

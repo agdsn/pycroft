@@ -5,11 +5,10 @@ from contextlib import contextmanager
 
 from flask import flash, abort, make_response
 from flask.typing import ResponseReturnValue
-from sqlalchemy.orm import Session, SessionTransaction
+from sqlalchemy.orm import SessionTransaction
 
 from pycroft.exc import PycroftException
 from pycroft.lib.net import MacExistsException, SubnetFullException
-from pycroft.model import session
 from pycroft.model.host import MulticastFlagException
 from pycroft.model.types import InvalidMACAddressException
 

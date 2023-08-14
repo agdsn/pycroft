@@ -79,6 +79,17 @@ filterwarnings = [
     "ignore::DeprecationWarning:kombu.utils.compat",
     # actually caused by reportlab.
     "ignore:.*load_module.*:DeprecationWarning:importlib._bootstrap",
+    # fixed in v1.1.2 (unreleased):
+    # https://github.com/wtforms/flask-wtf/blob/main/docs/changes.rst#version-112
+    "ignore::DeprecationWarning:flask_wtf.recaptcha.widgets",
+    # fixed once this PR goes through: https://github.com/python-babel/flask-babel/pull/230
+    "ignore:'locked_cached_property' is deprecated:DeprecationWarning:flask_babel",
+    "ignore:pkg_resources is deprecated:DeprecationWarning:passlib",
+
+    # TODO this probably comes from the `sphinxcontrib` packages.
+    # however, e.g. `sphinxcontrib-fulltoc` is unmaintained (last commit 2017).
+    # we probably need to start forking before updating to py3.12.
+    # "error:.*Deprecated call.*:DeprecationWarning:",
 ]
 timeout = "10"
 
@@ -88,11 +99,6 @@ target-version = "py310"
 exclude = [
     "deps/",
     "doc/",
-    # match statement cannot be parsed yet… :/
-    # see https://github.com/charliermarsh/ruff/issues/282
-
-    "ldap_sync/record_diff.py",
-    "web/blueprints/helpers/exception.py",
 ]
 # to look up the meaning of specific rule IDs, use `ruff rule $id`
 select = [

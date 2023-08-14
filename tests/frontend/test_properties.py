@@ -15,13 +15,12 @@ class TestPropertiesFrontend:
     def test_property_gets_added(self, client: TestClient):
         group_name = "This is my first property group"
         # first time: a redirect
-        response = client.assert_response_code(
+        response = client.assert_redirects(
             "properties.property_group_create",
-            code=302,
             method="post",
             data={"name": group_name},
+            expected_location=url_for("properties.property_groups"),
         )
-        assert response.location == url_for('properties.property_groups', _external=True)
         response = client.assert_url_response_code(response.location, code=200)
 
         content = response.data.decode('utf-8')
