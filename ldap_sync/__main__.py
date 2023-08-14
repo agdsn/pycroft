@@ -151,7 +151,7 @@ def try_setup_sentry() -> None:
         dsn=dsn,
         integrations=[logging_integration],
         traces_sample_rate=1.0,
-    )  # type: ignore
+    )
 
 
 def trigger_sentry() -> typing.NoReturn:
