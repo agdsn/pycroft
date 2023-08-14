@@ -99,11 +99,6 @@ target-version = "py310"
 exclude = [
     "deps/",
     "doc/",
-    # match statement cannot be parsed yet… :/
-    # see https://github.com/charliermarsh/ruff/issues/282
-
-    "ldap_sync/record_diff.py",
-    "web/blueprints/helpers/exception.py",
 ]
 # to look up the meaning of specific rule IDs, use `ruff rule $id`
 select = [
