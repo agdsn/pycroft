@@ -967,7 +967,7 @@ def transactions_confirm_selected():
     Confirms the unconfirmed transactions that where selected by the user in the frontend
     Javascript is used to post
     """
-    if not request.json:
+    if not request.is_json:
         return redirect(url_for(".transactions_unconfirmed"))
 
     ids = request.json.get("ids", [])
