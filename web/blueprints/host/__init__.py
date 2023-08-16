@@ -1,7 +1,7 @@
 import re
 
 from flask import Blueprint, flash, abort, redirect, url_for, render_template, request
-from flask.typing import ResponseValue
+from flask.typing import ResponseReturnValue
 from flask_login import current_user
 from flask_wtf import FlaskForm
 from ipaddr import IPv4Address
@@ -28,14 +28,14 @@ access = BlueprintAccess(bp, required_properties=['user_show'])
 
 @bp.route('/<int:host_id>/delete', methods=['GET', 'POST'])
 @access.require('hosts_change')
-def host_delete(host_id) -> ResponseValue:
+def host_delete(host_id) -> ResponseReturnValue:
     if (host := Host.get(host_id)) is None:
         flash("Host existiert nicht.", 'error')
         abort(404)
     owner = host.owner
     form = FlaskForm()
 
-    def default_response():
+    def default_response() -> ResponseReturnValue:
         form_args = {
             'form': form,
             'cancel_to': url_for('user.user_show', user_id=owner.id),
@@ -61,13 +61,13 @@ def host_delete(host_id) -> ResponseValue:
 
 @bp.route('/<int:host_id>/edit', methods=['GET', 'POST'])
 @access.require('hosts_change')
-def host_edit(host_id) -> ResponseValue:
+def host_edit(host_id) -> ResponseReturnValue:
     if (host := Host.get(host_id)) is None:
         flash("Host existiert nicht.", 'error')
         abort(404)
     form = HostForm(obj=host)
 
-    def default_response():
+    def default_response() -> ResponseReturnValue:
         form_args = {
             'form': form, 'cancel_to':
             url_for('user.user_show', user_id=host.owner.id)
@@ -108,11 +108,11 @@ def host_edit(host_id) -> ResponseValue:
 
 @bp.route('/create', methods=['GET', 'POST'])
 @access.require('hosts_change')
-def host_create() -> ResponseValue:
+def host_create() -> ResponseReturnValue:
     user = get_user_or_404(request.args.get('user_id', None))
     form = HostForm(owner_id=user.id)
 
-    def default_response():
+    def default_response() -> ResponseReturnValue:
         form_args = {
             'form': form,
             'cancel_to': url_for('user.user_show', user_id=user.id)
@@ -155,7 +155,7 @@ def host_create() -> ResponseValue:
 
 
 @bp.route("/<int:host_id>/interfaces")
-def host_interfaces_json(host_id) -> ResponseValue:
+def host_interfaces_json(host_id) -> ResponseReturnValue:
     if (host := Host.get(host_id)) is None:
         flash("Host existiert nicht.", 'error')
         abort(404)
@@ -189,7 +189,7 @@ def host_interfaces_json(host_id) -> ResponseValue:
 
 
 @bp.route("/<int:host_id>/interfaces/table")
-def interface_table(host_id) -> ResponseValue:
+def interface_table(host_id) -> ResponseReturnValue:
     return render_template('host/interface_table.html',
                            interface_table=InterfaceTable(
                                data_url=url_for(".host_interfaces_json",
@@ -200,14 +200,14 @@ def interface_table(host_id) -> ResponseValue:
 
 @bp.route('/interface/<int:interface_id>/delete', methods=['GET', 'POST'])
 @access.require('hosts_change')
-def interface_delete(interface_id) -> ResponseValue:
+def interface_delete(interface_id) -> ResponseReturnValue:
     if (interface := Interface.get(interface_id)) is None:
         flash("Interface existiert nicht.", 'error')
         abort(404)
 
     form = FlaskForm()
 
-    def default_response():
+    def default_response() -> ResponseReturnValue:
         form_args = {
             'form': form,
             'cancel_to': url_for('user.user_show', user_id=interface.host.owner_id),
@@ -236,7 +236,7 @@ def interface_delete(interface_id) -> ResponseValue:
 
 @bp.route('/interface/<int:interface_id>/edit', methods=['GET', 'POST'])
 @access.require('hosts_change')
-def interface_edit(interface_id) -> ResponseValue:
+def interface_edit(interface_id) -> ResponseReturnValue:
     if (interface := Interface.get(interface_id)) is None:
         flash("Interface existiert nicht.", 'error')
         abort(404)
@@ -249,7 +249,7 @@ def interface_edit(interface_id) -> ResponseValue:
     unused_ips = [ip for ips in get_unused_ips(subnets).values() for ip in ips]
     form.ips.choices = [(str(ip), str(ip)) for ip in current_ips + unused_ips]
 
-    def default_response():
+    def default_response() -> ResponseReturnValue:
         form_args = {
             'form': form,
             'cancel_to': url_for('user.user_show', user_id=interface.host.owner_id)
@@ -279,7 +279,7 @@ def interface_edit(interface_id) -> ResponseValue:
 
 @bp.route('/<int:host_id>/interface/create', methods=['GET', 'POST'])
 @access.require('hosts_change')
-def interface_create(host_id) -> ResponseValue:
+def interface_create(host_id) -> ResponseReturnValue:
     if (host := Host.get(host_id)) is None:
         flash("Host existiert nicht.", 'error')
         abort(404)
@@ -289,7 +289,7 @@ def interface_create(host_id) -> ResponseValue:
     unused_ips = [ip for ips in get_unused_ips(subnets).values() for ip in ips]
     form.ips.choices = [(str(ip), str(ip)) for ip in unused_ips]
 
-    def default_response():
+    def default_response() -> ResponseReturnValue:
         form_args = {
             'form': form,
             'cancel_to': url_for('user.user_show', user_id=host.owner.id)
@@ -361,7 +361,7 @@ def _host_row(host, user_id) -> HostRow:
 
 
 @bp.route("/<int:user_id>")
-def user_hosts_json(user_id) -> ResponseValue:
+def user_hosts_json(user_id) -> ResponseReturnValue:
     user = get_user_or_404(user_id)
     return TableResponse[HostRow](
         items=[_host_row(host, user_id) for host in user.hosts]
@@ -369,7 +369,7 @@ def user_hosts_json(user_id) -> ResponseValue:
 
 
 @bp.route("/interface-manufacturer/<string:mac>")
-def interface_manufacturer_json(mac) -> ResponseValue:
+def interface_manufacturer_json(mac) -> ResponseReturnValue:
     if not re.match(mac_regex, mac):
         return abort(400)
     return {"manufacturer": get_interface_manufacturer(mac)}
