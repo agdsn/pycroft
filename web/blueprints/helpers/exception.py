@@ -5,7 +5,6 @@ from contextlib import contextmanager
 
 from flask import flash, abort, make_response
 from flask.typing import ResponseReturnValue
-from sqlalchemy.orm import SessionTransaction
 
 from pycroft.exc import PycroftException
 from pycroft.lib.net import MacExistsException, SubnetFullException
