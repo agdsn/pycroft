@@ -236,7 +236,9 @@ def sort_buildings(buildings: t.Iterable[Building]) -> list[Building]:
     return sorted(buildings, key=make_sort_key)
 
 
-def determine_building(shortname: str | None = None, id: int | None = None) -> Building:
+def determine_building(
+    shortname: str | None = None, id: int | None = None
+) -> Building | None:
     """Determine building from shortname or id in this order.
 
     :param shortname: The short name of the building
@@ -249,4 +251,4 @@ def determine_building(shortname: str | None = None, id: int | None = None) -> B
         return t.cast(Building, session.session.scalars(stmt).one())
     if id:
         return session.session.get(Building, id)
-    raise ValueError("Either shortname or id must be given to identify the building!")
+    return None

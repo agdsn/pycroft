@@ -3,6 +3,7 @@ from dataclasses import asdict
 from typing import NoReturn
 
 from flask import Blueprint, url_for, abort, flash, redirect, request, render_template
+from flask.typing import ResponseValue
 from flask_login import current_user
 
 from pycroft.exc import PycroftException
@@ -98,7 +99,7 @@ def task_row(task: UserTask) -> TaskRow:
 
 
 @bp.route("/user/<int:user_id>/json")
-def json_tasks_for_user(user_id):
+def json_tasks_for_user(user_id) -> ResponseValue:
     user = get_user_or_404(user_id)
     return TableResponse[TaskRow](
         items=[task_row(t.cast(UserTask, task)) for task in user.tasks]
@@ -106,7 +107,7 @@ def json_tasks_for_user(user_id):
 
 
 @bp.route("/user/json")
-def json_user_tasks():
+def json_user_tasks() -> ResponseValue:
     failed_only = bool(request.args.get("failed_only", False))
     open_only = bool(request.args.get("open_only", False))
 
@@ -132,7 +133,7 @@ def get_task_or_404(task_id) -> Task | NoReturn:
 
 @bp.route("/<int:task_id>/manually_execute")
 @access.require('user_change')
-def manually_execute_user_task(task_id: int):
+def manually_execute_user_task(task_id: int) -> ResponseValue:
     task = get_task_or_404(task_id)
     try:
         manually_execute_task(task, processor=current_user)
@@ -154,7 +155,7 @@ def manually_execute_user_task(task_id: int):
 
 @bp.route("/<int:task_id>/cancel")
 @access.require('user_change')
-def cancel_user_task(task_id):
+def cancel_user_task(task_id) -> ResponseValue:
     task = get_task_or_404(task_id)
 
     cancel_task(task, current_user)
@@ -166,7 +167,7 @@ def cancel_user_task(task_id):
 
 @bp.route("/<int:task_id>/reschedule", methods=['GET', 'POST'])
 @access.require('user_change')
-def reschedule_user_task(task_id):
+def reschedule_user_task(task_id) -> ResponseValue:
     task = get_task_or_404(task_id)
 
     form = RescheduleTaskForm()
@@ -187,7 +188,7 @@ def reschedule_user_task(task_id):
 
 @bp.route("/user")
 @nav.navigate("Tasks")
-def user_tasks():
+def user_tasks() -> ResponseValue:
     return render_template(
         "task/tasks.html",
         task_table=TaskTable(data_url=url_for('.json_user_tasks', open_only=1)),

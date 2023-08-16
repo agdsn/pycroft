@@ -34,6 +34,7 @@ from flask import (
     url_for,
     make_response,
 )
+from flask.typing import ResponseReturnValue
 from flask_login import current_user
 from flask_wtf import FlaskForm
 from mt940.models import Transaction as MT940Transaction
@@ -109,7 +110,7 @@ from web.blueprints.finance.tables import (
     FinanceRow,
 )
 from web.blueprints.helpers.api import json_agg_core
-from web.blueprints.helpers.exception import handle_errors
+from web.blueprints.helpers.exception import abort_on_error
 from web.blueprints.navigation import BlueprintNavigation
 from web.table.table import (
     TableResponse,
@@ -131,7 +132,7 @@ nav = BlueprintNavigation(bp, "Finanzen", icon='fa-euro-sign', blueprint_access=
 @bp.route('/bank-accounts')
 @bp.route('/bank-accounts/list')
 @nav.navigate("Bankkonten", icon='fa-university')
-def bank_accounts_list():
+def bank_accounts_list() -> ResponseReturnValue:
     bank_account_table = BankAccountTable(
         data_url=url_for('.bank_accounts_list_json'),
         create_account=privilege_check(current_user, 'finance_change'))
@@ -147,7 +148,7 @@ def bank_accounts_list():
 
 
 @bp.route('/bank-accounts/list/json')
-def bank_accounts_list_json():
+def bank_accounts_list_json() -> ResponseReturnValue:
     return TableResponse[BankAccountRow](
         items=[
             BankAccountRow(
@@ -173,7 +174,7 @@ def bank_accounts_list_json():
 
 
 @bp.route('/bank-accounts/activities/json')
-def bank_accounts_activities_json():
+def bank_accounts_activities_json() -> ResponseReturnValue:
     def actions(activity_id) -> list[BtnColResponse]:
         return [
             BtnColResponse(
@@ -205,7 +206,7 @@ def bank_accounts_activities_json():
 
 
 @bp.route('/bank-accounts/import/errors/json')
-def bank_accounts_errors_json():
+def bank_accounts_errors_json() -> ResponseReturnValue:
     return TableResponse[ImportErrorRow](
         items=[
             ImportErrorRow(
@@ -249,7 +250,7 @@ def flash_fints_errors():
 @bp.route('/bank-accounts/import', methods=['GET', 'POST'])
 @access.require('finance_change')
 @nav.navigate("Bankkontobewegungen importieren", icon='fa-file-import')
-def bank_accounts_import():
+def bank_accounts_import() -> ResponseReturnValue:
     form = BankAccountActivitiesImportForm()
     form.account.choices = [
         (acc.id, acc.name) for acc in get_all_bank_accounts(session)
@@ -258,7 +259,7 @@ def bank_accounts_import():
 
     def display_form_response(
         imported: ImportedTransactions,
-    ):
+    ) -> str:
         return render_template(
             'finance/bank_accounts_import.html', form=form,
             transactions=imported.new,
@@ -340,7 +341,7 @@ def bank_accounts_import():
 
 @bp.route('/bank-accounts/importmanual', methods=['GET', 'POST'])
 @access.require('finance_change')
-def bank_accounts_import_manual():
+def bank_accounts_import_manual() -> ResponseReturnValue:
     form = BankAccountActivitiesImportManualForm()
     form.account.query = get_all_bank_accounts(session)
 
@@ -366,7 +367,7 @@ def bank_accounts_import_manual():
 
 @bp.route('/bank-accounts/importerrors', methods=['GET', 'POST'])
 @access.require('finance_change')
-def bank_accounts_import_errors():
+def bank_accounts_import_errors() -> ResponseReturnValue:
     error_table = ImportErrorTable(
         data_url=url_for('.bank_accounts_errors_json'))
     return render_template('finance/bank_accounts_import_errors.html',
@@ -376,13 +377,13 @@ def bank_accounts_import_errors():
 
 @bp.route('/bank-accounts/importerrors/<error_id>', methods=['GET', 'POST'])
 @access.require('finance_change')
-def fix_import_error(error_id):
+def fix_import_error(error_id) -> ResponseReturnValue:
     error = MT940Error.get(error_id)
     form = FixMT940Form()
     imported = ImportedTransactions([], [], [])
     new_exception = None
 
-    def default_response():
+    def default_response() -> str:
         return render_template(
             "finance/bank_accounts_error_fix.html",
             error_id=error_id,
@@ -428,7 +429,7 @@ def fix_import_error(error_id):
 
 @bp.route('/bank-accounts/create', methods=['GET', 'POST'])
 @access.require('finance_change')
-def bank_accounts_create():
+def bank_accounts_create() -> ResponseReturnValue:
     form = BankAccountCreateForm()
 
     if form.validate_on_submit():
@@ -453,7 +454,7 @@ def bank_accounts_create():
 
 @bp.route('/bank-account-activities/<activity_id>',
           methods=["GET", "POST"])
-def bank_account_activities_edit(activity_id):
+def bank_account_activities_edit(activity_id) -> ResponseReturnValue:
     activity = BankAccountActivity.get(activity_id)
 
     if activity is None:
@@ -521,7 +522,7 @@ def bank_account_activities_edit(activity_id):
 
 @bp.route('/bank-account-activities/match/')
 @access.require('finance_change')
-def bank_account_activities_match():
+def bank_account_activities_match() -> ResponseReturnValue:
     matching_user, matching_team = match_activities()
 
     field_list_user, matched_activities_user \
@@ -553,7 +554,7 @@ def _create_field_list_and_matched_activities_dict(matching, prefix):
 
 @bp.route('/bank-account-activities/match/do/', methods=['GET', 'POST'])
 @access.require('finance_change')
-def bank_account_activities_do_match():
+def bank_account_activities_do_match() -> ResponseReturnValue:
     # Generate form again
     matching_user, matching_team = match_activities()
 
@@ -632,7 +633,7 @@ def _apply_checked_matches(matching, subform):
 @bp.route('/accounts/')
 @bp.route('/accounts/list')
 @nav.navigate("Konten", icon='fa-money-check-alt')
-def accounts_list():
+def accounts_list() -> ResponseReturnValue:
     return render_template(
         "finance/accounts_list.html",
         accounts=get_accounts_by_type(session),
@@ -641,7 +642,7 @@ def accounts_list():
 
 @bp.route('/account/<int:account_id>/toggle-legacy')
 @access.require('finance_change')
-def account_toggle_legacy(account_id):
+def account_toggle_legacy(account_id) -> ResponseReturnValue:
     account = Account.get(account_id)
 
     if not account:
@@ -657,7 +658,7 @@ def account_toggle_legacy(account_id):
 
 
 @bp.route('/accounts/<int:account_id>/balance/json')
-def balance_json(account_id):
+def balance_json(account_id) -> ResponseReturnValue:
     invert = request.args.get('invert', 'False') == 'True'
 
     sum_exp = func.sum(Split.amount).over(order_by=Transaction.valid_on)
@@ -678,7 +679,7 @@ def balance_json(account_id):
 
 
 @bp.route('/accounts/<int:account_id>')
-def accounts_show(account_id):
+def accounts_show(account_id) -> ResponseReturnValue:
     account = session.get(Account, account_id)
 
     if account is None:
@@ -756,7 +757,7 @@ def _prefixed_merge(
 
 
 @bp.route('/accounts/<int:account_id>/json')
-def accounts_show_json(account_id):
+def accounts_show_json(account_id) -> ResponseReturnValue:
     style = request.args.get('style')
     limit = request.args.get('limit', type=int)
     offset = request.args.get('offset', type=int)
@@ -801,7 +802,7 @@ def accounts_show_json(account_id):
 
 
 @bp.route('/transactions/<int:transaction_id>')
-def transactions_show(transaction_id):
+def transactions_show(transaction_id) -> ResponseReturnValue:
     transaction = Transaction.get(transaction_id)
 
     if transaction is None:
@@ -819,7 +820,7 @@ def transactions_show(transaction_id):
 
 
 @bp.route('/transactions/<int:transaction_id>/json')
-def transactions_show_json(transaction_id):
+def transactions_show_json(transaction_id) -> ResponseReturnValue:
     transaction = Transaction.get(transaction_id)
     return TransactionSplitResponse(
         description=transaction.description,
@@ -839,7 +840,7 @@ def transactions_show_json(transaction_id):
 
 @bp.route('/transactions/unconfirmed')
 @nav.navigate("Unbestätigte Transaktionen", icon='fa-question')
-def transactions_unconfirmed():
+def transactions_unconfirmed() -> ResponseReturnValue:
     return render_template(
         'finance/transactions_unconfirmed.html',
         page_title="Unbestätigte Transaktionen",
@@ -912,7 +913,7 @@ def _format_transaction_row(
 
 
 @bp.route("/transactions/unconfirmed/json")
-def transactions_unconfirmed_json():
+def transactions_unconfirmed_json() -> ResponseReturnValue:
     # TODO extract transaction fetch (with user/bank account) to lib function
     transactions = (
         Transaction.q.filter_by(confirmed=False)
@@ -941,7 +942,7 @@ def transactions_unconfirmed_json():
 
 @bp.route('/transaction/<int:transaction_id>/confirm', methods=['GET', 'POST'])
 @access.require('finance_change')
-def transaction_confirm(transaction_id):
+def transaction_confirm(transaction_id) -> ResponseReturnValue:
     transaction = Transaction.get(transaction_id)
 
     if transaction is None:
@@ -962,7 +963,7 @@ def transaction_confirm(transaction_id):
 
 @bp.route("/transaction/confirm_selected", methods=["HEAD", "POST"])
 @access.require("finance_change")
-def transactions_confirm_selected():
+def transactions_confirm_selected() -> ResponseReturnValue:
     """
     Confirms the unconfirmed transactions that where selected by the user in the frontend
     Javascript is used to post
@@ -989,10 +990,10 @@ def transactions_confirm_selected():
 
 @bp.route('/transaction/confirm', methods=['GET', 'POST'])
 @access.require('finance_change')
-def transaction_confirm_all():
+def transaction_confirm_all() -> ResponseReturnValue:
     form = FlaskForm()
 
-    def default_response():
+    def default_response() -> str:
         form_args = {
             'form': form,
             'cancel_to': url_for('.transactions_unconfirmed'),
@@ -1007,7 +1008,7 @@ def transaction_confirm_all():
     if not form.is_submitted():
         return default_response()
 
-    with handle_errors(error_response=default_response), session.begin_nested():
+    with abort_on_error(error_response=default_response), session.begin_nested():
         lib.finance.transaction_confirm_all(current_user)
     session.commit()
 
@@ -1017,7 +1018,7 @@ def transaction_confirm_all():
 
 @bp.route('/transaction/<int:transaction_id>/delete', methods=['GET', 'POST'])
 @access.require('finance_change')
-def transaction_delete(transaction_id):
+def transaction_delete(transaction_id) -> ResponseReturnValue:
     transaction = Transaction.get(transaction_id)
 
     if transaction is None:
@@ -1054,14 +1055,14 @@ def transaction_delete(transaction_id):
 
 @access.require('finance_show')
 @bp.route('/transactions')
-def transactions_all():
+def transactions_all() -> ResponseReturnValue:
     url = url_for(".transactions_all_json", **request.args)  # type: ignore[arg-type]
     return render_template("finance/transactions_overview.html", api_endpoint=url)
 
 
 @access.require('finance_show')
 @bp.route('/transactions/json')
-def transactions_all_json():
+def transactions_all_json() -> ResponseReturnValue:
     lower = request.args.get('after', "")
     upper = request.args.get('before', "")
     filter = request.args.get('filter', "nonuser")
@@ -1112,7 +1113,7 @@ def transactions_all_json():
 @bp.route('/transactions/create', methods=['GET', 'POST'])
 @nav.navigate('Buchung erstellen', icon='fa-plus')
 @access.require('finance_change')
-def transactions_create():
+def transactions_create() -> ResponseReturnValue:
     form = TransactionCreateForm()
     if form.validate_on_submit():
         splits = [(
@@ -1141,7 +1142,7 @@ def transactions_create():
 
 @bp.route('/accounts/create', methods=['GET', 'POST'])
 @access.require('finance_change')
-def accounts_create():
+def accounts_create() -> ResponseReturnValue:
     form = AccountCreateForm()
 
     if form.validate_on_submit():
@@ -1156,7 +1157,7 @@ def accounts_create():
 
 @bp.route("/membership_fee/<int:fee_id>/book", methods=['GET', 'POST'])
 @access.require('finance_change')
-def membership_fee_book(fee_id):
+def membership_fee_book(fee_id) -> ResponseReturnValue:
     fee = MembershipFee.get(fee_id)
 
     if fee is None:
@@ -1180,7 +1181,7 @@ def membership_fee_book(fee_id):
 
 
 @bp.route("/membership_fee/<int:fee_id>/users_due_json")
-def membership_fee_users_due_json(fee_id):
+def membership_fee_users_due_json(fee_id) -> ResponseReturnValue:
     fee = MembershipFee.get(fee_id)
 
     if fee is None:
@@ -1217,14 +1218,14 @@ def membership_fee_users_due_json(fee_id):
 
 @bp.route("/membership_fees", methods=['GET', 'POST'])
 @nav.navigate("Beiträge", icon='fa-hand-holding-usd')
-def membership_fees():
+def membership_fees() -> ResponseReturnValue:
     table = MembershipFeeTable(data_url=url_for('.membership_fees_json'))
     return render_template('finance/membership_fees.html', table=table)
 
 
 @bp.route("/membership_fees/json")
 @access.require('finance_change')
-def membership_fees_json():
+def membership_fees_json() -> ResponseReturnValue:
     return TableResponse[MembershipFeeRow](
         items=[
             MembershipFeeRow(
@@ -1269,7 +1270,7 @@ def membership_fees_json():
 
 @bp.route('/membership_fee/create', methods=("GET", "POST"))
 @access.require('finance_change')
-def membership_fee_create():
+def membership_fee_create() -> ResponseReturnValue:
     previous_fee = get_last_membership_fee(session)
     if previous_fee:
         begins_on_default = previous_fee.ends_on + timedelta(1)
@@ -1314,7 +1315,7 @@ def membership_fee_create():
 
 @bp.route('/membership_fee/<int:fee_id>/edit', methods=("GET", "POST"))
 @access.require('finance_change')
-def membership_fee_edit(fee_id):
+def membership_fee_edit(fee_id) -> ResponseReturnValue:
     fee = MembershipFee.get(fee_id)
 
     if fee is None:
@@ -1351,7 +1352,7 @@ def membership_fee_edit(fee_id):
 
 @bp.route('/membership_fees/handle_payments_in_default', methods=("GET", "POST"))
 @access.require('finance_change')
-def handle_payments_in_default():
+def handle_payments_in_default() -> ResponseReturnValue:
     finance.end_payment_in_default_memberships(current_user)
 
     users_pid_membership_all, users_membership_terminated_all = \
@@ -1394,7 +1395,7 @@ def handle_payments_in_default():
 
 
 @bp.route('/json/accounts/system')
-def json_accounts_system():
+def json_accounts_system() -> ResponseReturnValue:
     return {
         "accounts": [
             {
@@ -1408,7 +1409,7 @@ def json_accounts_system():
 
 
 @bp.route('/json/accounts/user-search')
-def json_accounts_user_search():
+def json_accounts_user_search() -> ResponseReturnValue:
     query = request.args['query']
     results = session.query(
         Account.id, User.id, User.login, User.name
@@ -1432,7 +1433,7 @@ def json_accounts_user_search():
 
 @bp.route('/membership_fees/payments_in_default_csv')
 @access.require('finance_change')
-def csv_payments_in_default():
+def csv_payments_in_default() -> ResponseReturnValue:
     csv_str = get_pid_csv()
 
     output = make_response(csv_str)
@@ -1444,7 +1445,7 @@ def csv_payments_in_default():
 
 @bp.route('/membership_fees/payment_reminder_mail', methods=("GET", "POST"))
 @access.require('finance_change')
-def payment_reminder_mail():
+def payment_reminder_mail() -> ResponseReturnValue:
     form = ConfirmPaymentReminderMail()
 
     if form.validate_on_submit() and form.confirm.data:

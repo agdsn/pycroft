@@ -12,6 +12,7 @@
 from itertools import chain
 
 from flask import Blueprint, flash, redirect, render_template, url_for, abort
+from flask.typing import ResponseValue
 from flask_login import current_user
 from flask_wtf import FlaskForm
 
@@ -32,7 +33,7 @@ nav = BlueprintNavigation(bp, "", icon='fa-cogs', push_right=True, blueprint_acc
 
 @bp.route('/property_groups')
 @nav.navigate("Gruppen")
-def property_groups():
+def property_groups() -> ResponseValue:
     property_groups_list = PropertyGroup.q.all()
     categories = property_categories
     properties_with_description = set(chain(*(
@@ -50,7 +51,7 @@ def property_groups():
 
 @bp.route('/property_group/create', methods=['GET', 'POST'])
 @access.require('groups_change')
-def property_group_create():
+def property_group_create() -> ResponseValue:
     form = PropertyGroupForm()
     if form.validate_on_submit():
         group = PropertyGroup(name=form.name.data,
@@ -66,7 +67,7 @@ def property_group_create():
 
 @bp.route('/property_group/<group_id>/grant/<property_name>')
 @access.require('groups_change')
-def property_group_grant_property(group_id, property_name):
+def property_group_grant_property(group_id, property_name) -> ResponseValue:
     property_group = PropertyGroup.get(group_id)
 
     if property_group is None:
@@ -82,7 +83,7 @@ def property_group_grant_property(group_id, property_name):
 
 @bp.route('/property_group/<group_id>/deny/<property_name>')
 @access.require('groups_change')
-def property_group_deny_property(group_id, property_name):
+def property_group_deny_property(group_id, property_name) -> ResponseValue:
     property_group = PropertyGroup.get(group_id)
 
     if property_group is None:
@@ -98,7 +99,7 @@ def property_group_deny_property(group_id, property_name):
 
 @bp.route('/property_group/<group_id>/remove/<property_name>')
 @access.require('groups_change')
-def property_group_remove_property(group_id, property_name):
+def property_group_remove_property(group_id, property_name) -> ResponseValue:
     group = PropertyGroup.get(group_id)
 
     if group is None:
@@ -114,7 +115,7 @@ def property_group_remove_property(group_id, property_name):
 
 @bp.route('/property_group/<group_id>/edit', methods=['GET', 'POST'])
 @access.require('groups_change')
-def property_group_edit(group_id):
+def property_group_edit(group_id) -> ResponseValue:
     group = PropertyGroup.get(group_id)
 
     if group is None:
@@ -146,7 +147,7 @@ def property_group_edit(group_id):
 
 @bp.route('/property_group/<group_id>/delete', methods=['GET', 'POST'])
 @access.require('groups_change')
-def property_group_delete(group_id):
+def property_group_delete(group_id) -> ResponseValue:
     group = PropertyGroup.get(group_id)
 
     if group is None:

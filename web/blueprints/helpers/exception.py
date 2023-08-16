@@ -5,7 +5,6 @@ from contextlib import contextmanager
 
 from flask import flash, abort, make_response
 from flask.typing import ResponseReturnValue
-from sqlalchemy.orm import SessionTransaction
 
 from pycroft.exc import PycroftException
 from pycroft.lib.net import MacExistsException, SubnetFullException
@@ -20,16 +19,33 @@ class UnexpectedException(PycroftException):
     pass
 
 
+def flash_handler(e: PycroftException) -> None:
+    flash(exception_flash_message(e), "error")
+
+
+ErrorHandler = t.Callable[[PycroftException], None]
+
+
 @contextmanager
-def flash_and_wrap_errors() -> t.Iterator[None]:
+def flash_and_wrap_errors(
+    handler_map: dict[type[PycroftException], ErrorHandler] | None = None,
+) -> t.Iterator[None]:
     """Flash a message, roll back the session, and wrap unknown errors in a ``PycroftException``
+
+    :param handler_map: specifies what to do with exception types.
+        The default is to flash a message, but other actions may be desired instead
+        (such as appending the error to a form).
 
     :raises PycroftException:
     """
     try:
         yield
     except PycroftException as e:
-        flash(exception_flash_message(e), 'error')
+        handlers = handler_map or {}
+        handler = next(
+            (h for type_, h in handlers.items() if isinstance(e, type_)), flash_handler
+        )
+        handler(e)
         raise
     except Exception as e:
         traceback.print_exc()
@@ -38,27 +54,33 @@ def flash_and_wrap_errors() -> t.Iterator[None]:
         raise UnexpectedException from e
 
 
+ErrorHandlerMap = dict[type[PycroftException], ErrorHandler]
+
+
 @contextmanager
 # TODO rename to „wrap_errors“; `handle` suggests „I'll deal with everything“, which is incorrect
-def handle_errors(
+def abort_on_error(
     error_response: t.Callable[[], ResponseReturnValue]
     | ResponseReturnValue
     | None = None,
-) -> t.Iterator[SessionTransaction]:
+    handler_map: ErrorHandlerMap | None = None,
+) -> t.Iterator[None]:
     """Wraps errors as `PycroftErrors` and turns them into a flash message.
 
     Example:
 
         def default_response(): return render_template("template.html")
 
-        with handle_errors(error_response=default_response), session.begin_nested():
+        with abort_on_error(error_response=default_response), session.begin_nested():
             ... # call some `lib` functions
         session.commit()
 
     :param error_response: if given, this will be called when a `PycroftException` is caught
         and the return value is used as the response via :py:function:`flask.abort`.
+    :param handler_map: allows a custom handler for given exception types
+        which will be applied instead of the flash message.
     """
-    cm = flash_and_wrap_errors()
+    cm = flash_and_wrap_errors(handler_map)
 
     if error_response is None:
         with cm as n:

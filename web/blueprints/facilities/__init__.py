@@ -9,6 +9,7 @@
     :copyright: (c) 2012 by AG DSN.
 """
 from collections import defaultdict
+import typing as t
 
 from flask import (
     Blueprint,
@@ -19,6 +20,7 @@ from flask import (
     request,
     abort,
 )
+from flask.typing import ResponseReturnValue
 from flask_login import current_user
 from flask_wtf import FlaskForm as Form
 from sqlalchemy.orm import joinedload, aliased
@@ -26,12 +28,17 @@ from sqlalchemy.sql import and_, select, exists
 
 import pycroft.lib.facilities
 from pycroft import lib
+from pycroft.exc import PycroftException
 from pycroft.helpers.i18n import gettext
 from pycroft.lib.host import sort_ports
 from pycroft.lib.address import get_or_create_address
-from pycroft.lib.facilities import get_overcrowded_rooms, create_room, \
-    edit_room, \
-    RoomAlreadyExistsException, suggest_room_address_data
+from pycroft.lib.facilities import (
+    get_overcrowded_rooms,
+    create_room,
+    edit_room,
+    RoomAlreadyExistsException,
+    suggest_room_address_data,
+)
 from pycroft.lib.infrastructure import create_patch_port, edit_patch_port, \
     delete_patch_port, \
     PatchPortAlreadyExistsException
@@ -42,7 +49,12 @@ from pycroft.model.property import CurrentProperty
 from pycroft.model.user import User
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.facilities.forms import (
-    RoomLogEntry, PatchPortForm, CreateRoomForm, EditRoomForm)
+    RoomLogEntry,
+    PatchPortForm,
+    CreateRoomForm,
+    EditRoomForm,
+    CreateAddressForm,
+)
 from web.blueprints.helpers.log import format_room_log_entry
 from web.blueprints.helpers.user import user_button
 from web.blueprints.navigation import BlueprintNavigation
@@ -59,6 +71,7 @@ from .tables import (
     PatchPortRow,
     RoomOvercrowdedRow,
 )
+from ..helpers.exception import abort_on_error, ErrorHandlerMap
 from ..helpers.log_tables import LogTableRow
 
 bp = Blueprint('facilities', __name__)
@@ -66,19 +79,19 @@ access = BlueprintAccess(bp, required_properties=['facilities_show'])
 nav = BlueprintNavigation(bp, "Wohnheime", icon='fa-building', blueprint_access=access)
 
 @bp.route('/')
-def root():
+def root() -> ResponseReturnValue:
     return redirect(url_for(".overview"))
 
 @nav.navigate("Wohnheime", icon='fa-building')
 @bp.route('/sites/')
-def overview():
+def overview() -> ResponseReturnValue:
     return render_template(
         'facilities/site_overview.html',
         site_table=SiteTable(data_url=url_for('.overview_json')),
     )
 
 @bp.route('/sites/json')
-def overview_json():
+def overview_json() -> ResponseReturnValue:
     return TableResponse[SiteRow](
         items=[
             SiteRow(
@@ -105,8 +118,8 @@ def overview_json():
 
 
 @bp.route('/site/<int:site_id>')
-def site_show(site_id):
-    site = Site.get(site_id)
+def site_show(site_id: int) -> ResponseReturnValue:
+    site = session.session.get(Site, site_id)
     if not site:
         flash("Site existiert nicht!", "error")
         abort(404)
@@ -119,7 +132,7 @@ def site_show(site_id):
 
 def determine_building_or_404(
     id: int | None = None,
-    shortname: int | None = None,
+    shortname: str | None = None,
 ) -> Building:
     building = pycroft.lib.facilities.determine_building(id=id, shortname=shortname)
     if building is None:
@@ -128,9 +141,11 @@ def determine_building_or_404(
     return building
 
 
-@bp.route('/building/<int:building_id>/')
-@bp.route('/building/<building_shortname>/')
-def building_show(building_id=None, building_shortname=None):
+@bp.route("/building/<int:building_id>/")
+@bp.route("/building/<building_shortname>/")
+def building_show(
+    building_id: int | None = None, building_shortname: str | None = None
+) -> ResponseReturnValue:
     building = determine_building_or_404(id=building_id, shortname=building_shortname)
     rooms_list = building.rooms
     return render_template('facilities/building_show.html',
@@ -138,9 +153,11 @@ def building_show(building_id=None, building_shortname=None):
 
 
 # ToDo: Review this!
-@bp.route('/building/<int:building_id>/levels/')
-@bp.route('/building/<building_shortname>/levels/')
-def building_levels(building_id=None, building_shortname=None):
+@bp.route("/building/<int:building_id>/levels/")
+@bp.route("/building/<building_shortname>/levels/")
+def building_levels(
+    building_id: int | None = None, building_shortname: str | None = None
+) -> ResponseReturnValue:
     building = determine_building_or_404(id=building_id, shortname=building_shortname)
     levels_list = list({room.level for room in building.rooms})
 
@@ -154,67 +171,55 @@ def building_levels(building_id=None, building_shortname=None):
 
 @bp.route('/room/create', methods=['GET', 'POST'])
 @access.require('facilities_change')
-def room_create():
-    building_id = request.args.get("building_id")
-
+def room_create() -> ResponseReturnValue:
+    building_id: int | None = request.args.get("building_id", type=int)
     building = None
-
     if building_id:
-        building = Building.get(building_id)
-
-        if not building:
-            flash(f"Gebäude mit ID {building_id} nicht gefunden!", "error")
-            return redirect(url_for('.overview'))
+        building = determine_building_or_404(id=building_id)
 
     form = CreateRoomForm(building=building)
 
-    if form.validate_on_submit():
-        sess = session.session
-        try:
-            with sess.begin_nested():
-                address = get_or_create_address(**form.address_kwargs)
-                room = create_room(
-                    form.building.data,
-                    form.level.data,
-                    form.number.data,
-                    address=address,
-                    processor=current_user,
-                    inhabitable=form.inhabitable.data,
-                )
-        except RoomAlreadyExistsException:
-            form.number.errors.append("Ein Raum mit diesem Namen existiert bereits in dieser Etage!")
-        else:
-            sess.commit()
-            flash(f"Der Raum {room.short_name} wurde erfolgreich erstellt.", "success")
-            return redirect(url_for(".room_show", room_id=room.id))
+    def default_response() -> ResponseReturnValue:
+        return render_template(
+            "generic_form.html",
+            page_title="Raum erstellen",
+            form_args={"form": form, "cancel_to": url_for(".overview")},
+        )
 
-    form_args = {
-        'form': form,
-        'cancel_to': url_for('.overview')
+    if not form.is_submitted():
+        form.set_address_fields(suggest_room_address_data(building))
+        return default_response()
+
+    if not form.validate():
+        return default_response()
+
+    sess = session.session
+
+    _handlers: ErrorHandlerMap = {
+        RoomAlreadyExistsException: lambda _: form.number.errors.append(
+            "Ein Raum mit diesem Namen existiert bereits in dieser Etage!"
+        )
     }
+    with abort_on_error(default_response, _handlers), sess.begin_nested():
+        address = get_or_create_address(**form.address_kwargs)
+        room = create_room(
+            form.building.data,
+            form.level.data,
+            form.number.data,
+            address=address,
+            processor=current_user,
+            inhabitable=form.inhabitable.data,
+        )
+    sess.commit()
 
-    suggestion = suggest_room_address_data(building)
-    if suggestion and not form.is_submitted():
-        form.address_street.data = suggestion.street
-        form.address_number.data = suggestion.number
-        form.address_zip_code.data = suggestion.zip_code
-        form.address_city.data = suggestion.city
-        form.address_state.data = suggestion.state
-        form.address_country.data = suggestion.country
-
-    return render_template('generic_form.html',
-                           page_title="Raum erstellen",
-                           form_args=form_args)
+    flash(f"Der Raum {room.short_name} wurde erfolgreich erstellt.", "success")
+    return redirect(url_for(".room_show", room_id=room.id))
 
 
 @bp.route('/room/<int:room_id>/create', methods=['GET', 'POST'])
 @access.require('facilities_change')
-def room_edit(room_id):
-    room = Room.get(room_id)
-
-    if not room:
-        flash(f"Raum mit ID {room_id} nicht gefunden!", "error")
-        return redirect(url_for('.overview'))
+def room_edit(room_id: int) -> ResponseReturnValue:
+    room = get_room_or_404(room_id)
 
     form = EditRoomForm(building=room.building.short_name,
                         level=room.level,
@@ -222,53 +227,62 @@ def room_edit(room_id):
                         inhabitable=room.inhabitable,
                         vo_suchname=room.swdd_vo_suchname)
 
-    if form.validate_on_submit():
-        try:
-            with session.session.no_autoflush:
-                address = get_or_create_address(**form.address_kwargs)
-                edit_room(room, form.number.data, form.inhabitable.data, form.vo_suchname.data,
-                          address=address, processor=current_user)
+    def default_response() -> ResponseReturnValue:
+        if users := room.users_sharing_address:
+            flash(
+                gettext(
+                    "Dieser Raum hat {} bewohner ({}), die die Adresse des Raums teilen."
+                    " Ihre Adresse wird beim Ändern automatisch angepasst."
+                ).format(len(users), ", ".join(u.name for u in users)),
+                "info",
+            )
 
-            session.session.commit()
+        return render_template(
+            "generic_form.html",
+            page_title="Raum bearbeiten",
+            form_args={
+                "form": form,
+                "cancel_to": url_for(".room_show", room_id=room.id),
+            },
+        )
 
-            flash(f"Der Raum {room.short_name} wurde erfolgreich bearbeitet.",
-                  "success")
-
-            return redirect(url_for('.room_show', room_id=room.id))
-        except RoomAlreadyExistsException:
-            form.number.errors.append("Ein Raum mit diesem Namen existiert bereits in dieser Etage!")
-
-    old_addr = room.address
     if not form.is_submitted():
-        form.address_street.data = old_addr.street
-        form.address_number.data = old_addr.number
-        form.address_addition.data = old_addr.addition
-        form.address_zip_code.data = old_addr.zip_code
-        form.address_city.data = old_addr.city
-        form.address_state.data = old_addr.state
-        form.address_country.data = old_addr.country
+        form.set_address_fields(room.address)
+        return default_response()
 
-    if room.users_sharing_address:
-        flash(gettext("Dieser Raum hat {} bewohner ({}), die die Adresse des Raums teilen."
-                      " Ihre Adresse wird beim Ändern automatisch angepasst.")
-              .format(len(room.users_sharing_address),
-                      ', '.join(u.name for u in room.users_sharing_address)),
-              'info')
+    if not form.validate():
+        return default_response()
 
-    form_args = {
-        'form': form,
-        'cancel_to': url_for('.room_show', room_id=room.id)
+    sess = session.session
+
+    _handlers: ErrorHandlerMap = {
+        RoomAlreadyExistsException: lambda _: form.number.errors.append(
+            "Ein Raum mit diesem Namen existiert bereits in dieser Etage!"
+        )
     }
+    with abort_on_error(default_response, _handlers), sess.begin_nested():
+        address = get_or_create_address(**form.address_kwargs)
+        edit_room(
+            room,
+            form.number.data,
+            form.inhabitable.data,
+            form.vo_suchname.data,
+            address=address,
+            processor=current_user,
+        )
 
-    return render_template('generic_form.html',
-                           page_title="Raum bearbeiten",
-                           form_args=form_args)
+    flash(f"Der Raum {room.short_name} wurde erfolgreich bearbeitet.", "success")
+    return redirect(url_for(".room_show", room_id=room.id))
 
 
 # ToDo: Review this!
-@bp.route('/building/<int:building_id>/level/<int:level>/rooms/')
-@bp.route('/building/<building_shortname>/level/<int:level>/rooms/')
-def building_level_rooms(level, building_id=None, building_shortname=None):
+@bp.route("/building/<int:building_id>/level/<int:level>/rooms/")
+@bp.route("/building/<building_shortname>/level/<int:level>/rooms/")
+def building_level_rooms(
+    level: int,
+    building_id: int | None = None,
+    building_shortname: str | None = None,
+) -> ResponseReturnValue:
     building = determine_building_or_404(id=building_id, shortname=building_shortname)
     level_l0 = f"{level:02d}"
 
@@ -284,9 +298,13 @@ def building_level_rooms(level, building_id=None, building_shortname=None):
     )
 
 
-@bp.route('/building/<int:building_id>/level/<int:level>/rooms/json')
-@bp.route('/building/<building_shortname>/level/<int:level>/rooms/json')
-def building_level_rooms_json(level, building_id=None, building_shortname=None):
+@bp.route("/building/<int:building_id>/level/<int:level>/rooms/json")
+@bp.route("/building/<building_shortname>/level/<int:level>/rooms/json")
+def building_level_rooms_json(
+    level: int,
+    building_id: int | None = None,
+    building_shortname: str | None = None,
+) -> ResponseReturnValue:
     building = determine_building_or_404(id=building_id, shortname=building_shortname)
 
     all_users = bool(request.args.get('all_users', 0, type=int))
@@ -303,15 +321,16 @@ def building_level_rooms_json(level, building_id=None, building_shortname=None):
                      CurrentProperty.property_name == 'network_access')))
         )
 
+    # TODO remove mypy suppression below if moved to `select`
     rooms_users_q = (session.session.query(Room, user)
                      .options(joinedload(user.current_properties))
                      .filter(and_(Room.building == building, Room.level == level))
                      .outerjoin(user, user_join_condition))
 
-    level_inhabitants = defaultdict(lambda: [])
+    level_inhabitants: dict[Room, list[User]] = defaultdict(lambda: [])
     for room, user in rooms_users_q.all():
         if user is not None:
-            level_inhabitants[room].append(user)
+            level_inhabitants[room].append(t.cast(User, user))
         else:
             # Ensure room is in level_inhabitants
             level_inhabitants[room]
@@ -331,8 +350,8 @@ def building_level_rooms_json(level, building_id=None, building_shortname=None):
 
 
 def get_switch_room_or_redirect(switch_room_id: int) -> Room:
-    switch_room = Room.get(switch_room_id)
-    if not switch_room:
+    switch_room = session.session.get(Room, switch_room_id)
+    if switch_room is None:
         flash(f"Raum mit ID {switch_room_id} nicht gefunden!", "error")
         abort(redirect(url_for(".overview")))
     if not switch_room.is_switch_room:
@@ -343,49 +362,53 @@ def get_switch_room_or_redirect(switch_room_id: int) -> Room:
 
 @bp.route('/room/<int:switch_room_id>/patch-port/create', methods=['GET', 'POST'])
 @access.require('infrastructure_change')
-def patch_port_create(switch_room_id):
+def patch_port_create(switch_room_id: int) -> ResponseReturnValue:
     switch_room = get_switch_room_or_redirect(switch_room_id)
 
     form = PatchPortForm(switch_room=switch_room.short_name,
                          building=switch_room.building,
                          level=switch_room.level)
 
-    if form.validate_on_submit():
-        room = Room.q.filter_by(building=form.building.data,
-                                level=form.level.data,
-                                number=form.room_number.data).one()
-        sess = session.session
-        try:
-            with sess.begin_nested():
-                patch_port = create_patch_port(
-                    form.name.data, room, switch_room, current_user
-                )
-        except PatchPortAlreadyExistsException:
-            form.name.errors.append(
-                "Ein Patch-Port mit dieser Bezeichnung existiert bereits in diesem Switchraum."
-            )
-        else:
-            sess.commit()
-            flash(
-                f"Der Patch-Port {patch_port.name} zum Zimmer {patch_port.room.short_name} wurde erfolgreich erstellt.",
-                  "success")
-            return redirect(url_for('.room_show', room_id=switch_room_id, _anchor="patchpanel"))
+    def default_response() -> ResponseReturnValue:
+        form_args = {
+            "form": form,
+            "cancel_to": url_for(
+                ".room_show", room_id=switch_room_id, _anchor="patchpanel"
+            ),
+        }
+        return render_template(
+            "generic_form.html", page_title="Patch-Port erstellen", form_args=form_args
+        )
 
-    form_args = {
-        'form': form,
-        'cancel_to': url_for('.room_show', room_id=switch_room_id, _anchor="patchpanel")
+    if not form.validate_on_submit():
+        return default_response()
+
+    room = Room.q.filter_by(
+        building=form.building.data, level=form.level.data, number=form.room_number.data
+    ).one()
+    sess = session.session
+    _handlers: ErrorHandlerMap = {
+        PatchPortAlreadyExistsException: lambda _: form.name.errors.append(
+            "Ein Patch-Port mit dieser Bezeichnung existiert bereits in diesem Zimmer."
+        )
     }
+    with abort_on_error(default_response, _handlers), sess.begin_nested():
+        patch_port = create_patch_port(form.name.data, room, switch_room, current_user)
+    sess.commit()
 
-    return render_template('generic_form.html',
-                           page_title="Patch-Port erstellen",
-                           form_args=form_args)
+    flash(
+        f"Der Patch-Port {patch_port.name} zum Zimmer {patch_port.room.short_name} "
+        "wurde erfolgreich erstellt.",
+        "success",
+    )
+    return redirect(url_for(".room_show", room_id=switch_room_id, _anchor="patchpanel"))
 
 
 def get_patch_port_or_redirect(
     patch_port_id: int, in_switch_room: Room | None = None
 ) -> PatchPort:
-    patch_port = PatchPort.get(patch_port_id)
-    if not patch_port:
+    patch_port = session.session.get(PatchPort, patch_port_id)
+    if patch_port is None:
         flash(f"Patch-Port mit ID {patch_port_id} nicht gefunden!", "error")
         abort(redirect(url_for(".overview")))
     if in_switch_room and patch_port.switch_room != in_switch_room:
@@ -396,7 +419,7 @@ def get_patch_port_or_redirect(
 
 @bp.route('/room/<int:switch_room_id>/patch-port/<int:patch_port_id>/edit', methods=['GET', 'POST'])
 @access.require('infrastructure_change')
-def patch_port_edit(switch_room_id, patch_port_id):
+def patch_port_edit(switch_room_id: int, patch_port_id: int) -> ResponseReturnValue:
     switch_room = get_switch_room_or_redirect(switch_room_id)
     patch_port = get_patch_port_or_redirect(patch_port_id, in_switch_room=switch_room)
     form = PatchPortForm(switch_room=switch_room.short_name,
@@ -405,70 +428,84 @@ def patch_port_edit(switch_room_id, patch_port_id):
                          level=patch_port.room.level,
                          room_number=patch_port.room.number)
 
-    if form.validate_on_submit():
-        room = Room.q.filter_by(building=form.building.data,
-                                level=form.level.data,
-                                number=form.room_number.data).one()
-        sess = session.session
-        try:
-            with sess.begin_nested():
-                edit_patch_port(patch_port, form.name.data, room, current_user)
-        except PatchPortAlreadyExistsException:
-            form.name.errors.append(
-                "Ein Patch-Port mit dieser Bezeichnung existiert bereits in diesem Switchraum."
-            )
-        else:
-            sess.commit()
-            flash("Der Patch-Port wurde erfolgreich bearbeitet.", "success")
-            return redirect(url_for('.room_show', room_id=switch_room_id, _anchor="patchpanel"))
+    def default_response() -> ResponseReturnValue:
+        form_args = {
+            "form": form,
+            "cancel_to": url_for(
+                ".room_show", room_id=switch_room_id, _anchor="patchpanel"
+            ),
+        }
+        return render_template(
+            "generic_form.html",
+            page_title="Patch-Port bearbeiten",
+            form_args=form_args,
+        )
 
-    form_args = {
-        'form': form,
-        'cancel_to': url_for('.room_show', room_id=switch_room_id, _anchor="patchpanel")
+    if not form.validate_on_submit():
+        return default_response()
+
+    room = Room.q.filter_by(
+        building=form.building.data, level=form.level.data, number=form.room_number.data
+    ).one()
+    sess = session.session
+    _handlers: ErrorHandlerMap = {
+        PatchPortAlreadyExistsException: lambda _: form.name.errors.append(
+            "Ein Patch-Port mit dieser Bezeichnung existiert bereits in diesem Switchraum."
+        )
     }
+    with abort_on_error(default_response, _handlers), sess.begin_nested():
+        edit_patch_port(patch_port, form.name.data, room, current_user)
+    sess.commit()
 
-    return render_template('generic_form.html',
-                           page_title="Patch-Port bearbeiten",
-                           form_args=form_args)
+    flash("Der Patch-Port wurde erfolgreich bearbeitet.", "success")
+    return redirect(url_for(".room_show", room_id=switch_room_id, _anchor="patchpanel"))
 
 
 @bp.route('/room/<int:switch_room_id>/patch-port/<int:patch_port_id>/delete', methods=['GET', 'POST'])
 @access.require('infrastructure_change')
-def patch_port_delete(switch_room_id, patch_port_id):
+def patch_port_delete(switch_room_id: int, patch_port_id: int) -> ResponseReturnValue:
     switch_room = get_switch_room_or_redirect(switch_room_id)
     patch_port = get_patch_port_or_redirect(patch_port_id, in_switch_room=switch_room)
 
     form = Form()
 
-    if form.validate_on_submit():
+    def default_response() -> ResponseReturnValue:
+        form_args = {
+            "form": form,
+            "cancel_to": url_for(
+                ".room_show", room_id=switch_room_id, _anchor="patchpanel"
+            ),
+            "submit_text": "Löschen",
+            "actions_offset": 0,
+        }
+        return render_template(
+            "generic_form.html", page_title="Patch-Port löschen", form_args=form_args
+        )
+
+    if not form.validate_on_submit():
+        return default_response()
+
+    with abort_on_error(default_response), session.session.begin_nested():
         delete_patch_port(patch_port, current_user)
+    session.session.commit()
 
-        session.session.commit()
+    flash("Der Patch-Port wurde erfolgreich gelöscht.", "success")
+    return redirect(url_for(".room_show", room_id=switch_room_id, _anchor="patchpanel"))
 
-        flash("Der Patch-Port wurde erfolgreich gelöscht.", "success")
 
-        return redirect(url_for('.room_show', room_id=switch_room_id, _anchor="patchpanel"))
 
-    form_args = {
-        'form': form,
-        'cancel_to': url_for('.room_show', room_id=switch_room_id, _anchor="patchpanel"),
-        'submit_text': 'Löschen',
-        'actions_offset': 0
-    }
+def get_room_or_404(room_id: int) -> Room:
+    room = session.session.get(Room, room_id)
+    if room is None:
+        flash(f"Raum mit id {room_id} existiert nicht", "error")
+        abort(404)
+    return room
 
-    return render_template('generic_form.html',
-                           page_title="Patch-Port löschen",
-                           form_args=form_args)
 
 
 @bp.route('/room/<int:room_id>', methods=['GET', 'POST'])
-def room_show(room_id):
-    room = Room.get(room_id)
-
-    if room is None:
-        flash("Zimmer existiert nicht!", 'error')
-        abort(404)
-
+def room_show(room_id: int) -> ResponseReturnValue:
+    room = get_room_or_404(room_id)
     form = RoomLogEntry()
 
     if form.validate_on_submit():
@@ -503,22 +540,16 @@ def room_show(room_id):
 
 
 @bp.route('/room/<int:room_id>/logs/json')
-def room_logs_json(room_id):
+def room_logs_json(room_id: int) -> ResponseReturnValue:
+    room = get_room_or_404(room_id)
     return TableResponse[LogTableRow](
-        items=[
-            format_room_log_entry(entry)
-            for entry in reversed(Room.get(room_id).log_entries)
-        ]
+        items=[format_room_log_entry(entry) for entry in reversed(room.log_entries)]
     ).model_dump()
 
 
 @bp.route('/room/<int:room_id>/patchpanel/json')
-def room_patchpanel_json(room_id):
-    room = Room.get(room_id)
-
-    if not room:
-        abort(404)
-
+def room_patchpanel_json(room_id: int) -> ResponseReturnValue:
+    room = get_room_or_404(room_id)
     if not room.is_switch_room:
         abort(400)
 
@@ -571,7 +602,7 @@ def room_patchpanel_json(room_id):
 
 @bp.route('/json/levels')
 @access.require('facilities_show')
-def json_levels():
+def json_levels() -> ResponseReturnValue:
     """Endpoint for the room <select> field"""
     building_id = request.args.get("building", 0, type=int)
     levels = (
@@ -585,7 +616,7 @@ def json_levels():
 
 @bp.route('/json/rooms')
 @access.require('facilities_show')
-def json_rooms():
+def json_rooms() -> ResponseReturnValue:
     """Endpoint for the room <select> field"""
     building_id = request.args.get("building", 0, type=int)
     level = request.args.get("level", 0, type=int)
@@ -601,7 +632,7 @@ def json_rooms():
 @bp.route('/overcrowded', defaults={'building_id': None})
 @bp.route('/overcrowded/<int:building_id>')
 @nav.navigate("Mehrfachbelegungen", icon='fa-people-arrows')
-def overcrowded(building_id):
+def overcrowded(building_id: int) -> ResponseReturnValue:
     page_title = "Mehrfachbelegungen"
     if building_id:
         building = determine_building_or_404(id=building_id)
@@ -616,7 +647,7 @@ def overcrowded(building_id):
 
 @bp.route('/overcrowded/json', defaults={'building_id': None})
 @bp.route('/overcrowded/<int:building_id>/json')
-def overcrowded_json(building_id):
+def overcrowded_json(building_id: int) -> ResponseReturnValue:
     return TableResponse[RoomOvercrowdedRow](
         items=[
             RoomOvercrowdedRow(
@@ -638,7 +669,7 @@ def overcrowded_json(building_id):
 
 
 @bp.route('address/<string:type>')
-def addresses(type):
+def addresses(type: str) -> ResponseReturnValue:
     try:
         entity = get_address_entity(type)
     except ValueError as e:

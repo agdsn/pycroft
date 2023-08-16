@@ -11,6 +11,7 @@
 """
 
 from flask import Blueprint, abort, flash, redirect, render_template, url_for
+from flask.typing import ResponseValue
 from flask_login import current_user
 from flask_wtf import FlaskForm as Form
 from ipaddr import IPAddress
@@ -49,7 +50,7 @@ nav = BlueprintNavigation(bp, "Infrastruktur", icon='fa-network-wired', blueprin
 
 @bp.route('/subnets')
 @nav.navigate("Subnetze")
-def subnets():
+def subnets() -> ResponseValue:
     return render_template(
         'infrastructure/subnets_list.html',
         subnet_table=SubnetTable(data_url=url_for(".subnets_json")))
@@ -79,7 +80,7 @@ def format_reserved_addresses(subnet):
 
 
 @bp.route('/subnets/json')
-def subnets_json():
+def subnets_json() -> ResponseValue:
     return TableResponse[SubnetRow](
         items=[
             SubnetRow(
@@ -98,14 +99,14 @@ def subnets_json():
 
 @bp.route('/switches')
 @nav.navigate("Switche", icon='fa-random')
-def switches():
+def switches() -> ResponseValue:
     return render_template(
         'infrastructure/switches_list.html',
         switch_table=SwitchTable(data_url=url_for(".switches_json")))
 
 
 @bp.route('/switches/json')
-def switches_json():
+def switches_json() -> ResponseValue:
     return TableResponse[SwitchRow](
         items=[
             SwitchRow(
@@ -134,7 +135,7 @@ def switches_json():
 
 
 @bp.route('/switch/show/<int:switch_id>')
-def switch_show(switch_id):
+def switch_show(switch_id) -> ResponseValue:
     switch = Switch.get(switch_id)
     if not switch:
         flash(f"Switch mit ID {switch_id} nicht gefunden!", "error")
@@ -149,7 +150,7 @@ def switch_show(switch_id):
 
 
 @bp.route('/switch/show/<int:switch_id>/json')
-def switch_show_json(switch_id):
+def switch_show_json(switch_id) -> ResponseValue:
     switch = Switch.q.options(
         joinedload(Switch.ports).joinedload(SwitchPort.patch_port).joinedload(
             PatchPort.room)).get(switch_id)
@@ -199,7 +200,7 @@ def switch_show_json(switch_id):
 
 @bp.route('/switch/create', methods=['GET', 'POST'])
 @access.require('infrastructure_change')
-def switch_create():
+def switch_create() -> ResponseValue:
     form = SwitchForm()
 
     if form.validate_on_submit():
@@ -228,7 +229,7 @@ def switch_create():
 
 @bp.route('/switch/<int:switch_id>/edit', methods=['GET', 'POST'])
 @access.require('infrastructure_change')
-def switch_edit(switch_id):
+def switch_edit(switch_id) -> ResponseValue:
     sess = session.session
     if not (switch := sess.get(Switch, switch_id)):
         flash(f"Switch mit ID {switch_id} nicht gefunden!", "error")
@@ -259,7 +260,7 @@ def switch_edit(switch_id):
 
 @bp.route('/switch/<int:switch_id>/delete', methods=['GET', 'POST'])
 @access.require('infrastructure_change')
-def switch_delete(switch_id):
+def switch_delete(switch_id) -> ResponseValue:
     sess = session.session
     if not (switch := sess.get(Switch, switch_id)):
         flash(f"Switch mit ID {switch_id} nicht gefunden!", "error")
@@ -288,7 +289,7 @@ def switch_delete(switch_id):
 
 @bp.route('/switch/<int:switch_id>/port/create', methods=['GET', 'POST'])
 @access.require('infrastructure_change')
-def switch_port_create(switch_id):
+def switch_port_create(switch_id) -> ResponseValue:
     switch = Switch.get(switch_id)
 
     if not switch:
@@ -337,7 +338,7 @@ def switch_port_create(switch_id):
 
 @bp.route('/switch/<int:switch_id>/port/<int:switch_port_id>/edit', methods=['GET', 'POST'])
 @access.require('infrastructure_change')
-def switch_port_edit(switch_id, switch_port_id):
+def switch_port_edit(switch_id, switch_port_id) -> ResponseValue:
     switch = Switch.get(switch_id)
     switch_port = SwitchPort.get(switch_port_id)
 
@@ -397,7 +398,7 @@ def switch_port_edit(switch_id, switch_port_id):
 
 @bp.route('/switch/<int:switch_id>/port/<int:switch_port_id>/delete', methods=['GET', 'POST'])
 @access.require('infrastructure_change')
-def switch_port_delete(switch_id, switch_port_id):
+def switch_port_delete(switch_id, switch_port_id) -> ResponseValue:
     switch = Switch.get(switch_id)
     switch_port = SwitchPort.get(switch_port_id)
 
@@ -438,14 +439,14 @@ def switch_port_delete(switch_id, switch_port_id):
 
 @bp.route('/vlans')
 @nav.navigate("VLANs", icon='fa-hashtag')
-def vlans():
+def vlans() -> ResponseValue:
     return render_template(
         'infrastructure/vlan_list.html',
         vlan_table=VlanTable(data_url=url_for(".vlans_json")))
 
 
 @bp.route('/vlans/json')
-def vlans_json():
+def vlans_json() -> ResponseValue:
     return TableResponse[VlanRow](
         items=[VlanRow.model_validate(vlan) for vlan in VLAN.q.all()]
     ).model_dump()

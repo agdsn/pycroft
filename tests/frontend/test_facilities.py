@@ -188,8 +188,7 @@ class TestRoomCreate:
             client.assert_ok(ep)
 
     def test_get_wrong_id(self, ep, client, building):
-        with client.flashes_message("Gebäude.*nicht gefunden", "error"):
-            client.assert_url_redirects(url_for(ep, building_id=999))
+        client.assert_url_response_code(url_for(ep, building_id=999), code=404)
 
     def test_get_correct_building_id(self, ep, client, building):
         with client.renders_template("generic_form.html"):
@@ -253,8 +252,8 @@ class TestRoomEdit:
         f.UserFactory(address=room.address, room=room)
 
     def test_get_no_room(self, ep, client):
-        with client.flashes_message("Raum.*nicht gefunden", "error"):
-            client.assert_url_redirects(url_for(ep, room_id=999))
+        with client.flashes_message("Raum.*existiert nicht", "error"):
+            client.assert_url_response_code(url_for(ep, room_id=999), code=404)
 
     def test_get(self, url, client):
         with client.renders_template("generic_form.html"), client.flashes_message(

@@ -18,6 +18,7 @@ files = [
     "pycroft/external_services",
     "ldap_sync",
     "web/blueprints/finance",
+    "web/blueprints/facilities",
     "web/blueprints/__init__.py",
     "web/blueprints/access.py",
     "web/blueprints/navigation.py",
@@ -54,6 +55,7 @@ module = [
     "pycroft.helpers.utc",
     "web.blueprints",
     "web.blueprints.access",
+    "web.blueprints.facilities",
     "web.blueprints.navigation",
 ]
 disallow_untyped_defs = true
