@@ -996,7 +996,7 @@ def unblock(user_id) -> ResponseReturnValue:
         flash(str(e), 'error')
     else:
         flash('Nutzer entsperrt.', 'success')
-        return redirect(url_for('.user_show', user_id=user_id))
+    return redirect(url_for(".user_show", user_id=user_id))
 
 
 @bp.route('/<int:user_id>/move_out', methods=['GET', 'POST'])
