@@ -9,6 +9,8 @@
 
     :copyright: (c) 2012 by AG DSN.
 """
+import typing as t
+from collections import OrderedDict
 from itertools import chain
 
 from flask import Blueprint, flash, redirect, render_template, url_for, abort
@@ -36,12 +38,16 @@ nav = BlueprintNavigation(bp, "", icon='fa-cogs', push_right=True, blueprint_acc
 def property_groups() -> ResponseValue:
     property_groups_list = PropertyGroup.q.all()
     categories = property_categories
-    properties_with_description = set(chain(*(
-        category.keys() for category in categories.values()
-    )))
-    categories["Ohne Beschreibung"] = {
-        p: p for p in known_properties() if p not in properties_with_description
-    }
+    properties_with_description = set(
+        chain(*(category.keys() for category in categories.values()))
+    )
+    categories["Ohne Beschreibung"] = OrderedDict(
+        {
+            p: p
+            for p in sorted(known_properties())
+            if p not in properties_with_description
+        }
+    )
     return render_template(
         'properties/property_groups_list.html',
         property_categories=property_categories,
