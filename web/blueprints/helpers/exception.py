@@ -2,6 +2,7 @@ import logging
 import traceback
 import typing as t
 from contextlib import contextmanager
+from inspect import signature
 
 from flask import flash, abort, make_response
 from flask.typing import ResponseReturnValue
@@ -91,7 +92,16 @@ def abort_on_error(
         with cm as n:
             yield n
     except PycroftException:
-        resp = error_response() if callable(error_response) else error_response
+        # these shenanigans are necessary because a `ResponseReturnValue` can also be a callable,
+        # see https://flask.palletsprojects.com/en/2.3.x/api/#flask.Flask.make_response
+        _is_nullary_lambda = (
+            callable(error_response) and not signature(error_response).parameters
+        )
+        resp: ResponseReturnValue
+        if _is_nullary_lambda:
+            resp = t.cast(t.Callable[[], ResponseReturnValue], error_response)()
+        else:
+            resp = t.cast(ResponseReturnValue | None, error_response)
         abort(make_response(resp))
 
 
