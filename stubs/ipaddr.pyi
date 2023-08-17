@@ -114,7 +114,7 @@ class _BaseNet(_IPAddrBase):
     def with_hostmask(self):
         ...
     @property
-    def numhosts(self):
+    def numhosts(self) -> int:
         ...
     @property
     def version(self) -> None:
