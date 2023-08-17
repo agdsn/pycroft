@@ -11,9 +11,9 @@ management.
 """
 import typing as t
 
-from sqlalchemy import and_, func, distinct
+from sqlalchemy import and_, func, distinct, Result
 from sqlalchemy.future import select
-from sqlalchemy.orm import aliased, Query
+from sqlalchemy.orm import aliased
 
 from pycroft.helpers.i18n import deferred_gettext
 from pycroft.helpers.interval import UnboundedInterval, IntervalSet, Interval
@@ -179,8 +179,10 @@ def delete_property_group(group: PropertyGroup, processor: User) -> None:
     session.session.delete(group)
 
 
-def user_memberships_query(user_id: int, active_groups_only: bool = False) -> Query:
-    memberships = Membership.q.select_from(Membership).filter(Membership.user_id == user_id)
+def user_memberships_query(
+    user_id: int, active_groups_only: bool = False
+) -> Result[tuple[Membership, list[str], list[str]]]:
+    memberships = select(Membership).filter(Membership.user_id == user_id)
     if active_groups_only:
         memberships = memberships.filter(
             Membership.active_during.contains(func.current_timestamp())
@@ -193,11 +195,11 @@ def user_memberships_query(user_id: int, active_groups_only: bool = False) -> Qu
         .outerjoin(
             p_granted, and_(p_granted.property_group_id == group.id, p_granted.granted)
         )
-        .add_column(func.array_agg(distinct(p_granted.name)).label("granted"))
+        .add_columns(func.array_agg(distinct(p_granted.name)).label("granted"))
         .outerjoin(
             p_denied, and_(p_denied.property_group_id == group.id, ~p_denied.granted)
         )
-        .add_column(func.array_agg(distinct(p_denied.name)).label("denied"))
+        .add_columns(func.array_agg(distinct(p_denied.name)).label("denied"))
         .group_by(Membership.id)
     )
-    return memberships
+    return session.session.execute(memberships)

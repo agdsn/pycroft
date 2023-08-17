@@ -1,14 +1,17 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from datetime import datetime
 
 from flask import url_for
 from flask_wtf import FlaskForm as Form
 from markupsafe import escape, Markup
+from sqlalchemy import select
 from wtforms import Field
 from wtforms.validators import (
     Regexp, ValidationError, DataRequired, Email, Optional)
+
+from pycroft.helpers.utc import DateTimeTz
+from pycroft.model.session import session
 from wtforms_widgets.fields.core import TextField, TextAreaField, BooleanField, \
     QuerySelectField, FormField, \
     QuerySelectMultipleField, DateField, IntegerField, TimeField
@@ -65,9 +68,11 @@ class UniqueName:
         self.ratio = 0.6
 
     def force_set(self, form: Form) -> bool:
-        return self.force_field \
-               and hasattr(form, self.force_field)\
-               and getattr(form, self.force_field).data
+        return bool(
+            self.force_field
+            and hasattr(form, self.force_field)
+            and getattr(form, self.force_field).data
+        )
 
     def try_get_room(self, form: Form) -> Room | None:
         try:
@@ -75,9 +80,12 @@ class UniqueName:
             level = getattr(form, self.level_field).data
             building = getattr(form, self.building_field).data
         except AttributeError:
-            return
+            return None
 
-        return Room.q.filter_by(number=number, level=level, building=building).one_or_none()
+        # TODO this should be a lib function!
+        return session.scalar(
+            select(Room).filter_by(number=number, level=level, building=building)
+        )
 
     def __call__(self, form: Form, field: Field):
         if self.force_set(form):
@@ -111,9 +119,11 @@ class UniqueEmail:
         self.force_field = force_field
 
     def force_set(self, form: Form) -> bool:
-        return self.force_field \
-               and hasattr(form, self.force_field)\
-               and getattr(form, self.force_field).data
+        return bool(
+            self.force_field
+            and hasattr(form, self.force_field)
+            and getattr(form, self.force_field).data
+        )
 
     @staticmethod
     def get_conflicting_users(email: str) -> list[User]:
@@ -190,7 +200,7 @@ class UserMoveForm(SelectRoomForm):
                           description="Optional. In UTC angeben.",
                           render_kw={'placeholder': 'hh:mm'})
 
-    def get_execution_time(self, now: datetime) -> datetime:
+    def get_execution_time(self, now: DateTimeTz) -> DateTimeTz:
         if self.now.data:
             return now
         assert self.when.data, "`now` checkbox deselected but no date given!"

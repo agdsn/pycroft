@@ -54,7 +54,13 @@ from pycroft.lib.user_deletion import get_archivable_members
 from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.swdd import Tenancy
-from pycroft.model.user import User, Membership, BaseUser, RoomHistoryEntry
+from pycroft.model.user import (
+    User,
+    Membership,
+    BaseUser,
+    RoomHistoryEntry,
+    PropertyGroup,
+)
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.helpers.exception import abort_on_error
 from web.blueprints.helpers.form import refill_room_data
@@ -455,8 +461,10 @@ def user_show_logs_json(user_id, logtype="all") -> ResponseReturnValue:
 @bp.route("/<int:user_id>/groups/<group_filter>")
 def user_show_groups_json(user_id, group_filter="all") -> ResponseReturnValue:
     active_groups_only = group_filter == "active"
-    memberships: list[tuple[Membership, list[str], list[str]]] = \
-        lib.membership.user_memberships_query(user_id, active_groups_only)
+    memberships = t.cast(
+        t.Iterable[tuple[Membership, list[str], list[str]]],
+        lib.membership.user_memberships_query(user_id, active_groups_only),
+    )
 
     return TableResponse[MembershipRow](
         items=[
@@ -764,6 +772,7 @@ def edit_membership(user_id, membership_id) -> ResponseReturnValue:
         membership_id), 'error')
         abort(404)
 
+    assert isinstance(membership.group, PropertyGroup)
     if membership.group.permission_level > current_user.permission_level:
         flash("Eine Bearbeitung von Gruppenmitgliedschaften für Gruppen mit "
               "höherem Berechtigungslevel ist nicht möglich.", 'error')

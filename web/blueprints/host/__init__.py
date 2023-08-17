@@ -109,7 +109,7 @@ def host_edit(host_id) -> ResponseReturnValue:
 @bp.route('/create', methods=['GET', 'POST'])
 @access.require('hosts_change')
 def host_create() -> ResponseReturnValue:
-    user = get_user_or_404(request.args.get('user_id', None))
+    user = get_user_or_404(request.args.get("user_id", default=None, type=int))
     form = HostForm(owner_id=user.id)
 
     def default_response() -> ResponseReturnValue:
