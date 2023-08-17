@@ -10,6 +10,8 @@
     :copyright: (c) 2012 by AG DSN.
 """
 
+import typing as t
+
 from flask import Blueprint, render_template, flash, redirect, url_for, request
 from flask.typing import ResponseValue
 from flask_login import (
@@ -24,7 +26,7 @@ bp = Blueprint('login', __name__, )
 
 class AnonymousUser(AnonymousUserMixin):
     #: See `pycroft.model.user.BaseUser.current_properties_set`
-    current_properties_set = frozenset()
+    current_properties_set: t.Container[str] = frozenset()
 
 
 login_manager = LoginManager()

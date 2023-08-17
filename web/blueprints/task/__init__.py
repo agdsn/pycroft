@@ -5,6 +5,7 @@ from typing import NoReturn
 from flask import Blueprint, url_for, abort, flash, redirect, request, render_template
 from flask.typing import ResponseValue
 from flask_login import current_user
+from sqlalchemy import select
 
 from pycroft.exc import PycroftException
 from pycroft.lib.task import cancel_task, task_type_to_impl, \
@@ -111,17 +112,19 @@ def json_user_tasks() -> ResponseValue:
     failed_only = bool(request.args.get("failed_only", False))
     open_only = bool(request.args.get("open_only", False))
 
-    tasks = Task.q.order_by(Task.status.desc(), Task.due.asc())\
+    tasks = select(Task).order_by(Task.status.desc(), Task.due.asc())
 
     if failed_only:
-        tasks = tasks.filter_by(status=TaskStatus.FAILED).all()
+        tasks = tasks.filter_by(status=TaskStatus.FAILED)
     elif open_only:
-        tasks = tasks.filter_by(status=TaskStatus.OPEN).all()
+        tasks = tasks.filter_by(status=TaskStatus.OPEN)
     else:
-        tasks = tasks.all()
+        tasks = tasks
 
     return TableResponse[TaskRow](
-        items=[task_row(t.cast(UserTask, task)) for task in tasks]
+        items=[
+            task_row(t.cast(UserTask, task)) for task in session.session.scalars(tasks)
+        ]
     ).model_dump()
 
 
@@ -171,6 +174,7 @@ def reschedule_user_task(task_id) -> ResponseValue:
     task = get_task_or_404(task_id)
 
     form = RescheduleTaskForm()
+    assert isinstance(task, UserTask)
     return_url = url_for('user.user_show', user_id=task.user.id, _anchor='tasks')
 
     if form.validate_on_submit():

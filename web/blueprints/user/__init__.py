@@ -28,7 +28,7 @@ from flask import (
     jsonify,
     Response,
 )
-from flask.typing import ResponseValue
+from flask.typing import ResponseReturnValue
 from flask_login import current_user
 from markupsafe import Markup
 
@@ -54,7 +54,13 @@ from pycroft.lib.user_deletion import get_archivable_members
 from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.swdd import Tenancy
-from pycroft.model.user import User, Membership, BaseUser, RoomHistoryEntry
+from pycroft.model.user import (
+    User,
+    Membership,
+    BaseUser,
+    RoomHistoryEntry,
+    PropertyGroup,
+)
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.helpers.exception import abort_on_error
 from web.blueprints.helpers.form import refill_room_data
@@ -125,7 +131,7 @@ nav = BlueprintNavigation(bp, "Nutzer", icon='fa-user', blueprint_access=access)
 
 @bp.route('/')
 @nav.navigate("Übersicht", weight=1)
-def overview() -> ResponseValue:
+def overview() -> ResponseReturnValue:
     stats = pycroft.lib.stats.overview_stats()
     entries = [{"title": "Mitgliedschaftsanfragen",
                 "href": url_for('.member_requests'),
@@ -165,7 +171,7 @@ def make_pdf_response(pdf_data, filename, inline=True) -> Response:
 
 
 @bp.route('/user_sheet')
-def user_sheet() -> ResponseValue:
+def user_sheet() -> ResponseReturnValue:
     """Deliver the datasheet stored in the session"""
     try:
         sheet_id = flask_session['user_sheet']
@@ -182,7 +188,7 @@ def user_sheet() -> ResponseValue:
 
 
 @bp.route('/<int:user_id>/datasheet')
-def static_datasheet(user_id) -> ResponseValue:
+def static_datasheet(user_id) -> ResponseReturnValue:
     """Deliver an on-the-fly datasheet without the password.
 
     Useful for testing the layout itself.
@@ -197,7 +203,7 @@ def static_datasheet(user_id) -> ResponseValue:
 
 
 @bp.route('/json/traffic-usage')
-def json_users_highest_traffic() -> ResponseValue:
+def json_users_highest_traffic() -> ResponseReturnValue:
     return TableResponse[TrafficTopRow](
         items=[
             TrafficTopRow(
@@ -224,7 +230,7 @@ def and_then(val: T | None, map: Callable[[T], U]) -> U | None:
 
 
 @bp.route('/json/search')
-def json_search() -> ResponseValue:
+def json_search() -> ResponseReturnValue:
     g = request.args.get
     try:
         user_id = and_then(coalesce_none(g('id'), ""), int)
@@ -281,7 +287,7 @@ def infoflags(user):
 
 
 @bp.route('/<int:user_id>/', methods=['GET', 'POST'])
-def user_show(user_id) -> ResponseValue:
+def user_show(user_id) -> ResponseReturnValue:
     user = get_user_or_404(user_id)
     room = user.room
     form = UserLogEntry()
@@ -419,7 +425,7 @@ def user_show(user_id) -> ResponseValue:
 
 
 @bp.route("/<int:user_id>/account")
-def user_account(user_id) -> ResponseValue:
+def user_account(user_id) -> ResponseReturnValue:
     user = get_user_or_404(user_id)
     return redirect(url_for("finance.accounts_show",
                             account_id=user.account_id))
@@ -438,7 +444,7 @@ def _iter_user_logs(user: User, logtype: LogType) -> t.Iterator[LogTableRow]:
 
 @bp.route("/<int:user_id>/logs")
 @bp.route("/<int:user_id>/logs/<logtype>")
-def user_show_logs_json(user_id, logtype="all") -> ResponseValue:
+def user_show_logs_json(user_id, logtype="all") -> ResponseReturnValue:
     user = get_user_or_404(user_id)
 
     logs = _iter_user_logs(user, logtype)
@@ -453,10 +459,12 @@ def user_show_logs_json(user_id, logtype="all") -> ResponseValue:
 
 @bp.route("/<int:user_id>/groups")
 @bp.route("/<int:user_id>/groups/<group_filter>")
-def user_show_groups_json(user_id, group_filter="all") -> ResponseValue:
+def user_show_groups_json(user_id, group_filter="all") -> ResponseReturnValue:
     active_groups_only = group_filter == "active"
-    memberships: list[tuple[Membership, list[str], list[str]]] = \
-        lib.membership.user_memberships_query(user_id, active_groups_only)
+    memberships = t.cast(
+        t.Iterable[tuple[Membership, list[str], list[str]]],
+        lib.membership.user_memberships_query(user_id, active_groups_only),
+    )
 
     return TableResponse[MembershipRow](
         items=[
@@ -509,7 +517,7 @@ def user_show_groups_json(user_id, group_filter="all") -> ResponseValue:
 
 @bp.route('/<int:user_id>/add_membership', methods=['GET', 'Post'])
 @access.require('groups_change_membership')
-def add_membership(user_id) -> ResponseValue:
+def add_membership(user_id) -> ResponseReturnValue:
     user = get_user_or_404(user_id)
     form = UserAddGroupMembership()
 
@@ -545,7 +553,7 @@ def add_membership(user_id) -> ResponseValue:
 
 @bp.route('/<int:user_id>/end_membership/<int:membership_id>')
 @access.require('groups_change_membership')
-def end_membership(user_id, membership_id) -> ResponseValue:
+def end_membership(user_id, membership_id) -> ResponseReturnValue:
     user = get_user_or_404(user_id)
     membership = Membership.get(membership_id)
 
@@ -574,7 +582,7 @@ def end_membership(user_id, membership_id) -> ResponseValue:
 
 @bp.route('/<int:user_id>/traffic/json')
 @bp.route('/<int:user_id>/traffic/json/<int:days>')
-def json_trafficdata(user_id, days=7) -> ResponseValue:
+def json_trafficdata(user_id, days=7) -> ResponseReturnValue:
     """Generate a JSON file to use with traffic and credit graphs.
 
     :param user_id:
@@ -597,10 +605,10 @@ def json_trafficdata(user_id, days=7) -> ResponseValue:
 @nav.navigate("Anlegen (Extern/IBR)", weight=4, icon="fa-plus-square")
 # TODO: Namen aendern
 @access.require('user_change')
-def create() -> ResponseValue:
+def create() -> ResponseReturnValue:
     form = UserCreateForm(property_groups=[config.member_group])
 
-    def default_response():
+    def default_response() -> ResponseReturnValue:
         # TODO we should do this across the `web` package.  See #417
         return render_template('user/user_create.html', form=form), 400 \
             if form.is_submitted() else 200
@@ -657,10 +665,10 @@ def create() -> ResponseValue:
 @nav.navigate("Anlegen (freie Adresseingabe)", weight=5, icon="far fa-plus-square")
 # TODO: Namen aendern
 @access.require('user_change')
-def create_non_resident() -> ResponseValue:
+def create_non_resident() -> ResponseReturnValue:
     form = NonResidentUserCreateForm(property_groups=[config.member_group])
 
-    def default_response():
+    def default_response() -> ResponseReturnValue:
         # TODO we should do this across the `web` package.  See #417
         return render_template('user/user_create.html', form=form), 400 \
             if form.is_submitted() else 200
@@ -698,11 +706,11 @@ def create_non_resident() -> ResponseValue:
 
 @bp.route('/<int:user_id>/move', methods=['GET', 'POST'])
 @access.require('user_change')
-def move(user_id) -> ResponseValue:
+def move(user_id) -> ResponseReturnValue:
     user = get_user_or_404(user_id)
     form = UserMoveForm()
 
-    def default_response(refill_form_data=False):
+    def default_response(refill_form_data=False) -> ResponseReturnValue:
         if not form.is_submitted() or refill_form_data:
             if user.room is not None:
                 refill_room_data(form, user.room)
@@ -756,7 +764,7 @@ def move(user_id) -> ResponseValue:
 
 @bp.route('/<int:user_id>/edit_membership/<int:membership_id>', methods=['GET', 'POST'])
 @access.require('groups_change_membership')
-def edit_membership(user_id, membership_id) -> ResponseValue:
+def edit_membership(user_id, membership_id) -> ResponseReturnValue:
     membership: Membership = Membership.get(membership_id)
 
     if membership is None:
@@ -764,6 +772,7 @@ def edit_membership(user_id, membership_id) -> ResponseValue:
         membership_id), 'error')
         abort(404)
 
+    assert isinstance(membership.group, PropertyGroup)
     if membership.group.permission_level > current_user.permission_level:
         flash("Eine Bearbeitung von Gruppenmitgliedschaften für Gruppen mit "
               "höherem Berechtigungslevel ist nicht möglich.", 'error')
@@ -807,7 +816,7 @@ def edit_membership(user_id, membership_id) -> ResponseValue:
 
 @bp.route('/<int:user_id>/edit', methods=['GET', 'POST'])
 @access.require('user_change')
-def edit_user(user_id) -> ResponseValue:
+def edit_user(user_id) -> ResponseReturnValue:
     user = get_user_or_404(user_id)
     form = UserEditForm(obj=user, person_id=user.swdd_person_id)
 
@@ -850,7 +859,7 @@ def edit_user(user_id) -> ResponseValue:
 
 @bp.route('/<int:user_id>/edit_address', methods=['GET', 'POST'])
 @access.require('user_change')
-def edit_user_address(user_id: int) -> ResponseValue:
+def edit_user_address(user_id: int) -> ResponseReturnValue:
     user = get_user_or_404(user_id)
     form = UserEditAddressForm()
     user_show_url = url_for('.user_show', user_id=user.id)
@@ -894,7 +903,7 @@ def edit_user_address(user_id: int) -> ResponseValue:
 
 @bp.route('/search', methods=['GET', 'POST'])
 @nav.navigate("Suchen", weight=3, icon="fa-search")
-def search() -> ResponseValue:
+def search() -> ResponseReturnValue:
     form = UserSearchForm()
 
     return render_template(
@@ -906,7 +915,7 @@ def search() -> ResponseValue:
 
 @bp.route('/<int:user_id>/reset_password', methods=['GET', 'POST'])
 @access.require('user_change')
-def reset_password(user_id) -> ResponseValue:
+def reset_password(user_id) -> ResponseReturnValue:
     form = UserResetPasswordForm()
     my_user = get_user_or_404(user_id)
 
@@ -936,7 +945,7 @@ def reset_password(user_id) -> ResponseValue:
 
 @bp.route('/<int:user_id>/reset_wifi_password', methods=['GET', 'POST'])
 @access.require('user_change')
-def reset_wifi_password(user_id) -> ResponseValue:
+def reset_wifi_password(user_id) -> ResponseReturnValue:
     form = UserResetPasswordForm()
     myUser = User.get(user_id)
     if form.validate_on_submit():
@@ -956,7 +965,7 @@ def reset_wifi_password(user_id) -> ResponseValue:
 
 @bp.route('/<int:user_id>/block', methods=['GET', 'POST'])
 @access.require('user_change')
-def block(user_id) -> ResponseValue:
+def block(user_id) -> ResponseReturnValue:
     form = UserSuspendForm()
     myUser = get_user_or_404(user_id)
     if form.validate_on_submit():
@@ -984,7 +993,7 @@ def block(user_id) -> ResponseValue:
 
 @bp.route('/<int:user_id>/unblock', methods=['GET', 'POST'])
 @access.require('user_change')
-def unblock(user_id) -> ResponseValue:
+def unblock(user_id) -> ResponseReturnValue:
     user = get_user_or_404(user_id)
 
     try:
@@ -996,18 +1005,20 @@ def unblock(user_id) -> ResponseValue:
         flash(str(e), 'error')
     else:
         flash('Nutzer entsperrt.', 'success')
-        return redirect(url_for('.user_show', user_id=user_id))
+    return redirect(url_for(".user_show", user_id=user_id))
 
 
 @bp.route('/<int:user_id>/move_out', methods=['GET', 'POST'])
 @access.require('user_change')
-def move_out(user_id) -> ResponseValue:
+def move_out(user_id) -> ResponseReturnValue:
     form = UserMoveOutForm()
     user = get_user_or_404(user_id)
 
-    def default_response():
-        return render_template('user/user_move_out.html', form=form, user_id=user_id), \
-            400 if form.is_submitted() else 200
+    def default_response() -> ResponseReturnValue:
+        return (
+            render_template("user/user_move_out.html", form=form, user_id=user_id),
+            400 if form.is_submitted() else 200,
+        )
 
     if not user.room:
         flash(f"Nutzer {user_id} ist aktuell nirgends eingezogen!", 'error')
@@ -1040,11 +1051,11 @@ def move_out(user_id) -> ResponseValue:
 
 @bp.route('/<int:user_id>/move_in', methods=['GET', 'POST'])
 @access.require('user_change')
-def move_in(user_id) -> ResponseValue:
+def move_in(user_id) -> ResponseReturnValue:
     form = UserMoveInForm()
     user = get_user_or_404(user_id)
 
-    def default_response():
+    def default_response() -> ResponseReturnValue:
         return (
             render_template("user/user_move_in.html", form=form, user_id=user_id),
             400 if form.is_submitted() else 200,
@@ -1085,7 +1096,7 @@ def move_in(user_id) -> ResponseValue:
 
 
 @bp.route('<int:user_id>/json/room-history')
-def room_history_json(user_id) -> ResponseValue:
+def room_history_json(user_id) -> ResponseReturnValue:
     user = get_user_or_404(user_id)
     return TableResponse[RoomHistoryRow](
         items=[
@@ -1107,7 +1118,7 @@ def room_history_json(user_id) -> ResponseValue:
 
 
 @bp.route('<int:user_id>/json/tenancies')
-def tenancies_json(user_id) -> ResponseValue:
+def tenancies_json(user_id) -> ResponseReturnValue:
     user = get_user_or_404(user_id)
     return TableResponse[TenancyRow](
         items=[
@@ -1131,7 +1142,7 @@ def tenancies_json(user_id) -> ResponseValue:
 
 @bp.route('member-requests')
 @nav.navigate("Mitgliedschaftsanfragen", weight=2, icon="fa-user-clock")
-def member_requests() -> ResponseValue:
+def member_requests() -> ResponseReturnValue:
     return render_template("user/member_requests.html",
                            page_title="Mitgliedschaftsanfragen",
                            pre_member_table=PreMemberTable(
@@ -1140,7 +1151,7 @@ def member_requests() -> ResponseValue:
 
 
 @bp.route("member-request/<int:pre_member_id>/edit", methods=['GET', 'POST'])
-def member_request_edit(pre_member_id: int) -> ResponseValue:
+def member_request_edit(pre_member_id: int) -> ResponseReturnValue:
     prm = get_pre_member_or_404(pre_member_id)
 
     form = PreMemberEditForm(
@@ -1200,7 +1211,7 @@ def member_request_edit(pre_member_id: int) -> ResponseValue:
 
 @bp.route("member-request/<int:pre_member_id>/delete", methods=['GET', 'POST'])
 @access.require('user_change')
-def member_request_delete(pre_member_id: int) -> ResponseValue:
+def member_request_delete(pre_member_id: int) -> ResponseReturnValue:
     prm = get_pre_member_or_404(pre_member_id)
 
     form = PreMemberDenyForm()
@@ -1229,7 +1240,7 @@ def member_request_delete(pre_member_id: int) -> ResponseValue:
 
 @bp.route("member-request/<int:pre_member_id>/finish")
 @access.require('user_change')
-def member_request_finish(pre_member_id: int) -> ResponseValue:
+def member_request_finish(pre_member_id: int) -> ResponseReturnValue:
     prm = get_pre_member_or_404(pre_member_id)
 
     default_response = redirect(url_for(".member_request_edit", pre_member_id=prm.id))
@@ -1246,7 +1257,7 @@ def member_request_finish(pre_member_id: int) -> ResponseValue:
 
 @bp.route("member-request/<int:pre_member_id>/merge", methods=['GET', 'POST'])
 @access.require('user_change')
-def member_request_merge(pre_member_id: int) -> ResponseValue:
+def member_request_merge(pre_member_id: int) -> ResponseReturnValue:
     prm = get_pre_member_or_404(pre_member_id)
 
     form = PreMemberMergeForm()
@@ -1265,9 +1276,13 @@ def member_request_merge(pre_member_id: int) -> ResponseValue:
                            possible_users=possible_users)
 
 
-@bp.route("member-request/<int:pre_member_id>/merge/<int:user_id>", methods=['GET', 'POST'])
-@access.require('user_change')
-def member_request_merge_confirm(pre_member_id: int, user_id: int) -> ResponseValue:
+@bp.route(
+    "member-request/<int:pre_member_id>/merge/<int:user_id>", methods=["GET", "POST"]
+)
+@access.require("user_change")
+def member_request_merge_confirm(
+    pre_member_id: int, user_id: int
+) -> ResponseReturnValue:
     prm = get_pre_member_or_404(pre_member_id)
     user = get_user_or_404(user_id)
 
@@ -1312,7 +1327,7 @@ def member_request_merge_confirm(pre_member_id: int, user_id: int) -> ResponseVa
 
 
 @bp.route('json/member-requests')
-def member_requests_json() -> ResponseValue:
+def member_requests_json() -> ResponseReturnValue:
     prms = get_member_requests()
 
     return TableResponse[PreMemberRow](
@@ -1355,7 +1370,7 @@ def member_requests_json() -> ResponseValue:
 
 
 @bp.route('/resend-confirmation-mail')
-def resend_confirmation_mail() -> ResponseValue:
+def resend_confirmation_mail() -> ResponseReturnValue:
     user_id = request.args.get('user_id', type=int)
     is_prm = request.args.get('is_prm', type=bool, default=False)
 
@@ -1383,13 +1398,13 @@ def resend_confirmation_mail() -> ResponseValue:
 
 @nav.navigate('Archivierbar', weight=6, icon='fa-archive')
 @bp.route('/archivable_users')
-def archivable_users() -> ResponseValue:
+def archivable_users() -> ResponseReturnValue:
     table = ArchivableMembersTable(data_url=url_for('.archivable_users_json'))
     return render_template('user/archivable_users.html', table=table)
 
 
 @bp.route('/archivable_users_table')
-def archivable_users_json() -> ResponseValue:
+def archivable_users_json() -> ResponseReturnValue:
     return TableResponse[ArchivableMemberRow](
         items=[
             ArchivableMemberRow(
@@ -1419,7 +1434,7 @@ def archivable_users_json() -> ResponseValue:
 @nav.navigate('Rundmail', weight=10, icon='fa-envelope')
 @bp.route('/groupmail', methods=['GET', 'POST'])
 @access.require('mail_group')
-def mail_group() -> ResponseValue:
+def mail_group() -> ResponseReturnValue:
     form = GroupMailForm()
 
     form_args = {

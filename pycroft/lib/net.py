@@ -75,7 +75,26 @@ def get_subnets_for_room(room: Room) -> list[Subnet]:
                if s.address.version == 4]
 
 
-def get_subnets_with_usage() -> list[Subnet]:
+
+def calculate_max_ips(subnet: Subnet) -> int:
+    max_ips = subnet.address.numhosts - 2
+    if subnet.reserved_addresses_bottom:
+        max_ips -= subnet.reserved_addresses_bottom
+    if subnet.reserved_addresses_top:
+        max_ips -= subnet.reserved_addresses_top
+    return max_ips
+
+
+class SubnetUsage(t.NamedTuple):
+    max_ips: int
+    used_ips: int
+
+    @property
+    def free_ips(self) -> int:
+        return self.max_ips - self.used_ips
+
+
+def get_subnets_with_usage() -> list[tuple[Subnet, SubnetUsage]]:
     is_unreserved_ip = and_(
         IP.address >= cast(func.host(func.network(
             Subnet.address) + Subnet.reserved_addresses_bottom + 1), IPAddress),
@@ -90,17 +109,10 @@ def get_subnets_with_usage() -> list[Subnet]:
         .group_by(Subnet.id)
     ).all()
 
-    subnets = []
-    for subnet, used_ips in subnets_with_used_ips:
-        max_ips = subnet.address.numhosts - 2
-        if subnet.reserved_addresses_bottom:
-            max_ips -= subnet.reserved_addresses_bottom
-        if subnet.reserved_addresses_top:
-            max_ips -= subnet.reserved_addresses_top
-        subnet.used_ips = used_ips
-        subnet.max_ips = max_ips
-        subnets.append(subnet)
-    return subnets
+    return [
+        (subnet, SubnetUsage(max_ips=calculate_max_ips(subnet), used_ips=used_ips))
+        for subnet, used_ips in subnets_with_used_ips
+    ]
 
 
 def ptr_name(

@@ -169,7 +169,7 @@ class ArchivableMembersTable(RefreshableTableMixin, BootstrapTable):
 
     if typing.TYPE_CHECKING:
         @classmethod
-        def row(
+        def row(  # type: ignore[override]
             cls,
             id: int,
             user: dict,

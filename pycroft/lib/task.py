@@ -34,10 +34,15 @@ logger = logging.getLogger('pycroft.task')
 # dependent types, so we're always just instantiating
 # `TaskImpl = TaskImpl[Any, Any]`, anyway.
 class TaskImpl(ABC, Generic[TTask, TParams]):
-    @property
-    @abstractmethod
-    def name(self) -> str:
-        ...
+    name: str
+
+    def __init_subclass__(cls, **kwargs: t.Any) -> None:
+        _abc_in_bases = any(base == ABC for base in cls.__bases__)
+        if not _abc_in_bases and not hasattr(cls, "name"):
+            raise TypeError(
+                f"{cls.__name__} as a TaskImpl subclass needs a `name` attribute"
+            )
+        super().__init_subclass__(**kwargs)
 
     @property
     @abstractmethod

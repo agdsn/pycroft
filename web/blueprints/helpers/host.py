@@ -21,7 +21,7 @@ class UniqueMac:
         self.annex_field = annex_field
 
     def annex_set(self, form: Form) -> bool:
-        return self.annex_field and getattr(form, self.annex_field).data
+        return bool(self.annex_field and getattr(form, self.annex_field).data)
 
     def __call__(self, form: Form, field: Field):
         if not re.match(mac_regex, field.data):

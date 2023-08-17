@@ -29,7 +29,9 @@ class TaskTable(BootstrapTable):
     exception_message = Column(title=None, hide_if=lambda: True)
     type = Column("Typ", hide_if=lambda: True)
 
-    def __init__(self, hidden_columns: set[str] = None, sort_order="asc", *a, **kw):
+    def __init__(
+        self, hidden_columns: t.Container[str] = None, sort_order="asc", *a, **kw
+    ):
         table_args = kw.pop("table_args", {})
         table_args.setdefault("data-detail-view", "true")
         table_args.setdefault("data-sort-name", "due")

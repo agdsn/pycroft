@@ -89,10 +89,10 @@ def subnets_json() -> ResponseValue:
                 address=str(subnet.address),
                 gateway=str(subnet.gateway),
                 reserved=format_reserved_addresses(subnet),
-                free_ips=f"{subnet.max_ips - subnet.used_ips}",
-                free_ips_formatted=f"{subnet.max_ips - subnet.used_ips} (von {subnet.max_ips})",
+                free_ips=str(usage.free_ips),
+                free_ips_formatted=f"{usage.free_ips} (von {usage.max_ips})",
             )
-            for subnet in get_subnets_with_usage()
+            for subnet, usage in get_subnets_with_usage()
         ]
     ).model_dump()
 
