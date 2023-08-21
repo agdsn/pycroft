@@ -52,7 +52,7 @@ module = [
     "web.blueprints",
     "web.blueprints.access",
     "web.blueprints.facilities",
-#    "web.blueprints.host",
+    "web.blueprints.host",
     "web.blueprints.navigation",
 ]
 disallow_untyped_defs = true

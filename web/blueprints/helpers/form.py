@@ -1,9 +1,14 @@
+from __future__ import annotations
 import typing
+import typing as t
 
 from wtforms import Form
 from wtforms_widgets.fields.core import BooleanField
 
 from pycroft.model.facilities import Room
+
+if t.TYPE_CHECKING:
+    from web.blueprints.facilities.forms import SelectRoomForm
 
 
 def iter_prefixed_field_names(cls: type[Form], prefix: str) -> typing.Iterator[str]:
@@ -11,7 +16,7 @@ def iter_prefixed_field_names(cls: type[Form], prefix: str) -> typing.Iterator[s
             if hasattr(f, '_formfield') and f.startswith(prefix))
 
 
-def refill_room_data(form, room):
+def refill_room_data(form: SelectRoomForm, room: Room) -> None:
     if room:
         form.building.data = room.building
 

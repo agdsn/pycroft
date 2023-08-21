@@ -62,11 +62,11 @@ class InterfaceTable(BootstrapTable):
     ips = Column("IPs")
     actions = MultiBtnColumn("Aktionen", hide_if=no_hosts_change)
 
-    def __init__(self, *a, host_id=None, **kw):
-        table_args = kw.pop('table_args', {})
-        table_args.setdefault('data-hide-pagination-info', "true")
-        table_args.setdefault('data-search', "false")
-        kw['table_args'] = table_args
+    def __init__(self, *a, host_id: int | None = None, **kw) -> None:
+        table_args = kw.pop("table_args", {})
+        table_args.setdefault("data-hide-pagination-info", "true")
+        table_args.setdefault("data-search", "false")
+        kw["table_args"] = table_args
 
         super().__init__(*a, **kw)
         self.host_id = host_id
