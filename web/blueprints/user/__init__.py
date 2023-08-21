@@ -117,6 +117,7 @@ from ..helpers.log_tables import (
     LogTableExtended,
     LogTableSpecific,
     LogType,
+    is_log_type,
     LogTableRow,
 )
 from ..finance.tables import FinanceTable, FinanceTableSplitted
@@ -156,7 +157,7 @@ def overview() -> ResponseReturnValue:
                            ))
 
 
-def make_pdf_response(pdf_data, filename, inline=True) -> Response:
+def make_pdf_response(pdf_data: bytes, filename: str, inline: bool = True) -> Response:
     """Turn pdf data into a response with appropriate headers.
 
     Content-Type: application/pdf
@@ -188,15 +189,12 @@ def user_sheet() -> ResponseReturnValue:
 
 
 @bp.route('/<int:user_id>/datasheet')
-def static_datasheet(user_id) -> ResponseReturnValue:
+def static_datasheet(user_id: int) -> ResponseReturnValue:
     """Deliver an on-the-fly datasheet without the password.
 
     Useful for testing the layout itself.
     """
-    user = User.get(user_id)
-    if user is None:
-        abort(404)
-
+    user = get_user_or_404(user_id)
     return make_pdf_response(generate_user_sheet(True, False, user, plain_user_password="********",
                                                  generation_purpose='reprint'),
                              filename=f'user_sheet_plain_{user_id}.pdf')
@@ -274,7 +272,13 @@ def json_search() -> ResponseReturnValue:
     ).model_dump()
 
 
-def infoflags(user):
+class InfoflagDict(t.TypedDict):
+    title: str
+    icon: str
+    val: bool
+
+
+def infoflags(user: User) -> list[InfoflagDict]:
     user_status = lib.user.status(user)
     return [
         {'title': "Mitglied", 'icon': "user", 'val': user_status.member},
@@ -287,7 +291,7 @@ def infoflags(user):
 
 
 @bp.route('/<int:user_id>/', methods=['GET', 'POST'])
-def user_show(user_id) -> ResponseReturnValue:
+def user_show(user_id: int) -> ResponseReturnValue:
     user = get_user_or_404(user_id)
     room = user.room
     form = UserLogEntry()
@@ -425,7 +429,7 @@ def user_show(user_id) -> ResponseReturnValue:
 
 
 @bp.route("/<int:user_id>/account")
-def user_account(user_id) -> ResponseReturnValue:
+def user_account(user_id: int) -> ResponseReturnValue:
     user = get_user_or_404(user_id)
     return redirect(url_for("finance.accounts_show",
                             account_id=user.account_id))
@@ -444,9 +448,12 @@ def _iter_user_logs(user: User, logtype: LogType) -> t.Iterator[LogTableRow]:
 
 @bp.route("/<int:user_id>/logs")
 @bp.route("/<int:user_id>/logs/<logtype>")
-def user_show_logs_json(user_id, logtype="all") -> ResponseReturnValue:
+def user_show_logs_json(user_id: int, logtype: str = "all") -> ResponseReturnValue:
     user = get_user_or_404(user_id)
 
+    if not is_log_type(logtype):
+        flash(f"{logtype!r} ist kein valider logtyp", "error")
+        abort(404)
     logs = _iter_user_logs(user, logtype)
 
     def sort_key(l: LogTableRow) -> int | None:
@@ -459,7 +466,9 @@ def user_show_logs_json(user_id, logtype="all") -> ResponseReturnValue:
 
 @bp.route("/<int:user_id>/groups")
 @bp.route("/<int:user_id>/groups/<group_filter>")
-def user_show_groups_json(user_id, group_filter="all") -> ResponseReturnValue:
+def user_show_groups_json(
+    user_id: int, group_filter: str = "all"
+) -> ResponseReturnValue:
     active_groups_only = group_filter == "active"
     memberships = t.cast(
         t.Iterable[tuple[Membership, list[str], list[str]]],
@@ -517,7 +526,7 @@ def user_show_groups_json(user_id, group_filter="all") -> ResponseReturnValue:
 
 @bp.route('/<int:user_id>/add_membership', methods=['GET', 'Post'])
 @access.require('groups_change_membership')
-def add_membership(user_id) -> ResponseReturnValue:
+def add_membership(user_id: int) -> ResponseReturnValue:
     user = get_user_or_404(user_id)
     form = UserAddGroupMembership()
 
@@ -551,15 +560,18 @@ def add_membership(user_id) -> ResponseReturnValue:
         user_id=user_id, form=form)
 
 
+def get_membership_or_404(id: int) -> Membership:
+    if (membership := session.session.get(Membership, id)) is None:
+        flash(f"Gruppenmitgliedschaft mit ID {id} existiert nicht!", "error")
+        abort(404)
+    return membership
+
 @bp.route('/<int:user_id>/end_membership/<int:membership_id>')
 @access.require('groups_change_membership')
-def end_membership(user_id, membership_id) -> ResponseReturnValue:
+def end_membership(user_id: int, membership_id: int) -> ResponseReturnValue:
     user = get_user_or_404(user_id)
-    membership = Membership.get(membership_id)
-
-    if membership is None:
-        flash(f"Gruppenmitgliedschaft mit ID {membership_id} existiert nicht!", 'error')
-        abort(404)
+    membership = get_membership_or_404(membership_id)
+    assert isinstance(membership.group, PropertyGroup)
 
     if membership.user.id != user_id:
         flash(f"Gruppenmitgliedschaft {membership.id} gehört nicht zu Nutzer {user_id}!", 'error')
@@ -582,7 +594,7 @@ def end_membership(user_id, membership_id) -> ResponseReturnValue:
 
 @bp.route('/<int:user_id>/traffic/json')
 @bp.route('/<int:user_id>/traffic/json/<int:days>')
-def json_trafficdata(user_id, days=7) -> ResponseReturnValue:
+def json_trafficdata(user_id: int, days: int = 7) -> ResponseReturnValue:
     """Generate a JSON file to use with traffic and credit graphs.
 
     :param user_id:
@@ -706,11 +718,11 @@ def create_non_resident() -> ResponseReturnValue:
 
 @bp.route('/<int:user_id>/move', methods=['GET', 'POST'])
 @access.require('user_change')
-def move(user_id) -> ResponseReturnValue:
+def move(user_id: int) -> ResponseReturnValue:
     user = get_user_or_404(user_id)
     form = UserMoveForm()
 
-    def default_response(refill_form_data=False) -> ResponseReturnValue:
+    def default_response(refill_form_data: bool = False) -> ResponseReturnValue:
         if not form.is_submitted() or refill_form_data:
             if user.room is not None:
                 refill_room_data(form, user.room)
@@ -764,13 +776,8 @@ def move(user_id) -> ResponseReturnValue:
 
 @bp.route('/<int:user_id>/edit_membership/<int:membership_id>', methods=['GET', 'POST'])
 @access.require('groups_change_membership')
-def edit_membership(user_id, membership_id) -> ResponseReturnValue:
-    membership: Membership = Membership.get(membership_id)
-
-    if membership is None:
-        flash("Gruppenmitgliedschaft mit ID {} existiert nicht!".format(
-        membership_id), 'error')
-        abort(404)
+def edit_membership(user_id: int, membership_id: int) -> ResponseReturnValue:
+    membership = get_membership_or_404(membership_id)
 
     assert isinstance(membership.group, PropertyGroup)
     if membership.group.permission_level > current_user.permission_level:
@@ -816,7 +823,7 @@ def edit_membership(user_id, membership_id) -> ResponseReturnValue:
 
 @bp.route('/<int:user_id>/edit', methods=['GET', 'POST'])
 @access.require('user_change')
-def edit_user(user_id) -> ResponseReturnValue:
+def edit_user(user_id: int) -> ResponseReturnValue:
     user = get_user_or_404(user_id)
     form = UserEditForm(obj=user, person_id=user.swdd_person_id)
 
@@ -915,7 +922,7 @@ def search() -> ResponseReturnValue:
 
 @bp.route('/<int:user_id>/reset_password', methods=['GET', 'POST'])
 @access.require('user_change')
-def reset_password(user_id) -> ResponseReturnValue:
+def reset_password(user_id: int) -> ResponseReturnValue:
     form = UserResetPasswordForm()
     my_user = get_user_or_404(user_id)
 
@@ -945,14 +952,18 @@ def reset_password(user_id) -> ResponseReturnValue:
 
 @bp.route('/<int:user_id>/reset_wifi_password', methods=['GET', 'POST'])
 @access.require('user_change')
-def reset_wifi_password(user_id) -> ResponseReturnValue:
+def reset_wifi_password(user_id: int) -> ResponseReturnValue:
+    user = get_user_or_404(user_id)
     form = UserResetPasswordForm()
-    myUser = User.get(user_id)
     if form.validate_on_submit():
-        plain_password = lib.user.reset_wifi_password(myUser, processor=current_user)
-        sheet = lib.user.store_user_sheet(False, True, user=myUser,
-                                          plain_wifi_password=plain_password,
-                                          generation_purpose='password reset')
+        plain_password = lib.user.reset_wifi_password(user, processor=current_user)
+        sheet = lib.user.store_user_sheet(
+            False,
+            True,
+            user=user,
+            plain_wifi_password=plain_password,
+            generation_purpose="password reset",
+        )
 
         session.session.commit()
 
@@ -965,7 +976,7 @@ def reset_wifi_password(user_id) -> ResponseReturnValue:
 
 @bp.route('/<int:user_id>/block', methods=['GET', 'POST'])
 @access.require('user_change')
-def block(user_id) -> ResponseReturnValue:
+def block(user_id: int) -> ResponseReturnValue:
     form = UserSuspendForm()
     myUser = get_user_or_404(user_id)
     if form.validate_on_submit():
@@ -993,7 +1004,7 @@ def block(user_id) -> ResponseReturnValue:
 
 @bp.route('/<int:user_id>/unblock', methods=['GET', 'POST'])
 @access.require('user_change')
-def unblock(user_id) -> ResponseReturnValue:
+def unblock(user_id: int) -> ResponseReturnValue:
     user = get_user_or_404(user_id)
 
     try:
@@ -1010,7 +1021,7 @@ def unblock(user_id) -> ResponseReturnValue:
 
 @bp.route('/<int:user_id>/move_out', methods=['GET', 'POST'])
 @access.require('user_change')
-def move_out(user_id) -> ResponseReturnValue:
+def move_out(user_id: int) -> ResponseReturnValue:
     form = UserMoveOutForm()
     user = get_user_or_404(user_id)
 
@@ -1051,7 +1062,7 @@ def move_out(user_id) -> ResponseReturnValue:
 
 @bp.route('/<int:user_id>/move_in', methods=['GET', 'POST'])
 @access.require('user_change')
-def move_in(user_id) -> ResponseReturnValue:
+def move_in(user_id: int) -> ResponseReturnValue:
     form = UserMoveInForm()
     user = get_user_or_404(user_id)
 
@@ -1096,7 +1107,7 @@ def move_in(user_id) -> ResponseReturnValue:
 
 
 @bp.route('<int:user_id>/json/room-history')
-def room_history_json(user_id) -> ResponseReturnValue:
+def room_history_json(user_id: int) -> ResponseReturnValue:
     user = get_user_or_404(user_id)
     return TableResponse[RoomHistoryRow](
         items=[
@@ -1118,7 +1129,7 @@ def room_history_json(user_id) -> ResponseReturnValue:
 
 
 @bp.route('<int:user_id>/json/tenancies')
-def tenancies_json(user_id) -> ResponseReturnValue:
+def tenancies_json(user_id: int) -> ResponseReturnValue:
     user = get_user_or_404(user_id)
     return TableResponse[TenancyRow](
         items=[

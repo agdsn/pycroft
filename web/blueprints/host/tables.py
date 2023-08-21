@@ -22,7 +22,7 @@ class HostTable(BootstrapTable):
     interface_create_link = Column("", hide_if=lambda: True)
     id = Column("", hide_if=lambda: True)
 
-    def __init__(self, *a, user_id=None, **kw):
+    def __init__(self, *a, user_id: int | None = None, **kw) -> None:
         table_args = kw.pop('table_args', {})
         table_args.setdefault('data-load-subtables', "true")
         table_args.setdefault('data-detail-view', "true")

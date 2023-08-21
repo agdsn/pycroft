@@ -45,7 +45,7 @@ class FinanceTable(BootstrapTable):
             'data-page-list': '[5, 10, 25, 50, 100]'
         }
 
-    def __init__(self, *a, saldo=None, user_id=None, inverted=False, **kw):
+    def __init__(self, *a, saldo=None, user_id=None, inverted=False, **kw) -> None:
         """Init
 
         :param int user_id: An optional user_id.  If set, this causes
@@ -124,7 +124,7 @@ class FinanceTableSplitted(FinanceTable, SplittedTable):
 
     splits = (('soll', "Soll"), ('haben', "Haben"))
 
-    def __init__(self, *a, **kw):
+    def __init__(self, *a, **kw) -> None:
         super().__init__(*a, **kw)
         self.table_footer_offset = 7
 

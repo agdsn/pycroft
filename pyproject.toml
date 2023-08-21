@@ -53,6 +53,7 @@ module = [
     "web.blueprints.access",
     "web.blueprints.facilities",
     "web.blueprints.host",
+    "web.blueprints.user",
     "web.blueprints.navigation",
 ]
 disallow_untyped_defs = true

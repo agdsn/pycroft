@@ -23,7 +23,7 @@ class RefreshableTableMixin:
     ``{'data-show-refresh': "true"}`` is established.
     """
 
-    def __init__(self, *a, **kw):
+    def __init__(self, *a, **kw) -> None:
         table_args = kw.pop("table_args", {})
         table_args.setdefault("data-show-refresh", "true")
         kw["table_args"] = table_args
@@ -48,6 +48,11 @@ class LogTableSpecific(RefreshableTableMixin, BootstrapTable):
 
 
 LogType = t.Literal["user", "room", "hades", "task", "all"]
+LOG_TYPES = frozenset(t.get_args(LogType))
+
+
+def is_log_type(type: str) -> t.TypeGuard[LogType]:
+    return type in LOG_TYPES
 
 
 class LogTableRow(BaseModel):

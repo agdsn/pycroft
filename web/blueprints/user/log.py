@@ -5,6 +5,7 @@ This module contains functions that provide certain types of logs for
 a user.
 """
 import logging
+import typing as t
 
 from sqlalchemy.orm import Query
 
@@ -16,6 +17,7 @@ from pycroft.model.port import PatchPort
 from pycroft.model.user import User
 from ..helpers.log import format_hades_log_entry, format_hades_disabled, \
     format_user_not_connected, format_hades_error, format_hades_timeout
+from ..helpers.log_tables import LogTableRow
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +77,7 @@ def is_user_connected(user):
     return True
 
 
-def formatted_user_hades_logs(user):
+def formatted_user_hades_logs(user: User) -> t.Iterator[LogTableRow]:
     """Iterate over the user's hades logs if configured correctly
 
     In case of misconfiguration, i.e. if

@@ -30,7 +30,7 @@ class MembershipTable(BootstrapTable):
     ends_at = DateColumn("Ende")
     actions = MultiBtnColumn("Aktionen", hide_if=no_membership_change)
 
-    def __init__(self, *a, user_id=None, **kw):
+    def __init__(self, *a, user_id: int | None = None, **kw) -> None:
         super().__init__(*a, **kw)
         self.user_id = user_id
 
