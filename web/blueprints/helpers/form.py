@@ -16,25 +16,25 @@ def iter_prefixed_field_names(cls: type[Form], prefix: str) -> typing.Iterator[s
             if hasattr(f, '_formfield') and f.startswith(prefix))
 
 
-def refill_room_data(form: SelectRoomForm, room: Room) -> None:
-    if room:
-        form.building.data = room.building
+def refill_room_data(form: SelectRoomForm, room: Room | None) -> None:
+    if not room:
+        return
 
-        levels = Room.q.filter_by(building_id=room.building.id).order_by(Room.level)\
-                       .distinct()
+    form.building.data = room.building
 
-        form.level.choices = [(entry.level, str(entry.level)) for entry in
-                              levels]
-        form.level.data = room.level
+    levels = (
+        Room.q.filter_by(building_id=room.building.id).order_by(Room.level).distinct()
+    )
+    form.level.choices = [(entry.level, str(entry.level)) for entry in levels]
+    form.level.data = room.level
 
-        rooms = Room.q.filter_by(
-            building_id=room.building.id,
-            level=room.level
-        ).order_by(Room.number).distinct()
-
-        form.room_number.choices = [(entry.number, str(entry.number))
-                                    for entry in rooms]
-        form.room_number.data = room.number
+    rooms = (
+        Room.q.filter_by(building_id=room.building.id, level=room.level)
+        .order_by(Room.number)
+        .distinct()
+    )
+    form.room_number.choices = [(entry.number, str(entry.number)) for entry in rooms]
+    form.room_number.data = room.number
 
 
 def confirmable_div(confirm_field_id: str | None, prefix: str = 'form-group-') -> str:
