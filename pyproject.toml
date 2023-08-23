@@ -53,6 +53,7 @@ module = [
     "web.blueprints.access",
     "web.blueprints.facilities",
     "web.blueprints.host",
+    "web.blueprints.infrastructure",
     "web.blueprints.user",
     "web.blueprints.navigation",
 ]

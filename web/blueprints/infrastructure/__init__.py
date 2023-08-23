@@ -14,7 +14,7 @@ from flask import Blueprint, abort, flash, redirect, render_template, url_for
 from flask.typing import ResponseValue
 from flask_login import current_user
 from flask_wtf import FlaskForm as Form
-from ipaddr import IPAddress
+from ipaddr import IPAddress, _BaseIP
 from sqlalchemy.orm import joinedload
 
 from pycroft.lib.infrastructure import create_switch, \
@@ -26,7 +26,7 @@ from pycroft.lib.host import sort_ports
 from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.host import Switch, SwitchPort
-from pycroft.model.net import VLAN
+from pycroft.model.net import VLAN, Subnet
 from pycroft.model.port import PatchPort
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.infrastructure.forms import SwitchForm, SwitchPortForm
@@ -56,7 +56,7 @@ def subnets() -> ResponseValue:
         subnet_table=SubnetTable(data_url=url_for(".subnets_json")))
 
 
-def format_address_range(base_address, amount):
+def format_address_range(base_address: _BaseIP, amount: int) -> str:
     if amount == 0:
         raise ValueError
     if abs(amount) == 1:
@@ -66,7 +66,7 @@ def format_address_range(base_address, amount):
     return f'{str(base_address + amount + 1)} - {str(base_address)}'
 
 
-def format_reserved_addresses(subnet):
+def format_reserved_addresses(subnet: Subnet) -> list[str]:
     reserved = []
     if subnet.reserved_addresses_bottom:
         reserved.append(
@@ -135,8 +135,8 @@ def switches_json() -> ResponseValue:
 
 
 @bp.route('/switch/show/<int:switch_id>')
-def switch_show(switch_id) -> ResponseValue:
-    switch = Switch.get(switch_id)
+def switch_show(switch_id: int) -> ResponseValue:
+    switch = session.session.get(Switch, switch_id)
     if not switch:
         flash(f"Switch mit ID {switch_id} nicht gefunden!", "error")
         return redirect(url_for('.switches'))
@@ -150,14 +150,19 @@ def switch_show(switch_id) -> ResponseValue:
 
 
 @bp.route('/switch/show/<int:switch_id>/json')
-def switch_show_json(switch_id) -> ResponseValue:
-    switch = Switch.q.options(
-        joinedload(Switch.ports).joinedload(SwitchPort.patch_port).joinedload(
-            PatchPort.room)).get(switch_id)
+def switch_show_json(switch_id: int) -> ResponseValue:
+    switch = session.session.get(
+        Switch,
+        switch_id,
+        options=[
+            joinedload(Switch.ports)
+            .joinedload(SwitchPort.patch_port)
+            .joinedload(PatchPort.room)
+        ],
+    )
     if not switch:
         abort(404)
-    switch_port_list = switch.ports
-    switch_port_list = sort_ports(switch_port_list)
+    switch_port_list = sort_ports(switch.ports)
 
     return TableResponse[PortRow](
         items=[
@@ -229,7 +234,7 @@ def switch_create() -> ResponseValue:
 
 @bp.route('/switch/<int:switch_id>/edit', methods=['GET', 'POST'])
 @access.require('infrastructure_change')
-def switch_edit(switch_id) -> ResponseValue:
+def switch_edit(switch_id: int) -> ResponseValue:
     sess = session.session
     if not (switch := sess.get(Switch, switch_id)):
         flash(f"Switch mit ID {switch_id} nicht gefunden!", "error")
@@ -260,7 +265,7 @@ def switch_edit(switch_id) -> ResponseValue:
 
 @bp.route('/switch/<int:switch_id>/delete', methods=['GET', 'POST'])
 @access.require('infrastructure_change')
-def switch_delete(switch_id) -> ResponseValue:
+def switch_delete(switch_id: int) -> ResponseValue:
     sess = session.session
     if not (switch := sess.get(Switch, switch_id)):
         flash(f"Switch mit ID {switch_id} nicht gefunden!", "error")
@@ -289,8 +294,8 @@ def switch_delete(switch_id) -> ResponseValue:
 
 @bp.route('/switch/<int:switch_id>/port/create', methods=['GET', 'POST'])
 @access.require('infrastructure_change')
-def switch_port_create(switch_id) -> ResponseValue:
-    switch = Switch.get(switch_id)
+def switch_port_create(switch_id: int) -> ResponseValue:
+    switch = session.session.get(Switch, switch_id)
 
     if not switch:
         flash(f"Switch mit ID {switch_id} nicht gefunden!", "error")
@@ -338,9 +343,9 @@ def switch_port_create(switch_id) -> ResponseValue:
 
 @bp.route('/switch/<int:switch_id>/port/<int:switch_port_id>/edit', methods=['GET', 'POST'])
 @access.require('infrastructure_change')
-def switch_port_edit(switch_id, switch_port_id) -> ResponseValue:
-    switch = Switch.get(switch_id)
-    switch_port = SwitchPort.get(switch_port_id)
+def switch_port_edit(switch_id: int, switch_port_id: int) -> ResponseValue:
+    switch = session.session.get(Switch, switch_id)
+    switch_port = session.session.get(SwitchPort, switch_port_id)
 
     if not switch:
         flash(f"Switch mit ID {switch_id} nicht gefunden!", "error")
@@ -398,9 +403,9 @@ def switch_port_edit(switch_id, switch_port_id) -> ResponseValue:
 
 @bp.route('/switch/<int:switch_id>/port/<int:switch_port_id>/delete', methods=['GET', 'POST'])
 @access.require('infrastructure_change')
-def switch_port_delete(switch_id, switch_port_id) -> ResponseValue:
-    switch = Switch.get(switch_id)
-    switch_port = SwitchPort.get(switch_port_id)
+def switch_port_delete(switch_id: int, switch_port_id: int) -> ResponseValue:
+    switch = session.session.get(Switch, switch_id)
+    switch_port = session.session.get(SwitchPort, switch_port_id)
 
     if not switch:
         flash(f"Switch mit ID {switch_id} nicht gefunden!", "error")

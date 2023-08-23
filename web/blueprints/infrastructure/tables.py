@@ -82,7 +82,7 @@ class PortTable(BootstrapTable):
             'data-sort-name': 'switchport_name',
         }
 
-    def __init__(self, *a, switch_id=None, **kw):
+    def __init__(self, *a, switch_id=None, **kw) -> None:
         super().__init__(*a, **kw)
         self.switch_id = switch_id
 
