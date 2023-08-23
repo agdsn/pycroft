@@ -37,7 +37,7 @@ def format_parameters(parameters):
 
     # Replace building_id by the buildings short name
     if bid := parameters.get("building_id"):
-        if building := Building.get(bid):
+        if building := session.session.get(Building, bid):
             parameters["building"] = building.short_name
             del parameters["building_id"]
     return parameters

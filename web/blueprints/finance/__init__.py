@@ -275,7 +275,7 @@ def bank_accounts_import() -> ResponseReturnValue:
     if not form.validate():
         return display_form_response(imported)
 
-    bank_account = BankAccount.get(form.account.data)
+    bank_account = session.get(BankAccount, form.account.data)
 
     # set start_date, end_date
     if form.start_date.data is None:
@@ -378,7 +378,7 @@ def bank_accounts_import_errors() -> ResponseReturnValue:
 @bp.route('/bank-accounts/importerrors/<error_id>', methods=['GET', 'POST'])
 @access.require('finance_change')
 def fix_import_error(error_id) -> ResponseReturnValue:
-    error = MT940Error.get(error_id)
+    error = session.get(MT940Error, error_id)
     form = FixMT940Form()
     imported = ImportedTransactions([], [], [])
     new_exception = None
@@ -455,7 +455,7 @@ def bank_accounts_create() -> ResponseReturnValue:
 @bp.route('/bank-account-activities/<activity_id>',
           methods=["GET", "POST"])
 def bank_account_activities_edit(activity_id) -> ResponseReturnValue:
-    activity = BankAccountActivity.get(activity_id)
+    activity = session.get(BankAccountActivity, activity_id)
 
     if activity is None:
         flash(f"Bankbewegung mit ID {activity_id} existiert nicht!", 'error')
@@ -643,7 +643,7 @@ def accounts_list() -> ResponseReturnValue:
 @bp.route('/account/<int:account_id>/toggle-legacy')
 @access.require('finance_change')
 def account_toggle_legacy(account_id) -> ResponseReturnValue:
-    account = Account.get(account_id)
+    account = session.get(Account, account_id)
 
     if not account:
         abort(404)
@@ -768,7 +768,7 @@ def accounts_show_json(account_id) -> ResponseReturnValue:
     if sort_by.startswith("soll_") or sort_order.startswith("haben_"):
         sort_by = '_'.join(sort_by.split('_')[1:])
 
-    account = Account.get(account_id) or abort(404)
+    account = session.get(Account, account_id) or abort(404)
 
     total = Split.q.join(Transaction).filter(Split.account == account).count()
 
@@ -803,7 +803,7 @@ def accounts_show_json(account_id) -> ResponseReturnValue:
 
 @bp.route('/transactions/<int:transaction_id>')
 def transactions_show(transaction_id) -> ResponseReturnValue:
-    transaction = Transaction.get(transaction_id)
+    transaction = session.get(Transaction, transaction_id)
 
     if transaction is None:
         abort(404)
@@ -821,7 +821,7 @@ def transactions_show(transaction_id) -> ResponseReturnValue:
 
 @bp.route('/transactions/<int:transaction_id>/json')
 def transactions_show_json(transaction_id) -> ResponseReturnValue:
-    transaction = Transaction.get(transaction_id)
+    transaction = session.get(Transaction, transaction_id)
     return TransactionSplitResponse(
         description=transaction.description,
         items=[
@@ -943,7 +943,7 @@ def transactions_unconfirmed_json() -> ResponseReturnValue:
 @bp.route('/transaction/<int:transaction_id>/confirm', methods=['GET', 'POST'])
 @access.require('finance_change')
 def transaction_confirm(transaction_id) -> ResponseReturnValue:
-    transaction = Transaction.get(transaction_id)
+    transaction = session.get(Transaction, transaction_id)
 
     if transaction is None:
         flash("Transaktion existiert nicht.", 'error')
@@ -977,7 +977,7 @@ def transactions_confirm_selected() -> ResponseReturnValue:
 
     for id in ids:
         if isinstance(id, int):
-            transaction = Transaction.get(int(id))
+            transaction = session.get(Transaction, int(id))
             if transaction:
                 lib.finance.transaction_confirm(transaction, current_user)
             else:
@@ -1019,7 +1019,7 @@ def transaction_confirm_all() -> ResponseReturnValue:
 @bp.route('/transaction/<int:transaction_id>/delete', methods=['GET', 'POST'])
 @access.require('finance_change')
 def transaction_delete(transaction_id) -> ResponseReturnValue:
-    transaction = Transaction.get(transaction_id)
+    transaction = session.get(Transaction, transaction_id)
 
     if transaction is None:
         flash("Transaktion existiert nicht.", 'error')
@@ -1116,10 +1116,10 @@ def transactions_all_json() -> ResponseReturnValue:
 def transactions_create() -> ResponseReturnValue:
     form = TransactionCreateForm()
     if form.validate_on_submit():
-        splits = [(
-            Account.get(split_form.account_id.data),
-            split_form.amount.data
-        ) for split_form in form.splits]
+        splits = [
+            (session.get(Account, split_form.account_id.data), split_form.amount.data)
+            for split_form in form.splits
+        ]
         transaction = finance.complex_transaction(
             description=form.description.data,
             author=current_user,
@@ -1158,7 +1158,7 @@ def accounts_create() -> ResponseReturnValue:
 @bp.route("/membership_fee/<int:fee_id>/book", methods=['GET', 'POST'])
 @access.require('finance_change')
 def membership_fee_book(fee_id) -> ResponseReturnValue:
-    fee = MembershipFee.get(fee_id)
+    fee = session.get(MembershipFee, fee_id)
 
     if fee is None:
         flash('Ein Beitrag mit dieser ID existiert nicht!', 'error')
@@ -1182,7 +1182,7 @@ def membership_fee_book(fee_id) -> ResponseReturnValue:
 
 @bp.route("/membership_fee/<int:fee_id>/users_due_json")
 def membership_fee_users_due_json(fee_id) -> ResponseReturnValue:
-    fee = MembershipFee.get(fee_id)
+    fee = session.get(MembershipFee, fee_id)
 
     if fee is None:
         abort(404)
@@ -1316,7 +1316,7 @@ def membership_fee_create() -> ResponseReturnValue:
 @bp.route('/membership_fee/<int:fee_id>/edit', methods=("GET", "POST"))
 @access.require('finance_change')
 def membership_fee_edit(fee_id) -> ResponseReturnValue:
-    fee = MembershipFee.get(fee_id)
+    fee = session.get(MembershipFee, fee_id)
 
     if fee is None:
         flash('Ein Beitrag mit dieser ID existiert nicht!', 'error')

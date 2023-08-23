@@ -18,6 +18,7 @@ from flask_login import (
     AnonymousUserMixin, LoginManager, current_user, login_required, login_user,
     logout_user)
 
+from pycroft.model.session import session
 from pycroft.model.user import User
 from web.blueprints.login.forms import LoginForm
 
@@ -37,7 +38,7 @@ login_manager.login_message = "Bitte melden Sie sich an, um diese Seite zu benut
 
 @login_manager.user_loader
 def load_user(userid):
-    return User.get(userid)
+    return session.get(User, userid)
 
 
 @bp.route("/login", methods=("GET", "POST"))
