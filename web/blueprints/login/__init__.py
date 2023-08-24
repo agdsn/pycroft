@@ -37,7 +37,7 @@ login_manager.login_message = "Bitte melden Sie sich an, um diese Seite zu benut
 
 
 @login_manager.user_loader
-def load_user(userid):
+def load_user(userid: int) -> User | None:
     return session.get(User, userid)
 
 
