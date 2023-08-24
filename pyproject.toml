@@ -50,12 +50,7 @@ module = [
     "pycroft.helpers.user",
     "pycroft.helpers.utc",
     "web.blueprints",
-    "web.blueprints.access",
-    "web.blueprints.facilities",
-    "web.blueprints.host",
-    "web.blueprints.infrastructure",
-    "web.blueprints.user",
-    "web.blueprints.navigation",
+    "web.blueprints.*",
 ]
 disallow_untyped_defs = true
 disallow_untyped_calls = true
