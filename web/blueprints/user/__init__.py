@@ -12,6 +12,7 @@
 import re
 import typing as t
 from datetime import timedelta
+from decimal import Decimal
 from functools import partial
 from typing import TypeVar, Callable, cast
 
@@ -306,14 +307,7 @@ def user_show(user_id: int) -> ResponseReturnValue:
     balance = user.account.balance
     _log_endpoint = partial(url_for, ".user_show_logs_json", user_id=user.id)
     _membership_endpoint = partial(url_for, ".user_show_groups_json", user_id=user.id)
-    _finance_table_kwargs = {
-        'data_url': url_for("finance.accounts_show_json", account_id=user.account_id),
-        'user_id': user.id,
-        'table_args': {'data-page-size': 5},
-        'inverted': True,
-        'saldo': balance,
-    }
-
+    tbl_data_url = url_for("finance.accounts_show_json", account_id=user.account_id)
     is_blocked = False
 
     for group in get_blocked_groups():
@@ -356,13 +350,24 @@ def user_show(user_id: int) -> ResponseReturnValue:
                              user_id=user.id),
         task_table=TaskTable(data_url=url_for("task.json_tasks_for_user", user_id=user.id),
                              hidden_columns=['user']),
-        finance_table_regular=FinanceTable(**_finance_table_kwargs),
-        finance_table_splitted=FinanceTableSplitted(**_finance_table_kwargs),
+        finance_table_regular=FinanceTable(
+            data_url=tbl_data_url,
+            user_id=user.id,
+            table_args={"data-page-size": 5},
+            inverted=True,
+            saldo=balance,
+        ),
+        finance_table_splitted=FinanceTableSplitted(
+            data_url=tbl_data_url,
+            user_id=user.id,
+            table_args={"data-page-size": 5},
+            inverted=True,
+            saldo=balance,
+        ),
         room=room,
         form=form,
         flags=infoflags(user),
-        json_url=url_for("finance.accounts_show_json",
-                         account_id=user.account_id),
+        json_url=tbl_data_url,
         is_blocked=is_blocked,
         granted_properties=sorted(p.property_name for p in user.current_properties),
         revoked_properties=sorted(

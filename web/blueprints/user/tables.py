@@ -1,3 +1,4 @@
+import typing as t
 import typing
 
 from flask import url_for
@@ -31,8 +32,8 @@ class MembershipTable(BootstrapTable):
     ends_at = DateColumn("Ende")
     actions = MultiBtnColumn("Aktionen", hide_if=no_membership_change)
 
-    def __init__(self, *a, user_id: int | None = None, **kw) -> None:
-        super().__init__(*a, **kw)
+    def __init__(self, *, user_id: int | None = None, **kw: t.Any) -> None:
+        super().__init__(**kw)
         self.user_id = user_id
 
     @property

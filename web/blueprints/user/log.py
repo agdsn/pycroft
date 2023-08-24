@@ -7,47 +7,47 @@ a user.
 import logging
 import typing as t
 
+from ipaddr import _BaseIP
+from sqlalchemy import select, Row
 from sqlalchemy.orm import Query
 
-from hades_logs import hades_logs
+from hades_logs import hades_logs, RadiusLogEntry
 from hades_logs.exc import HadesConfigError, HadesOperationalError, HadesTimeout
 from pycroft.model import session
-from pycroft.model.host import SwitchPort
+from pycroft.model.host import SwitchPort, Switch
 from pycroft.model.port import PatchPort
 from pycroft.model.user import User
+from pycroft.model.facilities import Room
 from ..helpers.log import format_hades_log_entry, format_hades_disabled, \
     format_user_not_connected, format_hades_error, format_hades_timeout
 from ..helpers.log_tables import LogTableRow
 
 logger = logging.getLogger(__name__)
 
-def iter_hades_switch_ports(room):
+def iter_hades_switch_ports(room: Room) -> t.Sequence[Row[tuple[str, _BaseIP]]]:
     """Return all tuples of (nasportid, nasipaddress) for a room.
 
-    :param Room room: The room to filter by
+    :param room: The room to filter by
 
     :returns: An iterator of (nasportid, nasipaddress) usable as
               arguments in ``HadesLogs.fetch_logs()``
     """
-    from pycroft.model._all import Room, PatchPort, SwitchPort, Switch
-    query = (
-        session.session
-        .query(SwitchPort.name, Switch.management_ip)
+    stmt = (
+        select(SwitchPort.name, Switch.management_ip)
         .join(PatchPort.room)
         .join(PatchPort.switch_port)
         .join(SwitchPort.switch)
         .filter(Room.id == room.id)
     )
-    return query.all()
+    return session.session.execute(stmt).all()
 
 
-def get_user_hades_logs(user):
+def get_user_hades_logs(user: User) -> t.Iterator[tuple[PatchPort, RadiusLogEntry]]:
     """Iterate over a user's hades logs
 
-    :param User user: the user whose logs to display
+    :param user: the user whose logs to display
 
     :returns: an iterator over duples (interface, log_entry).
-    :rtype: Iterator[SwitchPort, RadiusLogEntry]
     """
     # Accessing the `hades_logs` proxy early ensures the exception is
     # raised even if there's no SwitchPort
@@ -67,7 +67,7 @@ def get_user_hades_logs(user):
             yield port, log_entry
 
 
-def is_user_connected(user):
+def is_user_connected(user: User) -> bool:
     try:
         next(patch_port
              for host in user.hosts
