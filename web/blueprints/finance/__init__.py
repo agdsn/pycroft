@@ -10,6 +10,7 @@
     :copyright: (c) 2012 by AG DSN.
 """
 import typing as t
+from decimal import Decimal
 from collections.abc import Iterable
 from datetime import date
 from datetime import timedelta, datetime
@@ -38,10 +39,19 @@ from flask.typing import ResponseReturnValue
 from flask_login import current_user
 from flask_wtf import FlaskForm
 from mt940.models import Transaction as MT940Transaction
-from sqlalchemy import or_, Text, cast, ColumnClause, FromClause
+from sqlalchemy import (
+    or_,
+    Text,
+    cast,
+    ColumnClause,
+    FromClause,
+    Select,
+    Over,
+    ColumnElement,
+)
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from sqlalchemy.sql.expression import literal_column, func, select, Join
-from wtforms import BooleanField
+from wtforms import BooleanField, FormField, Field
 
 from pycroft import config, lib
 from pycroft.exc import PycroftException
@@ -65,6 +75,7 @@ from pycroft.lib.finance import (
     get_last_membership_fee,
 )
 from pycroft.lib.finance.fints import get_fints_transactions
+from pycroft.lib.finance.matching import UserMatching, AccountMatching
 from pycroft.lib.mail import MemberNegativeBalance
 from pycroft.lib.user import encode_type2_user_id, user_send_mails
 from pycroft.model.finance import Account, Transaction
@@ -175,7 +186,7 @@ def bank_accounts_list_json() -> ResponseReturnValue:
 
 @bp.route('/bank-accounts/activities/json')
 def bank_accounts_activities_json() -> ResponseReturnValue:
-    def actions(activity_id) -> list[BtnColResponse]:
+    def actions(activity_id: int) -> list[BtnColResponse]:
         return [
             BtnColResponse(
                 href=url_for(".bank_account_activities_edit", activity_id=activity_id),
@@ -230,7 +241,7 @@ def bank_accounts_errors_json() -> ResponseReturnValue:
 from contextlib import contextmanager
 
 @contextmanager
-def flash_fints_errors():
+def flash_fints_errors() -> t.Iterator[None]:
     try:
         yield
     except (FinTSDialogError, FinTSClientPINError) as e:
@@ -377,7 +388,7 @@ def bank_accounts_import_errors() -> ResponseReturnValue:
 
 @bp.route('/bank-accounts/importerrors/<error_id>', methods=['GET', 'POST'])
 @access.require('finance_change')
-def fix_import_error(error_id) -> ResponseReturnValue:
+def fix_import_error(error_id: int) -> ResponseReturnValue:
     error = session.get(MT940Error, error_id)
     form = FixMT940Form()
     imported = ImportedTransactions([], [], [])
@@ -454,7 +465,7 @@ def bank_accounts_create() -> ResponseReturnValue:
 
 @bp.route('/bank-account-activities/<activity_id>',
           methods=["GET", "POST"])
-def bank_account_activities_edit(activity_id) -> ResponseReturnValue:
+def bank_account_activities_edit(activity_id: int) -> ResponseReturnValue:
     activity = session.get(BankAccountActivity, activity_id)
 
     if activity is None:
@@ -537,19 +548,71 @@ def bank_account_activities_match() -> ResponseReturnValue:
                            activities_team=matched_activities_team)
 
 
-def _create_field_list_and_matched_activities_dict(matching, prefix):
-    matched_activities = {}
+class UserMatch(t.TypedDict):
+    purpose: str
+    name: str
+    user: User
+    amount: Decimal | int
+
+
+class TeamMatch(t.TypedDict):
+    purpose: str
+    name: str
+    team: Account
+    amount: Decimal | int
+
+
+BooleanFieldList = list[t.Tuple[str, BooleanField]]
+
+
+@t.overload
+def _create_field_list_and_matched_activities_dict(
+    matching: t.Mapping[BankAccountActivity, Account], prefix: t.Literal["team"]
+) -> tuple[BooleanFieldList, dict[str, TeamMatch]]:
+    ...
+
+
+@t.overload
+def _create_field_list_and_matched_activities_dict(
+    matching: t.Mapping[BankAccountActivity, User], prefix: t.Literal["user"]
+) -> tuple[BooleanFieldList, dict[str, UserMatch]]:
+    ...
+
+
+def _create_field_list_and_matched_activities_dict(
+    matching: t.Mapping[BankAccountActivity, User]
+    | t.Mapping[BankAccountActivity, Account],
+    prefix: t.Literal["user", "team"],
+) -> (
+    tuple[BooleanFieldList, dict[str, UserMatch]]
+    | tuple[BooleanFieldList, dict[str, TeamMatch]]
+):
+    # compatibility of this implementation with the overload signatures is hard to verify;
+    # mypy is not too good at dependent typing
+    matched_activities: dict[str, UserMatch] | dict[str, TeamMatch]
+    if prefix == "user":
+        matched_activities = t.cast(dict[str, UserMatch], {})
+    elif prefix == "team":
+        matched_activities = t.cast(dict[str, TeamMatch], {})
+    else:
+        raise ValueError(f"Invalid Prefix: {prefix}")
+
     field_list = []
+    # mypy cannot verify that the type of `entity` is constant across iterations
     for activity, entity in matching.items():
         matched_activities[f"{prefix}-{str(activity.id)}"] = {
             'purpose': activity.reference,
             'name': activity.other_name,
-            prefix: entity,
+            prefix: entity,  # type: ignore[misc]
             'amount': activity.amount
         }
         field_list.append((str(activity.id), BooleanField(str(activity.id), default=True)))
 
-    return field_list, matched_activities
+    if prefix == "user":
+        return field_list, t.cast(dict[str, UserMatch], matched_activities)
+    if prefix == "team":
+        return field_list, t.cast(dict[str, TeamMatch], matched_activities)
+    raise ValueError(f"Invalid Prefix: {prefix}")
 
 
 @bp.route('/bank-account-activities/match/do/', methods=['GET', 'POST'])
@@ -577,7 +640,10 @@ def bank_account_activities_do_match() -> ResponseReturnValue:
                            matched_team=matched_team)
 
 
-def _create_field_list(matching):
+def _create_field_list(
+    matching: t.Mapping[BankAccountActivity, User | Account]
+) -> list[tuple[str, BooleanField]]:
+    # TODO use list comprehension
     field_list = []
     for activity, entity in matching.items():
         field_list.append(
@@ -588,7 +654,10 @@ def _create_field_list(matching):
     return field_list
 
 
-def _create_combined_form(field_list_user, field_list_team):
+def _create_combined_form(
+    field_list_user: t.Iterable[tuple[str, Field]],
+    field_list_team: t.Iterable[tuple[str, Field]],
+) -> FlaskForm:
     form_user = _create_form(field_list_user)
     form_team = _create_form(field_list_team)
 
@@ -599,7 +668,9 @@ def _create_combined_form(field_list_user, field_list_team):
     return Form()
 
 
-def _create_form(field_list):
+def _create_form(
+    field_list: t.Iterable[tuple[str, Field]]
+) -> type[forms.ActivityMatchForm]:
     class F(forms.ActivityMatchForm):
         pass
 
@@ -608,12 +679,14 @@ def _create_form(field_list):
     return F
 
 
-def _apply_checked_matches(matching, subform):
+def _apply_checked_matches(
+    matching: UserMatching | AccountMatching, subform: FormField
+) -> list[tuple[BankAccountActivity, User | Account]]:
     # look for all matches which were checked
     matched = []
     for activity, entity in matching.items():
         if subform[str(activity.id)].data and activity.transaction_id is None:
-            debit_account = entity if type(entity) is Account else entity.account
+            debit_account = entity.account if isinstance(entity, User) else entity
             credit_account = activity.bank_account.account
             transaction = finance.simple_transaction(
                 description=activity.reference,
@@ -642,7 +715,7 @@ def accounts_list() -> ResponseReturnValue:
 
 @bp.route('/account/<int:account_id>/toggle-legacy')
 @access.require('finance_change')
-def account_toggle_legacy(account_id) -> ResponseReturnValue:
+def account_toggle_legacy(account_id: int) -> ResponseReturnValue:
     account = session.get(Account, account_id)
 
     if not account:
@@ -658,10 +731,13 @@ def account_toggle_legacy(account_id) -> ResponseReturnValue:
 
 
 @bp.route('/accounts/<int:account_id>/balance/json')
-def balance_json(account_id) -> ResponseReturnValue:
+def balance_json(account_id: int) -> ResponseReturnValue:
     invert = request.args.get('invert', 'False') == 'True'
 
-    sum_exp = func.sum(Split.amount).over(order_by=Transaction.valid_on)
+    sum_exp: ColumnElement[int] = t.cast(
+        Over[int],
+        func.sum(Split.amount).over(order_by=Transaction.valid_on),  # type: ignore[no-untyped-call]
+    )
 
     if invert:
         sum_exp = -sum_exp
@@ -679,7 +755,7 @@ def balance_json(account_id) -> ResponseReturnValue:
 
 
 @bp.route('/accounts/<int:account_id>')
-def accounts_show(account_id) -> ResponseReturnValue:
+def accounts_show(account_id: int) -> ResponseReturnValue:
     account = session.get(Account, account_id)
 
     if account is None:
@@ -698,12 +774,7 @@ def accounts_show(account_id) -> ResponseReturnValue:
 
     inverted = account.type == "USER_ASSET"
 
-    _table_kwargs = {
-        'data_url': url_for("finance.accounts_show_json", account_id=account_id),
-        'saldo': account.balance,
-        'inverted': inverted
-    }
-
+    tbl_data_url = url_for("finance.accounts_show_json", account_id=account_id)
     balance = -account.balance if inverted else account.balance
 
     return render_template(
@@ -711,13 +782,23 @@ def accounts_show(account_id) -> ResponseReturnValue:
         account=account, user=user, balance=balance,
         balance_json_url=url_for('.balance_json', account_id=account_id,
                                  invert=inverted),
-        finance_table_regular=FinanceTable(**_table_kwargs),
-        finance_table_splitted=FinanceTableSplitted(**_table_kwargs),
+        finance_table_regular=FinanceTable(
+            data_url=tbl_data_url,
+            saldo=account.balance,
+            inverted=inverted,
+        ),
+        finance_table_splitted=FinanceTableSplitted(
+            data_url=tbl_data_url,
+            saldo=account.balance,
+            inverted=inverted,
+        ),
         account_name=localized(account.name, {int: {'insert_commas': False}})
     )
 
 
-def _format_row(split, style, prefix=None):
+def _format_row(
+    split: Split, style: str, prefix: str | None = None
+) -> dict[str, t.Any]:
     inverted = style == "inverted"
     row = FinanceRow(
         posted_at=datetime_filter(split.transaction.posted_at),
@@ -746,7 +827,7 @@ U = t.TypeVar("U")
 
 
 def _prefixed_merge(
-    a: dict[str, T], prefix_a: str, b: dict[str, U], prefix_b: str
+    a: t.Mapping[str, T], prefix_a: str, b: t.Mapping[str, U], prefix_b: str
 ) -> dict[str, T | U]:
     result: dict[str, T | U] = {}
     result.update(**{f'{prefix_a}_{k}': v
@@ -757,7 +838,7 @@ def _prefixed_merge(
 
 
 @bp.route('/accounts/<int:account_id>/json')
-def accounts_show_json(account_id) -> ResponseReturnValue:
+def accounts_show_json(account_id: int) -> ResponseReturnValue:
     style = request.args.get('style')
     limit = request.args.get('limit', type=int)
     offset = request.args.get('offset', type=int)
@@ -777,7 +858,7 @@ def accounts_show_json(account_id) -> ResponseReturnValue:
                                sort_order=sort_order, offset=offset,
                                limit=limit, eagerload=True)
 
-    def rows_from_query(query):
+    def rows_from_query(query: Select[tuple[Split]]) -> list[dict[str, t.Any]]:
         # iterating over `query` executes it
         return [_format_row(split, style) for split in session.scalars(query)]
 
@@ -802,7 +883,7 @@ def accounts_show_json(account_id) -> ResponseReturnValue:
 
 
 @bp.route('/transactions/<int:transaction_id>')
-def transactions_show(transaction_id) -> ResponseReturnValue:
+def transactions_show(transaction_id: int) -> ResponseReturnValue:
     transaction = session.get(Transaction, transaction_id)
 
     if transaction is None:
@@ -820,7 +901,7 @@ def transactions_show(transaction_id) -> ResponseReturnValue:
 
 
 @bp.route('/transactions/<int:transaction_id>/json')
-def transactions_show_json(transaction_id) -> ResponseReturnValue:
+def transactions_show_json(transaction_id: int) -> ResponseReturnValue:
     transaction = session.get(Transaction, transaction_id)
     return TransactionSplitResponse(
         description=transaction.description,
@@ -849,7 +930,9 @@ def transactions_unconfirmed() -> ResponseReturnValue:
     )
 
 
-def _iter_transaction_buttons(bank_acc_act, transaction) -> t.Iterator[BtnColResponse]:
+def _iter_transaction_buttons(
+    bank_acc_act: BankAccountActivity | None, transaction: Transaction
+) -> t.Iterator[BtnColResponse]:
     if not privilege_check(current_user, "finance_change"):
         return
 
@@ -942,7 +1025,7 @@ def transactions_unconfirmed_json() -> ResponseReturnValue:
 
 @bp.route('/transaction/<int:transaction_id>/confirm', methods=['GET', 'POST'])
 @access.require('finance_change')
-def transaction_confirm(transaction_id) -> ResponseReturnValue:
+def transaction_confirm(transaction_id: int) -> ResponseReturnValue:
     transaction = session.get(Transaction, transaction_id)
 
     if transaction is None:
@@ -1018,7 +1101,7 @@ def transaction_confirm_all() -> ResponseReturnValue:
 
 @bp.route('/transaction/<int:transaction_id>/delete', methods=['GET', 'POST'])
 @access.require('finance_change')
-def transaction_delete(transaction_id) -> ResponseReturnValue:
+def transaction_delete(transaction_id: int) -> ResponseReturnValue:
     transaction = session.get(Transaction, transaction_id)
 
     if transaction is None:
@@ -1157,7 +1240,7 @@ def accounts_create() -> ResponseReturnValue:
 
 @bp.route("/membership_fee/<int:fee_id>/book", methods=['GET', 'POST'])
 @access.require('finance_change')
-def membership_fee_book(fee_id) -> ResponseReturnValue:
+def membership_fee_book(fee_id: int) -> ResponseReturnValue:
     fee = session.get(MembershipFee, fee_id)
 
     if fee is None:
@@ -1181,7 +1264,7 @@ def membership_fee_book(fee_id) -> ResponseReturnValue:
 
 
 @bp.route("/membership_fee/<int:fee_id>/users_due_json")
-def membership_fee_users_due_json(fee_id) -> ResponseReturnValue:
+def membership_fee_users_due_json(fee_id: int) -> ResponseReturnValue:
     fee = session.get(MembershipFee, fee_id)
 
     if fee is None:
@@ -1315,7 +1398,7 @@ def membership_fee_create() -> ResponseReturnValue:
 
 @bp.route('/membership_fee/<int:fee_id>/edit', methods=("GET", "POST"))
 @access.require('finance_change')
-def membership_fee_edit(fee_id) -> ResponseReturnValue:
+def membership_fee_edit(fee_id: int) -> ResponseReturnValue:
     fee = session.get(MembershipFee, fee_id)
 
     if fee is None:

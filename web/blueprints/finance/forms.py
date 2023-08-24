@@ -4,9 +4,11 @@
 import datetime
 
 from flask_wtf import FlaskForm as Form
-from wtforms import Form as WTForm, ValidationError
+from wtforms import Form as WTForm, ValidationError, Field
 from wtforms.validators import DataRequired, NumberRange, Optional, \
     InputRequired
+
+from pycroft.model.user import User
 from wtforms_widgets.fields.core import (
     TextField, IntegerField, HiddenField, FileField, SelectField, FormField,
     FieldList, StringField, DateField, MoneyField, PasswordField, BooleanField,
@@ -82,7 +84,7 @@ class BankAccountCreateForm(Form):
     bic = TextField("BIC")
     fints = TextField("FinTS-Endpunkt", default="https://mybank.com/…")
 
-    def validate_iban(self, field):
+    def validate_iban(self, field: Field) -> None:
         if BankAccount.q.filter_by(iban=field.data ).first() is not None:
             raise ValidationError("Konto existiert bereits.")
 
@@ -138,7 +140,7 @@ class SplitCreateForm(WTForm):
     account_id = HiddenField(validators=[DataRequired(message=gettext("Missing account."))])
     amount = MoneyField("Wert", validators=[DataRequired(message=gettext("Invalid value."))])
 
-    def validate_amount(self, field):
+    def validate_amount(self, field: Field) -> None:
         cents = field.data.shift(2)
         if cents == 0 or cents != int(cents):
             raise ValidationError(gettext("Invalid value."))
@@ -155,7 +157,7 @@ class TransactionCreateForm(Form):
         min_entries=2
     )
 
-    def validate_splits(self, field):
+    def validate_splits(self, field: FormField) -> None:
         balance = sum(split_form['amount'].data for split_form in field
                       if split_form['amount'].data is not None)
         if balance != 0:
@@ -166,11 +168,11 @@ class ActivityMatchForm(Form):
     pass
 
 
-def get_user_name_with_id(user):
+def get_user_name_with_id(user: User) -> str:
     return f"{user.name} ({user.id})"
 
 
-def get_user_name_with_id_and_balance(user):
+def get_user_name_with_id_and_balance(user: User) -> str:
     return f"{user.name} ({user.id}) | {-user.account.balance}€"
 
 
