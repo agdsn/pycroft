@@ -1,3 +1,5 @@
+import typing as t
+
 from flask import url_for
 from pydantic import BaseModel
 
@@ -83,8 +85,8 @@ class PatchPortTable(BootstrapTable):
     edit_link = BtnColumn('Editieren', hide_if=no_inf_change)
     delete_link = BtnColumn('Löschen', hide_if=no_inf_change)
 
-    def __init__(self, *a, room_id=None, **kw) -> None:
-        super().__init__(*a, **kw)
+    def __init__(self, *, room_id: int | None = None, **kw: t.Any) -> None:
+        super().__init__(**kw)
 
         self.room_id = room_id
 

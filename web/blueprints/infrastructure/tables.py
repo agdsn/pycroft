@@ -1,7 +1,10 @@
+import typing as t
+
 from flask import url_for
 from flask_login import current_user
 from pydantic import BaseModel, ConfigDict
 
+from web.table.lazy_join import HasDunderStr
 from web.table.table import (
     BootstrapTable,
     Column,
@@ -13,7 +16,7 @@ from web.table.table import (
 )
 
 
-def no_inf_change():
+def no_inf_change() -> bool:
     return not current_user.has_property('infrastructure_change')
 
 
@@ -48,9 +51,9 @@ class SwitchTable(BootstrapTable):
     delete_link = BtnColumn('Löschen', width=1, hide_if=no_inf_change)
 
     @property
-    def toolbar(self):
+    def toolbar(self) -> HasDunderStr | None:
         if not current_user.has_property('infrastructure_change'):
-            return
+            return None
 
         return button_toolbar("Switch", url_for(".switch_create"))
 
@@ -82,8 +85,8 @@ class PortTable(BootstrapTable):
             'data-sort-name': 'switchport_name',
         }
 
-    def __init__(self, *a, switch_id=None, **kw) -> None:
-        super().__init__(*a, **kw)
+    def __init__(self, *, switch_id: int | None = None, **kw: t.Any) -> None:
+        super().__init__(**kw)
         self.switch_id = switch_id
 
     switchport_name = Column("Name", width=2, col_args={'data-sorter': 'table.sortPort'})
@@ -93,9 +96,9 @@ class PortTable(BootstrapTable):
     delete_link = BtnColumn('Löschen', hide_if=no_inf_change)
 
     @property
-    def toolbar(self):
+    def toolbar(self) -> HasDunderStr | None:
         if no_inf_change():
-            return
+            return None
         href = url_for(".switch_port_create", switch_id=self.switch_id)
         return button_toolbar("Switch-Port", href)
 

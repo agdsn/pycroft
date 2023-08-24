@@ -1,3 +1,5 @@
+import typing as t
+
 from flask import url_for
 from pydantic import BaseModel
 
@@ -23,7 +25,7 @@ class HostTable(BootstrapTable):
     interface_create_link = Column("", hide_if=lambda: True)
     id = Column("", hide_if=lambda: True)
 
-    def __init__(self, *a, user_id: int | None = None, **kw) -> None:
+    def __init__(self, *, user_id: int | None = None, **kw: t.Any) -> None:
         table_args = kw.pop('table_args', {})
         table_args.setdefault('data-load-subtables', "true")
         table_args.setdefault('data-detail-view', "true")
@@ -31,7 +33,7 @@ class HostTable(BootstrapTable):
         table_args.setdefault('data-response-handler', "table.userHostResponseHandler")
         kw['table_args'] = table_args
 
-        super().__init__(*a, **kw)
+        super().__init__(**kw)
         self.user_id = user_id
 
     @property
@@ -63,13 +65,13 @@ class InterfaceTable(BootstrapTable):
     ips = Column("IPs")
     actions = MultiBtnColumn("Aktionen", hide_if=no_hosts_change)
 
-    def __init__(self, *a, host_id: int | None = None, **kw) -> None:
+    def __init__(self, *, host_id: int | None = None, **kw: t.Any) -> None:
         table_args = kw.pop("table_args", {})
         table_args.setdefault("data-hide-pagination-info", "true")
         table_args.setdefault("data-search", "false")
         kw["table_args"] = table_args
 
-        super().__init__(*a, **kw)
+        super().__init__(**kw)
         self.host_id = host_id
 
 

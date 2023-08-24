@@ -13,21 +13,23 @@ from web.table.table import (
     UserColumn,
     DateColResponse,
     UserColResponse,
+    TableArgs,
 )
 
 
-class RefreshableTableMixin:
+class RefreshableTableMixin(BootstrapTable):
     """A mixin class showing the refresh button by default.
 
     In :py:meth:`__init__`s ``table_args`` argument, a default of
     ``{'data-show-refresh': "true"}`` is established.
     """
 
-    def __init__(self, *a, **kw) -> None:
-        table_args = kw.pop("table_args", {})
+    def __init__(self, *, table_args: TableArgs | None = None, **kw: t.Any) -> None:
+        if table_args is None:
+            table_args = {}
         table_args.setdefault("data-show-refresh", "true")
         kw["table_args"] = table_args
-        super().__init__(*a, **kw)
+        super().__init__(**kw)
 
 
 class LogTableExtended(RefreshableTableMixin, BootstrapTable):
