@@ -32,7 +32,10 @@ access = BlueprintAccess(bp, required_properties=['user_show'])
 nav = BlueprintNavigation(bp, "Tasks", icon='fa-tasks', blueprint_access=access)
 
 
-def format_parameters(parameters):
+T = t.TypeVar("T", bound=t.MutableMapping[str, t.Any])
+
+
+def format_parameters(parameters: T) -> T:
     """Make task parameters human readable by looking up objects behind ids"""
 
     # Replace building_id by the buildings short name
@@ -100,7 +103,7 @@ def task_row(task: UserTask) -> TaskRow:
 
 
 @bp.route("/user/<int:user_id>/json")
-def json_tasks_for_user(user_id) -> ResponseValue:
+def json_tasks_for_user(user_id: int) -> ResponseValue:
     user = get_user_or_404(user_id)
     return TableResponse[TaskRow](
         items=[task_row(t.cast(UserTask, task)) for task in user.tasks]
@@ -128,7 +131,7 @@ def json_user_tasks() -> ResponseValue:
     ).model_dump()
 
 
-def get_task_or_404(task_id) -> Task | NoReturn:
+def get_task_or_404(task_id: int) -> Task | NoReturn:
     if task := session.session.get(Task, task_id):
         return task
     abort(404)
@@ -158,7 +161,7 @@ def manually_execute_user_task(task_id: int) -> ResponseValue:
 
 @bp.route("/<int:task_id>/cancel")
 @access.require('user_change')
-def cancel_user_task(task_id) -> ResponseValue:
+def cancel_user_task(task_id: int) -> ResponseValue:
     task = get_task_or_404(task_id)
 
     cancel_task(task, current_user)
@@ -170,7 +173,7 @@ def cancel_user_task(task_id) -> ResponseValue:
 
 @bp.route("/<int:task_id>/reschedule", methods=['GET', 'POST'])
 @access.require('user_change')
-def reschedule_user_task(task_id) -> ResponseValue:
+def reschedule_user_task(task_id: int) -> ResponseValue:
     task = get_task_or_404(task_id)
 
     form = RescheduleTaskForm()
