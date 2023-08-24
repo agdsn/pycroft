@@ -54,8 +54,15 @@ class ConfirmCheckboxField(BooleanField):
 
     See `confirmable-error.ts`
     """
-    def __init__(self, label=None, validators=None, false_values=None, **kwargs):
-        kwargs.setdefault('render_kw', {})
-        kwargs.setdefault('default', False)
-        kwargs['render_kw'].setdefault('data-role', 'confirm-checkbox')
+
+    def __init__(
+        self,
+        label: str | None = None,
+        validators: t.Iterable[t.Any] | None = None,
+        false_values: t.Iterable[t.Any] | None = None,
+        **kwargs: t.Any,
+    ) -> None:
+        kwargs.setdefault("render_kw", {})
+        kwargs.setdefault("default", False)
+        kwargs["render_kw"].setdefault("data-role", "confirm-checkbox")
         super().__init__(label, validators, false_values, **kwargs)
