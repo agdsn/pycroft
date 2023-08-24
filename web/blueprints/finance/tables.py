@@ -47,13 +47,19 @@ class FinanceTable(BootstrapTable):
             'data-page-list': '[5, 10, 25, 50, 100]'
         }
 
-    def __init__(self, *a, saldo=None, user_id=None, inverted=False, **kw) -> None:
+    def __init__(
+        self,
+        *,
+        saldo: int | Decimal | None = None,
+        user_id: int | None = None,
+        inverted: bool = False,
+        **kw: t.Any,
+    ) -> None:
         """Init
 
-        :param int user_id: An optional user_id.  If set, this causes
-            a “details” button to be rendered in the toolbar
-            referencing the user.
-        :param bool inverted: An optional switch adding
+        :param user_id: If set, this causes a “details” button
+            to be rendered in the toolbar referencing the user.
+        :param inverted: An optional switch adding
             `style=inverted` to the given `data_url`
         """
 
@@ -66,7 +72,7 @@ class FinanceTable(BootstrapTable):
             )
             self.saldo = -saldo
 
-        super().__init__(*a, **kw)
+        super().__init__(**kw)
 
 
         self.user_id = user_id
@@ -126,12 +132,12 @@ class FinanceTableSplitted(FinanceTable, SplittedTable):
 
     splits = (('soll', "Soll"), ('haben', "Haben"))
 
-    def __init__(self, *a, **kw) -> None:
-        super().__init__(*a, **kw)
+    def __init__(self, **kw: t.Any) -> None:
+        super().__init__(**kw)
         self.table_footer_offset = 7
 
 
-def no_finance_change():
+def no_finance_change() -> bool:
     return not current_user.has_property('finance_change')
 
 
@@ -195,9 +201,9 @@ class BankAccountTable(BootstrapTable):
     last_imported_at = Column("Zuletzt importiert")
     kto = BtnColumn("Konto")
 
-    def __init__(self, *a, create_account=False, **kw):
+    def __init__(self, *, create_account: bool = False, **kw: t.Any) -> None:
         self.create_account = create_account
-        super().__init__(*a, **kw)
+        super().__init__(**kw)
 
     @property
     def toolbar(self) -> HasDunderStr | None:
@@ -230,14 +236,14 @@ class BankAccountActivityTable(BootstrapTable):
     amount = Column("Betrag", width=1, formatter="table.euroFormatter")
     actions = MultiBtnColumn("Aktionen", width=1)
 
-    def __init__(self, *a, **kw):
+    def __init__(self, **kw: t.Any) -> None:
         table_args = kw.pop('table_args', {})
         table_args.setdefault('data-detail-view', "true")
         table_args.setdefault('data-row-style', "table.financeRowFormatter")
         table_args.setdefault('data-detail-formatter', "table.bankAccountActivitiesDetailFormatter")
         kw['table_args'] = table_args
 
-        super().__init__(*a, **kw)
+        super().__init__(**kw)
 
     class Meta:
         table_args = {

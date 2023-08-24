@@ -30,7 +30,7 @@ def simple_transaction(
     description: str,
     debit_account: Account,
     credit_account: Account,
-    amount: Decimal,
+    amount: Decimal | int,
     author: User,
     valid_on: date | None = None,
     confirmed: bool = True,
