@@ -1,4 +1,5 @@
 import typing
+import typing as t
 from decimal import Decimal
 
 from flask import url_for
@@ -6,6 +7,7 @@ from flask_babel import gettext
 from flask_login import current_user
 from pydantic import BaseModel
 
+from web.table.lazy_join import HasDunderStr, LazilyJoined
 from web.table.table import (
     lazy_join,
     DictValueMixin,
@@ -76,20 +78,20 @@ class FinanceTable(BootstrapTable):
     amount = ColoredColumn("Wert", cell_style='table.tdRelativeCellStyle')
 
     @property
-    def toolbar(self):
+    def toolbar(self) -> HasDunderStr | None:
         """Generate a toolbar with a details button
 
         If a user_id was passed in the constructor, this renders a
         “details” button reaching the finance overview of the user's account.
         """
         if self.user_id is None:
-            return
+            return None
         href = url_for("user.user_account", user_id=self.user_id)
         return button_toolbar("Details", href, icon="fa-chart-area")
 
     @property
     @lazy_join
-    def table_footer(self):
+    def table_footer(self) -> t.Iterator[str]:
         yield "<tfoot>"
         yield "<tr>"
 
@@ -144,7 +146,7 @@ class MembershipFeeTable(BootstrapTable):
     actions = MultiBtnColumn("Aktionen")
 
     @property
-    def toolbar(self):
+    def toolbar(self) -> LazilyJoined:
         """An “add fee” button"""
         href = url_for(".membership_fee_create")
         return button_toolbar(gettext("Beitrag erstellen"), href)
@@ -198,10 +200,10 @@ class BankAccountTable(BootstrapTable):
         super().__init__(*a, **kw)
 
     @property
-    def toolbar(self):
+    def toolbar(self) -> HasDunderStr | None:
         """A “create bank account” button"""
         if not self.create_account:
-            return
+            return None
         href = url_for(".bank_accounts_create")
         return button_toolbar(gettext("Neues Bankkonto anlegen"), href)
 

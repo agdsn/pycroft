@@ -12,7 +12,7 @@ from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
 from pydantic import BaseModel, Field
 from annotated_types import Predicate
 
-from .lazy_join import lazy_join, LazilyJoined
+from .lazy_join import lazy_join, LazilyJoined, HasDunderStr
 
 
 class Column:
@@ -301,7 +301,7 @@ class IbanColumn(Column):
 
 
 UnboundTableArgs = frozenset[tuple[str, Any]]
-TableArgs = dict[str, str]
+TableArgs = dict[HasDunderStr, HasDunderStr]
 
 
 def _infer_table_args(meta_obj, superclass_table_args: TableArgs) -> UnboundTableArgs:
@@ -419,19 +419,23 @@ class BootstrapTable(metaclass=BootstrapTableMeta):
 
     @property
     @lazy_join
-    def table_header(self):
+    def table_header(self) -> t.Iterator[HasDunderStr]:
         yield "<thead>"
         yield "<tr>"
         yield from self.columns
         yield "</tr>"
         yield "</thead>"
 
-    toolbar = ""
+    @property
+    def toolbar(self) -> HasDunderStr | None:
+        return ""
 
-    table_footer = ""
+    @property
+    def table_footer(self) -> HasDunderStr | None:
+        return ""
 
     @lazy_join("\n")
-    def _render(self, table_id):
+    def _render(self, table_id) -> t.Iterator[HasDunderStr | None]:
         toolbar_args = html_params(id=f"{table_id}-toolbar",
                                    class_="btn-toolbar",
                                    role="toolbar")

@@ -1,6 +1,7 @@
+import typing as t
 from functools import wraps
 from types import FunctionType
-from typing import Generator, Callable, Iterable, overload
+from typing import Generator, Callable, overload
 
 
 def filled_iter(iter, filler):
@@ -14,33 +15,45 @@ def filled_iter(iter, filler):
         yield elem
 
 
+class HasDunderStr(t.Protocol):
+    def __str__(self) -> str:
+        ...
+
+
 class LazilyJoined:
     """A string that consists of multiple components
 
     NOTE: Just like a generator, it will be exhausted after the first call!
     """
-    _components: Iterable
 
-    def __init__(self, components: Iterable, glue: str = ""):
+    glue: str
+    _components: t.Iterable[HasDunderStr | None]
+    exhausted: bool
+
+    def __init__(
+        self,
+        components: t.Iterable[HasDunderStr | None],
+        glue: str = "",
+    ):
         self.glue = glue
         self._components = components
         self.exhausted = False
 
     @property
-    def _stringified_components(self):
+    def _stringified_components(self) -> t.Iterator[str]:
         return ((str(c) if c is not None else "") for c in self._components)
 
-    def __str__(self):
+    def __str__(self) -> str:
         self._mark_exhausted()
         return self.glue.join(self._stringified_components)
 
-    def __iter__(self):
+    def __iter__(self) -> t.Iterator[str]:
         self._mark_exhausted()
         if self.glue:
             return filled_iter(self._stringified_components, filler=self.glue)
         return iter(self._stringified_components)
 
-    def _mark_exhausted(self):
+    def _mark_exhausted(self) -> None:
         if self.exhausted:
             raise RuntimeError("LazyJoined object already exhausted!"
                                " You may call __str__ or __iter__ only once."
@@ -48,7 +61,9 @@ class LazilyJoined:
         self.exhausted = True
 
 
-DecoratedInType = Callable[..., (Generator[str, None, None])]
+DecoratedInType = Callable[
+    ..., Generator[HasDunderStr | None, None, None] | t.Iterator[HasDunderStr | None]
+]
 DecoratedOutType = Callable[..., LazilyJoined]
 
 @overload
