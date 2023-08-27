@@ -1,4 +1,5 @@
 from flask_wtf import FlaskForm as Form
+from sqlalchemy.orm import Query
 from wtforms.validators import DataRequired, IPAddress
 
 from pycroft.model.net import VLAN
@@ -8,7 +9,7 @@ from wtforms_widgets.fields.core import TextField, QuerySelectField, \
 from wtforms_widgets.fields.filters import to_uppercase, to_lowercase
 
 
-def vlan_query():
+def vlan_query() -> Query:
     return VLAN.q.order_by(VLAN.vid)
 
 

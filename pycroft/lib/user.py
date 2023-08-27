@@ -919,11 +919,12 @@ def generate_user_sheet(
     Only necessary if wifi=True:
     :param generation_purpose: Optional purpose why this usersheet was printed
     """
+    from pycroft.helpers import printing
     return generate_pdf(
         new_user=new_user,
         wifi=wifi,
         bank_account=config.membership_fee_bank_account,
-        user=user,
+        user=t.cast(printing.User, user),
         user_id=encode_type2_user_id(user.id),
         plain_user_password=plain_user_password,
         generation_purpose=generation_purpose,

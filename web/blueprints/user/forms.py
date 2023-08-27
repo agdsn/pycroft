@@ -6,6 +6,7 @@ from flask import url_for
 from flask_wtf import FlaskForm as Form
 from markupsafe import escape, Markup
 from sqlalchemy import select
+from sqlalchemy.orm import Query
 from wtforms import Field
 from wtforms.validators import (
     Regexp, ValidationError, DataRequired, Email, Optional)
@@ -35,19 +36,19 @@ from ..helpers.form import confirmable_div, ConfirmCheckboxField, \
     iter_prefixed_field_names
 
 
-def user_query():
+def user_query() -> Query:
     return User.q.order_by(User.id)
 
 
-def host_query():
+def host_query() -> Query:
     return Host.q.order_by(Host.id)
 
 
-def group_query():
+def group_query() -> Query:
     return PropertyGroup.q.order_by(PropertyGroup.name)
 
 
-def validate_unique_login(form, field):
+def validate_unique_login(form: Form, field: Field) -> None:
     if User.q.filter_by(login=field.data).first():
         raise ValidationError("Nutzerlogin schon vergeben!")
 
@@ -60,7 +61,8 @@ class UniqueName:
 
     :param force_field: The name of the “do it anyway” checkbox field
     """
-    def __init__(self, force_field: str | None = 'force'):
+
+    def __init__(self, force_field: str | None = "force") -> None:
         self.force_field = force_field
         self.building_field = 'building'
         self.level_field = 'level'
@@ -87,7 +89,7 @@ class UniqueName:
             select(Room).filter_by(number=number, level=level, building=building)
         )
 
-    def __call__(self, form: Form, field: Field):
+    def __call__(self, form: Form, field: Field) -> None:
         if self.force_set(form):
             return
         if (room := self.try_get_room(form)) is None:
@@ -115,7 +117,8 @@ class UniqueEmail:
 
     :param force_field: The name of the “do it anyway” checkbox field
     """
-    def __init__(self, force_field: str | None = 'force'):
+
+    def __init__(self, force_field: str | None = "force") -> None:
         self.force_field = force_field
 
     def force_set(self, form: Form) -> bool:
@@ -129,7 +132,7 @@ class UniqueEmail:
     def get_conflicting_users(email: str) -> list[User]:
         return User.q.filter_by(email=email).all()
 
-    def __call__(self, form: Form, field: Field):
+    def __call__(self, form: Form, field: Field) -> None:
         if self.force_set(form):
             return
         if not (conflicting_users := self.get_conflicting_users(field.data)):
@@ -182,7 +185,7 @@ class UserEditForm(Form):
 
 
 class UserEditAddressForm(CreateAddressForm):
-    def set_defaults_from_adress(self, address: Address):
+    def set_defaults_from_adress(self, address: Address) -> None:
         self.address_street.data = address.street
         self.address_number.data = address.number
         self.address_zip_code.data = address.zip_code

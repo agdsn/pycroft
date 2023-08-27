@@ -205,7 +205,7 @@ class TestEmptyTableDefaults:
         }
 
     def test_table_args_after_instantiation(self, EmptyTable):
-        assert EmptyTable("#").table_args == {
+        assert EmptyTable(data_url="#").table_args == {
             'data-toggle': "table",
             "data-icons-prefix": "fa",
             'data-url': "#",
@@ -250,10 +250,16 @@ class TestEnforcedUrlParams:
         return A_
 
     def test_url_param_is_added(self, A: type[BootstrapTable]):
-        assert A("http://localhost/table").data_url == "http://localhost/table?inverted=yes"
+        assert (
+            A(data_url="http://localhost/table").data_url
+            == "http://localhost/table?inverted=yes"
+        )
 
     def test_url_param_is_overridden(self, A: type[BootstrapTable]):
-        assert A("http://localhost/table?inverted=no").data_url == "http://localhost/table?inverted=yes"
+        assert (
+            A(data_url="http://localhost/table?inverted=no").data_url
+            == "http://localhost/table?inverted=yes"
+        )
 
 
 class TestSplittedTable:

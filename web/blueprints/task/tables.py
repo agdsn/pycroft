@@ -30,7 +30,11 @@ class TaskTable(BootstrapTable):
     type = Column("Typ", hide_if=lambda: True)
 
     def __init__(
-        self, hidden_columns: t.Container[str] = None, sort_order="asc", *a, **kw
+        self,
+        *,
+        hidden_columns: t.Container[str] = None,
+        sort_order: str = "asc",
+        **kw: t.Any
     ):
         table_args = kw.pop("table_args", {})
         table_args.setdefault("data-detail-view", "true")
@@ -46,7 +50,7 @@ class TaskTable(BootstrapTable):
 
         kw['table_args'] = table_args
 
-        super().__init__(*a, **kw)
+        super().__init__(**kw)
 
 
 class TaskRow(BaseModel):

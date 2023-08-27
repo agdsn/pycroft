@@ -73,8 +73,8 @@ def property_group_create() -> ResponseValue:
 
 @bp.route('/property_group/<group_id>/grant/<property_name>')
 @access.require('groups_change')
-def property_group_grant_property(group_id, property_name) -> ResponseValue:
-    property_group = PropertyGroup.get(group_id)
+def property_group_grant_property(group_id: int, property_name: str) -> ResponseValue:
+    property_group = session.session.get(PropertyGroup, group_id)
 
     if property_group is None:
         flash(f"Eigenschaftengruppe mit ID {group_id} existiert nicht!", 'error')
@@ -89,8 +89,8 @@ def property_group_grant_property(group_id, property_name) -> ResponseValue:
 
 @bp.route('/property_group/<group_id>/deny/<property_name>')
 @access.require('groups_change')
-def property_group_deny_property(group_id, property_name) -> ResponseValue:
-    property_group = PropertyGroup.get(group_id)
+def property_group_deny_property(group_id: int, property_name: str) -> ResponseValue:
+    property_group = session.session.get(PropertyGroup, group_id)
 
     if property_group is None:
         flash(f"Eigenschaftengruppe mit ID {group_id} existiert nicht!", 'error')
@@ -105,8 +105,8 @@ def property_group_deny_property(group_id, property_name) -> ResponseValue:
 
 @bp.route('/property_group/<group_id>/remove/<property_name>')
 @access.require('groups_change')
-def property_group_remove_property(group_id, property_name) -> ResponseValue:
-    group = PropertyGroup.get(group_id)
+def property_group_remove_property(group_id: int, property_name: str) -> ResponseValue:
+    group = session.session.get(PropertyGroup, group_id)
 
     if group is None:
         flash(f"Eigenschaftengruppe mit ID {group_id} existiert nicht!", 'error')
@@ -121,8 +121,8 @@ def property_group_remove_property(group_id, property_name) -> ResponseValue:
 
 @bp.route('/property_group/<group_id>/edit', methods=['GET', 'POST'])
 @access.require('groups_change')
-def property_group_edit(group_id) -> ResponseValue:
-    group = PropertyGroup.get(group_id)
+def property_group_edit(group_id: int) -> ResponseValue:
+    group = session.session.get(PropertyGroup, group_id)
 
     if group is None:
         flash(f"Eigenschaftengruppe mit ID {group_id} existiert nicht!", 'error')
@@ -153,8 +153,8 @@ def property_group_edit(group_id) -> ResponseValue:
 
 @bp.route('/property_group/<group_id>/delete', methods=['GET', 'POST'])
 @access.require('groups_change')
-def property_group_delete(group_id) -> ResponseValue:
-    group = PropertyGroup.get(group_id)
+def property_group_delete(group_id: int) -> ResponseValue:
+    group = session.session.get(PropertyGroup, group_id)
 
     if group is None:
         flash(f"Eigenschaftengruppe mit ID {group_id} existiert nicht!", 'error')

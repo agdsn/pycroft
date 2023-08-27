@@ -3,6 +3,7 @@
 #  the Apache License, Version 2.0. See the LICENSE file for details
 import logging
 import re
+import typing as t
 from typing import Callable, TypeVar
 
 from sqlalchemy import select
@@ -17,9 +18,11 @@ logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
 
-def match_activities() -> (
-    tuple[dict[BankAccountActivity, User], dict[BankAccountActivity, Account]]
-):
+UserMatching: t.TypeAlias = dict[BankAccountActivity, User]
+AccountMatching: t.TypeAlias = dict[BankAccountActivity, Account]
+
+
+def match_activities() -> tuple[UserMatching, AccountMatching]:
     """For all unmatched transactions, determine which user or team they should be matched with."""
     matching: dict[BankAccountActivity, User] = {}
     team_matching: dict[BankAccountActivity, Account] = {}

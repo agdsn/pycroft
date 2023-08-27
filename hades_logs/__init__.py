@@ -5,6 +5,7 @@ hades_logs
 This module provides access to Hades' radius logs utilizing its celery
 RPC api.
 """
+import typing as t
 import logging
 
 from celery.exceptions import TimeoutError as CeleryTimeoutError
@@ -110,7 +111,9 @@ class HadesLogs:
         full_task_name = f'{self.celery.main}.{name}'
         return self.celery.signature(full_task_name, args=args, kwargs=kwargs)
 
-    def fetch_logs(self, nasipaddress: str, nasportid: str, limit=100, reduced=True):
+    def fetch_logs(
+        self, nasipaddress: str, nasportid: str, limit: int = 100, reduced: bool = True
+    ) -> t.Iterator[RadiusLogEntry]:
         """Fetch the auth logs of the given port
 
         :param ipaddr nasipaddress: The IP address of the NAS

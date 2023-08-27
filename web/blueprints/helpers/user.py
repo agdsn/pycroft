@@ -3,10 +3,10 @@ from flask_login import current_user
 
 from pycroft.model.session import session
 from pycroft.model.user import User, PreMember
-from web.table.table import BtnColResponse
+from web.table.table import BtnColResponse, BtnClass, IconClass
 
 
-def user_btn_style(user):
+def user_btn_style(user: User) -> tuple[BtnClass, list[IconClass], str]:
     """Determine the icons and style of the button to a users page.
 
     First, add glyphicons concerning status warnings (finance,
@@ -93,9 +93,9 @@ def get_pre_member_or_404(prm_id: int) -> PreMember:
     return prm
 
 
-def no_membership_change():
+def no_membership_change() -> bool:
     return not current_user.has_property('groups_change_membership')
 
 
-def no_hosts_change():
+def no_hosts_change() -> bool:
     return not current_user.has_property('hosts_change')

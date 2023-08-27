@@ -1,4 +1,5 @@
 import typing
+import typing as t
 from decimal import Decimal
 
 from flask import url_for
@@ -6,6 +7,7 @@ from flask_babel import gettext
 from flask_login import current_user
 from pydantic import BaseModel
 
+from web.table.lazy_join import HasDunderStr, LazilyJoined
 from web.table.table import (
     lazy_join,
     DictValueMixin,
@@ -45,13 +47,19 @@ class FinanceTable(BootstrapTable):
             'data-page-list': '[5, 10, 25, 50, 100]'
         }
 
-    def __init__(self, *a, saldo=None, user_id=None, inverted=False, **kw):
+    def __init__(
+        self,
+        *,
+        saldo: int | Decimal | None = None,
+        user_id: int | None = None,
+        inverted: bool = False,
+        **kw: t.Any,
+    ) -> None:
         """Init
 
-        :param int user_id: An optional user_id.  If set, this causes
-            a “details” button to be rendered in the toolbar
-            referencing the user.
-        :param bool inverted: An optional switch adding
+        :param user_id: If set, this causes a “details” button
+            to be rendered in the toolbar referencing the user.
+        :param inverted: An optional switch adding
             `style=inverted` to the given `data_url`
         """
 
@@ -64,7 +72,7 @@ class FinanceTable(BootstrapTable):
             )
             self.saldo = -saldo
 
-        super().__init__(*a, **kw)
+        super().__init__(**kw)
 
 
         self.user_id = user_id
@@ -76,20 +84,20 @@ class FinanceTable(BootstrapTable):
     amount = ColoredColumn("Wert", cell_style='table.tdRelativeCellStyle')
 
     @property
-    def toolbar(self):
+    def toolbar(self) -> HasDunderStr | None:
         """Generate a toolbar with a details button
 
         If a user_id was passed in the constructor, this renders a
         “details” button reaching the finance overview of the user's account.
         """
         if self.user_id is None:
-            return
+            return None
         href = url_for("user.user_account", user_id=self.user_id)
         return button_toolbar("Details", href, icon="fa-chart-area")
 
     @property
     @lazy_join
-    def table_footer(self):
+    def table_footer(self) -> t.Iterator[str]:
         yield "<tfoot>"
         yield "<tr>"
 
@@ -124,12 +132,12 @@ class FinanceTableSplitted(FinanceTable, SplittedTable):
 
     splits = (('soll', "Soll"), ('haben', "Haben"))
 
-    def __init__(self, *a, **kw):
-        super().__init__(*a, **kw)
+    def __init__(self, **kw: t.Any) -> None:
+        super().__init__(**kw)
         self.table_footer_offset = 7
 
 
-def no_finance_change():
+def no_finance_change() -> bool:
     return not current_user.has_property('finance_change')
 
 
@@ -144,7 +152,7 @@ class MembershipFeeTable(BootstrapTable):
     actions = MultiBtnColumn("Aktionen")
 
     @property
-    def toolbar(self):
+    def toolbar(self) -> LazilyJoined:
         """An “add fee” button"""
         href = url_for(".membership_fee_create")
         return button_toolbar(gettext("Beitrag erstellen"), href)
@@ -193,15 +201,15 @@ class BankAccountTable(BootstrapTable):
     last_imported_at = Column("Zuletzt importiert")
     kto = BtnColumn("Konto")
 
-    def __init__(self, *a, create_account=False, **kw):
+    def __init__(self, *, create_account: bool = False, **kw: t.Any) -> None:
         self.create_account = create_account
-        super().__init__(*a, **kw)
+        super().__init__(**kw)
 
     @property
-    def toolbar(self):
+    def toolbar(self) -> HasDunderStr | None:
         """A “create bank account” button"""
         if not self.create_account:
-            return
+            return None
         href = url_for(".bank_accounts_create")
         return button_toolbar(gettext("Neues Bankkonto anlegen"), href)
 
@@ -228,14 +236,14 @@ class BankAccountActivityTable(BootstrapTable):
     amount = Column("Betrag", width=1, formatter="table.euroFormatter")
     actions = MultiBtnColumn("Aktionen", width=1)
 
-    def __init__(self, *a, **kw):
+    def __init__(self, **kw: t.Any) -> None:
         table_args = kw.pop('table_args', {})
         table_args.setdefault('data-detail-view', "true")
         table_args.setdefault('data-row-style', "table.financeRowFormatter")
         table_args.setdefault('data-detail-formatter', "table.bankAccountActivitiesDetailFormatter")
         kw['table_args'] = table_args
 
-        super().__init__(*a, **kw)
+        super().__init__(**kw)
 
     class Meta:
         table_args = {

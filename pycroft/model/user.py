@@ -373,7 +373,7 @@ class User(BaseUser, UserMixin):
         return self.wifi_passwd_hash is not None
 
     @staticmethod
-    def verify_and_get(login, plaintext_password):
+    def verify_and_get(login: str, plaintext_password: str) -> User | None:
         try:
             user = User.q.filter(User.login == func.lower(login)).one()
         except NoResultFound:

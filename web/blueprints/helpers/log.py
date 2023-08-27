@@ -6,6 +6,7 @@ sources of logs to a dict.  The latter represents a valid table row to
 :class:`LogTableExtended`.
 
 """
+import typing as t
 from datetime import datetime, timezone
 from functools import partial
 
@@ -41,14 +42,22 @@ format_task_log_entry = partial(format_log_entry, log_type='task')
 format_room_log_entry = partial(format_log_entry, log_type='room')
 
 
-def radius_description(interface, entry):
+class SupportsFormat(t.Protocol):
+    def __str__(self) -> str:
+        ...
+
+    def __format__(self, format_spec: t.Any) -> str:
+        ...
+
+
+def radius_description(interface: SupportsFormat, entry: RadiusLogEntry) -> str:
     """Build a readable log message from a radius log entry.
 
     :param interface: Something whose string representation can be
         used to inform about the port the radius log happened.  For
         instance, this can be a :class:`SwitchPort` object
         formatting itself to `switch-wu5-00 (D15)` or similar.
-    :param RadiusLogEntry entry: A :class:`RadiusLogEntry` as
+    :param entry: A :class:`RadiusLogEntry` as
         obtained from a :class:`HadesLogs` lookup.
     """
     prefix = f"{interface} – {entry.mac} – "
@@ -61,7 +70,9 @@ def radius_description(interface, entry):
     return prefix + msg
 
 
-def format_hades_log_entry(interface: str, entry: RadiusLogEntry) -> LogTableRow:
+def format_hades_log_entry(
+    interface: SupportsFormat, entry: RadiusLogEntry
+) -> LogTableRow:
     """Turn Radius Log entry information into a canonical form
 
     This utilizes :py:func:`radius_description` but returns a dict in

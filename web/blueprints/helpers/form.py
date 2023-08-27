@@ -1,9 +1,14 @@
+from __future__ import annotations
 import typing
+import typing as t
 
 from wtforms import Form
 from wtforms_widgets.fields.core import BooleanField
 
 from pycroft.model.facilities import Room
+
+if t.TYPE_CHECKING:
+    from web.blueprints.facilities.forms import SelectRoomForm
 
 
 def iter_prefixed_field_names(cls: type[Form], prefix: str) -> typing.Iterator[str]:
@@ -11,25 +16,25 @@ def iter_prefixed_field_names(cls: type[Form], prefix: str) -> typing.Iterator[s
             if hasattr(f, '_formfield') and f.startswith(prefix))
 
 
-def refill_room_data(form, room):
-    if room:
-        form.building.data = room.building
+def refill_room_data(form: SelectRoomForm, room: Room | None) -> None:
+    if not room:
+        return
 
-        levels = Room.q.filter_by(building_id=room.building.id).order_by(Room.level)\
-                       .distinct()
+    form.building.data = room.building
 
-        form.level.choices = [(entry.level, str(entry.level)) for entry in
-                              levels]
-        form.level.data = room.level
+    levels = (
+        Room.q.filter_by(building_id=room.building.id).order_by(Room.level).distinct()
+    )
+    form.level.choices = [(entry.level, str(entry.level)) for entry in levels]
+    form.level.data = room.level
 
-        rooms = Room.q.filter_by(
-            building_id=room.building.id,
-            level=room.level
-        ).order_by(Room.number).distinct()
-
-        form.room_number.choices = [(entry.number, str(entry.number))
-                                    for entry in rooms]
-        form.room_number.data = room.number
+    rooms = (
+        Room.q.filter_by(building_id=room.building.id, level=room.level)
+        .order_by(Room.number)
+        .distinct()
+    )
+    form.room_number.choices = [(entry.number, str(entry.number)) for entry in rooms]
+    form.room_number.data = room.number
 
 
 def confirmable_div(confirm_field_id: str | None, prefix: str = 'form-group-') -> str:
@@ -49,8 +54,15 @@ class ConfirmCheckboxField(BooleanField):
 
     See `confirmable-error.ts`
     """
-    def __init__(self, label=None, validators=None, false_values=None, **kwargs):
-        kwargs.setdefault('render_kw', {})
-        kwargs.setdefault('default', False)
-        kwargs['render_kw'].setdefault('data-role', 'confirm-checkbox')
+
+    def __init__(
+        self,
+        label: str | None = None,
+        validators: t.Iterable[t.Any] | None = None,
+        false_values: t.Iterable[t.Any] | None = None,
+        **kwargs: t.Any,
+    ) -> None:
+        kwargs.setdefault("render_kw", {})
+        kwargs.setdefault("default", False)
+        kwargs["render_kw"].setdefault("data-role", "confirm-checkbox")
         super().__init__(label, validators, false_values, **kwargs)

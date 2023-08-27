@@ -1,6 +1,7 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+import typing as t
 from typing import Callable
 
 from flask import url_for
@@ -21,14 +22,16 @@ from ..helpers.form import iter_prefixed_field_names
 
 
 class LazyString:
-    def __init__(self, value_factory: Callable[[], str]):
+    def __init__(self, value_factory: Callable[[], str]) -> None:
         self.value_factory = value_factory
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.value_factory()
 
 
-def create_address_field(name: str, *args, type: str, render_kw: dict | None = None, **kwargs):
+def create_address_field(
+    name: str, *args: t.Any, type: str, render_kw: dict | None = None, **kwargs: t.Any
+) -> TypeaheadField:
     assert type in ADDRESS_ENTITIES, "Unknown address_type"
     return TypeaheadField(
         name,
@@ -57,11 +60,11 @@ class CreateAddressForm(BaseForm):
     address_country = create_address_field("Land", type="country")
 
     @property
-    def address_kwargs(self):
+    def address_kwargs(self) -> dict[str, str]:
         return {key: getattr(self, f'address_{key}').data
                 for key in 'street number addition zip_code city state country'.split()}
 
-    def set_address_fields(self, obj: RoomAddressSuggestion | Address | None):
+    def set_address_fields(self, obj: RoomAddressSuggestion | Address | None) -> None:
         if not obj:
             return
         self.address_street.data = obj.street
@@ -75,7 +78,7 @@ class CreateAddressForm(BaseForm):
                 self.address_addition.data = addition
 
 
-def building_query():
+def building_query() -> list[Building]:
     return sort_buildings(Building.q.all())
 
 

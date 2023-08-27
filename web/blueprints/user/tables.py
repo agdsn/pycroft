@@ -1,9 +1,11 @@
+import typing as t
 import typing
 
 from flask import url_for
 from pydantic import BaseModel
 
 from web.blueprints.helpers.log_tables import RefreshableTableMixin
+from web.table.lazy_join import HasDunderStr
 from web.table.table import (
     BootstrapTable,
     Column,
@@ -30,16 +32,16 @@ class MembershipTable(BootstrapTable):
     ends_at = DateColumn("Ende")
     actions = MultiBtnColumn("Aktionen", hide_if=no_membership_change)
 
-    def __init__(self, *a, user_id=None, **kw):
-        super().__init__(*a, **kw)
+    def __init__(self, *, user_id: int | None = None, **kw: t.Any) -> None:
+        super().__init__(**kw)
         self.user_id = user_id
 
     @property
-    def toolbar(self):
+    def toolbar(self) -> HasDunderStr | None:
         if self.user_id is None:
-            return
+            return None
         if no_membership_change():
-            return
+            return None
 
         href = url_for(".add_membership", user_id=self.user_id)
         return button_toolbar("Mitgliedschaft", href)

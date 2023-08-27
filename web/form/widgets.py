@@ -1,5 +1,5 @@
 import wtforms_widgets
-from wtforms import ValidationError
+from wtforms import ValidationError, Form
 
 from pycroft.model import session
 from pycroft.model.user import User
@@ -8,15 +8,15 @@ from pycroft.model.user import User
 class UserIDField(wtforms_widgets.fields.core.StringField):
     """A User-ID Field """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-    def __call__(self, **kwargs):
+    def __call__(self, **kwargs) -> None:
         return super().__call__(
             **kwargs
         )
 
-    def pre_validate(self, form):
+    def pre_validate(self, form: Form) -> None:
         try:
             id = int(self.data)
         except ValueError:

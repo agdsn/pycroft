@@ -1,6 +1,9 @@
+import typing as t
+
 from flask import url_for
 from pydantic import BaseModel
 
+from web.table.lazy_join import LazilyJoined
 from web.table.table import (
     BootstrapTable,
     Column,
@@ -37,7 +40,7 @@ class BuildingLevelRoomTable(BootstrapTable):
     inhabitants = MultiBtnColumn('Bewohner')
 
     @property
-    def toolbar(self):
+    def toolbar(self) -> LazilyJoined:
         return toggle_button_toolbar(
             "Display all users",
             id="rooms-toggle-all-users",
@@ -82,15 +85,15 @@ class PatchPortTable(BootstrapTable):
     edit_link = BtnColumn('Editieren', hide_if=no_inf_change)
     delete_link = BtnColumn('Löschen', hide_if=no_inf_change)
 
-    def __init__(self, *a, room_id=None, **kw) -> None:
-        super().__init__(*a, **kw)
+    def __init__(self, *, room_id: int | None = None, **kw: t.Any) -> None:
+        super().__init__(**kw)
 
         self.room_id = room_id
 
     @property
-    def toolbar(self):
+    def toolbar(self) -> LazilyJoined | None:
         if no_inf_change():
-            return
+            return None
         href = url_for(".patch_port_create", switch_room_id=self.room_id)
         return button_toolbar("Patch-Port", href)
 

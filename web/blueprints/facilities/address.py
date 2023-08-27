@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, Query
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 
 from pycroft.model.address import Address
@@ -24,8 +24,11 @@ def get_address_entity(type: str) -> InstrumentedAttribute:
         ) from None
 
 
-def address_entity_search_query(query: str, entity: InstrumentedAttribute, session: Session, limit: int):
-    return (session.query()
+def address_entity_search_query(
+    query: str, entity: InstrumentedAttribute, session: Session, limit: int
+) -> Query:
+    return (
+        session.query()
         .add_columns(entity)
         .distinct()
         .filter(entity.ilike(f"%{query}%"))

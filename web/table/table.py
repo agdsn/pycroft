@@ -12,7 +12,7 @@ from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
 from pydantic import BaseModel, Field
 from annotated_types import Predicate
 
-from .lazy_join import lazy_join, LazilyJoined
+from .lazy_join import lazy_join, LazilyJoined, HasDunderStr
 
 
 class Column:
@@ -59,7 +59,7 @@ class Column:
         sortable=True,
         hide_if: Callable[[], bool] | None = lambda: False,
         escape: bool | None = None,
-    ):
+    ) -> None:
         self.name = name
         self.title = title
         self.formatter = formatter if formatter is not None else False
@@ -138,7 +138,7 @@ class DictListValueMixin:
 
 # noinspection PyPep8Naming
 class custom_formatter_column:
-    def __init__(self, formatter_name: str):
+    def __init__(self, formatter_name: str) -> None:
         self.formatter_name = formatter_name
 
     def __call__(self, cls):
@@ -168,7 +168,7 @@ class BtnColResponse(BaseModel):
 
 @custom_formatter_column('table.btnFormatter')
 class BtnColumn(DictValueMixin, Column):
-    def __init__(self, *a, **kw):
+    def __init__(self, *a, **kw) -> None:
         super().__init__(*a, sortable=False, **kw)
 
     if typing.TYPE_CHECKING:
@@ -190,7 +190,7 @@ class BtnColumn(DictValueMixin, Column):
 
 @custom_formatter_column('table.multiBtnFormatter')
 class MultiBtnColumn(DictListValueMixin, Column):
-    def __init__(self, *a, **kw):
+    def __init__(self, *a, **kw) -> None:
         super().__init__(*a, sortable=False, **kw)
 
     if typing.TYPE_CHECKING:
@@ -301,7 +301,7 @@ class IbanColumn(Column):
 
 
 UnboundTableArgs = frozenset[tuple[str, Any]]
-TableArgs = dict[str, str]
+TableArgs = dict[HasDunderStr, HasDunderStr]
 
 
 def _infer_table_args(meta_obj, superclass_table_args: TableArgs) -> UnboundTableArgs:
@@ -380,7 +380,7 @@ class BootstrapTable(metaclass=BootstrapTableMeta):
     class Meta:
         table_args = {'data-toggle': "table", "data-icons-prefix": "fa"}
 
-    def __init__(self, data_url, table_args=None) -> None:
+    def __init__(self, *, data_url: str, table_args: TableArgs | None = None) -> None:
         self.data_url = enforce_url_params(data_url, dict(self._enforced_url_params))
         # un-freeze the classes table args so it can be modified on the instance
         self.table_args = dict(self._table_args)
@@ -397,11 +397,11 @@ class BootstrapTable(metaclass=BootstrapTableMeta):
         return [getattr(self, a) for a in self.column_attrname_map.values()]
 
     @property
-    def columns(self):
+    def columns(self) -> t.Sequence[Column]:
         """Wrapper for subclasses to override."""
         return self._columns
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "<{cls} cols={numcols} data_url={data_url!r}>".format(
             cls=type(self).__name__,
             numcols=len(self.columns),
@@ -419,19 +419,23 @@ class BootstrapTable(metaclass=BootstrapTableMeta):
 
     @property
     @lazy_join
-    def table_header(self):
+    def table_header(self) -> t.Iterator[HasDunderStr]:
         yield "<thead>"
         yield "<tr>"
         yield from self.columns
         yield "</tr>"
         yield "</thead>"
 
-    toolbar = ""
+    @property
+    def toolbar(self) -> HasDunderStr | None:
+        return ""
 
-    table_footer = ""
+    @property
+    def table_footer(self) -> HasDunderStr | None:
+        return ""
 
     @lazy_join("\n")
-    def _render(self, table_id):
+    def _render(self, table_id) -> t.Iterator[HasDunderStr | None]:
         toolbar_args = html_params(id=f"{table_id}-toolbar",
                                    class_="btn-toolbar",
                                    role="toolbar")
@@ -593,7 +597,7 @@ def toggle_button_toolbar(title: str, id: str, icon: str = "fa-plus") \
     yield "</label>"
 
 
-def html_params(**kwargs):
+def html_params(**kwargs) -> str:
     """
     Generate HTML attribute syntax from inputted keyword arguments.
     """
