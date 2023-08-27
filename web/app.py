@@ -5,13 +5,19 @@ import jinja2.ext
 import logging
 import sentry_sdk
 from flask import (
-    Flask, current_app, redirect, render_template, request, url_for,
+    Flask,
+    current_app,
+    redirect,
+    render_template,
+    request,
+    url_for,
     g,
     make_response,
+    Response,
 )
-from flask.typing import ResponseValue
+from flask.typing import ResponseValue, ResponseReturnValue
 from flask_babel import Babel
-from flask_login import current_user
+from flask_login import current_user, LoginManager
 from jinja2 import select_autoescape
 from werkzeug.datastructures import ImmutableDict
 from sentry_sdk.integrations.flask import FlaskIntegration
@@ -47,7 +53,9 @@ class PycroftFlask(Flask):
         undefined=jinja2.StrictUndefined,
     )
 
-    def __init__(self, *a, **kw):
+    login_manager: LoginManager
+
+    def __init__(self, *a: t.Any, **kw: t.Any) -> None:
         super().__init__(*a, **kw)
         # config keys to support:
         self.maybe_add_config_from_env([
@@ -59,13 +67,11 @@ class PycroftFlask(Flask):
             'HADES_ROUTING_KEY',
         ])
 
-    def maybe_add_config_from_env(self, keys):
+    def maybe_add_config_from_env(self, keys: t.Iterable[str]) -> None:
         """Write keys from the environment to the app's config
 
         If a key does not exist in the environment, it will just be
         skipped.
-
-        :param keys: An iterable of strings
         """
         for key in keys:
             try:
@@ -77,11 +83,8 @@ class PycroftFlask(Flask):
                 self.logger.debug("Config key %s successfuly read from environment", key)
 
 
-def make_app(debug=False, hades_logs=True):
-    """  Create and configure the main? Flask app object
-
-    :return: The fully configured app object
-    """
+def make_app(debug: bool = False, hades_logs: bool = True) -> PycroftFlask:
+    """Create and configure the main? Flask app object"""
     app = PycroftFlask(__name__)
     app.debug = debug
 
@@ -122,7 +125,7 @@ def make_app(debug=False, hades_logs=True):
     @app.errorhandler(403)
     @app.errorhandler(404)
     @app.errorhandler(500)
-    def errorpage(e):
+    def errorpage(e: Exception) -> ResponseReturnValue:
         """Handle errors according to their error code
 
         :param e: The error from the errorhandler
@@ -133,10 +136,8 @@ def make_app(debug=False, hades_logs=True):
         if request.path.startswith('/api/'):
             return api.errorpage(e)
 
-        if not hasattr(e, 'code'):
-            code = 500
-        else:
-            code = e.code
+        code = getattr(e, "code", 500)
+
         if code == 500:
             message = str(e)
         elif code == 403:
@@ -158,9 +159,10 @@ def make_app(debug=False, hades_logs=True):
         app.logger.error("Someone used the debug-sentry endpoint! Also, this is a test error.",
                          extra={'pi': 3.141})
         div_by_zero = 1 / 0  # noqa
+        assert False  # noqa: B011
 
     @app.teardown_request
-    def shutdown_session(exception=None):
+    def shutdown_session(exception: BaseException | None = None) -> None:
         if app.testing:
             # things are not necessarily committed here,
             # so `remove` would result in a `ROLLBACK TO SAVEPOINT` to a pre-setup state.
@@ -169,14 +171,16 @@ def make_app(debug=False, hades_logs=True):
         session.Session.remove()
 
     @app.before_request
-    def require_login():
+    def require_login() -> ResponseReturnValue | None:
         """Request a login for every page
         except the login blueprint and the static folder.
 
         Blueprint "None" is needed for "/static/*" GET requests.
         """
         if current_user.is_anonymous and request.blueprint not in ("login", 'api', None):
-            return current_app.login_manager.unauthorized()
+            lm = t.cast(LoginManager, current_app.login_manager)  # type: ignore[attr-defined]
+            return lm.unauthorized()
+        return None
 
     if app.debug:
         register_pyinstrument(app)
@@ -185,7 +189,7 @@ def make_app(debug=False, hades_logs=True):
     return app
 
 
-def register_pyinstrument(app: Flask):
+def register_pyinstrument(app: Flask) -> None:
     try:
         from pyinstrument import Profiler
     except ImportError:
@@ -193,13 +197,13 @@ def register_pyinstrument(app: Flask):
         return
 
     @app.before_request
-    def before_request():
+    def before_request() -> None:
         if "profile" in request.args:
             g.profiler = Profiler()
             g.profiler.start()
 
     @app.after_request
-    def after_request(response):
+    def after_request(response: Response) -> Response:
         if not hasattr(g, "profiler"):
             return response
         g.profiler.stop()
@@ -210,7 +214,9 @@ IGNORED_EXCEPTION_TYPES = (HTTPException,)
 
 
 if dsn := os.getenv('PYCROFT_SENTRY_DSN'):
-    def before_send(event, hint):
+    _TE = t.TypeVar("_TE")
+
+    def before_send(event: _TE, hint: dict[str, t.Any]) -> _TE | None:
         if 'exc_info' in hint:
             exc_type, exc_value, _tb = hint['exc_info']
             if isinstance(exc_value, IGNORED_EXCEPTION_TYPES):
