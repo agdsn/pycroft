@@ -169,19 +169,6 @@ class ArchivableMembersTable(RefreshableTableMixin, BootstrapTable):
     current_properties = Column("Props", formatter="table.propertiesFormatter")
     end_of_membership = DateColumn("EOM")
 
-    if typing.TYPE_CHECKING:
-        @classmethod
-        def row(  # type: ignore[override]
-            cls,
-            id: int,
-            user: dict,
-            room_shortname: dict,
-            current_properties: str,
-            num_hosts: int,
-            end_of_membership: dict,
-        ) -> dict:
-            ...
-
 
 class ArchivableMemberRow(BaseModel):
     id: int

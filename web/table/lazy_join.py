@@ -4,7 +4,10 @@ from types import FunctionType
 from typing import Generator, Callable, overload
 
 
-def filled_iter(iter, filler):
+_T = t.TypeVar("_T")
+
+
+def filled_iter(iter: t.Iterable[_T], filler: _T) -> t.Iterator[_T]:
     """Inbetween every iteration, yield a constant filler."""
     first = True
     for elem in iter:
@@ -34,7 +37,7 @@ class LazilyJoined:
         self,
         components: t.Iterable[HasDunderStr | None],
         glue: str = "",
-    ):
+    ) -> None:
         self.glue = glue
         self._components = components
         self.exhausted = False
@@ -61,32 +64,45 @@ class LazilyJoined:
         self.exhausted = True
 
 
+_P = t.ParamSpec("_P")
 DecoratedInType = Callable[
-    ..., Generator[HasDunderStr | None, None, None] | t.Iterator[HasDunderStr | None]
+    _P,
+    Generator[HasDunderStr | None, None, None]
+    | t.Iterator[HasDunderStr | None]
+    | t.Iterator[HasDunderStr],
 ]
-DecoratedOutType = Callable[..., LazilyJoined]
+DecoratedOutType = Callable[_P, LazilyJoined]
 
 @overload
 def lazy_join(func_or_glue: DecoratedInType) -> DecoratedOutType:
     ...
+
+
 @overload
 def lazy_join(func_or_glue: str) -> Callable[[DecoratedInType], DecoratedOutType]:
     ...
-def lazy_join(func_or_glue):
+
+
+def lazy_join(
+    func_or_glue: str | DecoratedInType,
+) -> DecoratedOutType | Callable[[DecoratedInType], DecoratedOutType]:
     if type(func_or_glue) == FunctionType:
         # Return the wrapped function
-        return LazyJoinDecorator()(func=func_or_glue)
+        return LazyJoinDecorator()(func=t.cast(DecoratedInType, func_or_glue))
     # Return the decorator
-    return LazyJoinDecorator(glue=func_or_glue)
+    return LazyJoinDecorator(glue=t.cast(str, func_or_glue))
 
 
 class LazyJoinDecorator:
-    def __init__(self, glue: str = ""):
+    def __init__(self, glue: str = "") -> None:
         self.glue = glue
 
     def __call__(self, func: DecoratedInType) -> DecoratedOutType:
-        @wraps(func)
-        def wrapped(*a, **kw):
+        # error: Argument 1 to "__call__" of "IdentityFunction" has incompatible type
+        # "Callable[_P, LazilyJoined]"; expected "Callable[_P, LazilyJoined]"  [arg-type]
+        # …go home mypy, you're drunk!
+        @wraps(func)  # type: ignore[arg-type]
+        def wrapped(*a: _P.args, **kw: _P.kwargs) -> LazilyJoined:
             return LazilyJoined(func(*a, **kw), glue=self.glue)
 
         return wrapped
