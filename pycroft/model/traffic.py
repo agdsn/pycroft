@@ -19,6 +19,7 @@ from sqlalchemy import (
     select,
     cast,
     TEXT,
+    ColumnElement,
 )
 from sqlalchemy.orm import relationship, Query, Mapped, mapped_column
 from sqlalchemy.sql.selectable import TableValuedAlias
@@ -224,7 +225,10 @@ ddl.add_function(
 
 
 def traffic_history(
-    user_id: int, start: utc.DateTimeTz, end: utc.DateTimeTz, name='traffic_history'
+    user_id: int,
+    start: utc.DateTimeTz | ColumnElement[utc.DateTimeTz],
+    end: utc.DateTimeTz | ColumnElement[utc.DateTimeTz],
+    name="traffic_history",
 ) -> TableValuedAlias:
     """A sqlalchemy `func` wrapper for the `evaluate_properties` PSQL function.
 

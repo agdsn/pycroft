@@ -1,7 +1,10 @@
-from datetime import timedelta, datetime
+import typing as t
+from decimal import Decimal
+from datetime import timedelta, datetime, date
 from functools import wraps
 
-from flask import jsonify, request, current_app
+from flask import jsonify, request, current_app, Response
+from flask.typing import ResponseReturnValue
 from flask_restful import Api, Resource as FlaskRestfulResource, abort, \
     reqparse, inputs
 from sqlalchemy.exc import IntegrityError
@@ -37,7 +40,7 @@ from web.api.v0.helpers import parse_iso_date
 api = Api()
 
 
-def parse_authorization_header(value):
+def parse_authorization_header(value: str | None) -> str | None:
     if not value:
         return None
 
@@ -48,9 +51,13 @@ def parse_authorization_header(value):
         return None
 
 
-def authenticate(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
+_P = t.ParamSpec("_P")
+_TF = t.Callable[_P, ResponseReturnValue]
+
+
+def authenticate(func: _TF) -> _TF:
+    @t.cast(t.Callable[[_TF], _TF], wraps(func))
+    def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> ResponseReturnValue:
         auth = request.headers.get('authorization')
         api_key = parse_authorization_header(auth)
 
@@ -69,28 +76,28 @@ class Resource(FlaskRestfulResource):
     method_decorators = [authenticate]
 
 
-def get_user_or_404(user_id):
-    user = User.get(user_id)
+def get_user_or_404(user_id: int) -> User:
+    user = session.session.get(User, user_id)
     if user is None:
         abort(404, message=f"User {user_id} does not exist")
     return user
 
 
-def get_authenticated_user(user_id, password):
+def get_authenticated_user(user_id: int, password: str) -> User:
     user = get_user_or_404(user_id)
     if user is None or not user.check_password(password):
         abort(401, message="Authentication failed")
     return user
 
 
-def get_interface_or_404(interface_id):
-    interface = Interface.get(interface_id)
+def get_interface_or_404(interface_id: int) -> Interface:
+    interface = session.session.get(Interface, interface_id)
     if interface is None:
         abort(404, message=f"Interface {interface_id} does not exist")
     return interface
 
 
-def generate_user_data(user):
+def generate_user_data(user: User) -> Response:
     props = {prop.property_name for prop in user.current_properties}
     user_status = status(user)
 
@@ -98,15 +105,26 @@ def generate_user_data(user):
     step = timedelta(days=1)
     traffic_history = func_traffic_history(
         user.id,
+        # TODO what is the emitted sql statement?
+        # it seems to me that this expression returns `timestamp`, and not `timestamptz`
         func.current_timestamp() - interval + step,
-        func.current_timestamp())
+        func.current_timestamp(),
+    )
 
-    finance_history = [{
-        'valid_on': split.transaction.valid_on,
-        # Invert amount, to display it from the user's point of view
-        'amount': -split.amount,
-        'description': Message.from_json(split.transaction.description).localize()
-    } for split in user.account.splits]
+    class _Entry(t.TypedDict):
+        valid_on: date
+        amount: int | Decimal
+        description: str
+
+    finance_history: list[_Entry] = [
+        {
+            "valid_on": split.transaction.valid_on,
+            # Invert amount, to display it from the user's point of view
+            "amount": -split.amount,
+            "description": Message.from_json(split.transaction.description).localize(),
+        }
+        for split in user.account.splits
+    ]
 
     finance_history = sorted(finance_history, key=lambda e: e['valid_on'], reverse=True)
 
@@ -160,7 +178,7 @@ def generate_user_data(user):
 
 
 class UserResource(Resource):
-    def get(self, user_id):
+    def get(self, user_id: int) -> Response:
         user = get_user_or_404(user_id)
         return generate_user_data(user)
 
@@ -169,7 +187,7 @@ api.add_resource(UserResource, '/user/<int:user_id>')
 
 
 class ChangeEmailResource(Resource):
-    def post(self, user_id):
+    def post(self, user_id: int) -> ResponseReturnValue:
         parser = reqparse.RequestParser()
         parser.add_argument('password', type=str, required=True)
         parser.add_argument('new_email', type=str, required=True)
@@ -189,7 +207,7 @@ api.add_resource(ChangeEmailResource, '/user/<int:user_id>/change-email')
 
 
 class ChangePasswordResource(Resource):
-    def post(self, user_id):
+    def post(self, user_id: int) -> ResponseReturnValue:
         parser = reqparse.RequestParser()
         parser.add_argument('password', dest='old_password', required=True)
         parser.add_argument('new_password', dest='new_password', required=True)
@@ -205,7 +223,7 @@ api.add_resource(ChangePasswordResource, '/user/<int:user_id>/change-password')
 
 
 class FinanceHistoryResource(Resource):
-    def get(self, user_id):
+    def get(self, user_id: int) -> ResponseReturnValue:
         user = get_user_or_404(user_id)
         return jsonify([
             {'valid_on': s.transaction.valid_on.isoformat(), 'amount': s.amount}
@@ -218,7 +236,7 @@ api.add_resource(FinanceHistoryResource, '/user/<int:user_id>/finance-history')
 
 
 class AuthenticationResource(Resource):
-    def post(self):
+    def post(self) -> ResponseReturnValue:
         auth_parser = reqparse.RequestParser()
         auth_parser.add_argument('login', dest='login', required=True)
         auth_parser.add_argument('password', dest='password', required=True)
@@ -235,7 +253,7 @@ api.add_resource(AuthenticationResource, '/user/authenticate')
 
 
 class UserByIPResource(Resource):
-    def get(self):
+    def get(self) -> ResponseReturnValue:
         ipv4 = request.args.get('ip', IPAddress)
 
         user = session.session.scalars(
@@ -272,7 +290,7 @@ api.add_resource(UserByIPResource, '/user/from-ip')
 
 
 class UserInterfaceResource(Resource):
-    def post(self, user_id, interface_id):
+    def post(self, user_id: int, interface_id: int) -> ResponseReturnValue:
         parser = reqparse.RequestParser()
         parser.add_argument('password', dest='password', required=True)
         parser.add_argument('mac', dest='mac', required=True)
@@ -306,7 +324,7 @@ api.add_resource(UserInterfaceResource,
 
 
 class ActivateNetworkAccessResource(Resource):
-    def post(self, user_id):
+    def post(self, user_id: int) -> ResponseReturnValue:
         parser = reqparse.RequestParser()
         parser.add_argument('password', dest='password', required=True)
         parser.add_argument('birthdate', dest='birthdate', required=True)
@@ -356,7 +374,7 @@ api.add_resource(ActivateNetworkAccessResource,
 
 
 class TerminateMembershipResource(Resource):
-    def get(self, user_id):
+    def get(self, user_id: int) -> ResponseReturnValue:
         """
         :param user_id: The ID of the user
         :return: The estimated balance of the given end_date
@@ -375,7 +393,7 @@ class TerminateMembershipResource(Resource):
 
         return jsonify(estimated_balance=estimated_balance)
 
-    def post(self, user_id):
+    def post(self, user_id: int) -> ResponseReturnValue:
         """
         Terminate the membership on the given date
 
@@ -410,7 +428,7 @@ class TerminateMembershipResource(Resource):
 
         return "Membership termination scheduled."
 
-    def delete(self, user_id):
+    def delete(self, user_id: int) -> ResponseReturnValue:
         """
         Cancel termination of a membership
 
@@ -440,7 +458,7 @@ api.add_resource(TerminateMembershipResource,
 
 
 class ResetWifiPasswordResource(Resource):
-    def patch(self, user_id):
+    def patch(self, user_id: int) -> ResponseReturnValue:
         """
         Reset the wifi password
 
@@ -461,7 +479,7 @@ api.add_resource(ResetWifiPasswordResource,
 
 
 class RegistrationResource(Resource):
-    def get(self):
+    def get(self) -> ResponseReturnValue:
         """
         Get the newest tenancy for the supplied user data, or an error 404 if not found.
 
@@ -532,7 +550,7 @@ class RegistrationResource(Resource):
             'room': newest_tenancy.room.level_and_number
         })
 
-    def post(self):
+    def post(self) -> int:
         """
         Create a member request
         """
@@ -554,7 +572,7 @@ class RegistrationResource(Resource):
         swdd_person_id = None
 
         if args.room_id is not None:
-            room = Room.get(args.room_id)
+            room = session.session.get(Room, args.room_id)
 
             if room is None:
                 abort(404, message="Invalid room", code="invalid_room")
@@ -596,8 +614,10 @@ class RegistrationResource(Resource):
             abort(400, message="The move-in date is invalid", code="move_in_date_invalid")
         else:
             session.session.commit()
-
             return mr.id
+        raise AssertionError(
+            "unreachable"
+        )  # the `abort`s from `flask_restful` don't return `NoReturn`
 
 
 api.add_resource(RegistrationResource,
@@ -605,12 +625,12 @@ api.add_resource(RegistrationResource,
 
 
 class EmailConfirmResource(Resource):
-    def get(self):
+    def get(self) -> ResponseReturnValue:
         parser = reqparse.RequestParser()
         parser.add_argument('user_id', required=True, type=int)
         args = parser.parse_args()
 
-        user = User.get(args.user_id)
+        user = session.session.get(User, args.user_id)
 
         if user is None:
             abort(404, message='User not found')
@@ -621,7 +641,7 @@ class EmailConfirmResource(Resource):
 
         return jsonify({'success': True})
 
-    def post(self):
+    def post(self) -> ResponseReturnValue:
         parser = reqparse.RequestParser()
         parser.add_argument('key', required=True, type=str)
         args = parser.parse_args()
@@ -640,7 +660,7 @@ api.add_resource(EmailConfirmResource,  '/register/confirm')
 
 
 class ResetPasswordResource(Resource):
-    def post(self):
+    def post(self) -> ResponseReturnValue:
         parser = reqparse.RequestParser()
         parser.add_argument('ident', required=True, type=str)
         parser.add_argument('email', required=True, type=str)
@@ -660,7 +680,7 @@ class ResetPasswordResource(Resource):
             'success': True
         }
 
-    def patch(self):
+    def patch(self) -> ResponseReturnValue:
         parser = reqparse.RequestParser()
         parser.add_argument('token', required=True, type=str)
         parser.add_argument('password', required=True, type=str)

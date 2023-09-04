@@ -9,9 +9,10 @@ from __future__ import annotations
 import datetime
 import typing as t
 from datetime import timedelta, date
+from decimal import Decimal
 from math import fabs
 
-from sqlalchemy import ForeignKey, event, func, select, Enum, ColumnElement
+from sqlalchemy import ForeignKey, event, func, select, Enum, ColumnElement, Select
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship, object_session, Mapped, mapped_column
 from sqlalchemy.schema import CheckConstraint, ForeignKeyConstraint, UniqueConstraint
@@ -25,6 +26,7 @@ from .base import IntegerIdModel
 from .exc import PycroftModelException
 from .type_aliases import str127, str255, datetime_tz_onupdate
 from ..helpers import utc
+from ..helpers.utc import DateTimeTz
 
 manager = ddl.DDLManager()
 
@@ -361,14 +363,14 @@ class BankAccount(IntegerIdModel):
     # /backrefs
 
     @hybrid_property
-    def balance(self):
+    def _balance(self) -> Decimal:
         return object_session(self).execute(
             select(func.coalesce(func.sum(BankAccountActivity.amount), 0))
                 .where(BankAccountActivity.bank_account_id == self.id)
         ).scalar()
 
-    @balance.expression
-    def balance(cls):
+    @_balance.expression
+    def balance(cls) -> Select[tuple[Decimal]]:
         return select(
             [func.coalesce(func.sum(BankAccountActivity.amount), 0)]
         ).where(
@@ -376,7 +378,7 @@ class BankAccount(IntegerIdModel):
         ).label("balance")
 
     @hybrid_property
-    def last_imported_at(self):
+    def last_imported_at(self) -> DateTimeTz:
         return object_session(self).execute(
                     select(func.max(BankAccountActivity.imported_at))
                     .where(BankAccountActivity.bank_account_id == self.id)

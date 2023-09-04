@@ -17,7 +17,7 @@ from datetime import timedelta, date
 from difflib import SequenceMatcher
 from typing import Iterable
 
-from sqlalchemy import func, select, Boolean, String
+from sqlalchemy import func, select, Boolean, String, ColumnElement
 
 from pycroft import config, property
 from pycroft.helpers import user as user_helper, utc
@@ -681,7 +681,9 @@ def edit_address(
 
 
 def traffic_history(
-    user_id: int, start: DateTimeTz, end: DateTimeTz
+    user_id: int,
+    start: DateTimeTz | ColumnElement[DateTimeTz],
+    end: DateTimeTz | ColumnElement[DateTimeTz],
 ) -> list[TrafficHistoryEntry]:
     result = session.session.execute(
         select("*")
