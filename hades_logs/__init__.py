@@ -9,6 +9,7 @@ import typing as t
 import logging
 
 from celery.exceptions import TimeoutError as CeleryTimeoutError
+from flask import Flask
 from flask.globals import current_app
 from kombu.exceptions import OperationalError
 from werkzeug.local import LocalProxy
@@ -62,13 +63,14 @@ class HadesLogs:
 
     >>> logs.fetch_logs(<nasip>, <portid>)
     """
-    def __init__(self, app=None):
+
+    def __init__(self, app: Flask | None = None) -> None:
         self.app = app
         self.logger = logging.getLogger('hades_logs')
         if app is not None:
             self.init_app(app)
 
-    def init_app(self, app):
+    def init_app(self, app: Flask) -> None:
         try:
             app_name = app.config['HADES_CELERY_APP_NAME']
             broker_uri = app.config['HADES_BROKER_URI']

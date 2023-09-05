@@ -1,4 +1,3 @@
-import typing
 import typing as t
 from decimal import Decimal
 
@@ -10,7 +9,6 @@ from pydantic import BaseModel
 from web.table.lazy_join import HasDunderStr, LazilyJoined
 from web.table.table import (
     lazy_join,
-    DictValueMixin,
     custom_formatter_column,
     IbanColumn,
     DateColResponse,
@@ -25,11 +23,8 @@ from web.template_filters import money_filter
 
 
 @custom_formatter_column('table.coloredFormatter')
-class ColoredColumn(DictValueMixin, Column):
-    if typing.TYPE_CHECKING:
-        @classmethod
-        def value(cls, value: str, is_positive: bool) -> dict:  # type: ignore[override]
-            ...
+class ColoredColumn(Column):
+    pass
 
 
 class ColoredColResponse(BaseModel):

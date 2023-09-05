@@ -17,7 +17,7 @@ files = [
     "pycroft/lib",
     "pycroft/external_services",
     "ldap_sync",
-    "web/blueprints",
+    "web",
 ]
 mypy_path = "stubs"
 namespace_packages = true
@@ -49,8 +49,8 @@ module = [
     "pycroft.helpers.task",
     "pycroft.helpers.user",
     "pycroft.helpers.utc",
-    "web.blueprints",
-    "web.blueprints.*",
+    "web",
+    "web.*",
 ]
 disallow_untyped_defs = true
 disallow_untyped_calls = true

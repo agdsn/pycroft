@@ -1,3 +1,6 @@
+import typing as t
+
+
 import wtforms_widgets
 from wtforms import ValidationError, Form
 
@@ -8,10 +11,10 @@ from pycroft.model.user import User
 class UserIDField(wtforms_widgets.fields.core.StringField):
     """A User-ID Field """
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: t.Any, **kwargs: t.Any) -> None:
         super().__init__(*args, **kwargs)
 
-    def __call__(self, **kwargs) -> None:
+    def __call__(self, **kwargs: t.Any) -> t.Any:
         return super().__call__(
             **kwargs
         )

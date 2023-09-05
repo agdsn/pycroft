@@ -1,3 +1,4 @@
+from __future__ import annotations
 import html
 import typing
 import typing as t
@@ -9,10 +10,11 @@ from operator import methodcaller
 from typing import Iterable, Any, Callable
 from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
 
-from pydantic import BaseModel, Field
 from annotated_types import Predicate
+from markupsafe import Markup
+from pydantic import BaseModel, Field
 
-from .lazy_join import lazy_join, LazilyJoined, HasDunderStr
+from .lazy_join import lazy_join, HasDunderStr
 
 
 class Column:
@@ -50,13 +52,13 @@ class Column:
 
     def __init__(
         self,
-        title,
-        name=None,
-        formatter=None,
-        width=0,
-        cell_style=None,
-        col_args=None,
-        sortable=True,
+        title: str,
+        name: str | None = None,
+        formatter: str | None = None,
+        width: int | None = 0,
+        cell_style: str | None = None,
+        col_args: dict[str, str] | None = None,
+        sortable: bool = True,
         hide_if: Callable[[], bool] | None = lambda: False,
         escape: bool | None = None,
     ) -> None:
@@ -71,14 +73,14 @@ class Column:
         self.sortable = sortable
         self.hide_if = hide_if
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "<{cls} {name!r} title={title!r}>".format(
             cls=type(self).__name__,
             name=self.name,
             title=self.title,
         )
 
-    def build_col_args(self, **kwargs):
+    def build_col_args(self, **kwargs: HtmlParamValue) -> str:
         """Build th html-style attribute string for this column.
 
         This string can be used to add this column to a table in the
@@ -88,7 +90,7 @@ class Column:
         :param kwargs: Keyword arguments which are merged into the
             dict of html attributes.
         """
-        html_args = {
+        html_args: dict[str, HtmlParamValue] = {
             'class': f"col-sm-{self.width}" if self.width else False,
             'data-sortable': "true" if self.sortable else "false",
             'data-field': self.name,
@@ -99,7 +101,7 @@ class Column:
         html_args.update(kwargs)
         return html_params(**html_args)
 
-    def render(self):
+    def render(self) -> str:
         """Render this column as a ``<th>`` html tag.
 
         This uses the arguments provided by :meth:`build_col_args` and
@@ -113,43 +115,26 @@ class Column:
     __html__ = render
 
 
-class DictValueMixin:
-    @classmethod
-    def value(cls, **kw) -> dict:
-        """This function exists as a method to provide strongly-typed dicts.
-
-        For this, add a type annotation in the subclass like this:
-
-            >>> @custom_formatter_column('table.fooFormatter')
-            ... class FooColumn(DictValueMixin, Column):
-            ...     @classmethod
-            ...     def value(cls, foo: str) -> dict: ...
-        """
-        return {
-            key: None if val is False else val
-            for key, val in kw.items()
-            if val is not None
-        }
 
 
-class DictListValueMixin:
-    single_value = DictValueMixin.value
-
+_T = t.TypeVar("_T", bound=Column)
+_TT: t.TypeAlias = type[_T]
 
 # noinspection PyPep8Naming
 class custom_formatter_column:
     def __init__(self, formatter_name: str) -> None:
         self.formatter_name = formatter_name
 
-    def __call__(self, cls):
+    def __call__(self, cls: type[_T]) -> type[_T]:
         """Decorate the classes `__init__` function to inject the formatter"""
         old_init = cls.__init__
 
-        def __init__(obj, *a, **kw):
-            kw.setdefault('escape', False)
-            old_init(obj, *a, formatter=self.formatter_name, **kw)
+        def __init__(obj, *a, **kw):  # type: ignore[no-untyped-def]
+            kw.setdefault("escape", False)
+            kw.setdefault("formatter", self.formatter_name)
+            old_init(obj, *a, **kw)
 
-        cls.__init__ = __init__
+        cls.__init__ = __init__  # type: ignore[method-assign, assignment]
         return cls
 
 
@@ -167,46 +152,19 @@ class BtnColResponse(BaseModel):
 
 
 @custom_formatter_column('table.btnFormatter')
-class BtnColumn(DictValueMixin, Column):
-    def __init__(self, *a, **kw) -> None:
-        super().__init__(*a, sortable=False, **kw)
-
-    if typing.TYPE_CHECKING:
-        # TODO deprecate this!
-        @classmethod
-        def value(
-            cls,
-            *,
-            btn_class: str,
-            href: str,
-            title: str,
-            tooltip: str | None = None,
-            new_tab: bool | None = None,
-            icon: str | Iterable[str] | None = None,
-        ) -> dict:
-            # for argument types, see `btnFormatter`
-            ...
+class BtnColumn(Column):
+    def __init__(self, *a: t.Any, **kw: t.Any) -> None:
+        if kw.pop("sortable", False):
+            raise ValueError("BtnColumn does not support sorting")
+        kw["sortable"] = False
+        super().__init__(*a, **kw)
 
 
 @custom_formatter_column('table.multiBtnFormatter')
-class MultiBtnColumn(DictListValueMixin, Column):
-    def __init__(self, *a, **kw) -> None:
-        super().__init__(*a, sortable=False, **kw)
-
-    if typing.TYPE_CHECKING:
-        @classmethod
-        def single_value(
-            cls,
-            *,
-            btn_class: str = None,
-            href: str,
-            title: str,
-            tooltip: str | None = None,
-            new_tab: bool | None = None,
-            icon: str | Iterable[str] | None = None,
-        ) -> dict:
-            # for argument types, see `btnFormatter`
-            ...
+class MultiBtnColumn(Column):
+    def __init__(self, *a: t.Any, **kw: t.Any) -> None:
+        kw.setdefault("sortable", False)
+        super().__init__(*a, **kw)
 
 
 class LinkColResponse(BaseModel):
@@ -217,7 +175,7 @@ class LinkColResponse(BaseModel):
 
 
 @custom_formatter_column('table.linkFormatter')
-class LinkColumn(DictValueMixin, Column):
+class LinkColumn(Column):
     if typing.TYPE_CHECKING:
         @classmethod
         def value(
@@ -254,33 +212,13 @@ RelativeDateResponse = DateColResponse
 
 
 @custom_formatter_column('table.textWithBooleanFormatter')
-class TextWithBooleanColumn(DictValueMixin, Column):
-    if typing.TYPE_CHECKING:
-        @classmethod
-        def value(
-            cls,
-            *,
-            text: str,
-            bool: bool,
-            icon_true: str | None = None,
-            icon_false: str | None = None,
-        ) -> dict:
-            ...
+class TextWithBooleanColumn(Column):
+    pass
 
 
 @custom_formatter_column('table.userFormatter')
 class UserColumn(Column):
-    @classmethod
-    def value_plain(cls, title: str) -> dict:
-        return DictValueMixin.value(type='plain', title=title)
-
-    @classmethod
-    def value_native(
-        cls, *, href: str, title: str, glyphicon: str | None = None
-    ) -> dict:
-        return DictValueMixin.value(
-            type='native', href=href, title=title, glyphicon=glyphicon,
-        )
+    pass
 
 
 class UserColResponsePlain(BaseModel):
@@ -301,11 +239,13 @@ class IbanColumn(Column):
 
 
 UnboundTableArgs = frozenset[tuple[str, Any]]
-TableArgs = dict[HasDunderStr, HasDunderStr]
+TableArgs = dict[str, HasDunderStr]
 
 
-def _infer_table_args(meta_obj, superclass_table_args: TableArgs) -> UnboundTableArgs:
-    args = {}
+def _infer_table_args(
+    meta_obj: object, superclass_table_args: TableArgs
+) -> UnboundTableArgs:
+    args: TableArgs = {}
     args.update(**superclass_table_args)
     if meta_obj:
         args.update(**getattr(meta_obj, 'table_args', {}))
@@ -313,8 +253,10 @@ def _infer_table_args(meta_obj, superclass_table_args: TableArgs) -> UnboundTabl
     return frozenset(args.items())
 
 
-def _infer_enforced_url_params(meta_obj, superclass_params):
-    params = {}
+def _infer_enforced_url_params(
+    meta_obj: object, superclass_params: dict[str, str]
+) -> frozenset[tuple[str, str]]:
+    params: dict[str, str] = {}
     params.update(**superclass_params)
     if meta_obj:
         params.update(**getattr(meta_obj, 'enforced_url_params', {}))
@@ -322,6 +264,7 @@ def _infer_enforced_url_params(meta_obj, superclass_params):
     return frozenset(params.items())
 
 
+AttributeMap: t.TypeAlias = OrderedDict[str, str]
 class BootstrapTableMeta(type):
     """Provides a list of all attribute names bound to columns.
 
@@ -330,21 +273,33 @@ class BootstrapTableMeta(type):
     - :py:attr:`_table_args`
     """
 
-    def __new__(mcls, name, bases, dct: dict[str, Any]):
-        meta = dct.pop('Meta', None)
+    _table_args: UnboundTableArgs
+    _enforced_url_params: frozenset[tuple[str, str]]
+    column_attrname_map: OrderedDict  # TODO specify key/val types
+
+    def __new__(
+        mcls: type[BootstrapTableMeta],
+        name: str,
+        bases: tuple[type, ...],
+        dct: dict[str, Any],
+    ) -> type:
+        meta = dct.pop("Meta", None)
         cls = super().__new__(mcls, name, bases, dct)
 
         old_table_args = dict(getattr(cls, '_table_args', {}))
         # the type is frozenset for immutability
         cls._table_args = _infer_table_args(meta, old_table_args)
 
-        old_params = dict(getattr(cls, '_enforced_url_params', {}))
+        old_params: dict[str, str] = dict(getattr(cls, "_enforced_url_params", {}))
         # frozenset here as well
         cls._enforced_url_params = _infer_enforced_url_params(meta, old_params)
 
         # we need to copy: else we would reference the superclass's
         # column_attrname_map and update it as well
-        new_col_attr_map = copy(getattr(cls, 'column_attrname_map', OrderedDict()))
+        # TODO is the cast appropriate? what if a subclass has a `column_attrname_map` of a different type?
+        new_col_attr_map = copy(
+            t.cast(OrderedDict, getattr(cls, "column_attrname_map", OrderedDict()))
+        )
 
         for attrname, new_col in dct.items():
             if isinstance(new_col, Column):
@@ -372,7 +327,8 @@ class BootstrapTable(metaclass=BootstrapTableMeta):
         search, sort, order to make server-side pagination work.
     :param table_args: Additional things to be passed to table_args.
     """
-    column_attrname_map: dict[str, str]  # provided by BootstrapTableMeta
+
+    column_attrname_map: OrderedDict[str, str]  # provided by BootstrapTableMeta
     _table_args: UnboundTableArgs  # provided by BootstrapTableMeta
     _enforced_url_params: Iterable[tuple[str, Any]]  # provided by BootstrapTableMeta
     table_args: TableArgs
@@ -387,10 +343,6 @@ class BootstrapTable(metaclass=BootstrapTableMeta):
         self.table_args.setdefault('data-url', self.data_url)
         if table_args:
             self.table_args.update(table_args)
-
-    @classmethod
-    def row(cls, **kw) -> dict:
-        return dict(**kw)
 
     @property
     def _columns(self) -> list[Column]:
@@ -408,7 +360,7 @@ class BootstrapTable(metaclass=BootstrapTableMeta):
             data_url=self.data_url,
         )
 
-    def _init_table_args(self):
+    def _init_table_args(self) -> None:
         """Set the defaults of :py:attr:`table_args`"""
         default_args = {
             'data-toggle': "table",
@@ -435,7 +387,7 @@ class BootstrapTable(metaclass=BootstrapTableMeta):
         return ""
 
     @lazy_join("\n")
-    def _render(self, table_id) -> t.Iterator[HasDunderStr | None]:
+    def _render(self, table_id: str) -> t.Iterator[HasDunderStr | None]:
         toolbar_args = html_params(id=f"{table_id}-toolbar",
                                    class_="btn-toolbar",
                                    role="toolbar")
@@ -454,11 +406,9 @@ class BootstrapTable(metaclass=BootstrapTableMeta):
         yield self.table_footer
         yield "</table>"
 
-    def render(self, table_id):
+    def render(self, table_id: str) -> Markup:
         """Render the table, use _render() directly if jinja2 isn't available
         """
-        from markupsafe import Markup
-
         return Markup(self._render(table_id))
 
 
@@ -483,13 +433,13 @@ class SplittedTable(BootstrapTable):
     """
     splits: Iterable[tuple[str, str]]
 
-    def _iter_typed_splits(self):
+    def _iter_typed_splits(self) -> t.Iterator[TableSplit]:
         for t in self.splits:  # noqa: F402
             yield TableSplit(*t)
 
     @property
-    def columns(self):
-        cols = []
+    def columns(self) -> list[Column]:
+        cols: list[Column] = []
         unaltered_columns = self._columns
         for split in self._iter_typed_splits():
             for c in unaltered_columns:
@@ -498,9 +448,9 @@ class SplittedTable(BootstrapTable):
                 cols.append(prefixed_col)
         return cols
 
-    @property
+    @property  # type: ignore[arg-type]
     @lazy_join
-    def table_header(self):
+    def table_header(self) -> t.Iterable[HasDunderStr]:
         yield "<thead>"
         yield "<tr>"
         for split in self._iter_typed_splits():
@@ -514,7 +464,7 @@ class SplittedTable(BootstrapTable):
         yield "</thead>"
 
 
-def iso_format(dt: datetime | date | None = None):
+def iso_format(dt: datetime | date | None = None) -> str:
     if dt is None:
         return "n/a"
 
@@ -558,12 +508,11 @@ def datetime_format(
     )
 
 
-def enforce_url_params(url, params):
+def enforce_url_params(url: str, params: dict[str, str]) -> str:
     """Safely enforce query values in an url
 
-    :param str url: The url to patch
-    :param dict params: The parameters to enforce in the URL query
-        part
+    :param url: The url to patch
+    :param params: The parameters to enforce in the URL query part
     """
     if not params:
         return url
@@ -576,9 +525,12 @@ def enforce_url_params(url, params):
 
 
 @lazy_join
-def button_toolbar(title: str, href: str, id=False, icon: str = "fa-plus") \
-    -> LazilyJoined:
-    params = html_params(class_="btn btn-default btn-outline-secondary", href=href, id=id)
+def button_toolbar(
+    title: str, href: str, id: str | bool = False, icon: str = "fa-plus"
+) -> t.Iterator[str]:
+    params = html_params(
+        class_="btn btn-default btn-outline-secondary", href=href, id=id
+    )
     yield f"<a {params}>"
     yield f"<span class=\"fa {icon}\"></span>"
     yield " "
@@ -587,8 +539,9 @@ def button_toolbar(title: str, href: str, id=False, icon: str = "fa-plus") \
 
 
 @lazy_join
-def toggle_button_toolbar(title: str, id: str, icon: str = "fa-plus") \
-    -> LazilyJoined:
+def toggle_button_toolbar(
+    title: str, id: str, icon: str = "fa-plus"
+) -> t.Iterator[str]:
     yield f'<input type="checkbox" class="btn-check" autocomplete="off" id="{id}">'
     yield f'<label class="btn btn-default btn-outline-secondary" for="{id}">'
     yield f"<span class=\"fa {icon}\"></span>"
@@ -597,7 +550,10 @@ def toggle_button_toolbar(title: str, id: str, icon: str = "fa-plus") \
     yield "</label>"
 
 
-def html_params(**kwargs) -> str:
+HtmlParamValue = HasDunderStr | bool | None
+
+
+def html_params(**kwargs: HtmlParamValue) -> str:
     """
     Generate HTML attribute syntax from inputted keyword arguments.
     """
