@@ -191,7 +191,7 @@ def user_memberships_query(
     p_granted = aliased(Property)
     p_denied = aliased(Property)
     memberships = (
-        memberships.join(group)
+        memberships.join(group, Membership.group_id == group.id)
         .outerjoin(
             p_granted, and_(p_granted.property_group_id == group.id, p_granted.granted)
         )
