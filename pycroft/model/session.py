@@ -13,6 +13,7 @@ import typing as t
 from typing import overload, TypeVar, Callable, Any, TYPE_CHECKING
 
 from sqlalchemy.orm import scoped_session
+from sqlalchemy.sql.functions import AnsiFunction
 from werkzeug.local import LocalProxy
 import wrapt
 
@@ -77,3 +78,7 @@ def with_transaction(wrapped, instance, args, kwargs):
 
 def utcnow() -> DateTimeTz:
     return session.query(func.current_timestamp()).scalar()
+
+
+def current_timestamp() -> AnsiFunction[DateTimeTz]:
+    return t.cast(AnsiFunction[DateTimeTz], func.current_timestamp())

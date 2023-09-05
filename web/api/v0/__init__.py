@@ -8,7 +8,7 @@ from flask.typing import ResponseReturnValue
 from flask_restful import Api, Resource as FlaskRestfulResource, abort, \
     reqparse, inputs
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import select, func
+from sqlalchemy import select
 from sqlalchemy.orm import joinedload, selectinload
 
 from pycroft.helpers import utc
@@ -33,6 +33,7 @@ from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.finance import Account, Split
 from pycroft.model.host import IP, Interface, Host
+from pycroft.model.session import current_timestamp
 from pycroft.model.types import IPAddress, InvalidMACAddressException
 from pycroft.model.user import User, IllegalEmailError, IllegalLoginError
 from web.api.v0.helpers import parse_iso_date
@@ -105,10 +106,8 @@ def generate_user_data(user: User) -> Response:
     step = timedelta(days=1)
     traffic_history = func_traffic_history(
         user.id,
-        # TODO what is the emitted sql statement?
-        # it seems to me that this expression returns `timestamp`, and not `timestamptz`
-        func.current_timestamp() - interval + step,
-        func.current_timestamp(),
+        current_timestamp() - interval + step,
+        current_timestamp(),
     )
 
     class _Entry(t.TypedDict):

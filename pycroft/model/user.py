@@ -185,14 +185,15 @@ class BaseUser(IntegerIdModel):
                                "not correct!"
         return value
 
-    def check_password(self, plaintext_password):
+    def check_password(self, plaintext_password: str) -> bool:
         """verify a given plaintext password against the users passwd hash.
 
         """
         return verify_password(plaintext_password, self.passwd_hash)
 
     @property
-    def password(self):
+    # actually `NoReturn`, but mismatch to `setter` confuses mypy
+    def password(self) -> str:
         """Store a hash of a given plaintext passwd for the user."""
         raise RuntimeError("Password can not be read, only set")
 

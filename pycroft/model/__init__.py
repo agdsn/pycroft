@@ -12,7 +12,7 @@
 from datetime import timezone, tzinfo
 
 import psycopg2.extensions
-from sqlalchemy import create_engine as sqa_create_engine
+from sqlalchemy import create_engine as sqa_create_engine, Connection
 from sqlalchemy.future import Engine
 
 from . import _all
@@ -61,7 +61,7 @@ def create_engine(connection_string, **kwargs) -> Engine:
     return sqa_create_engine(connection_string, **kwargs)
 
 
-def create_db_model(bind):
+def create_db_model(bind: Connection) -> None:
     """Create all models in the database.
     """
     # skip objects marked with "is_view"
@@ -70,7 +70,7 @@ def create_db_model(bind):
     base.ModelBase.metadata.create_all(bind, tables=tables)
 
 
-def drop_db_model(bind):
+def drop_db_model(bind: Connection) -> None:
     """Drop all models from the database.
     """
     # skip objects marked with "is_view"

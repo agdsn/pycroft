@@ -1,5 +1,4 @@
 import typing as t
-import typing
 
 from flask import url_for
 from pydantic import BaseModel
