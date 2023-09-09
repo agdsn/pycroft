@@ -101,6 +101,6 @@ class PatchPortTable(BootstrapTable):
 class PatchPortRow(BaseModel):
     name: str
     room: LinkColResponse
-    switch_port: LinkColResponse
+    switch_port: LinkColResponse | None = None
     edit_link: BtnColResponse
     delete_link: BtnColResponse
