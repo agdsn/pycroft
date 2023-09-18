@@ -532,3 +532,13 @@ tr.row-membership-inactive {
 #toast.show {
   visibility: visible;
 }
+
+/* Room stuff */
+.patch-line {
+    margin: 5px;
+    min-height:3px;
+    min-width: 10em;
+    background-color: var(--bs-list-group-border-color);
+    background-position: 0 center;
+    background-size: 100% 2px;
+}
