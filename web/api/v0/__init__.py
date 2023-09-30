@@ -273,7 +273,7 @@ api.add_resource(AuthenticationResource, '/user/authenticate')
 class UserByIPResource(Resource):
     @use_kwargs(
         {
-            "ipv4": fields.IP(required=True, data_key="ip"),
+            "ipv4": fields.IP(required=True, data_key="ip"),  # type: ignore[no-untyped-call]
         },
         location="form",
     )
