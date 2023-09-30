@@ -394,8 +394,6 @@ class ActivateNetworkAccessResource(Resource):
         host = Host.q.filter_by(owner_id=user.id).one_or_none()
 
         try:
-            host_name = host_name if host_name else None
-
             if host is None:
                 host = host_create(user, user.room, host_name, user)
             else:
