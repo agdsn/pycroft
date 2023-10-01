@@ -146,7 +146,7 @@ jobs:
       - name: Run test-app entrypoints
         run: docker compose -f docker-compose.test.yml run --rm --no-deps test-app
       - name: Start
-        run: docker compose -f docker-compose.test.yml up test-app
+        run: docker compose -f docker-compose.test.yml up --wait --wait-timeout=30 test-app
       - name: Run webpack
         run: docker compose -f docker-compose.test.yml run --rm test-app webpack --mode production
       - name: Run tests
