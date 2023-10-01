@@ -2,14 +2,16 @@ import typing as t
 from decimal import Decimal
 from datetime import timedelta, datetime, date
 from functools import wraps
+from ipaddress import IPv4Address, IPv6Address
 
-from flask import jsonify, request, current_app, Response
+from flask import jsonify, current_app, Response
 from flask.typing import ResponseReturnValue
-from flask_restful import Api, Resource as FlaskRestfulResource, abort, \
-    reqparse, inputs
+from flask_restful import Api, Resource as FlaskRestfulResource, abort
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload, selectinload
+from webargs import fields
+from webargs.flaskparser import use_kwargs
 
 from pycroft.helpers import utc
 from pycroft.helpers.i18n import Message
@@ -36,7 +38,6 @@ from pycroft.model.host import IP, Interface, Host
 from pycroft.model.session import current_timestamp
 from pycroft.model.types import IPAddress, InvalidMACAddressException
 from pycroft.model.user import User, IllegalEmailError, IllegalLoginError
-from web.api.v0.helpers import parse_iso_date
 
 api = Api()
 
@@ -58,8 +59,13 @@ _TF = t.Callable[_P, ResponseReturnValue]
 
 def authenticate(func: _TF) -> _TF:
     @t.cast(t.Callable[[_TF], _TF], wraps(func))
-    def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> ResponseReturnValue:
-        auth = request.headers.get('authorization')
+    @use_kwargs(
+        {
+            "auth": fields.Str(required=True, data_key="authorization"),
+        },
+        location="headers",
+    )
+    def wrapper(auth: str, *args: _P.args, **kwargs: _P.kwargs) -> ResponseReturnValue:
         api_key = parse_authorization_header(auth)
 
         if api_key is None:
@@ -186,16 +192,24 @@ api.add_resource(UserResource, '/user/<int:user_id>')
 
 
 class ChangeEmailResource(Resource):
-    def post(self, user_id: int) -> ResponseReturnValue:
-        parser = reqparse.RequestParser()
-        parser.add_argument('password', type=str, required=True)
-        parser.add_argument('new_email', type=str, required=True)
-        parser.add_argument('forwarded', type=inputs.boolean, required=False, default=True)
-        args = parser.parse_args()
-
-        user = get_authenticated_user(user_id, args.password)
+    @use_kwargs(
+        {
+            "password": fields.Str(required=True),
+            "new_email": fields.Str(required=True),
+            "forwarded": fields.Bool(required=False, load_default=True),
+        },
+        location="form",
+    )
+    def post(
+        self,
+        user_id: int,
+        password: str,
+        new_email: str,
+        forwarded: bool | None = None,
+    ) -> ResponseReturnValue:
+        user = get_authenticated_user(user_id, password)
         try:
-            edit_email(user, args.new_email, args.forwarded, processor=user)
+            edit_email(user, new_email, forwarded, processor=user)
             session.session.commit()
         except IllegalEmailError:
             abort(400, message='Invalid email address.')
@@ -206,14 +220,18 @@ api.add_resource(ChangeEmailResource, '/user/<int:user_id>/change-email')
 
 
 class ChangePasswordResource(Resource):
-    def post(self, user_id: int) -> ResponseReturnValue:
-        parser = reqparse.RequestParser()
-        parser.add_argument('password', dest='old_password', required=True)
-        parser.add_argument('new_password', dest='new_password', required=True)
-        args = parser.parse_args()
-
-        user = get_authenticated_user(user_id, args.old_password)
-        change_password(user, args.new_password)
+    @use_kwargs(
+        {
+            "old_password": fields.Str(required=True, data_key="password"),
+            "new_password": fields.Str(required=True),
+        },
+        location="form",
+    )
+    def post(
+        self, user_id: int, old_password: str, new_password: str
+    ) -> ResponseReturnValue:
+        user = get_authenticated_user(user_id, old_password)
+        change_password(user, new_password)
         session.session.commit()
         return "Password has been changed."
 
@@ -235,14 +253,15 @@ api.add_resource(FinanceHistoryResource, '/user/<int:user_id>/finance-history')
 
 
 class AuthenticationResource(Resource):
-    def post(self) -> ResponseReturnValue:
-        auth_parser = reqparse.RequestParser()
-        auth_parser.add_argument('login', dest='login', required=True)
-        auth_parser.add_argument('password', dest='password', required=True)
-        args = auth_parser.parse_args()
-
-        user = User.verify_and_get(login=args.login,
-                                   plaintext_password=args.password)
+    @use_kwargs(
+        {
+            "login": fields.Str(required=True),
+            "password": fields.Str(required=True),
+        },
+        location="form",
+    )
+    def post(self, login: str, password: str) -> ResponseReturnValue:
+        user = User.verify_and_get(login=login, plaintext_password=password)
         if user is None:
             abort(401, message="Authentication failed")
         return {'id': user.id}
@@ -252,9 +271,13 @@ api.add_resource(AuthenticationResource, '/user/authenticate')
 
 
 class UserByIPResource(Resource):
-    def get(self) -> ResponseReturnValue:
-        ipv4 = request.args.get('ip', IPAddress)
-
+    @use_kwargs(
+        {
+            "ipv4": fields.IP(required=True, data_key="ip"),  # type: ignore[no-untyped-call]
+        },
+        location="form",
+    )
+    def get(self, ipv4: IPv4Address | IPv6Address) -> ResponseReturnValue:
         user = session.session.scalars(
             select(User)
             .join(Host)
@@ -289,14 +312,23 @@ api.add_resource(UserByIPResource, '/user/from-ip')
 
 
 class UserInterfaceResource(Resource):
-    def post(self, user_id: int, interface_id: int) -> ResponseReturnValue:
-        parser = reqparse.RequestParser()
-        parser.add_argument('password', dest='password', required=True)
-        parser.add_argument('mac', dest='mac', required=True)
-        parser.add_argument('host_name', dest='host_name', required=False)
-        args = parser.parse_args()
-
-        user = get_authenticated_user(user_id, args.password)
+    @use_kwargs(
+        {
+            "password": fields.Str(required=True),
+            "mac": fields.Str(required=True),
+            "host_name": fields.Str(required=False),
+        },
+        location="form",
+    )
+    def post(
+        self,
+        user_id: int,
+        interface_id: int,
+        password: str,
+        mac: str,
+        host_name: str | None = None,
+    ) -> ResponseReturnValue:
+        user = get_authenticated_user(user_id, password)
         interface = get_interface_or_404(interface_id)
         if interface.host.owner != user:
             abort(
@@ -305,10 +337,15 @@ class UserInterfaceResource(Resource):
             )
 
         try:
-            if args.host_name:
-                host_edit(interface.host, interface.host.owner, interface.host.room,
-                          args.host_name, user)
-            change_mac(interface, args.mac, user)
+            if host_name:
+                host_edit(
+                    interface.host,
+                    interface.host.owner,
+                    interface.host.room,
+                    host_name,
+                    user,
+                )
+            change_mac(interface, mac, user)
             session.session.add(interface)
             session.session.commit()
         except InvalidMACAddressException:
@@ -323,15 +360,24 @@ api.add_resource(UserInterfaceResource,
 
 
 class ActivateNetworkAccessResource(Resource):
-    def post(self, user_id: int) -> ResponseReturnValue:
-        parser = reqparse.RequestParser()
-        parser.add_argument('password', dest='password', required=True)
-        parser.add_argument('birthdate', dest='birthdate', required=True)
-        parser.add_argument('mac', dest='mac', required=True)
-        parser.add_argument('host_name', dest='host_name', required=False)
-        args = parser.parse_args()
-
-        user = get_authenticated_user(user_id, args.password)
+    @use_kwargs(
+        {
+            "password": fields.Str(required=True),
+            "birthdate": fields.Date(required=True),
+            "mac": fields.Str(required=True),
+            "host_name": fields.Str(required=False),
+        },
+        location="form",
+    )
+    def post(
+        self,
+        user_id: int,
+        password: str,
+        birthdate: date,
+        mac: str,
+        host_name: str | None = None,
+    ) -> ResponseReturnValue:
+        user = get_authenticated_user(user_id, password)
 
         if user.room is None:
             abort(424, message="User is not living in a dormitory.")
@@ -343,19 +389,17 @@ class ActivateNetworkAccessResource(Resource):
         if len(interfaces) > 0:
             abort(412, message="User already has a host with interface.")
 
-        user.birthdate = args.birthdate
+        user.birthdate = birthdate
 
         host = Host.q.filter_by(owner_id=user.id).one_or_none()
 
         try:
-            host_name = args.host_name if args.host_name else None
-
             if host is None:
                 host = host_create(user, user.room, host_name, user)
             else:
                 host_edit(host, host.owner, user.room, host_name, user)
 
-            interface_create(host, None, args.mac, None, user)
+            interface_create(host, None, mac, None, user)
 
             session.session.commit()
         except InvalidMACAddressException:
@@ -373,40 +417,40 @@ api.add_resource(ActivateNetworkAccessResource,
 
 
 class TerminateMembershipResource(Resource):
-    def get(self, user_id: int) -> ResponseReturnValue:
+    @use_kwargs(
+        {
+            "end_date": fields.Date(required=True),
+        },
+        location="query",
+    )
+    def get(self, user_id: int, end_date: date) -> ResponseReturnValue:
         """
         :param user_id: The ID of the user
         :return: The estimated balance of the given end_date
         """
 
-        parser = reqparse.RequestParser()
-        parser.add_argument('end_date',
-                            dest='end_date',
-                            required=True,
-                            type=parse_iso_date)
-        args = parser.parse_args()
-
         user = get_user_or_404(user_id)
 
-        estimated_balance = estimate_balance(session.session, user, args.end_date)
+        estimated_balance = estimate_balance(session.session, user, end_date)
 
         return jsonify(estimated_balance=estimated_balance)
 
-    def post(self, user_id: int) -> ResponseReturnValue:
+    @use_kwargs(
+        {
+            "end_date": fields.Date(required=True),
+            "comment": fields.Str(required=False),
+        },
+        location="form",
+    )
+    def post(
+        self, user_id: int, end_date: date, comment: str | None = None
+    ) -> ResponseReturnValue:
         """
         Terminate the membership on the given date
 
         :param user_id: The ID of the user
         :return:
         """
-
-        parser = reqparse.RequestParser()
-        parser.add_argument('end_date',
-                            dest='end_date',
-                            required=True,
-                            type=lambda x: datetime.strptime(x, '%Y-%m-%d').date())
-        parser.add_argument('comment', dest='comment', required=False)
-        args = parser.parse_args()
 
         user = get_user_or_404(user_id)
 
@@ -417,11 +461,13 @@ class TerminateMembershipResource(Resource):
         if not user.has_property('member'):
             abort(400, message="User is not a member.")
 
-        move_out(user=user,
-                 comment=args.comment if args.comment is not None else "Move-out over API",
-                 processor=user,
-                 when=utc.with_min_time(args.end_date),
-                 end_membership=True)
+        move_out(
+            user=user,
+            comment=comment if comment is not None else "Move-out over API",
+            processor=user,
+            when=utc.with_min_time(end_date),
+            end_membership=True,
+        )
 
         session.session.commit()
 
@@ -478,7 +524,24 @@ api.add_resource(ResetWifiPasswordResource,
 
 
 class RegistrationResource(Resource):
-    def get(self) -> ResponseReturnValue:
+    @use_kwargs(
+        {
+            "first_name": fields.Str(required=True),
+            "last_name": fields.Str(required=True),
+            "birthdate": fields.Date(required=True),
+            "person_id": fields.Int(required=True),
+            "previous_dorm": fields.Str(required=False),
+        },
+        location="query",
+    )
+    def get(
+        self,
+        first_name: str,
+        last_name: str,
+        birthdate: date,
+        person_id: int,
+        previous_dorm: str | None = None,
+    ) -> ResponseReturnValue:
         """
         Get the newest tenancy for the supplied user data, or an error 404 if not found.
 
@@ -495,23 +558,13 @@ class RegistrationResource(Resource):
                 similar user already lives in the room
         """
 
-        parser = reqparse.RequestParser()
-        parser.add_argument('first_name', required=True, type=str)
-        parser.add_argument('last_name', required=True, type=str)
-        parser.add_argument('birthdate', required=True, type=parse_iso_date)
-        parser.add_argument('person_id', required=True, type=int)
-        parser.add_argument('previous_dorm', required=False, type=str)
-        args = parser.parse_args()
-
-        person_id = get_swdd_person_id(args.first_name, args.last_name, args.birthdate)
+        person_id = get_swdd_person_id(first_name, last_name, birthdate)
 
         # some tenants have an additional semicolon added to their last names
         if person_id is None:
-            person_id = get_swdd_person_id(
-                args.first_name, args.last_name + ";", args.birthdate
-            )
+            person_id = get_swdd_person_id(first_name, last_name + ";", birthdate)
 
-        if person_id is None or person_id != args.person_id:
+        if person_id is None or person_id != person_id:
             abort(404, message="No tenancies found for this data",
                   code="no_tenancies")
 
@@ -527,12 +580,12 @@ class RegistrationResource(Resource):
             abort(404, message="Cannot associate a room with any tenancy",
                   code="no_room_for_tenancies")
 
-        if args.previous_dorm is None:
+        if previous_dorm is None:
             if get_user_by_swdd_person_id(person_id) is not None:
                 abort(400, message="User already exists", code="user_exists")
 
         try:
-            name = get_name_from_first_last(args.first_name, args.last_name)
+            name = get_name_from_first_last(first_name, last_name)
 
             check_similar_user_in_room(name, newest_tenancy.room)
         except UserExistsInRoomException:
@@ -549,50 +602,73 @@ class RegistrationResource(Resource):
             'room': newest_tenancy.room.level_and_number
         })
 
-    def post(self) -> int:
+    @use_kwargs(
+        {
+            "first_name": fields.Str(required=True),
+            "last_name": fields.Str(required=False),
+            "birthdate": fields.Date(required=True),
+            "email": fields.Str(required=True),
+            "password": fields.Str(required=True),
+            "login": fields.Str(required=True),
+            "person_id": fields.Int(required=False),
+            "room_id": fields.Int(required=False),
+            "move_in_date": fields.Date(required=False),
+            "previous_dorm": fields.Str(required=False),
+        },
+        location="form",
+    )
+    def post(
+        self,
+        first_name: str,
+        birthdate: date,
+        email: str,
+        password: str,
+        login: str,
+        last_name: str | None = None,
+        person_id: int | None = None,
+        room_id: int | None = None,
+        move_in_date: date | None = None,
+        previous_dorm: str | None = None,
+    ) -> int:
         """
         Create a member request
         """
 
-        parser = reqparse.RequestParser()
-        parser.add_argument('first_name', required=True, type=str)
-        parser.add_argument('last_name', required=False, type=str)
-        parser.add_argument('birthdate', required=True, type=parse_iso_date)
-        parser.add_argument('email', required=True, type=str)
-        parser.add_argument('password', required=True, type=str)
-        parser.add_argument('login', required=True, type=str)
-        parser.add_argument('person_id', required=False, type=int)
-        parser.add_argument('room_id', required=False, type=int)
-        parser.add_argument('move_in_date', required=False, type=parse_iso_date)
-        parser.add_argument('previous_dorm', required=False, type=str)
-        args = parser.parse_args()
-
         room = None
         swdd_person_id = None
 
-        if args.room_id is not None:
-            room = session.session.get(Room, args.room_id)
+        if room_id is not None:
+            room = session.session.get(Room, room_id)
 
             if room is None:
                 abort(404, message="Invalid room", code="invalid_room")
 
-        if args.person_id is not None:
-            swdd_person_id = get_swdd_person_id(args.first_name, args.last_name, args.birthdate)
+        if person_id is not None:
+            swdd_person_id = get_swdd_person_id(first_name, last_name, birthdate)
 
             # some tenants have an additional semicolon added to their last names
             if swdd_person_id is None:
                 swdd_person_id = get_swdd_person_id(
-                    args.first_name, args.last_name + ";", args.birthdate
+                    first_name, last_name + ";", birthdate
                 )
 
-            if swdd_person_id != args.person_id:
+            if swdd_person_id != person_id:
                 abort(400, message="Person id does not match", code="person_id_mismatch")
 
-        name = get_name_from_first_last(args.first_name, args.last_name)
+        name = get_name_from_first_last(first_name, last_name)
 
         try:
-            mr = create_member_request(name, args.email, args.password, args.login, args.birthdate,
-                                       swdd_person_id, room, args.move_in_date, args.previous_dorm)
+            mr = create_member_request(
+                name,
+                email,
+                password,
+                login,
+                birthdate,
+                swdd_person_id,
+                room,
+                move_in_date,
+                previous_dorm,
+            )
         except UserExistsException:
             abort(400, message="User already exists", code="user_exists")
         except UserExistsInRoomException:
@@ -624,12 +700,14 @@ api.add_resource(RegistrationResource,
 
 
 class EmailConfirmResource(Resource):
-    def get(self) -> ResponseReturnValue:
-        parser = reqparse.RequestParser()
-        parser.add_argument('user_id', required=True, type=int)
-        args = parser.parse_args()
-
-        user = session.session.get(User, args.user_id)
+    @use_kwargs(
+        {
+            "user_id": fields.Int(required=True),
+        },
+        location="query",
+    )
+    def get(self, user_id: int) -> ResponseReturnValue:
+        user = session.session.get(User, user_id)
 
         if user is None:
             abort(404, message='User not found')
@@ -640,13 +718,15 @@ class EmailConfirmResource(Resource):
 
         return jsonify({'success': True})
 
-    def post(self) -> ResponseReturnValue:
-        parser = reqparse.RequestParser()
-        parser.add_argument('key', required=True, type=str)
-        args = parser.parse_args()
-
+    @use_kwargs(
+        {
+            "key": fields.Str(required=True),
+        },
+        location="form",
+    )
+    def post(self, key: str) -> ResponseReturnValue:
         try:
-            user_type, reg_result = confirm_mail_address(args.key)
+            user_type, reg_result = confirm_mail_address(key)
         except ValueError:
             abort(400, message="Bad key", code="bad_key")
 
@@ -659,13 +739,15 @@ api.add_resource(EmailConfirmResource,  '/register/confirm')
 
 
 class ResetPasswordResource(Resource):
-    def post(self) -> ResponseReturnValue:
-        parser = reqparse.RequestParser()
-        parser.add_argument('ident', required=True, type=str)
-        parser.add_argument('email', required=True, type=str)
-        args = parser.parse_args()
-
-        user = get_user_by_id_or_login(args.ident, args.email)
+    @use_kwargs(
+        {
+            "ident": fields.Str(required=True),
+            "email": fields.Str(required=True),
+        },
+        location="form",
+    )
+    def post(self, ident: str, email: str) -> ResponseReturnValue:
+        user = get_user_by_id_or_login(ident, email)
 
         if user is None or not user.has_property('sipa_login'):
             abort(404, message="Not found", code="not_found")
@@ -679,13 +761,15 @@ class ResetPasswordResource(Resource):
             'success': True
         }
 
-    def patch(self) -> ResponseReturnValue:
-        parser = reqparse.RequestParser()
-        parser.add_argument('token', required=True, type=str)
-        parser.add_argument('password', required=True, type=str)
-        args = parser.parse_args()
-
-        if not change_password_from_token(args.token, args.password):
+    @use_kwargs(
+        {
+            "token": fields.Str(required=True),
+            "password": fields.Str(required=True),
+        },
+        location="form",
+    )
+    def patch(self, token: str, password: str) -> ResponseReturnValue:
+        if not change_password_from_token(token, password):
             abort(403, message="Invalid token", code="invalid_token")
 
         session.session.commit()

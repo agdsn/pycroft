@@ -144,14 +144,14 @@ jobs:
       - name: Build
         run: docker buildx bake --load
       - name: Run test-app entrypoints
-        run: docker-compose -f docker-compose.test.yml run --rm --no-deps test-app
+        run: docker compose -f docker-compose.test.yml run --rm --no-deps test-app
       - name: Start
-        run: docker-compose -f docker-compose.test.yml up test-app
+        run: docker compose -f docker-compose.test.yml up --wait --wait-timeout=30 test-app
       - name: Run webpack
-        run: docker-compose -f docker-compose.test.yml run --rm test-app webpack --mode production
+        run: docker compose -f docker-compose.test.yml run --rm test-app webpack --mode production
       - name: Run tests
         run: >
-          docker-compose -f docker-compose.test.yml run --rm test-app
+          docker compose -f docker-compose.test.yml run --rm test-app
           test -m "not legacy"
           --junitxml=junit/test-results.xml
           --cov=pycroft --cov=web --cov=ldap_sync --cov=hades_logs --cov-append

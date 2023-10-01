@@ -5,6 +5,7 @@ pycroft.lib.swdd
 import hmac
 import os
 import unicodedata
+from datetime import date
 
 from sqlalchemy import func
 
@@ -13,7 +14,7 @@ from pycroft.model.swdd import Tenancy, TenancyStatus
 swdd_hmac_key = os.environ.get('SWDD_HASH_KEY')
 
 
-def get_swdd_person_id(first_name: str, last_name: str, birthdate: str) -> int | None:
+def get_swdd_person_id(first_name: str, last_name: str, birthdate: date) -> int | None:
     """
     Builds a hmac hash from the given parameters and searches for a match in the Tenancy view
 
