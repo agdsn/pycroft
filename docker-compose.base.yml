@@ -64,7 +64,7 @@ services:
       interval: 2s
       timeout: 2m
   ldap:
-    image: dinkel/openldap
+    image: dinkel/openldap:2.4.44
     environment:
       - SLAPD_PASSWORD=password
       - SLAPD_DOMAIN=agdsn.de
