@@ -275,7 +275,7 @@ class UserByIPResource(Resource):
         {
             "ipv4": fields.IP(required=True, data_key="ip"),  # type: ignore[no-untyped-call]
         },
-        location="form",
+        location="query",
     )
     def get(self, ipv4: IPv4Address | IPv6Address) -> ResponseReturnValue:
         user = session.session.scalars(
