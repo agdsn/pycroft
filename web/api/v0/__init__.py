@@ -9,7 +9,8 @@ from flask.typing import ResponseReturnValue
 from flask_restful import Api, Resource as FlaskRestfulResource, abort
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select
-from sqlalchemy.orm import joinedload, selectinload
+from sqlalchemy.orm import joinedload, selectinload, undefer, with_polymorphic
+from sqlalchemy.orm.interfaces import ORMOption
 from webargs import fields
 from webargs.flaskparser import use_kwargs
 
@@ -36,6 +37,7 @@ from pycroft.model.facilities import Room
 from pycroft.model.finance import Account, Split
 from pycroft.model.host import IP, Interface, Host
 from pycroft.model.session import current_timestamp
+from pycroft.model.task import Task
 from pycroft.model.types import IPAddress, InvalidMACAddressException
 from pycroft.model.user import User, IllegalEmailError, IllegalLoginError
 
@@ -83,8 +85,8 @@ class Resource(FlaskRestfulResource):
     method_decorators = [authenticate]
 
 
-def get_user_or_404(user_id: int) -> User:
-    user = session.session.get(User, user_id)
+def get_user_or_404(user_id: int, options: t.Sequence[ORMOption] | None = None) -> User:
+    user = session.session.get(User, user_id, options=options)
     if user is None:
         abort(404, message=f"User {user_id} does not exist")
     return user
@@ -184,7 +186,21 @@ def generate_user_data(user: User) -> Response:
 
 class UserResource(Resource):
     def get(self, user_id: int) -> Response:
-        user = get_user_or_404(user_id)
+        user = get_user_or_404(
+            user_id,
+            options=[
+                joinedload(User.room).joinedload(Room.building),
+                joinedload(User.hosts)
+                .joinedload(Host.interfaces)
+                .joinedload(Interface.ips),
+                undefer(User.wifi_passwd_hash),
+                joinedload(User.account)
+                .selectinload(Account.splits)
+                .joinedload(Split.transaction),
+                selectinload(User.tasks.of_type(with_polymorphic(Task, "*"))),
+                selectinload(User.current_properties),
+            ],
+        )
         return generate_user_data(user)
 
 
