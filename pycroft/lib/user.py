@@ -876,17 +876,17 @@ class UserStatus(t.NamedTuple):
 
 
 def status(user: User) -> UserStatus:
-    current_groups = user.active_property_groups()
     has_interface = any(h.interfaces for h in user.hosts)
+    has_access = "network_access" in user.current_properties
     return UserStatus(
-        member=config.member_group in current_groups,
-        traffic_exceeded=config.traffic_limit_exceeded_group in current_groups,
-        network_access=user.has_property("network_access") and has_interface,
-        wifi_access=user.has_wifi_access and user.has_property("network_access"),
+        member="member" in user.current_properties,
+        traffic_exceeded="traffic_limit_exceeded" in user.current_properties,
+        network_access=has_access and has_interface,
+        wifi_access=user.has_wifi_access and has_access,
         account_balanced=user_has_paid(user),
-        violation=user.has_property("violation"),
-        ldap=user.has_property("ldap"),
-        admin=any(user.has_property(prop) for prop in admin_properties),
+        violation="violation" in user.current_properties,
+        ldap="ldap" in user.current_properties,
+        admin=any(prop in user.current_properties for prop in admin_properties),
     )
 
 
