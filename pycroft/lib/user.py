@@ -877,15 +877,15 @@ class UserStatus(t.NamedTuple):
 
 def status(user: User) -> UserStatus:
     has_interface = any(h.interfaces for h in user.hosts)
-    has_access = "network_access" in user.current_properties
+    has_access = user.has_property("network_access")
     return UserStatus(
-        member="member" in user.current_properties,
-        traffic_exceeded="traffic_limit_exceeded" in user.current_properties,
+        member=user.has_property("member"),
+        traffic_exceeded=user.has_property("traffic_limit_exceeded"),
         network_access=has_access and has_interface,
         wifi_access=user.has_wifi_access and has_access,
         account_balanced=user_has_paid(user),
-        violation="violation" in user.current_properties,
-        ldap="ldap" in user.current_properties,
+        violation=user.has_property("violation"),
+        ldap=user.has_property("ldap"),
         admin=any(prop in user.current_properties for prop in admin_properties),
     )
 
