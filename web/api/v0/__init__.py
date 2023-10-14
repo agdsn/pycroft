@@ -574,17 +574,17 @@ class RegistrationResource(Resource):
                 similar user already lives in the room
         """
 
-        person_id = get_swdd_person_id(first_name, last_name, birthdate)
+        swdd_person_id = get_swdd_person_id(first_name, last_name, birthdate)
 
         # some tenants have an additional semicolon added to their last names
-        if person_id is None:
-            person_id = get_swdd_person_id(first_name, last_name + ";", birthdate)
+        if swdd_person_id is None:
+            swdd_person_id = get_swdd_person_id(first_name, last_name + ";", birthdate)
 
-        if person_id is None or person_id != person_id:
+        if swdd_person_id is None or swdd_person_id != person_id:
             abort(404, message="No tenancies found for this data",
                   code="no_tenancies")
 
-        tenancies = get_relevant_tenancies(person_id)
+        tenancies = get_relevant_tenancies(swdd_person_id)
 
         if not tenancies:
             abort(404, message="No active or future tenancies found",
@@ -597,7 +597,7 @@ class RegistrationResource(Resource):
                   code="no_room_for_tenancies")
 
         if previous_dorm is None:
-            if get_user_by_swdd_person_id(person_id) is not None:
+            if get_user_by_swdd_person_id(swdd_person_id) is not None:
                 abort(400, message="User already exists", code="user_exists")
 
         try:
