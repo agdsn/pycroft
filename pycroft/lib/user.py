@@ -18,6 +18,7 @@ from difflib import SequenceMatcher
 from typing import Iterable
 
 from sqlalchemy import func, select, Boolean, String, ColumnElement
+from sqlalchemy.orm import Session
 
 from pycroft import config, property
 from pycroft.helpers import user as user_helper, utc
@@ -53,9 +54,15 @@ from pycroft.model.task_serialization import UserMoveParams, UserMoveOutParams, 
     UserMoveInParams
 from pycroft.model.traffic import TrafficHistoryEntry
 from pycroft.model.traffic import traffic_history as func_traffic_history
-from pycroft.model.user import User, UnixAccount, PreMember, BaseUser, \
-    RoomHistoryEntry, \
-    PropertyGroup
+from pycroft.model.user import (
+    User,
+    UnixAccount,
+    PreMember,
+    BaseUser,
+    RoomHistoryEntry,
+    PropertyGroup,
+    Membership,
+)
 from pycroft.model.webstorage import WebStorage
 from pycroft.task import send_mails_async
 
@@ -1087,11 +1094,13 @@ def user_send_mail(
     user_send_mails([user], template, soft_fail, use_internal, **kwargs)
 
 
-def get_active_users(session, group):
-    active_memberships = User.active_memberships()
-    users = User.q.join(active_memberships)\
-        .filter(active_memberships.c.group_id == group.id).distinct().all()
-    return users
+def get_active_users(session: Session, group) -> list[User]:
+    return session.scalars(
+        select(User)
+        .join(User.current_memberships)
+        .where(Membership.group == group)
+        .distinct()
+    )
 
 
 def group_send_mail(group: PropertyGroup, subject: str, body_plain: str) -> None:
