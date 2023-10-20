@@ -53,6 +53,7 @@ dependencies = [
     "pydantic ~= 2.4.0",
     "python-dotenv ~= 0.21.0",
     "reportlab ~= 3.6.13",  # usersheet generation
+    "schwifty ~= 2024.5.4",
     "sentry-sdk[Flask] ~= 1.29.2",
     "simplejson ~= 3.11.1",  # decimal serialization
     "SQLAlchemy >= 2.0.1",
