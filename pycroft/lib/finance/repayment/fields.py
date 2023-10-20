@@ -9,6 +9,6 @@ class IBANField(fields.Field):
 
     def _deserialize(self, value, attr, data, **kwargs) -> IBAN:
         try:
-            return IBAN(value)
+            return IBAN(value, validate_bban=True)
         except ValueError as error:
-            raise ValidationError("Pin codes must contain only digits.") from error
+            raise ValidationError("Field must be a valid IBAN.") from error
