@@ -1087,12 +1087,15 @@ def user_send_mail(
     user_send_mails([user], template, soft_fail, use_internal, **kwargs)
 
 
-def group_send_mail(group: PropertyGroup, subject: str, body_plain: str) -> None:
+def get_active_users(session, group):
     active_memberships = User.active_memberships()
-
     users = User.q.join(active_memberships)\
         .filter(active_memberships.c.group_id == group.id).distinct().all()
+    return users
 
+
+def group_send_mail(group: PropertyGroup, subject: str, body_plain: str) -> None:
+    users = get_active_users(group)
     user_send_mails(users, soft_fail=True, body_plain=body_plain, subject=subject)
 
 
