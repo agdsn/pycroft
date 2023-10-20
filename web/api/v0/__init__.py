@@ -812,7 +812,9 @@ class RequestRepaymentResource(Resource):
         },
         location="form",
     )
-    def post(self, user_id: int, beneficiary: str, iban: str, amount: Decimal) -> Response:
+    def post(
+        self, user_id: int, beneficiary: str, iban: str, amount: Decimal
+    ) -> Response:
         current_app.logger.warning({beneficiary, iban, amount})
         return jsonify({"success": True})
 
