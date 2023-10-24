@@ -17,7 +17,7 @@ from datetime import timedelta, date
 from difflib import SequenceMatcher
 from typing import Iterable
 
-from sqlalchemy import func, select, Boolean, String, ColumnElement
+from sqlalchemy import func, select, Boolean, String, ColumnElement, ScalarResult
 from sqlalchemy.orm import Session
 
 from pycroft import config, property
@@ -1094,7 +1094,7 @@ def user_send_mail(
     user_send_mails([user], template, soft_fail, use_internal, **kwargs)
 
 
-def get_active_users(session: Session, group) -> list[User]:
+def get_active_users(session: Session, group: PropertyGroup) -> ScalarResult[User]:
     return session.scalars(
         select(User)
         .join(User.current_memberships)
@@ -1104,7 +1104,7 @@ def get_active_users(session: Session, group) -> list[User]:
 
 
 def group_send_mail(group: PropertyGroup, subject: str, body_plain: str) -> None:
-    users = get_active_users(group)
+    users = get_active_users(session=session.session, group=group)
     user_send_mails(users, soft_fail=True, body_plain=body_plain, subject=subject)
 
 
