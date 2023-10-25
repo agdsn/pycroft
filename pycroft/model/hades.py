@@ -15,6 +15,7 @@ from sqlalchemy import (
     and_,
     Boolean,
     select,
+    case,
 )
 from sqlalchemy.orm import Query, aliased, configure_mappers
 
@@ -100,7 +101,10 @@ radusergroup = View(
             func.host(Switch.management_ip).label("NASIPAddress"),
             SwitchPort.name.label("NASPortId"),
             radius_property.c.hades_group_name.label("GroupName"),
-            literal(-10).label("Priority"),
+            case(
+                (radius_property.c.is_blocking_group, literal(-10)),
+                else_=literal(10),
+            ).label("Priority"),
         )
         .select_from(User)
         .join(Host)
