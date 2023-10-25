@@ -231,14 +231,14 @@ radgroupreply = View(
             literal("Egress-VLAN-Name").label("Attribute"),
             literal(":=").label("Op"),
             literal("2hades-unauth").label("Value"),
-        ),
+        ).where(radius_property.c.is_blocking_group),
         # Fall-Through := No, blocking groups
         select(
             radius_property.c.hades_group_name.label("GroupName"),
             literal("Fall-Through").label("Attribute"),
             literal(":=").label("Op"),
             literal("No").label("Value"),
-        ),
+        ).where(radius_property.c.is_blocking_group),
         # Generic error group `no_network_access`
         # Same semantics as a specific error group
         Query([
