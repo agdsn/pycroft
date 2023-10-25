@@ -161,16 +161,25 @@ class TestHadesView:
         assert row == (host.interfaces[0].mac, str(host.ips[0].address), host.name)
 
 
-class TestHadesBlockedView:
+class TestFinanceBlocking:
+    @pytest.fixture(scope="class")
+    def bad_group(self, payment_in_default_group):
+        return payment_in_default_group
+
+    @pytest.fixture(scope="class")
+    def radius_group_name(self) -> str:
+        return "pid"
+
     @pytest.fixture(scope='class', autouse=True)
-    def payment_in_default_membership(self, now, class_session, user, payment_in_default_group):
+    def bad_membership(self, now, class_session, user, bad_group):
         return MembershipFactory.create(
-            user=user, group=payment_in_default_group,
+            user=user,
+            group=bad_group,
             begins_at=now + timedelta(-1),
             ends_at=now + timedelta(1)
         )
 
-    def test_radusergroup_blocked(self, session, user):
+    def test_radusergroup_blocked(self, session, user, radius_group_name):
         host = user.hosts[0]
         switch_ports = [p.switch_port for p in host.room.connected_patch_ports]
         assert len(host.ips) == 1
@@ -179,11 +188,31 @@ class TestHadesBlockedView:
 
         rows = session.query(hades.radusergroup.table).all()
         for switch_port in switch_ports:
-            assert (mac, str(switch_port.switch.management_ip), switch_port.name,
-                    'payment_in_default', -10) in rows
-            assert (mac, str(switch_port.switch.management_ip), switch_port.name,
-                    'no_network_access', 0) in rows
+            assert (
+                mac,
+                str(switch_port.switch.management_ip),
+                switch_port.name,
+                radius_group_name,
+                -10,
+            ) in rows
+            assert (
+                mac,
+                str(switch_port.switch.management_ip),
+                switch_port.name,
+                "no_network_access",
+                0,
+            ) in rows
 
     def test_dhcphost_blocked(self, session):
         rows = session.query(hades.dhcphost.table).all()
         assert len(rows) == 0
+
+
+class TestTrafficBlocking(TestFinanceBlocking):
+    @pytest.fixture(scope="class")
+    def bad_group(self, traffic_limit_exceeded_group):
+        return traffic_limit_exceeded_group
+
+    @pytest.fixture(scope="class")
+    def radius_group_name(self) -> str:
+        return "traffic"
