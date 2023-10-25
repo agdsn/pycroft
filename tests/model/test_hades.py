@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 
 import pytest
+from sqlalchemy import select
 
 from pycroft.helpers.interval import closedopen
 from pycroft.model import hades
@@ -69,10 +70,15 @@ def membership(module_session, user, network_access_group, now) -> Membership:
 
 @pytest.fixture(scope='module', autouse=True)
 def mapped_radius_properties(module_session) -> None:
-    module_session.execute(hades.radius_property.insert().values([
-        ('payment_in_default',),
-        ('traffic_limit_exceeded',),
-    ]))
+    module_session.execute(
+        hades.radius_property.insert().values(
+            [
+                ("payment_in_default", "pid", True),
+                ("traffic_limit_exceeded", "traffic", True),
+                ("non_blocking_group", "non_blocking", False),
+            ]
+        )
+    )
 
 
 class TestHadesView:
@@ -123,11 +129,16 @@ class TestHadesView:
             assert (group_name, "Fall-Through", ":=", "Yes") in rows
 
     def test_radgroupreply_blocking_groups(self, session):
-        props = [x[0] for x in session.query(hades.radius_property).all()]
-        rows = session.query(hades.radgroupreply.table).all()
-        for prop in props:
-            assert (prop, "Egress-VLAN-Name", ":=", "2hades-unauth") in rows
-            assert (prop, "Fall-Through", ":=", "No") in rows
+        rp = hades.radius_property
+        groups = session.execute(select(rp.c.hades_group_name, rp.c.is_blocking_group))
+        rows = session.execute(select(hades.radgroupreply.table)).all()
+        for prop, is_blocking in groups:
+            if is_blocking:
+                assert (prop, "Egress-VLAN-Name", ":=", "2hades-unauth") in rows
+                assert (prop, "Fall-Through", ":=", "No") in rows
+            else:
+                assert (prop, "Egress-VLAN-Name", ":=", "2hades-unauth") not in rows
+                assert (prop, "Fall-Through", ":=", "No") not in rows
 
     def test_radusergroup_access(self, session, user):
         host = user.hosts[0]
