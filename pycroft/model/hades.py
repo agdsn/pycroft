@@ -2,8 +2,20 @@
 pycroft.model.hades
 ~~~~~~~~~~~~~~~~~~~
 """
-from sqlalchemy import literal, Column, String, func, union_all, Table, Integer, \
-    PrimaryKeyConstraint, null, and_
+from sqlalchemy import (
+    literal,
+    Column,
+    String,
+    func,
+    union_all,
+    Table,
+    Integer,
+    PrimaryKeyConstraint,
+    null,
+    and_,
+    Boolean,
+    select,
+)
 from sqlalchemy.orm import Query, aliased, configure_mappers
 
 from pycroft.model.base import ModelBase
@@ -33,6 +45,8 @@ radius_property = Table(
     'radius_property',
     ModelBase.metadata,
     Column('property', String, primary_key=True),
+    Column("hades_group_name", String, nullable=False),
+    Column("is_blocking_group", Boolean, nullable=False),
 )
 # This is a hack to enforce that Views are created after _all_ their
 # depenencies.  The Views' creation is then targeted after
@@ -212,19 +226,19 @@ radgroupreply = View(
             literal('Yes').label('Value'),
         ]),
         # Egress-VLAN-Name := 2hades-unauth, blocking groups
-        Query([
-            radius_property.c.property.label('GroupName'),
-            literal("Egress-VLAN-Name").label('Attribute'),
-            literal(":=").label('Op'),
-            literal("2hades-unauth").label('Value'),
-        ]),
+        select(
+            radius_property.c.hades_group_name.label("GroupName"),
+            literal("Egress-VLAN-Name").label("Attribute"),
+            literal(":=").label("Op"),
+            literal("2hades-unauth").label("Value"),
+        ),
         # Fall-Through := No, blocking groups
-        Query([
-            radius_property.c.property.label('GroupName'),
-            literal("Fall-Through").label('Attribute'),
-            literal(":=").label('Op'),
-            literal("No").label('Value'),
-        ]),
+        select(
+            radius_property.c.hades_group_name.label("GroupName"),
+            literal("Fall-Through").label("Attribute"),
+            literal(":=").label("Op"),
+            literal("No").label("Value"),
+        ),
         # Generic error group `no_network_access`
         # Same semantics as a specific error group
         Query([
