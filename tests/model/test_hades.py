@@ -5,7 +5,7 @@ from sqlalchemy import select
 
 from pycroft.helpers.interval import closedopen
 from pycroft.model import hades
-from pycroft.model.host import Switch
+from pycroft.model.host import Switch, Host
 from pycroft.model.net import VLAN
 from pycroft.model.user import PropertyGroup, User, Membership
 from tests.factories import PropertyGroupFactory, MembershipFactory, \
@@ -35,6 +35,14 @@ def traffic_limit_exceeded_group(module_session) -> PropertyGroup:
         name="Blocked (traffic)",
         granted={'traffic_limit_exceeded'},
         denied={'network_access'},
+    )
+
+
+@pytest.fixture(scope="module", autouse=True)
+def non_blocking_group(module_session) -> PropertyGroup:
+    return PropertyGroupFactory.create(
+        name="Non-blocking",
+        granted={"non_blocking_group"},
     )
 
 
@@ -161,6 +169,13 @@ class TestHadesView:
         assert row == (host.interfaces[0].mac, str(host.ips[0].address), host.name)
 
 
+def mac_from_host(host: Host):
+    assert len(host.ips) == 1
+    assert len(host.interfaces) == 1
+    mac = host.interfaces[0].mac
+    return mac
+
+
 class TestFinanceBlocking:
     @pytest.fixture(scope="class")
     def bad_group(self, payment_in_default_group):
@@ -182,9 +197,7 @@ class TestFinanceBlocking:
     def test_radusergroup_blocked(self, session, user, radius_group_name):
         host = user.hosts[0]
         switch_ports = [p.switch_port for p in host.room.connected_patch_ports]
-        assert len(host.ips) == 1
-        assert len(host.interfaces) == 1
-        mac = host.interfaces[0].mac
+        mac = mac_from_host(host)
 
         rows = session.query(hades.radusergroup.table).all()
         for switch_port in switch_ports:
@@ -216,3 +229,43 @@ class TestTrafficBlocking(TestFinanceBlocking):
     @pytest.fixture(scope="class")
     def radius_group_name(self) -> str:
         return "traffic"
+
+
+class TestNonBlockingGroup:
+    @pytest.fixture(scope="class", autouse=True)
+    def non_blocking_membership(self, class_session, user, non_blocking_group, now):
+        return MembershipFactory.create(
+            user=user,
+            group=non_blocking_group,
+            begins_at=now + timedelta(-1),
+            ends_at=None,
+        )
+
+    def test_radusergroup_non_blocking(self, session, user):
+        radius_group_name = "non_blocking"
+        host = user.hosts[0]
+        mac = mac_from_host(host)
+        switch_ports = [p.switch_port for p in host.room.connected_patch_ports]
+        rows = session.execute(select(hades.radusergroup.table)).all()
+        for switch_port in switch_ports:
+            mgmt_ip = str(switch_port.switch.management_ip)
+            assert (
+                mac,
+                mgmt_ip,
+                switch_port.name,
+                radius_group_name,
+                10,
+            ) in rows, (
+                "radusergroup does not contain row "
+                f"for non-blocking custom group {radius_group_name!r}"
+            )
+            assert (
+                mac,
+                mgmt_ip,
+                switch_port.name,
+                "no_network_access",
+                0,
+            ) not in rows, (
+                "radusergroup contains a `no_network_access` row "
+                "for user with non-blocking custom group"
+            )
