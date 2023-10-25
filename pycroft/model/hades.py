@@ -93,13 +93,16 @@ radusergroup = View(
         # Priority -10: Blocking reason exists
         # <mac> @ <switch>/<port> → <blocking_group> (Prio -10)
         # Note that Fall-Through:=No for blocking groups, so first match terminates
-        Query([
-            Interface.mac.label('UserName'),
-            func.host(Switch.management_ip).label('NASIPAddress'),
-            SwitchPort.name.label('NASPortId'),
-            radius_property.c.property.label('GroupName'),
-            literal(-10).label('Priority'),
-        ]).select_from(User)
+        # Also, priority 10: some other custom radius group
+        # <mac> @ <switch>/<port> → <blocking_group> (Prio -10)
+        select(
+            Interface.mac.label("UserName"),
+            func.host(Switch.management_ip).label("NASIPAddress"),
+            SwitchPort.name.label("NASPortId"),
+            radius_property.c.hades_group_name.label("GroupName"),
+            literal(-10).label("Priority"),
+        )
+        .select_from(User)
         .join(Host)
         .join(Host.interfaces)
         .join(Host.room)
@@ -107,10 +110,9 @@ radusergroup = View(
         .join(SwitchPort)
         .join(Switch)
         .join(User.current_properties)
-        .join(radius_property,
-              radius_property.c.property == CurrentProperty.property_name)
-        .statement,
-
+        .join(
+            radius_property, radius_property.c.property == CurrentProperty.property_name
+        ),
         # Priority 0: No blocking reason exists → generic error group `no_network_access`
         Query([
             Interface.mac.label('UserName'),
