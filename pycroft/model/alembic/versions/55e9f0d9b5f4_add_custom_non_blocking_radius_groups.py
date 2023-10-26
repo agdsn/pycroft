@@ -51,7 +51,7 @@ def upgrade():
     op.execute(
         """
         CREATE OR REPLACE VIEW radusergroup AS
-        SELECT interface.mac AS "UserName",
+        SELECT interface.mac::text AS "UserName",
             host(switch.management_ip) AS "NASIPAddress",
             switch_port.name AS "NASPortId",
             vlan.name::text || '_untagged'::text AS "GroupName",
@@ -69,7 +69,7 @@ def upgrade():
              JOIN current_property ON "user".id = current_property.user_id AND NOT current_property.denied
           WHERE current_property.property_name::text = 'network_access'::text
         UNION ALL
-         SELECT interface.mac AS "UserName",
+         SELECT interface.mac::text AS "UserName",
             host(switch.management_ip) AS "NASIPAddress",
             switch_port.name AS "NASPortId",
             radius_property.hades_group_name AS "GroupName",
@@ -87,7 +87,7 @@ def upgrade():
              JOIN current_property ON "user".id = current_property.user_id AND NOT current_property.denied
              JOIN radius_property ON radius_property.property::text = current_property.property_name::text
         UNION ALL
-         SELECT interface.mac AS "UserName",
+         SELECT interface.mac::text AS "UserName",
             host(switch.management_ip) AS "NASIPAddress",
             switch_port.name AS "NASPortId",
             'no_network_access'::text AS "GroupName",
@@ -104,7 +104,13 @@ def upgrade():
              JOIN patch_port ON patch_port.room_id = room.id AND patch_port.switch_port_id IS NOT NULL
              JOIN switch_port ON switch_port.id = patch_port.switch_port_id
              JOIN switch ON switch.host_id = switch_port.switch_id
-          WHERE users_with_network_access.network_access IS NULL;
+          WHERE users_with_network_access.network_access IS NULL
+        UNION ALL
+         SELECT 'unknown'::text AS "UserName",
+            NULL::text AS "NASIPAddress",
+            NULL::character varying AS "NASPortId",
+            'unknown'::text AS "GroupName",
+            1 AS "Priority";
     """
     )
     op.execute(
@@ -227,7 +233,7 @@ def downgrade():
     op.execute(
         """
         CREATE OR REPLACE VIEW radusergroup AS
-         SELECT interface.mac AS "UserName",
+         SELECT interface.mac::text AS "UserName",
             host(switch.management_ip) AS "NASIPAddress",
             switch_port.name AS "NASPortId",
             vlan.name::text || '_untagged'::text AS "GroupName",
@@ -245,7 +251,7 @@ def downgrade():
              JOIN current_property ON "user".id = current_property.user_id AND NOT current_property.denied
           WHERE current_property.property_name::text = 'network_access'::text
         UNION ALL
-         SELECT interface.mac AS "UserName",
+         SELECT interface.mac::text AS "UserName",
             host(switch.management_ip) AS "NASIPAddress",
             switch_port.name AS "NASPortId",
             radius_property.property AS "GroupName",
@@ -260,7 +266,7 @@ def downgrade():
              JOIN current_property ON "user".id = current_property.user_id AND NOT current_property.denied
              JOIN radius_property ON radius_property.property::text = current_property.property_name::text
         UNION ALL
-         SELECT interface.mac AS "UserName",
+         SELECT interface.mac::text AS "UserName",
             host(switch.management_ip) AS "NASIPAddress",
             switch_port.name AS "NASPortId",
             'no_network_access'::text AS "GroupName",
@@ -277,7 +283,13 @@ def downgrade():
              JOIN patch_port ON patch_port.room_id = room.id AND patch_port.switch_port_id IS NOT NULL
              JOIN switch_port ON switch_port.id = patch_port.switch_port_id
              JOIN switch ON switch.host_id = switch_port.switch_id
-          WHERE users_with_network_access.network_access IS NULL;
+          WHERE users_with_network_access.network_access IS NULL
+        UNION ALL
+         SELECT 'unknown'::text AS "UserName",
+            NULL::text AS "NASIPAddress",
+            NULL::character varying AS "NASPortId",
+            'unknown'::text AS "GroupName",
+            1 AS "Priority";
     """
     )
 

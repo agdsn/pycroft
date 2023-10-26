@@ -6,6 +6,7 @@ from sqlalchemy import (
     literal,
     Column,
     String,
+    Text,
     func,
     union_all,
     Table,
@@ -16,6 +17,7 @@ from sqlalchemy import (
     Boolean,
     select,
     case,
+    cast,
 )
 from sqlalchemy.orm import Query, aliased, configure_mappers
 
@@ -69,15 +71,18 @@ radusergroup = View(
         # Priority 20: valid case (interface's mac w/ vlan at correct ports)
         # <mac> @ <switch>/<port> → <vlan>_[un]tagged (Prio 20)
         # Parsing continues because of Fall-Through:=Yes
-        Query([
-            Interface.mac.label('UserName'),
-            # `host()` does not print the `/32` like `text` would
-            func.host(Switch.management_ip).label('NASIPAddress'),
-            SwitchPort.name.label('NASPortId'),
-            # TODO: add `_tagged` instead if interface needs that
-            (VLAN.name + '_untagged').label('GroupName'),
-            literal(20).label('Priority'),
-        ]).select_from(User)
+        Query(
+            [
+                func.text(Interface.mac).label("UserName"),
+                # `host()` does not print the `/32` like `text` would
+                func.host(Switch.management_ip).label("NASIPAddress"),
+                SwitchPort.name.label("NASPortId"),
+                # TODO: add `_tagged` instead if interface needs that
+                (VLAN.name + "_untagged").label("GroupName"),
+                literal(20).label("Priority"),
+            ]
+        )
+        .select_from(User)
         .join(Host)
         .join(Interface)
         .join(Host.room)
@@ -97,7 +102,7 @@ radusergroup = View(
         # Also, priority 10: some other custom radius group
         # <mac> @ <switch>/<port> → <blocking_group> (Prio -10)
         select(
-            Interface.mac.label("UserName"),
+            func.text(Interface.mac).label("UserName"),
             func.host(Switch.management_ip).label("NASIPAddress"),
             SwitchPort.name.label("NASPortId"),
             radius_property.c.hades_group_name.label("GroupName"),
@@ -118,13 +123,16 @@ radusergroup = View(
             radius_property, radius_property.c.property == CurrentProperty.property_name
         ),
         # Priority 0: No blocking reason exists → generic error group `no_network_access`
-        Query([
-            Interface.mac.label('UserName'),
-            func.host(Switch.management_ip).label('NASIPAddress'),
-            SwitchPort.name.label('NASPortId'),
-            literal('no_network_access').label('GroupName'),
-            literal(0).label('Priority'),
-        ]).select_from(User)
+        Query(
+            [
+                func.text(Interface.mac).label("UserName"),
+                func.host(Switch.management_ip).label("NASIPAddress"),
+                SwitchPort.name.label("NASPortId"),
+                literal("no_network_access").label("GroupName"),
+                literal(0).label("Priority"),
+            ]
+        )
+        .select_from(User)
         .outerjoin(network_access_subq, User.id == network_access_subq.c.user_id)
         .filter(network_access_subq.c.network_access.is_(None))
         .join(User.hosts)
@@ -134,6 +142,13 @@ radusergroup = View(
         .join(SwitchPort)
         .join(Switch)
         .statement,
+        select(
+            cast(literal("unknown"), Text).label("UserName"),
+            cast(literal(None), Text).label("NASIPAddress"),
+            cast(literal(None), String).label("NASPortId"),
+            cast(literal("unknown"), Text).label("GroupName"),
+            literal(1).label("Priority"),
+        ),
     ),
 )
 hades_view_ddl.add_view(radius_property, radusergroup)
