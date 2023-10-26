@@ -27,5 +27,5 @@ def register_commands(app: Flask) -> None:
         engine = create_engine(os.getenv('PYCROFT_DB_URI'))
         click.confirm(f'This will drop the whole database schema associated to {engine!r}.'
                       ' Are you absolutely sure?', abort=True)
-        with engine.connect() as connection:
+        with engine.begin() as connection:
             drop_db_model(bind=connection)

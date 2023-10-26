@@ -2,8 +2,21 @@
 pycroft.model.hades
 ~~~~~~~~~~~~~~~~~~~
 """
-from sqlalchemy import literal, Column, String, func, union_all, Table, Integer, \
-    PrimaryKeyConstraint, null, and_
+from sqlalchemy import (
+    literal,
+    Column,
+    String,
+    func,
+    union_all,
+    Table,
+    Integer,
+    PrimaryKeyConstraint,
+    null,
+    and_,
+    Boolean,
+    select,
+    case,
+)
 from sqlalchemy.orm import Query, aliased, configure_mappers
 
 from pycroft.model.base import ModelBase
@@ -33,6 +46,8 @@ radius_property = Table(
     'radius_property',
     ModelBase.metadata,
     Column('property', String, primary_key=True),
+    Column("hades_group_name", String, nullable=False),
+    Column("is_blocking_group", Boolean, nullable=False),
 )
 # This is a hack to enforce that Views are created after _all_ their
 # depenencies.  The Views' creation is then targeted after
@@ -79,13 +94,19 @@ radusergroup = View(
         # Priority -10: Blocking reason exists
         # <mac> @ <switch>/<port> → <blocking_group> (Prio -10)
         # Note that Fall-Through:=No for blocking groups, so first match terminates
-        Query([
-            Interface.mac.label('UserName'),
-            func.host(Switch.management_ip).label('NASIPAddress'),
-            SwitchPort.name.label('NASPortId'),
-            radius_property.c.property.label('GroupName'),
-            literal(-10).label('Priority'),
-        ]).select_from(User)
+        # Also, priority 10: some other custom radius group
+        # <mac> @ <switch>/<port> → <blocking_group> (Prio -10)
+        select(
+            Interface.mac.label("UserName"),
+            func.host(Switch.management_ip).label("NASIPAddress"),
+            SwitchPort.name.label("NASPortId"),
+            radius_property.c.hades_group_name.label("GroupName"),
+            case(
+                (radius_property.c.is_blocking_group, literal(-10)),
+                else_=literal(10),
+            ).label("Priority"),
+        )
+        .select_from(User)
         .join(Host)
         .join(Host.interfaces)
         .join(Host.room)
@@ -93,10 +114,9 @@ radusergroup = View(
         .join(SwitchPort)
         .join(Switch)
         .join(User.current_properties)
-        .join(radius_property,
-              radius_property.c.property == CurrentProperty.property_name)
-        .statement,
-
+        .join(
+            radius_property, radius_property.c.property == CurrentProperty.property_name
+        ),
         # Priority 0: No blocking reason exists → generic error group `no_network_access`
         Query([
             Interface.mac.label('UserName'),
@@ -212,19 +232,19 @@ radgroupreply = View(
             literal('Yes').label('Value'),
         ]),
         # Egress-VLAN-Name := 2hades-unauth, blocking groups
-        Query([
-            radius_property.c.property.label('GroupName'),
-            literal("Egress-VLAN-Name").label('Attribute'),
-            literal(":=").label('Op'),
-            literal("2hades-unauth").label('Value'),
-        ]),
+        select(
+            radius_property.c.hades_group_name.label("GroupName"),
+            literal("Egress-VLAN-Name").label("Attribute"),
+            literal(":=").label("Op"),
+            literal("2hades-unauth").label("Value"),
+        ).where(radius_property.c.is_blocking_group),
         # Fall-Through := No, blocking groups
-        Query([
-            radius_property.c.property.label('GroupName'),
-            literal("Fall-Through").label('Attribute'),
-            literal(":=").label('Op'),
-            literal("No").label('Value'),
-        ]),
+        select(
+            radius_property.c.hades_group_name.label("GroupName"),
+            literal("Fall-Through").label("Attribute"),
+            literal(":=").label("Op"),
+            literal("No").label("Value"),
+        ).where(radius_property.c.is_blocking_group),
         # Generic error group `no_network_access`
         # Same semantics as a specific error group
         Query([
