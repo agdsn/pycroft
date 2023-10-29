@@ -5,17 +5,17 @@ pycroft.lib.user_deletion
 This module contains methods concerning user archival and deletion.
 """
 from __future__ import annotations
-from datetime import timedelta, datetime
-from typing import Protocol, Sequence
+from datetime import datetime
+from typing import Protocol, Sequence, cast
 
-from sqlalchemy import func, nulls_last, and_, not_
+from sqlalchemy import func, and_, not_
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload, Session
-from sqlalchemy.sql.functions import current_timestamp
+from sqlalchemy.sql import Select
 
-from pycroft import Config
 from pycroft.model.property import CurrentProperty
-from pycroft.model.user import User, Membership
+from pycroft.model.user import User
+from pycroft.lib.membership import select_user_and_last_mem
 
 
 class ArchivableMemberInfo(Protocol):
@@ -24,43 +24,13 @@ class ArchivableMemberInfo(Protocol):
     mem_end: datetime
 
 
-def get_archivable_members(session: Session) -> Sequence[ArchivableMemberInfo]:
-    """Return all the users that qualify for being archived right now.
-
-    Selected are those users
-    - whose last membership in the member_group ended two weeks in the past,
-    - excluding users who currently have the `do-not-archive` property.
-    """
-    # see FunctionElement.over
-    mem_ends_at = func.upper(Membership.active_during)
-    window_args = {
-        'partition_by': User.id,
-        'order_by': nulls_last(mem_ends_at),
-    }
-    # mypy: ignore[no-untyped-call]
-    last_mem = (
-        select(
-            User.id.label('user_id'),
-            func.last_value(Membership.id)
-            .over(**window_args, rows=(None, None))  # type: ignore[no-untyped-call]
-            .label("mem_id"),
-            func.last_value(mem_ends_at)
-            .over(**window_args, rows=(None, None))  # type: ignore[no-untyped-call]
-            .label("mem_end"),
-        )
-        .select_from(User)
-        .distinct()
-        .join(Membership)
-        .join(Config, Config.member_group_id == Membership.group_id)
-    ).cte(
-        "last_mem"
-    )  # mypy: ignore[no-untyped-call]
-    stmt = (
-        select(
-            User,
-            last_mem.c.mem_id,
-            last_mem.c.mem_end,
-        )
+def select_archivable_members(
+    current_year: int,
+) -> Select:  # Select[Tuple[User, int, datetime]]
+    # last_mem: (user_id, mem_id, mem_end)
+    last_mem = select_user_and_last_mem().cte("last_mem")
+    return (
+        select()
         .select_from(last_mem)
         # Join the granted `do-not-archive` property, if existent
         .join(CurrentProperty,
@@ -71,20 +41,59 @@ def get_archivable_members(session: Session) -> Sequence[ArchivableMemberInfo]:
         # …and use that to filter out the `do-not-archive` occurrences.
         .filter(CurrentProperty.property_name.is_(None))
         .join(User, User.id == last_mem.c.user_id)
-        .filter(last_mem.c.mem_end < current_timestamp() - timedelta(days=14))  # type: ignore[no-untyped-call]
+        .filter(func.extract("year", last_mem.c.mem_end) + 2 <= current_year)  # type: ignore[no-untyped-call]
         .order_by(last_mem.c.mem_end)
-        .options(joinedload(User.hosts), # joinedload(User.current_memberships),
-                 joinedload(User.account, innerjoin=True), joinedload(User.room),
-                 joinedload(User.current_properties_maybe_denied))
+        .add_columns(
+            User,
+            last_mem.c.mem_id,
+            last_mem.c.mem_end,
+        )
     )
 
-    return session.execute(stmt).unique().all()
 
+def get_archivable_members(
+    session: Session,
+    current_year: int | None = None,
+) -> Sequence[ArchivableMemberInfo]:
+    """Return all the users that qualify for being archived right now.
 
-def get_invalidated_archive_memberships() -> list[Membership]:
-    """Get all memberships in `to_be_archived` of users who have an active `do-not-archive` property.
+    Selected are those users
+    - whose last membership in the member_group ended two weeks in the past,
+    - excluding users who currently have the `do-not-archive` property.
 
-    This can happen if archivability is detected, and later the user becomes a member again,
-    or if for some reason the user shall not be archived.
+    We joined load the following information:
+    - hosts
+    - account
+    - room
+    - current_properties_maybe_denied
+
+    :param session:
+    :param current_year: dependency injection of the current year.
+        defaults to the current year.
     """
+    return cast(
+        list[ArchivableMemberInfo],
+        session.execute(
+            select_archivable_members(
+                # I know we're sloppy with time zones,
+                # but ±2h around new year's eve don't matter.
+                current_year=current_year
+                or datetime.now().year
+            ).options(
+                joinedload(User.hosts),
+                # joinedload(User.current_memberships),
+                joinedload(User.account, innerjoin=True),
+                joinedload(User.room),
+                joinedload(User.current_properties_maybe_denied),
+            )
+        ).unique().all(),
+    )
+
+
+def archive_users(session: Session, user_ids: Sequence[int]) -> None:
+    # todo remove hosts
+    # todo remove tasks
+    # todo remove log entries
+    # todo insert these users into an archival log
+    # todo add membership in archival group
     pass

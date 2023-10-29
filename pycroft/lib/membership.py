@@ -9,12 +9,15 @@ This module contains functions concerning groups, membership, and property
 management.
 
 """
+from __future__ import annotations
 import typing as t
 
-from sqlalchemy import and_, func, distinct, Result
+from sqlalchemy import and_, func, distinct, Result, nulls_last
 from sqlalchemy.future import select
 from sqlalchemy.orm import aliased
+from sqlalchemy.sql import Select, ClauseElement
 
+from pycroft import Config
 from pycroft.helpers.i18n import deferred_gettext
 from pycroft.helpers.interval import UnboundedInterval, IntervalSet, Interval
 from pycroft.helpers.utc import DateTimeTz
@@ -203,3 +206,34 @@ def user_memberships_query(
         .group_by(Membership.id)
     )
     return session.session.execute(memberships)
+
+
+def select_user_and_last_mem() -> Select:  # Select[Tuple[int, int, str]]
+    """Select users with their last membership of a user in the ``member`` group.
+
+    :returns: a select statement with columns ``user_id``, ``mem_id``, ``mem_end``.
+    """
+    mem_ends_at = func.upper(Membership.active_during)
+    # see FunctionElement.over for documentation on `partition_by`, `order_by`
+    # ideally, sqlalchemy would support named windows;
+    # instead, we have to re-use the arguments.
+    window_args: dict[str, ClauseElement | t.Sequence[ClauseElement | str] | None] = {
+        "partition_by": User.id,
+        "order_by": nulls_last(mem_ends_at),
+    }
+    return (
+        select()
+        .select_from(User)
+        .distinct()
+        .join(Membership)
+        .join(Config, Config.member_group_id == Membership.group_id)
+        .add_columns(
+            User.id.label("user_id"),
+            func.last_value(Membership.id)
+            .over(**window_args, rows=(None, None))  # type: ignore[no-untyped-call]
+            .label("mem_id"),
+            func.last_value(mem_ends_at)
+            .over(**window_args, rows=(None, None))  # type: ignore[no-untyped-call]
+            .label("mem_end"),
+        )
+    )  # mypy: ignore[no-untyped-call]
