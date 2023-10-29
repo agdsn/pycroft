@@ -32,6 +32,8 @@ from sqlalchemy import (
     Index,
     text,
     event,
+    CheckConstraint,
+    Computed,
 )
 from sqlalchemy.dialects.postgresql import ExcludeConstraint
 from sqlalchemy.ext.associationproxy import association_proxy
@@ -96,6 +98,7 @@ class BaseUser(IntegerIdModel):
     __abstract__ = True
 
     login: Mapped[str40] = mapped_column(unique=True)
+    login_hash: Mapped[str] = mapped_column(Computed("digest(login, 'sha512')"))
     name: Mapped[str255]
     registered_at: Mapped[utc.DateTimeTz]
     passwd_hash: Mapped[str_deferred | None]
@@ -462,6 +465,11 @@ class User(BaseUser, UserMixin):
     __table_args__ = (UniqueConstraint('swdd_person_id'),)
 
 
+@event.listens_for(User.__table__, "before_create")
+def create_pgcrypto(target, connection, **kw):
+    connection.execute(text("create extension if not exists pgcrypto"))
+
+
 manager.add_function(
     User.__table__,
     ddl.Function(
@@ -633,11 +641,108 @@ unix_account_uid_seq = Sequence('unix_account_uid_seq', start=1000,
 
 class UnixAccount(IntegerIdModel):
     uid: Mapped[int] = mapped_column(
+        ForeignKey("unix_tombstone.uid"),
         unique=True, server_default=unix_account_uid_seq.next_value()
     )
+    tombstone: Mapped[UnixTombstone] = relationship(viewonly=True)
     gid: Mapped[int] = mapped_column(default=100)
     login_shell: Mapped[str] = mapped_column(default="/bin/bash")
     home_directory: Mapped[str] = mapped_column(unique=True)
+
+
+class UnixTombstone(ModelBase):
+    # mapped_column does not work yet for reference in `__mapper_args__`, unfortunately.
+    from sqlalchemy import Column, Integer, String
+
+    uid: Mapped[int] = Column(Integer, unique=True)
+    login_hash: Mapped[str] = Column(String, unique=True)
+
+    # backrefs
+    unix_account: Mapped[UnixAccount] = relationship(viewonly=True, uselist=False)
+    # /backrefs
+
+    __table_args__ = (
+        UniqueConstraint("uid", "login_hash"),
+        Index(
+            "uid_only_unique", login_hash, unique=True, postgresql_where=uid.is_(None)
+        ),
+        Index(
+            "login_hash_only_unique",
+            uid,
+            unique=True,
+            postgresql_where=login_hash.is_(None),
+        ),
+        CheckConstraint("uid is not null or login_hash is not null"),
+    )
+    __mapper_args__ = {"primary_key": (uid, login_hash)}  # fake PKey for mapper
+
+
+# unix account creation
+manager.add_function(
+    User.__table__,
+    ddl.Function(
+        "unix_account_ensure_tombstone",
+        [],
+        "trigger",
+        # IF unix_account has a corresponding user
+        # THEN use that tombstone.
+        # However, in the scenario where the user's tombstone exists and points to a different uid,
+        # we throw an error instead.
+        """
+        DECLARE
+          v_user "user";
+          v_login_ts unix_tombstone;
+          v_ua_ts unix_tombstone;
+        BEGIN
+          select * into v_user from "user" u where u.unix_account_id = NEW.id;
+          select * into v_ua_ts from unix_tombstone ts where ts.uid = NEW.uid;
+
+          select ts.* into v_login_ts from "user" u
+              join unix_tombstone ts on u.login_hash = ts.login_hash
+              where u.unix_account_id = NEW.id;
+
+          -- 1) no user, no tombstone
+          -- 2) no user, tombstone
+          -- 3) user, no tombstone -> create
+          -- 4a) user, tombstone with different login hash
+          -- 4b) user, tombstone with matching login hash
+
+          IF v_user IS NULL THEN
+              IF v_ua_ts IS NULL THEN
+                  insert into unix_tombstone (uid) values (NEW.uid);
+              END IF;
+              RETURN NEW;
+          END IF;
+          -- else: user not null
+          IF v_ua_ts IS NULL THEN
+              insert into unix_tombstone (uid, login_hash) values (NEW.uid, v_user.login_hash);
+          ELSE
+              IF v_ua_ts.login_hash <> v_user.login_hash THEN
+                  RAISE EXCEPTION 'unix_account %%: tombstone login hash (%%) differs from user login hash (%%)',
+                  NEW.id, v_ua_ts.login_hash, v_user.login_hash
+                  USING ERRCODE = 'integrity_constraint_violation';
+              END IF;
+          END IF;
+
+          RETURN NEW;
+        END;
+        """,
+        volatility="volatile",
+        strict=True,
+        language="plpgsql",
+    ),
+)
+
+manager.add_trigger(
+    User.__table__,
+    ddl.Trigger(
+        "unix_account_ensure_tombstone_trigger",
+        UnixAccount.__table__,
+        ("INSERT",),
+        "unix_account_ensure_tombstone()",
+        when="BEFORE",
+    ),
+)
 
 
 class RoomHistoryEntry(IntegerIdModel):
