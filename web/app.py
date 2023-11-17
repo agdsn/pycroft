@@ -178,7 +178,12 @@ def make_app(debug: bool = False, hades_logs: bool = True) -> PycroftFlask:
 
         Blueprint "None" is needed for "/static/*" GET requests.
         """
-        if current_user.is_anonymous and request.blueprint not in ("login", 'api', None):
+        if current_user.is_anonymous and request.blueprint not in (
+            "login",
+            "api",
+            "health",
+            None,
+        ):
             lm = t.cast(LoginManager, current_app.login_manager)  # type: ignore[attr-defined]
             return lm.unauthorized()
         return None
