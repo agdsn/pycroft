@@ -10,13 +10,21 @@
 {% import "macros/forms.html" as forms %}
 {% import "macros/resources.html" as resources %}
 
-{% block single_row_content %}
-  <div class="box box-info">
-    <strong>Hinweis:</strong>
-    Bei Umzügen muss ein Nachweis über den Umzugswunsch archiviert werden!
-    Beispiel: Verschieben eines Tickets in die Umzugsqueue oder Ausdrucken / unterschrieben Abheften des Antrags.
+{% block content %}
+  <div class="row">
+    <div class="box box-info">
+      <strong>Hinweis:</strong>
+      Bei Umzügen muss ein Nachweis über den Umzugswunsch archiviert werden!
+      Beispiel: Verschieben eines Tickets in die Umzugsqueue oder Ausdrucken / unterschrieben Abheften des Antrags.
+    </div>
+    {{ forms.simple_form(form, '', url_for('.user_show', user_id=user_id)  ) }}
   </div>
-  {{ forms.simple_form(form, '', url_for('.user_show', user_id=user_id)  ) }}
+  {% if tenancy_table %}
+  <div class="row">
+    <h3>{{ _("Mietverträge") }}</h3>
+    {{ tenancy_table.render("tenancy_table") }}
+  </div>
+  {% endif %}
 {% endblock %}
 
 {% block page_script %}
