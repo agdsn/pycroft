@@ -731,7 +731,14 @@ def move(user_id: int) -> ResponseReturnValue:
         if not form.is_submitted() or refill_form_data:
             if user.room is not None:
                 refill_room_data(form, user.room)
-        return render_template('user/user_move.html', user_id=user_id, form=form)
+        return render_template(
+            "user/user_move.html",
+            user_id=user_id,
+            form=form,
+            tenancy_table=TenancyTable(
+                data_url=url_for(".tenancies_json", user_id=user.id)
+            ),
+        )
 
     if not form.validate_on_submit():
         return default_response()

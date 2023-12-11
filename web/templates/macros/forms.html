@@ -16,13 +16,17 @@
 
 {% macro advanced_form(form, submit_to="", cancel_to="", form_render_mode="horizontal", field_render_mode="horizontal", submit_text="Übernehmen", enctype="application/x-www-form-urlencoded", method="POST", show_cancel=true, show_submit=true, col_width=12, actions_offset=4, first_autofocus=true, autocomplete="off") -%}
     <form method="{{ method }}" action="{{ submit_to }}" enctype="{{ enctype }}" class="form-{{ form_render_mode }}" role="form">
-        <div class="row">
+        <div class="row mb-3">
             {# Namespace required because jinja2 does not save changes done in a loop #}
             {% set ns = namespace(autofocus=first_autofocus) %}
             {% for field in form %}
+                {% if field.flags.hidden %}
+                {{ field(render_mode=field_render_mode, autofocus=ns.autofocus, autocomplete=autocomplete) }}
+                {% else %}
                 <div class="col-sm-{{ col_width }} mb-3">
                     {{ field(render_mode=field_render_mode, autofocus=ns.autofocus, autocomplete=autocomplete) }}
                 </div>
+                {% endif %}
                 {% set ns.autofocus = false %}
             {% endfor %}
             <div class="offset-sm-{{ actions_offset }} col-sm-{{ col_width - actions_offset }}">
