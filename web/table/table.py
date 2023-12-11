@@ -329,6 +329,7 @@ class BootstrapTable(metaclass=BootstrapTableMeta):
     """
 
     column_attrname_map: OrderedDict[str, str]  # provided by BootstrapTableMeta
+    _render_toolbar: bool = True
     _table_args: UnboundTableArgs  # provided by BootstrapTableMeta
     _enforced_url_params: Iterable[tuple[str, Any]]  # provided by BootstrapTableMeta
     table_args: TableArgs
@@ -388,18 +389,21 @@ class BootstrapTable(metaclass=BootstrapTableMeta):
 
     @lazy_join("\n")
     def _render(self, table_id: str) -> t.Iterator[HasDunderStr | None]:
-        toolbar_args = html_params(id=f"{table_id}-toolbar",
-                                   class_="btn-toolbar",
-                                   role="toolbar")
-        yield f"<div {toolbar_args}>"
-        yield self.toolbar
-        yield "</div>"
-
         table_args = self.table_args
-        table_args.update({
-            'id': table_id,
-            'data-toolbar': f"#{table_id}-toolbar",
-        })
+        table_args.update({"id": table_id})
+
+        if self._render_toolbar:
+            toolbar_args = html_params(
+                id=f"{table_id}-toolbar", class_="btn-toolbar", role="toolbar"
+            )
+            yield f"<div {toolbar_args}>"
+            yield self.toolbar
+            yield "</div>"
+            table_args.update(
+                {
+                    "data-toolbar": f"#{table_id}-toolbar",
+                }
+            )
 
         yield f"<table {html_params(**table_args)}>"
         yield self.table_header

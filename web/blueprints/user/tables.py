@@ -112,6 +112,8 @@ class RoomHistoryRow(BaseModel):
 
 
 class TenancyTable(BootstrapTable):
+    _render_toolbar = False
+
     room = LinkColumn("Zimmer")
     begins_at = DateColumn("Von")
     ends_at = DateColumn("Bis")
