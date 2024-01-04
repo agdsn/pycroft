@@ -9,7 +9,9 @@ class IBANField(fields.Field):
     to a string.
     """
 
-    def _deserialize(self, value: Any, attr: str | None, data: Mapping[str, Any], **kwargs) -> IBAN:
+    def _deserialize(
+        self, value: Any, attr: str | None, data: Mapping[str, Any], **kwargs
+    ) -> IBAN:
         try:
             return IBAN(value, validate_bban=True)
         except ValueError as error:
