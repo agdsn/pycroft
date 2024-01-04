@@ -1621,3 +1621,8 @@ def payment_reminder_mail() -> ResponseReturnValue:
                            page_title="Zahlungserinnerungen per E-Mail versenden",
                            form_args=form_args,
                            form=form)
+
+@bp.route("/repayment_requests", methods=("GET", "POST"))
+@access.require("finance_change")
+def handle_repayment_requests() -> ResponseReturnValue:
+    return render_template()
