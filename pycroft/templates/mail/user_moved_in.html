@@ -1,4 +1,6 @@
-{{ link.start_pre(mode) }}
+{% extends "base.html.j2" %}
+{%- import "macros/link.html" as link with context -%}
+{% block body %}
 English version below!
 
 ---
@@ -38,5 +40,4 @@ work with the correct MAC address in the room specified above.
 
 Best Regards
 Your AG DSN
-{{ link.render_link_list(mode) }}
-{{ link.end_pre(mode) }}
+{% endblock %}

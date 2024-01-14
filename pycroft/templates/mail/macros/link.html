@@ -1,9 +1,3 @@
-{%- macro start_pre(mode) -%}
-{%- if mode == 'html' -%}
-<pre>
-{%- endif -%}
-{%- endmacro -%}
-
 {%- macro render_link(text, url, mode) -%}
 {%- if mode == 'html' -%}
 <a href="{{ url }}">{{ text }}</a>
@@ -18,10 +12,4 @@
 [{{ n }}] {{ links[n] }}
 {% endfor -%}
 {%- endif -%}{{ '' if links.clear() }}
-{%- endmacro -%}
-
-{%- macro end_pre(mode) -%}
-{%- if mode == 'html' -%}
-</pre>
-{%- endif -%}
 {%- endmacro -%}

@@ -1,6 +1,6 @@
-{%- set links = [] -%}
+{% extends "base.html.j2" %}
 {%- import "macros/link.html" as link with context -%}
-{{ link.start_pre(mode) }}
+{% block body %}
 English version below!
 
 ---
@@ -29,6 +29,4 @@ If you have not registered with us, you can ignore this email.
 
 Best Regards
 Your AG DSN
-
-{{ link.render_link_list(mode) }}
-{{ link.end_pre(mode) }}
+{% endblock %}

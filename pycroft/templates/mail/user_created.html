@@ -1,7 +1,6 @@
-{%- set links = [] -%}
+{% extends "base.html.j2" %}
 {%- import "macros/link.html" as link with context -%}
-
-{{ link.start_pre(mode) }}
+{% block body %}
 English version below!
 
 ---
@@ -83,6 +82,4 @@ Further steps (including how to use the network) can be found {{ link.render_lin
 
 Best Regards
 Your AG DSN
-
-{{ link.render_link_list(mode) }}
-{{ link.end_pre(mode) }}
+{% endblock %}
