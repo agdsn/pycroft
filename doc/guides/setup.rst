@@ -5,10 +5,19 @@ Using Docker
 ------------
 The full dev-setup requires docker.
 
+It is highly recommended to install
+* `just <https://github.com/casey/just/releases>` ``≥1.23.0``
+
 Follow the following guides:
 
 #. :ref:`cloned repository`
 #. :ref:`installed docker`
+
+If you have ``just`` installed, just run `just setup`
+and follow any leftover instructions.
+
+Alternatively, follow these guides:
+
 #. :ref:`docker environment`
 #. :ref:`running containers`
 #. :ref:`imported dump`
