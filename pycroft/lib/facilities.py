@@ -69,6 +69,7 @@ def get_overcrowded_rooms(building_id: int = None) -> dict[int, list[User]]:
     )
 
     users = session.session.scalars(stmt).unique().all()
+    users = sorted(users, key=lambda u: u.room.id)
     return {k: list(v) for k, v in groupby(users, lambda u: u.room.id)}
 
 
