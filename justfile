@@ -33,8 +33,15 @@ build:
     docker buildx bake
 
 # initializes the dev db with the instance
-[confirm("about to remove any current data in the dev instance. continue?")]
-schema-import: _schema-import (alembic "upgrade" "head")
+schema-import: _confirm-drop \
+    _schema-import (alembic "upgrade" "head")
+
+_confirm-drop:
+    @read -p "Möchten Sie die Datenbank neu importieren?(J/n) " con; \
+    if [ $con != "J" ]; then \
+        echo "Datenbanklöschung abgebrochen."; \
+        exit 1; \
+    fi
 
 _schema-import: _ensure_schema_dir _stop_all (_up "dev-db")
     psql postgres://postgres@127.0.0.1:55432/pycroft \
