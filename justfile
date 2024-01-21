@@ -1,4 +1,4 @@
-#! /usr/bin/env just
+#!/usr/bin/env just
 # To install `just`, see
 # https://github.com/casey/just#packages
 
@@ -33,14 +33,15 @@ build:
     docker buildx bake
 
 # initializes the dev db with the instance
-schema-import: _confirm-drop \
-    _schema-import (alembic "upgrade" "head")
+schema-import: _confirm-drop _schema-import (alembic "upgrade" "head")
 
 _confirm-drop:
-    @read -p "Möchten Sie die Datenbank neu importieren?(J/n) " con; \
-    if [ $con != "J" ]; then \
-        echo "Datenbanklöschung abgebrochen."; \
-        exit 1; \
+    #!/usr/bin/env bash
+    read -p "Möchten Sie die Datenbank neu importieren? (J/n) " -n 1 con;
+    echo;
+    if [[ ! $con =~ [Jj] ]]; then
+        echo "Datenbanklöschung abgebrochen.";
+        exit 1;
     fi
 
 _schema-import: _ensure_schema_dir _stop_all (_up "dev-db")
