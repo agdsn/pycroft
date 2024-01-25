@@ -2,7 +2,7 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import typing as t
-from typing import Callable
+from collections.abc import Callable
 
 from flask import url_for
 from flask_wtf import FlaskForm as Form

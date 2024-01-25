@@ -7,7 +7,8 @@ import typing
 import typing as t
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Mapping, TypeVar, Generic
+from typing import TypeVar, Generic
+from collections.abc import Mapping
 
 from marshmallow import ValidationError
 from sqlalchemy import select, func

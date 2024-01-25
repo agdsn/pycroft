@@ -4,7 +4,8 @@ pycroft.model.task_serialization
 """
 from dataclasses import dataclass
 from datetime import date
-from typing import Callable, TypeVar
+from typing import TypeVar
+from collections.abc import Callable
 
 import wrapt
 from marshmallow import Schema, fields, post_load, ValidationError
