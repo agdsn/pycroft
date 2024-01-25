@@ -18,7 +18,7 @@ jobs:
         fetch-depth: 50
     - uses: actions/setup-python@v4
       with:
-        python-version: '3.10'
+        python-version: '3.11'
         cache: 'pip'
     - name: "Run pre-commit hooks for HEAD"
       uses: pre-commit/action@v3.0.0
@@ -39,7 +39,7 @@ jobs:
           submodules: recursive
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11'
           cache: 'pip'
       - name: print information about pip cache
         run: pip cache info && pip cache list
