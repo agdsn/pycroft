@@ -2,7 +2,7 @@
 # To install `just`, see
 # https://github.com/casey/just#packages
 
-# execute `just --evaluate <var>` to check the values of the variables set below 
+# execute `just --evaluate <var>` to check the values of the variables set below
 drc := if `docker compose 2>&1 >/dev/null; echo $?` == "0" { "docker compose" } else { "docker-compose" }
 export COMPOSE_FILE := "docker-compose.dev.yml:docker-compose.test.yml"
 export PGPASSFILE := ".pycroft.pgpass"
@@ -66,6 +66,7 @@ _confirm-drop:
     fi
 
 _schema-import: _ensure_schema_dir _stop_all (_up "dev-db")
+    chmod 0600 .pycroft.pgpass
     psql postgres://postgres@127.0.0.1:55432/pycroft \
       --quiet --no-password -o /dev/null \
       -c 'set client_min_messages to WARNING' \
@@ -83,7 +84,7 @@ _ensure_schema_dir:
     #!/usr/bin/env bash
     if [[ ! -d {{ schemadir }} ]]; then
     	echo "{{ schemadir }} does not exist! Please clone it from gitlab:"
-    	echo "git clone git@git.agdsn.de:AGDSN/pycroft-data.git data"
+    	echo "git clone --depth 1 git@git.agdsn.de:AGDSN/pycroft-data.git data"
     	exit 1
     fi
 
