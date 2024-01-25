@@ -10,6 +10,7 @@ dev-psql := drc + " exec --user=postgres dev-db psql pycroft"
 schemadir := justfile_directory() / "data"
 sql_schema := schemadir / "pycroft_schema.sql"
 sql_dump := schemadir / "pycroft.sql"
+swdd := justfile_directory() / "docker" / "db" / "docker-entrypoint-initdb.d" / "swdd.sql"
 
 # test
 
@@ -33,7 +34,20 @@ build:
     docker buildx bake
 
 # initializes the dev db with the instance
-schema-import: _confirm-drop _schema-import (alembic "upgrade" "head")
+schema-import: _confirm-drop _schema-import (alembic "upgrade" "head") _create-swdd-view
+
+# creates the `swdd_vv` materialized view (→ `swdd.swdd_vv`)
+_create-swdd-view:
+    psql -wb postgres://postgres@127.0.0.1:55432/pycroft -c 'create materialized view swdd_vv as \
+    SELECT swdd_vv.persvv_id, \
+           swdd_vv.person_id, \
+           swdd_vv.vo_suchname, \
+           swdd_vv.person_hash, \
+           swdd_vv.mietbeginn, \
+           swdd_vv.mietende, \
+           swdd_vv.status_id \
+    FROM swdd.swdd_vv; \
+    ALTER materialized view swdd_vv owner to postgres;'
 
 _confirm-drop:
     #!/usr/bin/env bash
@@ -46,16 +60,17 @@ _confirm-drop:
 
 _schema-import: _ensure_schema_dir _stop_all (_up "dev-db")
     psql postgres://postgres@127.0.0.1:55432/pycroft \
-    	--quiet --no-password -o /dev/null \
-    	-c 'set client_min_messages to WARNING' \
-        --echo-errors -c '\set ON_ERROR_STOP 1' \
-    	-c '\echo dropping schema…' \
-        -c 'drop schema if exists pycroft cascade' \
-    	-c '\echo importing schema…' \
-        -f {{ sql_schema }} \
-    	-c '\echo importing dump…' \
-        -f {{ sql_dump }} \
-    	-c '\echo all done.'
+      --quiet --no-password -o /dev/null \
+      -c 'set client_min_messages to WARNING' \
+      --echo-errors -c '\set ON_ERROR_STOP 1' \
+      -c '\echo dropping schema…' \
+      -c 'drop schema if exists pycroft cascade' \
+      -f {{ swdd }} \
+      -c '\echo importing schema…' \
+      -f {{ sql_schema }} \
+      -c '\echo importing dump…' \
+      -f {{ sql_dump }} \
+      -c '\echo all done.'
 
 _ensure_schema_dir:
     #!/usr/bin/env bash
