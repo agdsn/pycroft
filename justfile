@@ -19,8 +19,14 @@ swdd := justfile_directory() / "docker" / "db" / "docker-entrypoint-initdb.d" / 
 default:
     just --list
 
+# ansi codes: bold yellow / reset
+_a_by := "\\e[1;33m"
+_a_rst := "\\e[0m"
+
 # set up a working pycroft installation.
 setup: _setup && build _schema-import schema-upgrade
+    @echo -e "{{ _a_by }}About to build all docker images. This may take a while.{{ _a_rst }}"
+    @echo "If you wish to skip this, run \`setup-no-build\` instead."
 
 _setup:
     git submodule init
