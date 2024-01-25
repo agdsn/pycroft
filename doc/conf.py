@@ -125,7 +125,11 @@ autodoc_type_aliases = {
 }
 # see https://github.com/sphinx-doc/sphinx/issues/10480#issuecomment-1221396022
 import sphinx.ext.autodoc
-sphinx.ext.autodoc.NewTypeDataDocumenter.directivetype = 'class'
+
+try:
+    sphinx.ext.autodoc.NewTypeDataDocumenter.directivetype = "class"
+except AttributeError:
+    pass
 
 todo_include_todos = True
 # -- Options for HTML output ---------------------------------------------------
