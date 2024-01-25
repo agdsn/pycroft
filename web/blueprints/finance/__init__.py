@@ -736,7 +736,7 @@ def balance_json(account_id: int) -> ResponseReturnValue:
 
     sum_exp: ColumnElement[int] = t.cast(
         Over[int],
-        func.sum(Split.amount).over(order_by=Transaction.valid_on),  # type: ignore[no-untyped-call]
+        func.sum(Split.amount).over(order_by=Transaction.valid_on),
     )
 
     if invert:
