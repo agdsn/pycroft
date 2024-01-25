@@ -34,9 +34,10 @@ build:
     docker buildx bake
 
 # initializes the dev db with the instance
-schema-import: _confirm-drop _schema-import (alembic "upgrade" "head") create_view
+schema-import: _confirm-drop _schema-import (alembic "upgrade" "head") _create-swdd-view
 
-create_view:
+# creates the `swdd_vv` materialized view (→ `swdd.swdd_vv`)
+_create-swdd-view:
     psql -wb postgres://postgres@127.0.0.1:55432/pycroft -c 'create materialized view swdd_vv as \
     SELECT swdd_vv.persvv_id, \
            swdd_vv.person_id, \
