@@ -1,4 +1,5 @@
 from __future__ import annotations
+import typing as t
 from typing import NamedTuple
 
 
@@ -10,7 +11,7 @@ class SphinxLog(NamedTuple):
     message: str
 
     @classmethod
-    def from_sphinx_output(cls, line: str) -> SphinxLog | None:
+    def from_sphinx_output(cls, line: str) -> t.Self | None:
         args = tuple(el.strip() for el in line.split(":", maxsplit=4))
         if len(args) != 5:
             return None

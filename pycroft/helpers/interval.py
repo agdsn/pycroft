@@ -14,6 +14,8 @@ from functools import reduce
 from itertools import tee, chain, filterfalse
 from typing import Generic
 
+# from typing_extensions import Self
+
 if t.TYPE_CHECKING:
     from _typeshed import SupportsAllComparisons
     # TODO figure out how we can demand that T shall be a totally ordered metric space
@@ -202,7 +204,7 @@ class Interval(tuple, Generic[T]):
         cls,
         lower: T | None, lower_closed: bool,
         upper: T | None, upper_closed: bool,
-    ) -> Interval[T]:
+    ) -> t.Self:
         return cls(Bound(_convert_begin(lower), lower_closed),
                    Bound(_convert_end(upper), upper_closed))
 

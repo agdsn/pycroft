@@ -10,6 +10,7 @@
     :copyright: (c) 2011 by AG DSN.
 """
 import re
+import typing as t
 
 import ipaddr
 from sqlalchemy import String
@@ -101,10 +102,8 @@ class ModelBase(DeclarativeBase, metaclass=_ModelMeta):
         #                   DeprecationWarning)
         q: Query
 
-        T = typing.TypeVar('T', bound='ModelBase')
-
         @classmethod
-        def get(cls: type[T], *a, **kw) -> T:  # noqa: F811
+        def get(cls, *a, **kw) -> t.Self:  # noqa: F811
             pass
 
 

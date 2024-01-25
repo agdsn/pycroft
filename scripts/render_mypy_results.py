@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import typing as t
 from typing import NamedTuple
 
 RE_OUTPUT_LINE = re.compile(
@@ -15,7 +16,7 @@ class MypyMessage(NamedTuple):
     message: str
 
     @classmethod
-    def from_mypy_output(cls, output: str) -> MypyMessage | None:
+    def from_mypy_output(cls, output: str) -> t.Self | None:
         match = RE_OUTPUT_LINE.match(output)
         if match is None:
             return None

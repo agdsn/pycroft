@@ -53,10 +53,6 @@ def _maybe_escape_filter_chars(value: T) -> T | str:
     return value
 
 
-# TODO: replace with the py3.11 Self type
-TRecord = typing.TypeVar("TRecord", bound="Record")
-
-
 def escape_and_normalize_attrs(attrs: Attributes) -> NormalizedAttributes:
     return {
         key: [
