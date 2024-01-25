@@ -50,7 +50,7 @@ jobs:
         id: pip-install
       # now come the tests
       - name: Execute ruff
-        run: ruff check --format=github .
+        run: ruff check --output-format=github .
         if: success() || steps.pip-install.conclusion == 'success'
       - name: Execute mypy
         run: ./scripts/run_mypy.sh
