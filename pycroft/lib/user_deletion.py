@@ -79,7 +79,7 @@ def get_archivable_members(session: Session) -> Sequence[ArchivableMemberInfo]:
         # …and use that to filter out the `do-not-archive` occurrences.
         .filter(CurrentProperty.property_name.is_(None))
         .join(User, User.id == last_mem.c.user_id)
-        .filter(last_mem.c.mem_end < current_timestamp() - timedelta(days=14))  # type: ignore[no-untyped-call]
+        .filter(last_mem.c.mem_end < current_timestamp() - timedelta(days=14))
         .order_by(last_mem.c.mem_end)
         .options(joinedload(User.hosts), # joinedload(User.current_memberships),
                  joinedload(User.account, innerjoin=True), joinedload(User.room),
