@@ -7,7 +7,8 @@ from copy import copy
 from dataclasses import dataclass
 from datetime import date, datetime, time, timezone
 from operator import methodcaller
-from typing import Iterable, Any, Callable
+from typing import Any
+from collections.abc import Iterable, Callable
 from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
 
 from annotated_types import Predicate

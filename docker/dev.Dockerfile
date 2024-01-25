@@ -22,6 +22,7 @@ RUN apt-get update \
         less \
         libpq-dev \
         nodejs \
+        npm \
         postgresql-client \
         strace \
         unzip \

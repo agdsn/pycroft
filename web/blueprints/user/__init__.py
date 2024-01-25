@@ -14,7 +14,8 @@ import typing as t
 from datetime import timedelta
 from decimal import Decimal
 from functools import partial
-from typing import TypeVar, Callable, cast
+from typing import TypeVar, cast
+from collections.abc import Callable
 
 from flask import (
     Blueprint,

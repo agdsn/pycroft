@@ -4,7 +4,8 @@
 import logging
 import re
 import typing as t
-from typing import Callable, TypeVar
+from typing import TypeVar
+from collections.abc import Callable
 
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload

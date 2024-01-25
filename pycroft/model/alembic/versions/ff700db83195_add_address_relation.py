@@ -5,7 +5,8 @@ Revises: f85ef1ef556c
 Create Date: 2019-10-03 19:15:55.716640
 
 """
-from typing import Callable
+
+from collections.abc import Callable
 
 import sqlalchemy as sa
 from alembic import op

@@ -15,7 +15,7 @@ import typing
 import typing as t
 from datetime import timedelta, date
 from difflib import SequenceMatcher
-from typing import Iterable
+from collections.abc import Iterable
 
 from sqlalchemy import func, select, Boolean, String, ColumnElement, ScalarResult
 from sqlalchemy.orm import Session

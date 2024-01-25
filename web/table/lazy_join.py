@@ -1,7 +1,8 @@
 import typing as t
 from functools import wraps
 from types import FunctionType
-from typing import Generator, Callable, overload
+from typing import overload
+from collections.abc import Generator, Callable
 
 
 _T = t.TypeVar("_T")

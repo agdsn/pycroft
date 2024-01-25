@@ -11,6 +11,7 @@ import abc
 import json
 import traceback
 import typing
+import typing as t
 from functools import partial
 
 import jsonschema
@@ -19,10 +20,6 @@ from .babel import gettext, dgettext, dngettext, ngettext
 from .formatting import format_param
 from .options import Options
 from .serde import Serializable, serialize_param, deserialize_param
-
-
-# TODO remove in py3.11 (replace `TSelf` by `Self`)
-TMessage = typing.TypeVar("TMessage", bound="Message")
 
 
 class Message(abc.ABC):
@@ -91,7 +88,7 @@ class Message(abc.ABC):
             obj["kwargs"] = {k: serialize_param(v) for k, v in self.kwargs.items()}
         return json.dumps(obj, ensure_ascii=False)
 
-    def format(self: TMessage, *args: Serializable, **kwargs: Serializable) -> TMessage:
+    def format(self, *args: Serializable, **kwargs: Serializable) -> t.Self:
         self.args = args
         self.kwargs = kwargs
         return self

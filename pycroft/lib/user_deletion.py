@@ -7,7 +7,8 @@ This module contains methods concerning user archival and deletion.
 from __future__ import annotations
 import typing as t
 from datetime import timedelta, datetime
-from typing import Protocol, Sequence
+from typing import Protocol
+from collections.abc import Sequence
 
 from sqlalchemy import func, nulls_last, and_, not_
 from sqlalchemy.future import select

@@ -16,9 +16,9 @@ blinker~=1.4
 ipaddr~=2.2.0
 jsonschema~=3.2.0
 passlib~=1.7.1
-psycopg2~=2.8.6
+psycopg2-binary~=2.9.4
 webargs~=8.3.0
-wrapt~=1.12.1
+wrapt~=1.14.1
 # only needed for ldap caching
 ldap3~=2.5.1
 celery~=5.2.1

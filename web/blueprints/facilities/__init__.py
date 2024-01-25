@@ -327,7 +327,7 @@ def building_level_rooms_json(
                      .filter(and_(Room.building == building, Room.level == level))
                      .outerjoin(user, user_join_condition))
 
-    level_inhabitants: dict[Room, list[User]] = defaultdict(lambda: [])
+    level_inhabitants: dict[Room, list[User]] = defaultdict(list)
     for room, user in rooms_users_q.all():
         if user is not None:
             level_inhabitants[room].append(t.cast(User, user))

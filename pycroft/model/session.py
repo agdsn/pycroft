@@ -10,7 +10,8 @@
     :copyright: (c) 2011 by AG DSN.
 """
 import typing as t
-from typing import overload, TypeVar, Callable, Any, TYPE_CHECKING
+from typing import overload, TypeVar, Any, TYPE_CHECKING
+from collections.abc import Callable
 
 from sqlalchemy.orm import scoped_session
 from sqlalchemy.sql.functions import AnsiFunction
