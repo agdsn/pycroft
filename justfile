@@ -2,7 +2,8 @@
 # To install `just`, see
 # https://github.com/casey/just#packages
 
-drc := "docker compose"
+# execute `just --evaluate <var>` to check the values of the variables set below 
+drc := if `docker compose 2>&1 >/dev/null; echo $?` == "0" { "docker compose" } else { "docker-compose" }
 export COMPOSE_FILE := "docker-compose.dev.yml:docker-compose.test.yml"
 export PGPASSFILE := ".pycroft.pgpass"
 test-psql := drc + " exec --user=postgres test-db psql pycroft"
