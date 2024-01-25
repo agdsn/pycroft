@@ -58,7 +58,7 @@ _create-swdd-view:
 
 _confirm-drop:
     #!/usr/bin/env bash
-    read -p "Möchten Sie die Datenbank neu importieren? (J/n) " -n 1 con;
+    read -p "Möchten Sie die Datenbank neu importieren? (j/N) " -n 1 con;
     echo;
     if [[ ! $con =~ [Jj] ]]; then
         echo "Datenbanklöschung abgebrochen.";
