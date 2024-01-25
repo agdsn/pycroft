@@ -98,10 +98,7 @@ class LazyJoinDecorator:
         self.glue = glue
 
     def __call__(self, func: DecoratedInType) -> DecoratedOutType:
-        # error: Argument 1 to "__call__" of "IdentityFunction" has incompatible type
-        # "Callable[_P, LazilyJoined]"; expected "Callable[_P, LazilyJoined]"  [arg-type]
-        # …go home mypy, you're drunk!
-        @wraps(func)  # type: ignore[arg-type]
+        @wraps(func)
         def wrapped(*a: _P.args, **kw: _P.kwargs) -> LazilyJoined:
             return LazilyJoined(func(*a, **kw), glue=self.glue)
 

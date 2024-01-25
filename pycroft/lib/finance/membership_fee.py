@@ -250,14 +250,12 @@ def post_transactions_for_membership_fee(
     ).fetchall()
 
     if not simulate:
-        # `over` not typed yet,
-        # see https://github.com/sqlalchemy/sqlalchemy/issues/6810
         numbered_users = (
             select(
                 users.c.id,
                 users.c.fee_account_id.label("fee_account_id"),
                 users.c.account_id,
-                func.row_number().over().label("index"),  # type: ignore[no-untyped-call]
+                func.row_number().over().label("index"),
             )
             .select_from(users)
             .cte("membership_fee_numbered_users")
@@ -289,7 +287,7 @@ def post_transactions_for_membership_fee(
         numbered_transactions = (
             select(
                 transactions.c.id,
-                func.row_number().over().label("index"),  # type: ignore[no-untyped-call]
+                func.row_number().over().label("index"),
             )
             .select_from(transactions)
             .cte("membership_fee_numbered_transactions")

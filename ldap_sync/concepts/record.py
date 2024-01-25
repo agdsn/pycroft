@@ -34,7 +34,7 @@ def _canonicalize_to_list(
     if isinstance(value, list):
         return list(value)
     if value == "" or value == b"" or value is None:
-        return []  # type: ignore
+        return []
     # str, byte, int – or unknown. But good fallback.
     return [value]  # type: ignore
 

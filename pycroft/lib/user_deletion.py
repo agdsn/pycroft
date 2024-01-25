@@ -5,6 +5,7 @@ pycroft.lib.user_deletion
 This module contains methods concerning user archival and deletion.
 """
 from __future__ import annotations
+import typing as t
 from datetime import timedelta, datetime
 from typing import Protocol, Sequence
 
@@ -24,6 +25,16 @@ class ArchivableMemberInfo(Protocol):
     mem_end: datetime
 
 
+TP = t.TypeVar("TP")
+TO = t.TypeVar("TO")
+
+
+# mrh, not available in py3.10…
+class _WindowArgs(t.TypedDict, t.Generic[TP, TO]):
+    partition_by: TP
+    order_by: TO
+
+
 def get_archivable_members(session: Session) -> Sequence[ArchivableMemberInfo]:
     """Return all the users that qualify for being archived right now.
 
@@ -33,28 +44,25 @@ def get_archivable_members(session: Session) -> Sequence[ArchivableMemberInfo]:
     """
     # see FunctionElement.over
     mem_ends_at = func.upper(Membership.active_during)
-    window_args = {
+    window_args: _WindowArgs = {
         'partition_by': User.id,
         'order_by': nulls_last(mem_ends_at),
     }
-    # mypy: ignore[no-untyped-call]
     last_mem = (
         select(
             User.id.label('user_id'),
             func.last_value(Membership.id)
-            .over(**window_args, rows=(None, None))  # type: ignore[no-untyped-call]
+            .over(**window_args, rows=(None, None))
             .label("mem_id"),
             func.last_value(mem_ends_at)
-            .over(**window_args, rows=(None, None))  # type: ignore[no-untyped-call]
+            .over(**window_args, rows=(None, None))
             .label("mem_end"),
         )
         .select_from(User)
         .distinct()
         .join(Membership)
         .join(Config, Config.member_group_id == Membership.group_id)
-    ).cte(
-        "last_mem"
-    )  # mypy: ignore[no-untyped-call]
+    ).cte("last_mem")
     stmt = (
         select(
             User,
@@ -71,7 +79,7 @@ def get_archivable_members(session: Session) -> Sequence[ArchivableMemberInfo]:
         # …and use that to filter out the `do-not-archive` occurrences.
         .filter(CurrentProperty.property_name.is_(None))
         .join(User, User.id == last_mem.c.user_id)
-        .filter(last_mem.c.mem_end < current_timestamp() - timedelta(days=14))  # type: ignore[no-untyped-call]
+        .filter(last_mem.c.mem_end < current_timestamp() - timedelta(days=14))
         .order_by(last_mem.c.mem_end)
         .options(joinedload(User.hosts), # joinedload(User.current_memberships),
                  joinedload(User.account, innerjoin=True), joinedload(User.room),
