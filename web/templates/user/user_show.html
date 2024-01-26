@@ -24,7 +24,7 @@
       <ul class="nav nav-tabs">
         {% for tab in tabs %}
           <li class="nav-item">
-            <a class="nav-link {{ "active" if tab.id == 'hosts' else "" }}
+            <a class="nav-link user-nav-link {{ "active" if tab.id == 'hosts' else "" }}
                {{ "disabled" if 'disabled' in tab and tab.disabled else "" }}"
                {{ 'aria-current="page"' if tab.id == 'hosts' else "" }}
                {{ 'aria-disabled="true"' if 'disabled' in tab and tab.disabled else "" }}
@@ -59,4 +59,5 @@
 
 {% block page_script %}
     {{ resources.link_script_file('tab-anchor.js' | require) }}
+  {{ resources.link_script_file('user-suite.js' | require) }}
 {% endblock %}
