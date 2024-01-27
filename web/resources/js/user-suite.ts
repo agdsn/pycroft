@@ -8,41 +8,34 @@ function waitForKeyPress(callback: (event: KeyboardEvent) => void): void {
   const handleKeyPress = (event: KeyboardEvent) => {
     // Call the callback function with the event when a key is pressed
     callback(event);
-
-    // Remove the event listener after the first key press (if you want it to happen only once)
-    // document.removeEventListener('keydown', handleKeyPress);
   };
 
   // Add the event listener to the document
   document.addEventListener('keydown', handleKeyPress);
 }
 
-// Example of using the function
 waitForKeyPress((event) => {
-  console.log(`Key pressed: ${event.key}`);
-  // Add your logic here based on the key press
+    // checks rather the input was triggered in a text area then it is dismissed
+    if(event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
+
     if (event.key === "ArrowRight" ){
-        const navLinks = [...document.querySelectorAll<HTMLElement>(".user-nav-link")].filter(x => !x.classList.contains("disabled));
+        const navLinks = [...document.querySelectorAll<HTMLElement>(".user-nav-link")].filter(x => !x.classList.contains("disabled"));
         for (let i= 0; i < navLinks.length; i++){
-            const link = navLinks[i] as HTMLLinkElement;
-            if(link.classList.contains("active")) {
-                let index = (i + 1)% (navLinks.length - 1);
-                let link2 = navLinks[index] as HTMLLinkElement;
-                link2.click();
+            if(navLinks[i].classList.contains("active")) {
+                let index = (i + 1) % navLinks.length;
+                navLinks[index].click();
                 break;
             }
         }
     }
 
     if (event.key === "ArrowLeft" ){
-        const navLinks = document.getElementsByClassName("user-nav-link");
+        const navLinks = [...document.querySelectorAll<HTMLElement>(".user-nav-link")].filter(x => !x.classList.contains("disabled"));
         for (let i= 0; i < navLinks.length; i++){
-            const link = navLinks[i] as HTMLLinkElement;
-            if(link.classList.contains("active")) {
+            if(navLinks[i].classList.contains("active")) {
                 let index = i - 1;
-                if (index < 0) index += (navLinks.length - 1); // Ich hasse JS noch nicht mal mod kann das ordentlich
-                const link2 = navLinks[index] as HTMLLinkElement;
-                link2.click();
+                if (index < 0) index += (navLinks.length); // Ich hasse JS noch nicht mal mod kann das ordentlich
+                navLinks[index].click();
                 break;
             }
         }
