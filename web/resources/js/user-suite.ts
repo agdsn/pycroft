@@ -22,7 +22,7 @@ waitForKeyPress((event) => {
   console.log(`Key pressed: ${event.key}`);
   // Add your logic here based on the key press
     if (event.key === "ArrowRight" ){
-        const navLinks = document.getElementsByClassName("user-nav-link");
+        const navLinks = [...document.querySelectorAll<HTMLElement>(".user-nav-link")].filter(x => !x.classList.contains("disabled));
         for (let i= 0; i < navLinks.length; i++){
             const link = navLinks[i] as HTMLLinkElement;
             if(link.classList.contains("active")) {
