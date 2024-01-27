@@ -191,6 +191,13 @@ class LinkColumn(Column):
             ...
 
 
+@custom_formatter_column("table.multiLinkFormatter")
+class MultiLinkColumn(Column):
+    def __init__(self, *a: t.Any, **kw: t.Any) -> None:
+        kw.setdefault("sortable", False)
+        super().__init__(*a, **kw)
+
+
 
 @custom_formatter_column('table.dateFormatter')
 class DateColumn(Column):

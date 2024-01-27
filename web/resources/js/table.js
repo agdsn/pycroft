@@ -174,6 +174,16 @@ export function multiBtnFormatter(value, row, index) {
     return btnFormatter(value, row, index);
 }
 
+export function multiLinkFormatter(value, row, index) {
+    if (!value) {
+        return;
+    }
+    if (Array.isArray(value)) {
+        return value.map(v => linkFormatter(v, row, index)).join('&nbsp;');
+    }
+    return linkFormatter(value, row, index);
+}
+
 export function listFormatter(value, row, index) {
     if (!value) {
         return;
