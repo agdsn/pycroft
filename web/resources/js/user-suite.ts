@@ -26,21 +26,21 @@ waitForKeyPress((event) => {
         for (let i= 0; i < navLinks.length; i++){
             const link = navLinks[i] as HTMLLinkElement;
             if(link.classList.contains("active")) {
-                let index = (i + 1)%navLinks.length;
-                const link2 = navLinks[index] as HTMLLinkElement;
+                let index = (i + 1)% (navLinks.length - 1);
+                let link2 = navLinks[index] as HTMLLinkElement;
                 link2.click();
                 break;
             }
         }
     }
+
     if (event.key === "ArrowLeft" ){
         const navLinks = document.getElementsByClassName("user-nav-link");
-        let next = false;
-        console.log(navLinks.length)
         for (let i= 0; i < navLinks.length; i++){
             const link = navLinks[i] as HTMLLinkElement;
             if(link.classList.contains("active")) {
-                let index = (i - 1) % navLinks.length;
+                let index = i - 1;
+                if (index < 0) index += (navLinks.length - 1); // Ich hasse JS noch nicht mal mod kann das ordentlich
                 const link2 = navLinks[index] as HTMLLinkElement;
                 link2.click();
                 break;
