@@ -24,11 +24,11 @@
       <ul class="nav nav-tabs">
         {% for tab in tabs %}
           <li class="nav-item">
-            <a class="nav-link user-nav-link {{ "active" if tab.id == 'hosts' else "" }}
+            <button class="nav-link user-nav-link {{ "active" if tab.id == 'hosts' else "" }}
                {{ "disabled" if 'disabled' in tab and tab.disabled else "" }}"
                {{ 'aria-current="page"' if tab.id == 'hosts' else "" }}
                {{ 'aria-disabled="true"' if 'disabled' in tab and tab.disabled else "" }}
-               id="tab-{{ tab.id }}" href="#{{ tab.id }}"
+               id="tab-{{ tab.id }}" data-bs-target="#{{ tab.id }}"
                data-bs-toggle="tab" data-bs-target="#{{ tab.id }}">
               {% if tab.icon %}<i class="fas {{ tab.icon }}"></i> {% endif -%}
               {{ tab.name }}
