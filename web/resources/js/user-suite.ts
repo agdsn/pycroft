@@ -4,17 +4,7 @@
  * the Apache License, Version 2.0. See the LICENSE file for details
  */
 
-function waitForKeyPress(callback: (event: KeyboardEvent) => void): void {
-  const handleKeyPress = (event: KeyboardEvent) => {
-    // Call the callback function with the event when a key is pressed
-    callback(event);
-  };
-
-  // Add the event listener to the document
-  document.addEventListener('keydown', handleKeyPress);
-}
-
-waitForKeyPress((event) => {
+function handleKeyPress(event: KeyboardEvent) {
     // checks rather the input was triggered in a text area then it is dismissed
     if(event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
 
@@ -40,4 +30,7 @@ waitForKeyPress((event) => {
             }
         }
     }
-});
+}
+
+document.addEventListener('keydown', handleKeyPress);
+
