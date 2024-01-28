@@ -3,27 +3,33 @@ import {Tab} from 'bootstrap';
 
 function navigateToAnchorTab() {
     const hash = window.location.hash;
+    if (!hash) return;
 
-    if (hash) {
-        const element: Element | null = document.querySelector(`ul.nav a[href="${hash}"]`);
-        if (element === null) return;
-        new Tab(element).show();
-    }
+    const selector = `ul.nav [href="${hash}"], ul.nav [data-bs-target="${hash}"]`;
+    const element = document.querySelector<HTMLElement>(selector);
+    if (element === null) return;
+    new Tab(element).show();
 }
 
-function updateLocationHash(this: HTMLAnchorElement, ev: MouseEvent){
-    if (this.hash === null) {
-        console.warn('Selected tab does not have an id. Cannot update')
-        return null;
-    }
+function updateLocationHash(this: HTMLElement, _: MouseEvent){
+    if (this instanceof HTMLAnchorElement) {
+        if (this.hash === null) {
+         // console.warn('Selected tab does not have an id. Cannot update')
+            return null;
+        }
 
-    window.location.hash = this.hash;
+        window.location.hash = this.hash;
+    } else {
+        const bsTarget = this.dataset.bsTarget || null;
+        if (bsTarget === null) return;
+        window.location.href = bsTarget;
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     navigateToAnchorTab();
 
-    for (const el of document.querySelectorAll<HTMLAnchorElement>('.nav-tabs a')) {
+    for (const el of document.querySelectorAll<HTMLElement>('.nav-tabs [role="tab"]')) {
         // `new Tab(element)` already implicitly happens due to the respective
         // `data-` attributes being present
         el.addEventListener('click', updateLocationHash, false)

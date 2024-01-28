@@ -76,6 +76,10 @@ export default {
             import: './js/tab-anchor.ts',
             dependOn: 'main',
         },
+        'user-suite': {
+            import: './js/user-suite.ts',
+            dependOn: 'main',
+        },
         'rooms-table': {
             import: './js/rooms-table.ts',
             dependOn: 'main',
