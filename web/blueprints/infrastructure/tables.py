@@ -4,7 +4,7 @@ from flask import url_for
 from flask_login import current_user
 from pydantic import BaseModel, ConfigDict
 
-from web.table.lazy_join import HasDunderStr
+from web.table.lazy_join import HasDunderStr, lazy_join
 from web.table.table import (
     BootstrapTable,
     Column,
@@ -85,9 +85,10 @@ class PortTable(BootstrapTable):
             'data-sort-name': 'switchport_name',
         }
 
-    def __init__(self, *, switch_id: int | None = None, **kw: t.Any) -> None:
+    def __init__(self, *, switch_id: int, switch_room_id: int, **kw: t.Any) -> None:
         super().__init__(**kw)
         self.switch_id = switch_id
+        self.switch_room_id = switch_room_id
 
     switchport_name = Column("Name", width=2, col_args={'data-sorter': 'table.sortPort'})
     patchport_name = Column("→ Patchport", width=2, col_args={'data-sorter': 'table.sortPatchPort'})
@@ -96,11 +97,19 @@ class PortTable(BootstrapTable):
     delete_link = BtnColumn('Löschen', hide_if=no_inf_change)
 
     @property
-    def toolbar(self) -> HasDunderStr | None:
+    @lazy_join
+    def toolbar(self) -> t.Iterator[HasDunderStr | None]:
         if no_inf_change():
             return None
-        href = url_for(".switch_port_create", switch_id=self.switch_id)
-        return button_toolbar("Switch-Port", href)
+
+        yield from button_toolbar(
+            "Switch-Port",
+            url_for(".switch_port_create", switch_id=self.switch_id),
+        )
+        yield from button_toolbar(
+            "Patch-Port",
+            url_for("facilities.patch_port_create", switch_room_id=self.switch_room_id),
+        )
 
 
 class PortRow(BaseModel):

@@ -146,7 +146,10 @@ def switch_show(switch_id: int) -> ResponseValue:
         switch=switch,
         port_table=PortTable(
             data_url=url_for('.switch_show_json', switch_id=switch.host_id),
-            switch_id=switch_id))
+            switch_id=switch_id,
+            switch_room_id=switch.host.room_id,
+        ),
+    )
 
 
 @bp.route('/switch/show/<int:switch_id>/json')

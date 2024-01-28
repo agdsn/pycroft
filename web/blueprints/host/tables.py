@@ -11,6 +11,8 @@ from web.table.table import (
     button_toolbar,
     MultiBtnColumn,
     BtnColResponse,
+    MultiLinkColumn,
+    LinkColResponse,
 )
 
 
@@ -18,7 +20,7 @@ class HostTable(BootstrapTable):
     """A table for displaying hosts
     """
     name = Column("Name")
-    switch = Column("Switch")
+    switch = MultiLinkColumn("Switch")
     port = Column("SwitchPort")
     actions = MultiBtnColumn("Aktionen", hide_if=no_hosts_change, width=3)
     interfaces_table_link = Column("", hide_if=lambda: True)
@@ -49,7 +51,7 @@ class HostTable(BootstrapTable):
 
 class HostRow(BaseModel):
     name: str | None = None
-    switch: str | None = None
+    switch: list[LinkColResponse] | None = None
     port: str | None = None
     actions: list[BtnColResponse]
     interfaces_table_link: str

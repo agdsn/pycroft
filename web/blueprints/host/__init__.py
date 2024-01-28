@@ -20,7 +20,7 @@ from web.blueprints.helpers.form import refill_room_data
 from web.blueprints.helpers.user import get_user_or_404
 from web.blueprints.host.forms import InterfaceForm, HostForm
 from web.blueprints.host.tables import InterfaceTable, HostTable, HostRow, InterfaceRow
-from web.table.table import TableResponse, BtnColResponse
+from web.table.table import TableResponse, BtnColResponse, LinkColResponse
 
 bp = Blueprint('host', __name__)
 access = BlueprintAccess(bp, required_properties=['user_show'])
@@ -330,17 +330,22 @@ def interface_create(host_id: int) -> ResponseReturnValue:
 def _host_row(host: Host, user_id: int) -> HostRow:
     if host.room:
         patch_ports = host.room.connected_patch_ports
-        switches = ", ".join(
-            p.switch_port.switch.host.name or "<unnamed switch>" for p in patch_ports
-        )
+        switches = [p.switch_port.switch.host for p in patch_ports]
+        switch_links = [
+            LinkColResponse(
+                href=url_for("infrastructure.switch_show", switch_id=s.id),
+                title=s.name or f"<unnamed switch #{s.id}>",
+            )
+            for s in switches
+        ]
         ports = ", ".join(p.switch_port.name for p in patch_ports)
     else:
-        switches = None
+        switch_links = []
         ports = None
     return HostRow(
         id=host.id,
         name=host.name,
-        switch=switches,
+        switch=switch_links,
         port=ports,
         actions=[
             BtnColResponse(

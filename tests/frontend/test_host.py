@@ -185,5 +185,5 @@ def test_user_host_without_room(client, host_without_room):
     )
     assert len(resp.json["items"]) == 1
     [it] = resp.json["items"]
-    assert it["switch"] is None
+    assert it["switch"] == []
     assert it["port"] is None
