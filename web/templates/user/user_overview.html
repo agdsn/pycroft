@@ -26,6 +26,45 @@
     </div>
 
     <div class="col-sm-6 col-md-5 col-lg-4">
+    	<button class="btn btn-primary" _="
+        on animate
+          set :x to 20
+          repeat
+            log :x
+            put :x into <span/> in me
+            decrement :x
+
+            wait for a cancel or 50ms
+            if the result's type is 'cancel'
+              set :x to 20
+              break
+            end
+            if :x is 0
+              log 'done!!!'
+              remove me
+              break
+            end
+          end
+        on pointerdown
+          send animate to me
+        on pointerup
+          send cancel to me
+      ">
+        <span></span>
+        <i class="fa fa-trash"></i>
+      </button>
+      <!--<div class="btn" _="
+        on pointerdown
+          repeat until event pointerup
+            set rand to Math.random() * 360
+            transition
+              *background-color
+              to `hsl($rand 100% 90%)`
+              over 250ms
+          end
+      ">
+        Foo :)
+      </div>-->
       <h3>Traffic Erzeuger</h3>
       <h6 class="text-muted">7 Tage</h6>
 
