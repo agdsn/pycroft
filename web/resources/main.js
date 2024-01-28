@@ -20,6 +20,8 @@ import 'nvd3';
 import 'typeahead.js/dist/bloodhound';
 import 'underscore';
 import 'url-polyfill';
+import _hyperscript from "hyperscript.org";
+_hyperscript.browserInit();
 
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap-datepicker/dist/css/bootstrap-datepicker3.css';
