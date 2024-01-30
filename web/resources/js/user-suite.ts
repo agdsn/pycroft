@@ -5,32 +5,24 @@
  */
 
 function handleKeyPress(event: KeyboardEvent) {
-    // checks rather the input was triggered in a text area then it is dismissed
-    if(event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
+    // Dismiss event in case it was triggered in a text area or the shift key was (already) pressed
+    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement || event.shiftKey) return;
 
-    if (event.key === "ArrowRight" ){
-        const navLinks = [...document.querySelectorAll<HTMLElement>(".user-nav-link")].filter(x => !x.classList.contains("disabled"));
-        for (let i= 0; i < navLinks.length; i++){
-            if(navLinks[i].classList.contains("active")) {
-                let index = (i + 1) % navLinks.length;
-                navLinks[index].click();
-                break;
-            }
-        }
-    }
+    if !(event.key === "ArrowRight" || event.key === "ArrowLeft") return;
 
-    if (event.key === "ArrowLeft" ){
-        const navLinks = [...document.querySelectorAll<HTMLElement>(".user-nav-link")].filter(x => !x.classList.contains("disabled"));
-        for (let i= 0; i < navLinks.length; i++){
-            if(navLinks[i].classList.contains("active")) {
-                let index = i - 1;
-                if (index < 0) index += (navLinks.length); // Ich hasse JS noch nicht mal mod kann das ordentlich
-                navLinks[index].click();
-                break;
-            }
+    const navLinks = [...document.querySelectorAll<HTMLElement>(".user-nav-link")].filter(x => !x.classList.contains("disabled"));
+    const currentIndex = navLinks.findIndex(link => link.classList.contains("active"));
+
+    const indexChange = (() => {
+        switch (event.key) {
+            case "ArrowRight":
+                return +1;
+            case "ArrowLeft":
+                return -1;
         }
-    }
+    })();
+
+    navLinks[(navLinks.length + currentIndex + indexChange) % navLinks.length].click();
 }
 
 document.addEventListener('keydown', handleKeyPress);
-
