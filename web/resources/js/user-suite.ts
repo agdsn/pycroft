@@ -8,7 +8,7 @@ function handleKeyPress(event: KeyboardEvent) {
     // Dismiss event in case it was triggered in a text area or the shift key was (already) pressed
     if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement || event.shiftKey) return;
 
-    if !(event.key === "ArrowRight" || event.key === "ArrowLeft") return;
+    if (!(event.key === "ArrowRight" || event.key === "ArrowLeft")) return;
 
     const navLinks = [...document.querySelectorAll<HTMLElement>(".user-nav-link")].filter(x => !x.classList.contains("disabled"));
     const currentIndex = navLinks.findIndex(link => link.classList.contains("active"));
