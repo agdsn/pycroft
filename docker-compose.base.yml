@@ -44,6 +44,8 @@ services:
       SWDD_HASH_KEY: key
       MAIL_CONFIRM_URL: "http://localhost/sipa/register/confirm/{}"
       PASSWORD_RESET_URL: "http://localhost/sipa/reset-password/{}"
+      # alternative: `scripts.server_run:prepare_server(echo=True)`
+      FLASK_APP: scripts.server_run:prepare_server
       FLASK_ENV: development
   dev:
     extends: dev-base
