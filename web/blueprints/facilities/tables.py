@@ -15,6 +15,7 @@ from web.table.table import (
     DateColumn,
     LinkColResponse,
     BtnColResponse,
+    DateColResponse,
 )
 from web.blueprints.infrastructure.tables import no_inf_change
 
@@ -104,3 +105,22 @@ class PatchPortRow(BaseModel):
     switch_port: LinkColResponse | None = None
     edit_link: BtnColResponse
     delete_link: BtnColResponse
+
+
+class RoomTenanciesTable(BootstrapTable):
+    _render_toolbar = False
+
+    inhabitants = BtnColumn("Bewohner")
+    begins_at = DateColumn("Von")
+    ends_at = DateColumn("Bis")
+    status = Column("Status")
+
+    class Meta:
+        table_args = {"data-sort-name": "begins_at"}
+
+
+class RoomTenanciesRow(BaseModel):
+    inhabitant: BtnColResponse
+    begins_at: DateColResponse
+    ends_at: DateColResponse
+    status: str
