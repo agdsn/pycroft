@@ -87,6 +87,15 @@
         </div>
     </section>
 
+    <section id="tenancies">
+        <h2 class="page-header">Mietverhältnisse</h2>
+        {% if room_tenancies_table %}
+          {{ room_tenancies_table.render("room_tenancies_table") }}
+        {% else %}
+            <span class="text-muted">Dieser Raum hat keine Mietverhältnisse</span>
+        {% endif %}
+    </section>
+
     <section id="patchports">
         <h2 class="page-header">Patchports</h2>
         {% if ports %}
