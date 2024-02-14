@@ -5,6 +5,9 @@ requires = [
 ]
 build-backend = "setuptools.build_meta"
 
+[tool.black]
+line-length = 100
+
 [tool.mypy]
 exclude = "deps/.*/build"
 plugins = "sqlalchemy.ext.mypy.plugin"
