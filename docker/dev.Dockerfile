@@ -30,6 +30,7 @@ RUN apt-get update \
     && apt-get clean
 
 COPY --link . /
+COPY --link --chmod=755 ./container /container
 
 USER pycroft
 WORKDIR /opt/pycroft
