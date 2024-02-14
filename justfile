@@ -6,8 +6,9 @@
 drc := if `docker compose 2>&1 >/dev/null; echo $?` == "0" { "docker compose" } else { "docker-compose" }
 export COMPOSE_FILE := "docker-compose.dev.yml:docker-compose.test.yml"
 export PGPASSFILE := ".pycroft.pgpass"
-test-psql := drc + " exec --user=postgres test-db psql pycroft"
-dev-psql := drc + " exec --user=postgres dev-db psql pycroft"
+psql_pycroft_uri := "postgresql:///pycroft?options=-csearch_path%3Dpycroft,public"
+test-psql := drc + " exec --user=postgres test-db psql " + "'" + psql_pycroft_uri + "'"
+dev-psql := drc + " exec --user=postgres dev-db psql " + "'" + psql_pycroft_uri + "'"
 schemadir := justfile_directory() / "data"
 sql_schema := schemadir / "pycroft_schema.sql"
 sql_dump := schemadir / "pycroft.sql"
@@ -104,12 +105,12 @@ alembic command *args:
     {{ drc }} --progress=none run --rm dev-app alembic {{ command }} {{ args }}
 
 # run an interactive postgres shell in the dev-db container
-dev-psql *args="-f -": (_up "dev-db")
-    {{ dev-psql }} -c 'set search_path=pycroft,public' {{ args }}
+dev-psql *args: (_up "dev-db")
+    {{ dev-psql }} {{ args }}
 
 # run an interactive postgres shell in the test-db container
-test-psql *args="-f -": (_up "test-db")
-    {{ test-psql }} -c 'set search_path=pycroft,public' {{ args }}
+test-psql *args: (_up "test-db")
+    {{ test-psql }} {{ args }}
 
 # give a quick overview over the schema in the dev-db.
 
