@@ -149,13 +149,13 @@ class SplitCreateForm(WTForm):
 class TransactionCreateForm(Form):
     description = TextField("Beschreibung", validators=[DataRequired()])
     valid_on = DateField(
-        "Gültig ab", validators=[Optional()], today_btn=True,
-        today_highlight=True, default=datetime.date.today())
-    splits = FieldList(
-        FormField(SplitCreateForm),
-        validators=[DataRequired()],
-        min_entries=2
+        "Gültig ab",
+        validators=[Optional()],
+        today_btn=True,
+        today_highlight=True,
+        default=datetime.date.today,
     )
+    splits = FieldList(FormField(SplitCreateForm), validators=[DataRequired()], min_entries=2)
 
     def validate_splits(self, field: FormField) -> None:
         balance = sum(split_form['amount'].data for split_form in field
