@@ -111,6 +111,7 @@ class RoomTenanciesTable(BootstrapTable):
     _render_toolbar = False
 
     inhabitant = BtnColumn("Bewohner")
+    swdd_person_id = Column("Debitorennummer")
     begins_at = DateColumn("Von")
     ends_at = DateColumn("Bis")
     status = Column("Status")
@@ -121,6 +122,7 @@ class RoomTenanciesTable(BootstrapTable):
 
 class RoomTenanciesRow(BaseModel):
     inhabitant: BtnColResponse | None = None
+    swdd_person_id: int | None = None
     begins_at: DateColResponse
     ends_at: DateColResponse
     status: str

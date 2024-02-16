@@ -611,12 +611,18 @@ def room_patchpanel_json(room_id: int) -> ResponseReturnValue:
 @bp.route("/room/<int:room_id>/tenancies/json")
 def room_tenancies_json(room_id: int) -> ResponseReturnValue:
     room = get_room_or_404(room_id)
+
+    def tenancy_person_id(tenancy):
+        return tenancy.person_id if tenancy.person_id is not None else None
+
+    def tenancy_user_button(tenancy):
+        return user_button(tenancy.user) if tenancy.user is not None else None
+
     return TableResponse[RoomTenanciesRow](
         items=[
             RoomTenanciesRow(
-                inhabitant=(
-                    user_button(tenancy.user) if tenancy.user is not None else None
-                ),
+                inhabitant=tenancy_user_button(tenancy),
+                swdd_person_id=tenancy_person_id(tenancy),
                 begins_at=date_format(tenancy.mietbeginn, formatter=date_filter),
                 ends_at=date_format(tenancy.mietende, formatter=date_filter),
                 status=tenancy.status.name,
