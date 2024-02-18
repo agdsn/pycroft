@@ -248,18 +248,3 @@ def send_template_mails(
     from pycroft.task import send_mails_async
 
     send_mails_async.delay(mails)
-
-
-def send_plain_mails(email_addresses: list[str], subject: str, body_plain: str) -> None:
-    mails = []
-
-    for addr in email_addresses:
-        mail = Mail(to_name='',
-                    to_address=addr,
-                    subject=subject,
-                    body_plain=body_plain)
-        mails.append(mail)
-
-    from pycroft.task import send_mails_async
-
-    send_mails_async.delay(mails)
