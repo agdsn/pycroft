@@ -220,9 +220,9 @@ rules:
     message: |
       Don't use `<a>` tags in a mail template.
       Use the mode-aware `render_link` macro instead.
-      Please do not forget to add {{ link.render_link_list(mode) }} at end of the email.
+      Please do not forget to add {{ link.render_link_list() }} at end of the email.
     fix: >
-      {{ link.render_link("$TEXT", "$HREF", mode) }}
+      {{ link.render_link("$TEXT", "$HREF") }}
     severity: ERROR
     languages: [ html ]
     paths:
