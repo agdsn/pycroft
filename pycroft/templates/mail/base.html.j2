@@ -2,10 +2,10 @@
 {%- import "macros/link.html" as link with context -%}
 {%- if mode == 'html' -%}
 <pre>
-{%- endif -%}
-{% block body %}{% endblock %}
+{% endif %}
+{%- block body -%}{%- endblock -%}
 
-{{ link.render_link_list(mode) }}
+{{ link.render_link_list() }}
 {%- if mode == 'html' -%}
 </pre>
 {%- endif -%}

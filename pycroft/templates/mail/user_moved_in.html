@@ -22,7 +22,7 @@ mit der korrekten MAC Adresse in dem oben angegebenen Zimmer funktionieren.
 Viele Grüße
 Deine AG DSN
 
-{{ link.render_link_list(mode) }}
+{{ link.render_link_list() }}
 --
 
 Hello {{ user.name }},
@@ -34,7 +34,7 @@ member account:
 {{ user.address.zip_code }} {{ user.address.city }}
 {{ user.address.country }}
 
-You can enable your network connection after logging in on our {{ link.render_link("webpage", "https://agdsn.de/sipa/usersuite/", mode) }}.
+You can enable your network connection after logging in on our {{ link.render_link("webpage", "https://agdsn.de/sipa/usersuite/") }}.
 If you have already enabled your network connection, it should now
 work with the correct MAC address in the room specified above.
 
