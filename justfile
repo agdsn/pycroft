@@ -46,7 +46,7 @@ schema-import: _confirm-drop _schema-import (alembic "upgrade" "head") _create-s
 
 # creates the `swdd_vv` materialized view (→ `swdd.swdd_vv`)
 _create-swdd-view:
-    psql -wb postgres://postgres@127.0.0.1:55432/pycroft -c 'create materialized view swdd_vv as \
+    psql -wb postgres://postgres@127.0.0.1:55432/pycroft -c 'create materialized view if not exists swdd_vv as \
     SELECT swdd_vv.persvv_id, \
            swdd_vv.person_id, \
            swdd_vv.vo_suchname, \
