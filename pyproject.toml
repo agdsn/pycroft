@@ -99,6 +99,7 @@ exclude = [
     "deps/",
     "doc/",
 ]
+[tool.ruff.lint]
 # to look up the meaning of specific rule IDs, use `ruff rule $id`
 select = [
     "E",
@@ -120,7 +121,7 @@ unfixable = [
     "E712",  # comparison to True/False
 ]
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["E402", "F401"]
 "pycroft/model/_all.py" = ["F403"]
 "helpers/interactive.py" = ["F403"]
