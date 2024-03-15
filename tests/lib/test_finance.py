@@ -18,7 +18,10 @@ from pycroft.lib.finance import (
     estimate_balance,
     post_transactions_for_membership_fee, get_users_with_payment_in_default,
     end_payment_in_default_memberships,
-    take_actions_for_payment_in_default_users)
+    take_actions_for_payment_in_default_users,
+    get_activities_to_return,
+    generate_activities_return_sepaxml,
+)
 from pycroft.model.finance import (
     Transaction,
     Split,
@@ -654,3 +657,65 @@ class TestLastImportedAt:
         assert finance.get_last_import_date(session) == datetime(
             2020, 1, 1, tzinfo=timezone.utc
         )
+
+
+class TestReturnNonAttributable:
+    @pytest.mark.parametrize(
+        "expected, set_transaction_id, amount_negative, imported_at_old",
+        [
+            (0, False, False, False),  # too young
+            (0, True, False, False),  # too young, already attributed
+            (1, False, False, True),
+            (0, True, False, True),  # already attributed
+            (0, False, True, False),  # negative amount, too young
+            (0, True, True, False),  # negative amount, too young, already attributed
+            (0, False, True, True),  # negative amount
+            (0, True, True, True),  # negative amount, already attributed
+        ],
+    )
+    def test_activities_to_return(
+        self,
+        session: Session,
+        utcnow,
+        expected,
+        set_transaction_id,
+        amount_negative,
+        imported_at_old,
+    ):
+        kwargs = {}
+
+        if amount_negative:
+            kwargs["amount"] = -1000
+        if imported_at_old:
+            kwargs["imported_at"] = utcnow.date() - timedelta(days=20)
+
+        activity = BankAccountActivityFactory.create(**kwargs)
+
+        if set_transaction_id:
+            user = UserFactory.create()
+
+            debit_account = user.account
+            credit_account = activity.bank_account.account
+            transaction = finance.simple_transaction(
+                description=activity.reference,
+                debit_account=debit_account,
+                credit_account=credit_account,
+                amount=activity.amount,
+                author=user,
+                valid_on=activity.valid_on,
+            )
+            activity.split = next(
+                split for split in transaction.splits if split.account_id == credit_account.id
+            )
+
+            session.add(activity)
+
+        activities_to_return = get_activities_to_return(session)
+
+        assert len(activities_to_return) == expected
+
+    def test_generate_sepa_xml(self, session: Session, utcnow):
+        BankAccountActivityFactory.create(imported_at=utcnow.date() - timedelta(days=20))
+        BankAccountActivityFactory.create(imported_at=utcnow.date() - timedelta(days=21))
+
+        generate_activities_return_sepaxml(get_activities_to_return(session))

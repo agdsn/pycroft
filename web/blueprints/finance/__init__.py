@@ -11,11 +11,12 @@
 """
 import typing as t
 from decimal import Decimal
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from datetime import date
 from datetime import timedelta, datetime
 from functools import partial
 from itertools import zip_longest, chain
+from io import BytesIO
 
 import wtforms
 from fints.dialog import FinTSDialogError
@@ -34,6 +35,7 @@ from flask import (
     request,
     url_for,
     make_response,
+    send_file,
 )
 from flask.typing import ResponseReturnValue
 from flask_login import current_user
@@ -67,6 +69,8 @@ from pycroft.lib.finance import (
     get_system_accounts,
     ImportedTransactions,
     match_activities,
+    get_activities_to_return,
+    generate_activities_return_sepaxml,
     get_all_bank_accounts,
     get_unassigned_bank_account_activities,
     get_all_mt940_errors,
@@ -547,6 +551,66 @@ def bank_account_activities_match() -> ResponseReturnValue:
     return render_template('finance/bank_accounts_match.html', form=form,
                            activities_user=matched_activities_user,
                            activities_team=matched_activities_team)
+
+
+class ActivityEntry(t.TypedDict):
+    bank_account: str
+    name: str
+    valid_on: date
+    reference: str
+    amount: int
+
+
+@bp.route("/bank-account-activities/return/")
+@access.require("finance_change")
+def bank_account_activities_return() -> ResponseReturnValue:
+    field_list: BooleanFieldList = []
+    activities: dict[str, ActivityEntry] = {}
+
+    for activity in get_activities_to_return(session):
+        activities[str(activity.id)] = {
+            "bank_account": activity.bank_account.name,
+            "name": activity.other_name,
+            "valid_on": activity.valid_on,
+            "reference": activity.reference,
+            "amount": activity.amount,
+        }
+
+        field_list.append((str(activity.id), BooleanField(str(activity.id), default=True)))
+
+    form: t.Any = _create_form(field_list)
+
+    return render_template(
+        "finance/bank_account_activities_return.html",
+        form=form(),
+        activities=activities,
+    )
+
+
+@bp.route("/bank-account-activities/return/do/", methods=["POST"])
+@access.require("finance_change")
+def bank_account_activities_return_do() -> ResponseReturnValue:
+    field_list: BooleanFieldList = []
+    activities_to_return: Sequence[BankAccountActivity] = get_activities_to_return(session)
+
+    for activity in activities_to_return:
+        field_list.append((str(activity.id), BooleanField(str(activity.id), default=True)))
+
+    form: t.Any = _create_form(field_list)()
+
+    if form.validate_on_submit():
+        selected_activities: list[BankAccountActivity] = [
+            activity for activity in activities_to_return if form[str(activity.id)].data
+        ]
+
+        sepa_xml: bytes = generate_activities_return_sepaxml(selected_activities)
+
+    return send_file(
+        BytesIO(sepa_xml),
+        as_attachment=True,
+        download_name=f"non-attributable-transactions-{datetime.now().date()}.xml",
+    )
+
 
 
 class UserMatch(t.TypedDict):
