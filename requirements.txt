@@ -40,3 +40,4 @@ sentry-sdk[Flask]~=1.29.2
 -e ./deps/wtforms-widgets/
 python-dotenv~=0.21.0
 pydantic~=2.0.0
+schwifty~=2023.9.0
