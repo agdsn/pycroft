@@ -129,7 +129,7 @@ def switches_json() -> ResponseValue:
                     btn_class="btn-link",
                 ),
             )
-            for switch in Switch.q.all()
+            for switch in Switch.q.options(joinedload(Switch.host)).all()
         ]
     ).model_dump()
 
