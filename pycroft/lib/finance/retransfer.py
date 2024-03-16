@@ -5,6 +5,7 @@ from sepaxml import SepaTransfer
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
+from pycroft import config
 from pycroft.helpers.utc import ensure_tz
 from pycroft.model import session
 from pycroft.model.finance import BankAccountActivity
@@ -23,14 +24,14 @@ def get_activities_to_return() -> Sequence[BankAccountActivity]:
 
 
 def generate_activities_return_sepaxml(activities: list[BankAccountActivity]) -> bytes:
-    config = {
-        "name": "Studierendenrat der TU Dresden",
-        "IBAN": "DE61850503003120219540",
-        "BIC": "OSDDDE81",
+    transfer_config: dict = {
+        "name": config.membership_fee_bank_account.owner,
+        "IBAN": config.membership_fee_bank_account.iban,
+        "BIC": config.membership_fee_bank_account.bic,
         "batch": False,
         "currency": "EUR",
     }
-    sepa = SepaTransfer(config, clean=False)
+    sepa = SepaTransfer(transfer_config, clean=False)
 
     for activity in activities:
         payment = {
