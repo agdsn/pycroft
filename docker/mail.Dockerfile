@@ -1,13 +1,8 @@
-FROM golang:rc-alpine
-RUN apk add --no-cache git
-RUN apk add --no-cache gcc
-RUN apk add --no-cache musl-dev
-RUN git clone "https://github.com/jamillosantos/mailslurper.git" /opt/mailslurper
-WORKDIR /opt/mailslurper/cmd/mailslurper
-RUN go get github.com/mjibson/esc
-RUN cd /opt/mailslurper/cmd/mailslurper
-COPY ./mailslurper.conf config.json
-RUN go get
-RUN go generate
-RUN go build
-ENTRYPOINT ["/opt/mailslurper/cmd/mailslurper/mailslurper"]
+FROM debian:unstable
+
+RUN apt-get update && apt-get install -y python3 python3-aiosmtpd python3-termcolor
+
+WORKDIR /opt/mail
+COPY mail.py mail.py
+
+ENTRYPOINT ["python3", "mail.py"]

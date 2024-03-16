@@ -126,9 +126,6 @@ services:
       dev:
         aliases:
           - mail
-    ports:
-      - "5005:5005"
-      - "5006:5006"
 
 volumes:
   home:

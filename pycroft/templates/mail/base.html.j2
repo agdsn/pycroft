@@ -1,0 +1,11 @@
+{%- set links = [] -%}
+{%- import "macros/link.html" as link with context -%}
+{%- if mode == 'html' -%}
+<pre>
+{% endif %}
+{%- block body -%}{%- endblock -%}
+
+{{ link.render_link_list() }}
+{%- if mode == 'html' -%}
+</pre>
+{%- endif -%}
