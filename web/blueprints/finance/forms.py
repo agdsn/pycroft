@@ -78,6 +78,7 @@ class MembershipFeeEditForm(MembershipFeeCreateForm):
 class BankAccountCreateForm(Form):
     name = TextField("Name")
     bank = TextField("Bank")
+    owner = TextField("Kontoinhaber")
     account_number = TextField("Kontonummer")
     routing_number = TextField("Bankleitzahl (BLZ)")
     iban = TextField("IBAN")

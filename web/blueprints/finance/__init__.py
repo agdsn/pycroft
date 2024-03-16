@@ -447,6 +447,7 @@ def bank_accounts_create() -> ResponseReturnValue:
         new_bank_account = BankAccount(
             name=form.name.data,
             bank=form.bank.data,
+            owner=form.owner.data,
             account_number=form.account_number.data,
             routing_number=form.routing_number.data,
             iban=form.iban.data,

@@ -31,6 +31,7 @@ class BankAccount(t.Protocol):
     bank: t.Any
     iban: t.Any
     bic: t.Any
+    owner: t.Any
 
 
 class Building(t.Protocol):
@@ -289,7 +290,7 @@ def generate_user_sheet(
             six monthly contributions at once.'''.format(
             contribution / 100), style['JustifyText']))
 
-        recipient = 'Studierendenrat TUD - AG DSN'
+        recipient = bank_account.owner
 
         if user.room:
             purpose = '{id}, {name}, {dorm} {level} {room}'.format(
