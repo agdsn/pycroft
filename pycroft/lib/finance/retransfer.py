@@ -16,8 +16,7 @@ def get_activities_to_return() -> Sequence[BankAccountActivity]:
         .options(joinedload(BankAccountActivity.bank_account))
         .filter(BankAccountActivity.transaction_id.is_(None))
         .filter(BankAccountActivity.amount > 0)
-        .filter(BankAccountActivity.imported_at < ensure_tz(datetime.utcnow() - timedelta(days=14))
-        )
+        .filter(BankAccountActivity.imported_at < ensure_tz(datetime.utcnow() - timedelta(days=14)))
     )
 
     return session.session.scalars(statement).all()
