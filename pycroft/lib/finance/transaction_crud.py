@@ -221,9 +221,15 @@ def process_transactions(
         ):
             purpose = purpose + " EREF+" + transaction.data["end_to_end_reference"]
 
+        amount = transaction.data["amount"].amount
+
+        # Reversal ("Storno")
+        if "R" in transaction.data.get("status", ""):
+            amount = -amount
+
         new_activity = BankAccountActivity(
             bank_account_id=bank_account.id,
-            amount=transaction.data["amount"].amount,
+            amount=amount,
             reference=purpose,
             other_account_number=iban,
             other_routing_number=bic,
