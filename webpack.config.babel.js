@@ -162,11 +162,6 @@ export default {
                 enforce: "pre",
                 include: dep,
             },
-            {
-                test: /\.tsx?$/,
-                use: 'ts-loader',
-                exclude: dep,
-            },
             // Expose our table module as a global variable.
             // Functions from this module are referenced through
             // data-*-attributes for use by bootstrap-table.
@@ -201,39 +196,13 @@ export default {
                     path.join(dep, "bootstrap-datepicker", "dist", "locales"),
                 ],
             },
-            // Transpile modern JavaScript for older browsers.
+            // Use esbuild for TS compilation and TS/JS transpilation
             {
-                test: /\.jsx?$/,
+                test: /\.[jt]sx?$/,
                 exclude: dep,
-                use: {
-                    loader: 'babel-loader',
-                    options: {
-                        cacheDirectory: true,
-                        // Use the recommended preset-env
-                        presets: [
-                            ['@babel/preset-env', {
-                                targets: {
-                                    browsers: [
-                                        'IE 11',
-                                        'FF 52',
-                                        'Chrome 49',
-                                    ],
-                                },
-                                // Let webpack handle modules
-                                modules: false,
-                                forceAllTransforms: PROD,
-                            }],
-                        ],
-                        // Import the babel runtime instead of inlining it in
-                        // every file.
-                        plugins: [
-                            ['@babel/plugin-transform-runtime', {
-                                helpers: false,
-                                regenerator: true,
-                                useESModules: true,
-                            }],
-                        ],
-                    },
+                loader: 'esbuild-loader',
+                options: {
+                    target: 'es2015',
                 },
             },
             // Handle CSS
