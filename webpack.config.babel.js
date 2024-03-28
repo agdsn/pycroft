@@ -202,7 +202,7 @@ export default {
                 exclude: dep,
                 loader: 'esbuild-loader',
                 options: {
-                    target: 'es2015',
+                    target: 'es2016',
                 },
             },
             // Handle CSS
