@@ -67,6 +67,6 @@
   },
   "scripts": {
     "webpack": "webpack",
-    "build": "webpack --profile --progress --config webpack.config.babel.js"
+    "build": "webpack --profile --progress"
   }
 }
