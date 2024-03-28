@@ -4,7 +4,7 @@ import webpack from "webpack";
 import { WebpackManifestPlugin } from "webpack-manifest-plugin";
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
-import TerserPlugin from "terser-webpack-plugin";
+const { EsbuildPlugin } = require('esbuild-loader');
 
 // Check for production mode
 const PROD = process.env.NODE_ENV === "production";
@@ -117,8 +117,9 @@ export default {
     optimization: {
         minimizer: PROD ? [
             // Compress JavaScript
-            new TerserPlugin({
-                parallel: true,
+            new EsbuildPlugin({
+              target: 'es2016',
+              css: true
             }),
         ] : [],
         runtimeChunk: {
