@@ -14,7 +14,6 @@
   },
   "homepage": "https://github.com/agdsn/pycroft#readme",
   "dependencies": {
-    "@babel/runtime": "^7.18.0",
     "@fortawesome/fontawesome-free": "^6.1.1",
     "@popperjs/core": "^2.9.2",
     "bootstrap": "^5.3.1",
@@ -39,9 +38,7 @@
     "yarn": "YARN NO LONGER USED - use npm instead."
   },
   "devDependencies": {
-    "@babel/core": "^7.18.0",
-    "@babel/plugin-transform-runtime": "^7.18.0",
-    "@babel/preset-env": "^7.18.0",
+    "@babel/preset-env": "^7.24.3",
     "@babel/register": "^7.10.3",
     "@types/bootstrap": "^5.0.16",
     "@types/bootstrap-3-typeahead": "^4.0.3",
@@ -49,7 +46,6 @@
     "@typescript-eslint/eslint-plugin": "^5.26.0",
     "@typescript-eslint/parser": "^5.26.0",
     "autocomplete.js": "^0.38.1",
-    "babel-loader": "^8.1.0",
     "clean-webpack-plugin": "^4.0.0",
     "css-loader": "^6.7.1",
     "esbuild-loader": "^4.1.0",
