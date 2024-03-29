@@ -120,7 +120,7 @@ class RoomTenanciesTable(BootstrapTable):
 
 
 class RoomTenanciesRow(BaseModel):
-    inhabitant: BtnColResponse
+    inhabitant: BtnColResponse | None = None
     begins_at: DateColResponse
     ends_at: DateColResponse
     status: str
