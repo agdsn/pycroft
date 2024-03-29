@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from pycroft.model.facilities import Building, Room, Site
 from pycroft.model.port import PatchPort
 from web.blueprints.facilities.address import ADDRESS_ENTITIES
+from web.blueprints.facilities.tables import RoomTenanciesRow
 from tests import factories as f
 from tests.factories import RoomFactory
 from .assertions import TestClient
@@ -134,6 +135,28 @@ class TestBuilding:
             client.assert_url_ok(
                 f"/facilities/building/{building.id}/level/{room.level}/rooms/"
             )
+
+
+class TestRoomTenancies:
+    @pytest.fixture(scope="class")
+    def user(self, class_session):
+        return f.UserFactory(swdd_person_id="1")
+
+    @pytest.fixture(scope="class")
+    def room(self, class_session):
+        return f.RoomFactory(swdd_vo_suchname="1")
+
+    def test_room_tenancies_json(self, room, user, session, client):
+        resp = client.assert_url_ok(
+            url_for(
+                "facilities.room_tenancies_json",
+                room_id=room.id,
+            )
+        )
+        assert (items := resp.json.get("items"))
+        assert len(items) == 1
+        tenancy_row = RoomTenanciesRow.model_validate(items[0])
+        assert tenancy_row.inhabitant.title == user.name
 
 
 class TestOvercrowdedRooms:

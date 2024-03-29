@@ -58,7 +58,7 @@ from web.blueprints.facilities.forms import (
 from web.blueprints.helpers.log import format_room_log_entry
 from web.blueprints.helpers.user import user_button
 from web.blueprints.navigation import BlueprintNavigation
-from web.table.table import TableResponse, LinkColResponse, BtnColResponse
+from web.table.table import TableResponse, LinkColResponse, BtnColResponse, date_format
 from .address import get_address_entity, address_entity_search_query
 from .tables import (
     BuildingLevelRoomTable,
@@ -70,9 +70,12 @@ from .tables import (
     BuildingLevelRoomRow,
     PatchPortRow,
     RoomOvercrowdedRow,
+    RoomTenanciesTable,
+    RoomTenanciesRow,
 )
 from ..helpers.exception import abort_on_error, ErrorHandlerMap
 from ..helpers.log_tables import LogTableRow
+from ...template_filters import date_filter
 
 bp = Blueprint('facilities', __name__)
 access = BlueprintAccess(bp, required_properties=['facilities_show'])
@@ -519,6 +522,11 @@ def room_show(room_id: int) -> ResponseReturnValue:
     patch_port_table = PatchPortTable(data_url=url_for(".room_patchpanel_json", room_id=room.id),
                                       room_id=room_id)
 
+    room_tenancies_table = RoomTenanciesTable(
+        data_url=url_for(".room_tenancies_json", room_id=room.id),
+        table_args={"data-search": "false"},
+    )
+
     return render_template(
         "facilities/room_show.html",
         page_title=f"Raum {room.short_name}",
@@ -535,6 +543,7 @@ def room_show(room_id: int) -> ResponseReturnValue:
         ],
         room_log_table=room_log_table,
         patch_port_table=patch_port_table,
+        room_tenancies_table=room_tenancies_table,
         form=form,
     )
 
@@ -596,6 +605,22 @@ def room_patchpanel_json(room_id: int) -> ResponseReturnValue:
                 ),
             )
             for port in patch_ports
+        ]
+    ).model_dump()
+
+
+@bp.route("/room/<int:room_id>/tenancies/json")
+def room_tenancies_json(room_id: int) -> ResponseReturnValue:
+    room = get_room_or_404(room_id)
+    return TableResponse[RoomTenanciesRow](
+        items=[
+            RoomTenanciesRow(
+                inhabitant=user_button(tenancy.user),
+                begins_at=date_format(tenancy.mietbeginn, formatter=date_filter),
+                ends_at=date_format(tenancy.mietende, formatter=date_filter),
+                status=tenancy.status.name,
+            )
+            for tenancy in room.tenancies
         ]
     ).model_dump()
 
