@@ -274,6 +274,7 @@ def room_edit(room_id: int) -> ResponseReturnValue:
             processor=current_user,
         )
 
+    sess.commit()
     flash(f"Der Raum {room.short_name} wurde erfolgreich bearbeitet.", "success")
     return redirect(url_for(".room_show", room_id=room.id))
 
