@@ -110,7 +110,7 @@ class PatchPortRow(BaseModel):
 class RoomTenanciesTable(BootstrapTable):
     _render_toolbar = False
 
-    inhabitants = BtnColumn("Bewohner")
+    inhabitant = BtnColumn("Bewohner")
     begins_at = DateColumn("Von")
     ends_at = DateColumn("Bis")
     status = Column("Status")
