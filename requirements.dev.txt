@@ -6,10 +6,10 @@ pytest-timeout~=2.1.0
 pytest-cov~=4.0.0
 # required for pycharm „run with coverage“ reporting
 coverage~=6.5.0
-git+https://github.com/lukasjuhrich/sqlalchemy_schemadisplay.git@master#egg=sqlalchemy-schemadisplay
+sqlalchemy-schemadisplay @ git+https://github.com/lukasjuhrich/sqlalchemy_schemadisplay.git@master
 sphinx~=5.1.1
 sphinx-autobuild~=2021.3.14
-git+https://github.com/agdsn/guzzle_sphinx_theme.git@977d49fcbdf2b3df9660d813d4b33369391923e1#egg=guzzle-sphinx-theme
+guzzle-sphinx-theme @ git+https://github.com/agdsn/guzzle_sphinx_theme.git@977d49fcbdf2b3df9660d813d4b33369391923e1
 mypy~=1.8.0
 celery-types~=0.9.3
 types-jsonschema~=4.3.0
