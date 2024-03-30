@@ -616,7 +616,7 @@ def room_tenancies_json(room_id: int) -> ResponseReturnValue:
     return TableResponse[RoomTenanciesRow](
         items=[
             RoomTenanciesRow(
-                inhabitant=user_button(tenancy.user),
+                inhabitant=user_button(tenancy.user) if tenancy.user else None,
                 begins_at=date_format(tenancy.mietbeginn, formatter=date_filter),
                 ends_at=date_format(tenancy.mietende, formatter=date_filter),
                 status=tenancy.status.name,
