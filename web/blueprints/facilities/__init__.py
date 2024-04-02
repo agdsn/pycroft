@@ -533,7 +533,7 @@ def room_show(room_id: int) -> ResponseReturnValue:
         page_title=f"Raum {room.short_name}",
         room=room,
         ports=room.patch_ports,
-        user_buttons=[user_button(user).model_dump() for user in room.users],
+        user_buttons=[user_button(user) for user in room.users],
         user_histories=[
             (
                 user_button(room_history_entry.user).model_dump(),
