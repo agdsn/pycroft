@@ -5,6 +5,82 @@ requires = [
 ]
 build-backend = "setuptools.build_meta"
 
+# PROJECT METADATA
+[project]
+name = "pycroft"
+version = "0.1.0"
+authors = [{name = "The Pycroft Authors"}]
+license = {text = "Apache Software License"}
+description = "AG DSN user management software"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Web Environment",
+    "Framework :: Flask",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.4",
+    "Programming Language :: Python :: 3.5",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Topic :: Internet",
+]
+urls = {Homepage = "http://github.com/agdsn/pycroft/"}
+requires-python = ">= 3.4"
+dependencies = [
+    "alembic",
+    "celery ~= 5.2.1",
+    "Flask",
+    "Flask-Babel",
+    "Flask-Login",
+    "Flask-WTF",
+    "fints ~= 3.1.0",
+    "Jinja2",
+    "mac-vendor-lookup",
+    "MarkupSafe",
+    "Marshmallow",
+    "SQLAlchemy >= 1.1",
+    "WTForms",
+    "Werkzeug",
+    "jsonschema",
+    "ipaddr >= 2.2.0",
+    "passlib",
+    "psycopg2-binary >= 2.7.0",
+    "reportlab",
+    "simplejson",
+    "wrapt",
+    "wtforms-widgets",
+]
+
+[project.readme]
+text = """
+Pycroft
+-------
+Pycroft is the user management system of the AG DSN
+(Arbeitsgemeinschaft Dresdner Studentennetz)
+
+Notes for developers
+--------------------
+When editing this file, you need to re-build the docker image for the
+changes to take effect.  On a running system, you can just execute
+``pip install -e .`` to update e.g. console script names."""
+
+[project.optional-dependencies]
+schemadisplay = ["sqlalchemy-schemadisplay"]
+testing = ["factory-boy", "Flask-Testing", "nose", "pydot"]
+
+[project.scripts]
+pycroft = "scripts.server_run:main"
+pycroft_ldap_sync = "ldap_sync.__main__:main"
+alembic_wrapper = "scripts.alembic_wrapper:cli"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages]
+find = {namespaces = false}
+
+# TOOLS
 [tool.black]
 line-length = 100
 
