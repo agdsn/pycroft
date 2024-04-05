@@ -43,6 +43,7 @@ jobs:
           # cache: 'pip'
       - name: set up `uv`
         run: pip install uv && uv venv && uv pip list
+      - run: echo "VIRTUAL_ENV=./.venv" >> $GITHUB_ENV
       - name: install pip dependencies
         run: uv pip sync requirements.dev.txt && uv pip install . deps/wtforms-widgets && uv pip list
         id: pip-install
