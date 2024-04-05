@@ -533,7 +533,7 @@ def room_show(room_id: int) -> ResponseReturnValue:
         page_title=f"Raum {room.short_name}",
         room=room,
         ports=room.patch_ports,
-        user_buttons=[user_button(user).model_dump() for user in room.users],
+        user_buttons=[user_button(user) for user in room.users],
         user_histories=[
             (
                 user_button(room_history_entry.user).model_dump(),
@@ -617,6 +617,7 @@ def room_tenancies_json(room_id: int) -> ResponseReturnValue:
         items=[
             RoomTenanciesRow(
                 inhabitant=user_button(tenancy.user) if tenancy.user else None,
+                swdd_person_id=tenancy.person_id if tenancy.person_id else None,
                 begins_at=date_format(tenancy.mietbeginn, formatter=date_filter),
                 ends_at=date_format(tenancy.mietende, formatter=date_filter),
                 status=tenancy.status.name,
