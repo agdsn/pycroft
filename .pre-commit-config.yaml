@@ -15,6 +15,21 @@ repos:
   rev: 'v0.3.2'
   hooks:
     - id: ruff
+- repo: https://github.com/astral-sh/uv-pre-commit
+  rev: 0.1.29
+  hooks:
+    - id: pip-compile
+      name: "pip-compile: requirements.txt"
+      args: [pyproject.toml, --generate-hashes, --quiet, -o, requirements.txt]
+      files: ^(pyproject.toml|requirements.txt)$
+    - id: pip-compile
+      name: "pip-compile: requirements.dev.txt"
+      args: [pyproject.toml, --generate-hashes, --extra, dev, --quiet, -o, requirements.dev.txt]
+      files: ^(pyproject.toml|requirements.dev.txt)$
+    - id: pip-compile
+      name: "pip-compile: requirements.prod.txt"
+      args: [pyproject.toml, --generate-hashes, --extra, prod, --quiet, -o, requirements.prod.txt]
+      files: ^(pyproject.toml|requirements.prod.txt)$
 - repo: https://github.com/returntocorp/semgrep
   rev: 'v1.31.2'
   hooks:
