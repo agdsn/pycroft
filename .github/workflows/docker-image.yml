@@ -49,6 +49,11 @@ jobs:
           && uv pip install --system . deps/wtforms-widgets
           && uv pip list --system
         id: pip-install
+      - uses: actions/cache@v4
+        id: cache-uv
+        with:
+          path: ~/.cache/uv
+          key: uv
       # now come the tests
       - name: Execute ruff
         run: ruff check --output-format=github .
