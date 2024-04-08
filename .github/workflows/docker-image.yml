@@ -42,10 +42,12 @@ jobs:
           python-version: '3.11'
           # cache: 'pip'
       - name: set up `uv`
-        run: pip install uv && uv venv && uv pip list
-      - run: echo "VIRTUAL_ENV=./.venv" >> $GITHUB_ENV
+        run: pip install uv && uv pip list
       - name: install pip dependencies
-        run: uv pip sync requirements.dev.txt && uv pip install . deps/wtforms-widgets && uv pip list
+        run: >
+          uv pip sync --system requirements.dev.txt
+          && uv pip install --system . deps/wtforms-widgets
+          && uv pip list --system
         id: pip-install
       # now come the tests
       - name: Execute ruff
