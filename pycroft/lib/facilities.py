@@ -187,8 +187,8 @@ class RoomAddressSuggestion:
 
     def __str__(self) -> str:
         return f"{self.street} {self.number}, {self.zip_code} {self.city}," \
-               + (f" {self.state}, " if self.state else "") \
-               + f"{self.country}"
+               + (f" {self.state}," if self.state else "") \
+               + f" {self.country}"
 
 
 def suggest_room_address_data(building: Building) -> RoomAddressSuggestion | None:
