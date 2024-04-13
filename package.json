@@ -45,6 +45,7 @@
     "@types/jquery": "^3.5.5",
     "@typescript-eslint/eslint-plugin": "^5.26.0",
     "@typescript-eslint/parser": "^5.26.0",
+    "ajv": "^8",
     "autocomplete.js": "^0.38.1",
     "clean-webpack-plugin": "^4.0.0",
     "css-loader": "^6.7.1",
@@ -68,5 +69,10 @@
   "scripts": {
     "webpack": "webpack",
     "build": "webpack --profile --progress"
-  }
+  },
+  "trustedDependencies": [
+    "@fortawesome/fontawesome-free",
+    "core-js",
+    "esbuild"
+  ]
 }
