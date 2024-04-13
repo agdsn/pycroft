@@ -6,13 +6,14 @@ LOCKDIR=/opt/pycroft/app/node_modules
 . /container/common/locking.sh
 
 function execute_hook() {
+  set -x
   cd /opt/pycroft/app
 
   if shopt -s nullglob dotglob; files=(node_modules/*); (( ${#files[@]} > 0 )); then
     return
   fi
 
-  npm ci
+  bun install --frozen-lockfile
 }
 
 [[ -d $LOCKDIR ]] || mkdir $LOCKDIR

@@ -15,13 +15,12 @@ RUN /opt/pycroft/venv/bin/pip wheel --wheel-dir /opt/pycroft/wheel -r requiremen
   && /opt/pycroft/venv/bin/pip wheel --wheel-dir /opt/pycroft/wheel --no-deps ./deps/wtforms-widgets
 
 # Download JS/CSS dependencies
-COPY --chown=pycroft:pycroft package.json package-lock.json ./
-RUN npm ci \
-    npm outdated
+COPY --chown=pycroft:pycroft package.json bun.lockb ./
+RUN bun install --frozen-lockfile --production
 
 # Build Pycroft wheel
 COPY --chown=pycroft:pycroft . .
-RUN npm run --prod build
+RUN bun run --prod build
 RUN /opt/pycroft/venv/bin/pip wheel --no-deps --wheel-dir /opt/pycroft/wheel .
 
 FROM pycroft-base

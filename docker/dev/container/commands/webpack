@@ -27,7 +27,7 @@ run() {
 	echo "## npm ll:"
 	npm ll
 
-	exec npm run -- webpack --config webpack.config.babel.js "$@"
+	exec bun run -- webpack --config webpack.config.babel.js "$@"
 }
 
 [[ "$0" == "$BASH_SOURCE" ]] && run "$@" || :
