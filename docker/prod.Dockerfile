@@ -16,7 +16,7 @@ RUN /opt/pycroft/venv/bin/pip wheel --wheel-dir /opt/pycroft/wheel -r requiremen
 
 # Download JS/CSS dependencies
 COPY --chown=pycroft:pycroft package.json bun.lockb ./
-RUN bun install --frozen-lockfile --production
+RUN bun install --frozen-lockfile
 
 # Build Pycroft wheel
 COPY --chown=pycroft:pycroft . .
