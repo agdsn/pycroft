@@ -10,7 +10,9 @@ WORKDIR /opt/pycroft/app
 # Download or build wheels of requirements
 COPY --chown=pycroft:pycroft requirements.txt .
 COPY --chown=pycroft:pycroft ./deps ./deps
-RUN /opt/pycroft/venv/bin/pip wheel --wheel-dir /opt/pycroft/wheel -r requirements.txt
+RUN /opt/pycroft/venv/bin/pip wheel --wheel-dir /opt/pycroft/wheel -r requirements.txt \
+  && rm /opt/pycroft/wheel/wtforms_widgets*.whl \
+  && /opt/pycroft/venv/bin/pip wheel --wheel-dir /opt/pycroft/wheel --no-deps ./deps/wtforms-widgets
 
 # Download JS/CSS dependencies
 COPY --chown=pycroft:pycroft package.json package-lock.json ./
