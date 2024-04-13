@@ -124,6 +124,10 @@ schema-status: (_up "dev-db")
 
 # upgrade the (imported or created) schema to the current revision
 schema-upgrade: (_up "dev-db") (alembic "upgrade" "head")
+deps-compile:
+    uv pip compile pyproject.toml --generate-hashes -o requirements.txt
+    uv pip compile pyproject.toml --generate-hashes --extra dev -o requirements.dev.txt
+    uv pip compile pyproject.toml --generate-hashes --extra prod -o requirements.prod.txt
 
 _stop_all:
     {{ drc }} --progress=quiet stop
