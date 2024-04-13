@@ -24,7 +24,7 @@ Reinstall the pip requirements
 
 .. code:: sh
 
-   drc run --rm dev-app pip install -r requirements.txt
+   drc run --rm dev-app pip sync requirements.txt
 
 I need to downgrade the schema
 ------------------------------
