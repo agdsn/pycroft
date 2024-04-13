@@ -54,6 +54,7 @@
     "expose-loader": "^4.0.0",
     "imports-loader": "^4.0.0",
     "mini-css-extract-plugin": "^2.6.0",
+    "npm-check-updates": "^16.14.18",
     "null-loader": "^4.0.0",
     "postcss-loader": "^7.0.0",
     "sass-loader": "^13.0.0",
