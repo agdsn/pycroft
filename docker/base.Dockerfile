@@ -26,8 +26,9 @@ WORKDIR /opt/pycroft
 # - Upgrade pip, setuptools and wheel
 # - Create app directory
 RUN python3 -m venv /opt/pycroft/venv \
-    && /opt/pycroft/venv/bin/pip install -U pip setuptools wheel \
+    && /opt/pycroft/venv/bin/pip install -U uv pip setuptools wheel \
     && mkdir /opt/pycroft/app /opt/pycroft/wheel
+ENV VIRTUAL_ENV=/opt/pycroft/venv
 
 COPY --link . /
 
