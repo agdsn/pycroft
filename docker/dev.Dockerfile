@@ -11,7 +11,9 @@ COPY etc/apt /etc/apt
 
 # Install Debian packages
 # Build-essential is needed For compiling things in pip
-RUN apt-get update \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update \
     && apt-get install -y --no-install-recommends \
         bash \
         bash-completion \

@@ -11,7 +11,9 @@ ENV LANG=C.UTF-8 DEBIAN_FRONTEND=noninteractive
 COPY etc/apt /etc/apt
 
 # Install Debian packages
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
         bash \
         libpq5 \
     && apt-get clean
@@ -25,10 +27,12 @@ WORKDIR /opt/pycroft
 # - Create a virtual environment
 # - Upgrade pip, setuptools and wheel
 # - Create app directory
-RUN python3 -m venv /opt/pycroft/venv \
-    && /opt/pycroft/venv/bin/pip install -U uv pip setuptools wheel \
-    && mkdir /opt/pycroft/app /opt/pycroft/wheel
 ENV VIRTUAL_ENV=/opt/pycroft/venv
+RUN --mount=type=cache,target=/opt/pycroft/.cache,uid=$UID,gid=$GID\
+    python3 -m venv /opt/pycroft/venv \
+    && /opt/pycroft/venv/bin/pip install -U uv \
+    && /opt/pycroft/venv/bin/uv pip install -U setuptools wheel \
+    && mkdir /opt/pycroft/app /opt/pycroft/wheel
 
 COPY --link . /
 
