@@ -5,6 +5,108 @@ requires = [
 ]
 build-backend = "setuptools.build_meta"
 
+# PROJECT METADATA
+[project]
+name = "pycroft"
+version = "0.1.0"
+authors = [{name = "The Pycroft Authors"}]
+license = {text = "Apache Software License"}
+description = "AG DSN user management software"
+readme = "README.md"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Web Environment",
+    "Framework :: Flask",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Internet",
+]
+urls = {Homepage = "http://github.com/agdsn/pycroft/"}
+requires-python = ">= 3.11"
+dependencies = [
+    "alembic ~= 1.9.2",
+    "babel >= 2.12.1",
+    "blinker ~= 1.4",
+    "celery ~= 5.2.1",
+    "Click ~= 8.0",
+    "email-validator ~= 1.1.1",
+    "fints ~= 3.1.0",
+    "Flask ~= 2.3.2",
+    "Flask-Babel ~= 3.1.0",
+    "Flask-Login ~= 0.6.2",
+    "Flask-RESTful ~= 0.3.7",
+    "Flask-WTF ~= 1.1.1",
+    "GitPython ~= 2.1.7",
+    "ipaddr ~= 2.2.0",
+    "Jinja2 ~= 3.0",
+    "jsonschema ~= 3.2.0",
+    "ldap3 ~= 2.5.1",  # only needed for ldap caching
+    "mac-vendor-lookup ~= 0.1.11",
+    "MarkupSafe ~= 2.0",
+    "marshmallow ~= 3.20.1",
+    "mt-940 ~= 4.19.0",
+    "passlib ~= 1.7.1",
+    "pillow ~= 8.4.0",  # usersheet generation
+    "psycopg2-binary ~= 2.9.4",
+    "pydantic ~= 2.0.0",
+    "python-dotenv ~= 0.21.0",
+    "reportlab ~= 3.6.2",
+    "sentry-sdk[Flask] ~= 1.29.2",
+    "simplejson ~= 3.11.1",  # decimal serialization
+    "SQLAlchemy >= 2.0.1",
+    "webargs ~= 8.3.0",
+    "Werkzeug ~= 2.3.6",
+    "wrapt ~= 1.14.1",
+    "WTForms ~= 2.3.3",
+    "wtforms-widgets",  # note: use `pip install -e deps/wtforms-widgets` for development
+]
+
+[project.optional-dependencies]
+prod = [
+    "uwsgi ~= 2.0.21",
+    "uwsgitop ~= 0.11",
+]
+schemadisplay = [
+    "sqlalchemy-schemadisplay @ git+https://github.com/lukasjuhrich/sqlalchemy_schemadisplay.git@master",
+]
+dev = [
+    "celery-types ~= 0.9.3",
+    "coverage ~= 6.5.0",
+    "factory-boy ~= 3.2.0",
+    "Flask-Testing ~= 0.8.1",
+    "guzzle-sphinx-theme @ git+https://github.com/agdsn/guzzle_sphinx_theme.git@977d49fcbdf2b3df9660d813d4b33369391923e1",
+    "mypy ~= 1.8.0",
+    "pydot ~= 1.4.1",
+    "pyinstrument ~= 4.2.0",
+    "pytest ~= 7.0.0",
+    "pytest-cov ~= 4.0.0",
+    "pytest-timeout ~= 2.1.0",
+    # required for pycharm „run with coverage“ reporting
+    "ruff ~= 0.3.2",
+    "sphinx ~= 5.1.1",
+    "sphinx-autobuild ~= 2021.3.14",
+    "sphinxcontrib-fulltoc ~= 1.2.0",
+    "sphinxcontrib-httpdomain ~= 1.8.0",
+    "sphinx-paramlinks ~= 0.6.0",
+    "types-jsonschema ~= 4.3.0",
+    "types-passlib ~= 1.7.7",
+    "watchdog ~= 2.3.1",
+]
+
+[project.scripts]
+pycroft = "scripts.server_run:main"
+pycroft_ldap_sync = "ldap_sync.__main__:main"
+alembic_wrapper = "scripts.alembic_wrapper:cli"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages]
+find = {namespaces = false}
+
+# TOOLS
 [tool.black]
 line-length = 100
 

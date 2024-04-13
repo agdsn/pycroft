@@ -40,14 +40,27 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip'
-      - name: print information about pip cache
-        run: pip cache info && pip cache list
-      - name: ensure presence of `wheel`
-        run: pip install wheel
-      - name: install pip dependencies
-        run: pip install -r requirements.txt -r requirements.dev.txt
+          # cache: 'pip'
+      - name: set up `uv`
+        run: pip install uv && uv pip list
+      - name: restore uv cache
+        uses: actions/cache/restore@v4
+        id: cache-uv-restore
+        with:
+          path: ~/.cache/uv
+          key: uv
+      - name: install pip dependencies with uv
+        run: >
+          uv pip sync --system requirements.dev.txt
+          && uv pip install --system . deps/wtforms-widgets
+          && uv pip list --system
         id: pip-install
+      - name: save uv cache
+        uses: actions/cache/save@v4
+        id: cache-uv-save
+        with:
+          path: ~/.cache/uv
+          key: uv
       # now come the tests
       - name: Execute ruff
         run: ruff check --output-format=github .

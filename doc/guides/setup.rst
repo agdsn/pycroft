@@ -31,9 +31,7 @@ Using a python virtual environment (venv)
 -----------------------------------------
 
 Prerequisites
-    * `virtualenvwrapper <https://virtualenvwrapper.readthedocs.io/en/latest/>`_
-      (`arch:python-virtualenvwrapper <https://archlinux.org/packages/?name=python-virtualenvwrapper>`_,
-      `debian:virtualenvwrapper <https://packages.debian.org/bullseye/virtualenvwrapper>`_)
+    * installed `uv <https://github.com/astral-sh/uv>`_
 
 If you only want to build the documentation or run tests,
 you only need to do the following:
@@ -42,8 +40,7 @@ you only need to do the following:
 #. Set up a virtual environment
 
    .. code:: shell
-
-       mkvirtualenv -a . -r requirements.txt -r requirements.dev.txt pycroft
-       pip install -r requirements.txt -r requirements.dev.txt
+       uv venv
+       uv pip sync requirements.dev.txt && uv pip install -e deps/wtforms-widgets -e '.[dev]'
 
 #. Run tests / Build docs / …

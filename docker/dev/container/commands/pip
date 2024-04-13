@@ -5,12 +5,12 @@ set -euo pipefail
 readonly USAGE=("<command> [options]")
 
 readonly DESCRIPTION=(
-	"Run the pip of the virtual environment in the project root directory."
+	"Run `uv pip` of the virtual environment in the project root directory."
 )
 
 run() {
 	cd /opt/pycroft/app
-	/opt/pycroft/venv/bin/pip "$@"
+	/opt/pycroft/venv/bin/uv pip "$@"
 }
 
 [[ "$0" == "$BASH_SOURCE" ]] && run "$@" || :

@@ -6,7 +6,9 @@ LOCKDIR=/opt/pycroft/venv
 . /container/common/locking.sh
 
 function execute_hook() {
-  PIP="/opt/pycroft/venv/bin/pip"
+  set -x
+  PIP="/opt/pycroft/venv/bin/uv pip"
+  UV="/opt/pycroft/venv/bin/uv"
   PY="/opt/pycroft/venv/bin/python"
 
   if [[ ! -f /opt/pycroft/venv/bin/activate ]]; then
@@ -20,15 +22,15 @@ function execute_hook() {
   fi
 
   $PY -m ensurepip
+  $PY -m pip install uv
   $PIP install wheel
 
   echo "No pip packages found, installing requirements"
   cd /opt/pycroft/app
-  $PIP install --upgrade pip
-  $PIP cache info
-  $PIP cache list
-  $PIP install -r requirements.txt -r requirements.dev.txt
-  $PIP install -e .
+  $PIP install --upgrade uv
+  ls `$UV cache dir`
+  $PIP sync requirements.dev.txt
+  $PIP install -e '.[dev]' 'wtforms-widgets @ ./deps/wtforms-widgets'
 }
 
 [[ -d $LOCKDIR ]] || mkdir $LOCKDIR
