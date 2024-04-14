@@ -158,6 +158,8 @@ jobs:
         run: docker compose -f docker-compose.test.yml run --rm --no-deps test-app
       - name: Start
         run: docker compose -f docker-compose.test.yml up --quiet-pull --wait --wait-timeout=60 test-app
+      - name: list npm packages for debug output
+        run: docker compose -f docker-compose.test.yml run --rm test-app shell bun pm ls --all
       - name: Run webpack
         run: docker compose -f docker-compose.test.yml run --rm test-app webpack --mode production
       - name: Run tests
