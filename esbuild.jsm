@@ -1,4 +1,5 @@
 import * as esbuild from 'esbuild';
+import glob from 'fast-glob';
 
 await esbuild.build({
 	logLevel: "info",
@@ -11,7 +12,7 @@ await esbuild.build({
 
 	entryPoints: [
 		'./web/resources/main.js',
-		'./web/resources/js/lazy-load-select.js',
+		...await glob("web/resources/js/*.{js,ts}"),
 	],
   outdir: 'web/static',
   assetNames: '[name].[hash]',

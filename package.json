@@ -53,6 +53,7 @@
     "esbuild-loader": "^4.1.0",
     "eslint": "^8.16.0",
     "expose-loader": "^5.0.0",
+    "fast-glob": "^3.3.2",
     "imports-loader": "^5.0.0",
     "mini-css-extract-plugin": "^2.6.0",
     "npm-check-updates": "^16.14.18",
