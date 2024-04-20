@@ -1,4 +1,3 @@
-
 import "core-js/stable";
 import "regenerator-runtime/runtime";
 
@@ -37,13 +36,7 @@ import './js/quick-search';
 import './js/table';
 import './js/table-fixed-header';
 
-import './img/favicon.ico';
-import './img/pycroft.png';
-import './img/pycroft.svg';
-
 import './css/autocomplete.css';
 import './css/style.css';
-
-import './xml/opensearch.en.xml'
 
 import '@fortawesome/fontawesome-free/js/all'

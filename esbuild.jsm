@@ -34,12 +34,13 @@ let result = await esbuild.build({
   // minify: true,
   sourcemap: true,
   target: 'es2016',
-  format: 'cjs',  // esm does not work, as `import '….png'` statements will err in the browser
+  format: 'esm',
   metafile: true,
   absWorkingDir: src,
 
   entryPoints: [
     {in: `${src}/main.js`, out: 'main'},
+    {in: `${src}/assets.js`, out: 'assets'},
     ...entryPoints,
   ],
   outdir: dst,

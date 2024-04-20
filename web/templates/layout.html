@@ -182,7 +182,7 @@
     var $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
 </script>
 {# <script type="text/javascript" src="{{ 'runtime.js' | require }}"></script> #}
-<script type="text/javascript" src="{{ 'main.js' | require }}"></script>
+<script type="module" src="{{ 'main.js' | require }}"></script>
 {{ resources.linked_script_files() }}
 {{ resources.ready_scripts() }}
 {% block page_script %}{% endblock %}
