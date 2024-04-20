@@ -5,6 +5,7 @@
  */
 
 import {de, timeFormat} from './d3locale.js';
+import * as d3 from 'd3';
 
 d3.selectAll('[data-chart="balance"]').each(function(d, i) {
   const parent = d3.select(this);
@@ -13,10 +14,10 @@ d3.selectAll('[data-chart="balance"]').each(function(d, i) {
       width = _width - margin.left - margin.right,
       height = 150 - margin.top - margin.bottom;
 
-  const x = d3.time.scale()
+  const x = d3.scaleUtc()
       .range([0, width]);
 
-  const y = d3.scale.linear()
+  const y = d3.scaleLinear()
       .range([height, 0]);
 
   const xAxis = d3.svg.axis()
@@ -75,7 +76,7 @@ d3.selectAll('[data-chart="balance"]').each(function(d, i) {
 
     const data = resp.items;
     data.forEach(function(d) {
-      d.valid_on = d3.time.format.iso.parse(d.valid_on);
+      d.valid_on = d3.utcParse(d.valid_on);
       d.balance = +d.balance/100.; //converts string to number
     });
 
@@ -84,7 +85,7 @@ d3.selectAll('[data-chart="balance"]').each(function(d, i) {
     const last = data[data.length - 1];
     // 'today' might be earlier than last valid_on though...
     data.push({'balance': last.balance, 'valid_on': today});
-    data.splice(0, 0, {'balance': 0, 'valid_on': d3.time.day.offset(first.valid_on, -1)});
+    data.splice(0, 0, {'balance': 0, 'valid_on': d3.utcDay.offset(first.valid_on, -1)});
 
     x.domain(d3.extent(data, function(d) { return d.valid_on; }));
     y.domain(d3.extent(data, function(d) { return d.balance; }));

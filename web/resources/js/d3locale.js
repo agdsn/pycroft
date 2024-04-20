@@ -4,7 +4,9 @@
  * the Apache License, Version 2.0. See the LICENSE file for details.
  */
 
-const de = d3.locale({
+import * as d3 from 'd3';
+// does not exist anymore!
+const de = d3.formatDefaultLocale({
     decimal: ",",
     thousands: ".",
     grouping: [3],
@@ -19,7 +21,7 @@ const de = d3.locale({
     shortMonths: ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Dez"],
 });
 
-const timeFormat = de.timeFormat.multi([
+const timeFormat = d3.timeFormat([
     ["%H:%M", d => d.getMinutes()],
     ["%H:%M", d => d.getHours()],
     ["%a %d", d => d.getDay() && d.getDate() !== 1],

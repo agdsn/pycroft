@@ -8,9 +8,10 @@ import $ from 'jquery';
 // TODO fix once we have a replacement
 nv = {addGraph: _ => ({})}
 import * as binaryPrefix from './binary-prefix';
+import * as d3 from 'd3';
 
 $(() => {
-    const dateFormat = d3.time.format('%Y-%m-%d');
+    const dateFormat = d3.utcFormat('%Y-%m-%d');
 
     function setChartSize(graph) {
         const width = graph.parent.node().getBoundingClientRect().width;
@@ -77,7 +78,7 @@ $(() => {
             // Normalize data
             const traffic = resp;
             traffic.forEach(d => {
-                d.timestamp = d3.time.format.iso.parse(d.timestamp);
+                d.timestamp = d3.utcParse(d.timestamp);
             });
 
             // Traffic graph
