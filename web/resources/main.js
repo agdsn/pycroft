@@ -29,7 +29,6 @@ import './js/color-mode';
 import './js/account-typeahead';
 import './js/generic-typeahead';
 import './js/alerts';
-import './js/balance-chart';
 import './js/d3locale';
 import './js/form';
 import './js/quick-search';
