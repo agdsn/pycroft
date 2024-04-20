@@ -79,7 +79,7 @@ function deriveEntryName(outname, outprops) {
     return null
   }
   if (entryPoint !== undefined) {
-    return entryPoint
+    return entryPoint.replace(/^js\//, "").replace(/\.ts$/, ".js")
   }
   else if (outname.match(/main\..*\.css/)) {
     return "main.css"
