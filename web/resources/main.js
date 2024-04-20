@@ -16,7 +16,6 @@ import 'jquery';
 import 'matchheight';
 import 'moment';
 import 'moment/dist/locale/de.js';
-import 'nvd3';
 import 'typeahead.js/dist/bloodhound';
 import 'underscore';
 import 'url-polyfill';

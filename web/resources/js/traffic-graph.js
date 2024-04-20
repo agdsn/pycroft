@@ -5,7 +5,8 @@
  */
 
 import $ from 'jquery';
-import nv from 'nvd3';
+// TODO fix once we have a replacement
+nv = {addGraph: _ => ({})}
 import * as binaryPrefix from './binary-prefix';
 
 $(() => {
