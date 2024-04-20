@@ -33,7 +33,8 @@ import './js/balance-chart';
 import './js/d3locale';
 import './js/form';
 import './js/quick-search';
-import './js/table';
+import * as table from './js/table';
+window.table = table;
 import './js/table-fixed-header';
 
 import './css/autocomplete.css';
