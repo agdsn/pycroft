@@ -14,54 +14,32 @@ d3.selectAll('[data-chart="balance"]').each(function(d, i) {
       width = _width - margin.left - margin.right,
       height = 150 - margin.top - margin.bottom;
 
-  const x = d3.scaleUtc()
-      .range([0, width]);
+  const x = d3.scaleUtc().range([0, width])
+  const y = d3.scaleLinear().range([height, 0])
 
-  const y = d3.scaleLinear()
-      .range([height, 0]);
+  const xAxis = d3
+    .axisBottom(x).tickFormat(timeFormat);
 
-  const xAxis = d3.svg.axis()
-      .scale(x)
-      .orient("bottom")
-      .tickFormat(timeFormat);
+  const yAxis = d3
+      .axisLeft(y)
+      .tickFormat(de.format("$s"));
 
-  const yAxis = d3.svg.axis()
-      .scale(y)
-      .orient("left")
-      .tickFormat(de.numberFormat("$s"));
+  const area_pos = d3.area()
+      .x((d) => x(d.valid_on))
+      .y0((_) => y(0))
+      .y1((d) => d.balance > 0 ? y(d.balance) : y(0))
+      .curve(d3.curveStepAfter);
 
-  const area_pos = d3.svg.area()
-      .x(function (d) {
-        return x(d.valid_on);
-      })
-      .y0(function (d) {
-        return y(0);
-      })
-      .y1(function (d) {
-        return d.balance > 0 ? y(d.balance) : y(0);
-      })
-      .interpolate("step-after");
+  const area_neg = d3.area()
+      .x((d) => x(d.valid_on))
+      .y0((d) => d.balance < 0 ? y(d.balance) : y(0))
+      .y1((_) => y(0))
+      .curve(d3.curveStepAfter);
 
-  const area_neg = d3.svg.area()
-      .x(function (d) {
-        return x(d.valid_on);
-      })
-      .y0(function (d) {
-        return d.balance < 0 ? y(d.balance) : y(0);
-      })
-      .y1(function (d) {
-        return y(0);
-      })
-      .interpolate("step-after");
-
-  const line = d3.svg.line()
-      .x(function (d) {
-        return x(d.valid_on);
-      })
-      .y(function (d) {
-        return y(d.balance);
-      })
-      .interpolate("step-after");
+  const line = d3.line()
+      .x((d) => x(d.valid_on))
+      .y((d) => y(d.balance))
+      .curve(d3.curveStepAfter);
 
   const svg = parent.append("svg")
       .attr("viewBox", "0 0 " +
@@ -71,13 +49,12 @@ d3.selectAll('[data-chart="balance"]').each(function(d, i) {
       .append("g")
       .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-  d3.json(parent.attr("data-url"), function(error, resp) {
-    if (error) throw error;
-
+  d3.json(parent.attr("data-url"))
+    .then(function(resp) {
     const data = resp.items;
-    data.forEach(function(d) {
-      d.valid_on = d3.utcParse(d.valid_on);
-      d.balance = +d.balance/100.; //converts string to number
+    data.forEach((d) => {
+        d.valid_on = d3.utcParse(d.valid_on);
+        d.balance = +d.balance / 100.; //converts string to number
     });
 
     const today = new Date();
@@ -121,5 +98,6 @@ d3.selectAll('[data-chart="balance"]').each(function(d, i) {
         .datum(data)
         .attr("class", "line")
         .attr("d", line);
-  });
+  })
+    .catch(error => { throw error })
 });
