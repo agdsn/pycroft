@@ -14,15 +14,17 @@ d3.selectAll('[data-chart="balance"]').each(function(d, i) {
       width = _width - margin.left - margin.right,
       height = 150 - margin.top - margin.bottom;
 
-  const x = d3.scaleUtc().range([0, width])
+  const x = d3.scaleTime().range([0, width])
   const y = d3.scaleLinear().range([height, 0])
 
   const xAxis = d3
-    .axisBottom(x).tickFormat(timeFormat);
+    .axisBottom(x)
+    .tickFormat(timeFormat)
 
   const yAxis = d3
       .axisLeft(y)
-      .tickFormat(de.format("$s"));
+      .tickFormat(de.format("$,.0~s"))
+      .ticks(5)
 
   const area_pos = d3.area()
       .x((d) => x(d.valid_on))
@@ -51,11 +53,10 @@ d3.selectAll('[data-chart="balance"]').each(function(d, i) {
 
   d3.json(parent.attr("data-url"))
     .then(function(resp) {
-    const data = resp.items;
-    data.forEach((d) => {
-        d.valid_on = d3.utcParse(d.valid_on);
-        d.balance = +d.balance / 100.; //converts string to number
-    });
+    let data = resp.items.map((d) => ({
+        valid_on: d3.isoParse(d.valid_on),
+        balance: +d.balance / 100., //converts string to number
+    }));
 
     const today = new Date();
     const first = data[0];
@@ -64,8 +65,8 @@ d3.selectAll('[data-chart="balance"]').each(function(d, i) {
     data.push({'balance': last.balance, 'valid_on': today});
     data.splice(0, 0, {'balance': 0, 'valid_on': d3.utcDay.offset(first.valid_on, -1)});
 
-    x.domain(d3.extent(data, function(d) { return d.valid_on; }));
-    y.domain(d3.extent(data, function(d) { return d.balance; }));
+    x.domain(d3.extent(data, (d) => d.valid_on));
+    y.domain(d3.extent(data, (d) => d.balance));
 
     svg.append("path")
         .datum(data)
@@ -82,17 +83,20 @@ d3.selectAll('[data-chart="balance"]').each(function(d, i) {
     svg.append("g")
         .attr("class", "x axis")
         .attr("transform", "translate(0," + height + ")")
-        .call(xAxis);
+        .call(xAxis)
+        .attr("font-size", "16px")
 
     svg.append("g")
         .attr("class", "y axis")
         .call(yAxis)
+        .attr("font-size", "16px")
       .append("text")
+        .attr("font-size", "16px")
         .attr("transform", "rotate(-90)")
         .attr("y", 6)
         .attr("dy", ".71em")
         .style("text-anchor", "end")
-        .text("Saldo");
+        .text("Saldo")
 
     svg.append("path")
         .datum(data)

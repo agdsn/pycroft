@@ -21,13 +21,29 @@ const de = d3.formatDefaultLocale({
     shortMonths: ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Dez"],
 });
 
-const timeFormat = d3.timeFormat([
-    ["%H:%M", d => d.getMinutes()],
-    ["%H:%M", d => d.getHours()],
-    ["%a %d", d => d.getDay() && d.getDate() !== 1],
-    ["%b %d", d => d.getDate() !== 1],
-    ["%B", d => d.getMonth()],
-    ["%Y", () => true],
-]);
+const formatMillisecond = d3.timeFormat(".%L"),
+    formatSecond = d3.timeFormat(":%S"),
+    formatMinute = d3.timeFormat("%I:%M"),
+    formatHour = d3.timeFormat("%I %p"),
+    formatDay = d3.timeFormat("%a %d"),
+    formatWeek = d3.timeFormat("%b %d"),
+    formatMonth = d3.timeFormat("%B"),
+    formatYear = d3.timeFormat("%Y");
+
+/**
+* Conditionally format a given date: Start of year formatted as year, start of month as month, etc.
+* @param {Date} date
+*/
+function timeFormat(date) {
+  return (
+      d3.timeSecond(date) < date ? formatMillisecond
+    : d3.timeMinute(date) < date ? formatSecond
+    : d3.timeHour(date) < date ? formatMinute
+    : d3.timeDay(date) < date ? formatHour
+    : d3.timeMonth(date) < date ? formatDay (d3.timeWeek(date) < date ? formatDay : formatWeek)
+    : d3.timeYear(date) < date ? formatMonth
+    : formatYear
+  )(date);
+}
 
 export {timeFormat, de};
