@@ -37,7 +37,7 @@ const { values: args } = parseArgs({
   allowPositionals: true,
 })
 
-const options = {
+const options: esbuild.BuildOptions = {
   logLevel: "info",
 
   bundle: true,
