@@ -26,7 +26,7 @@ const entryPoints = [
   {out: x[0], in: path.join(src, x[1])}
 ))
 
-let result = await esbuild.build({
+const options = {
   logLevel: "info",
 
   bundle: true,
@@ -59,7 +59,12 @@ let result = await esbuild.build({
   plugins: [{name: "manifest", setup(build){
     build.onEnd(result => generateManifest(result, src, dst))}
   }]
-})
+}
+
+// esbuild.build(options)
+const ctx = await esbuild.context(options)
+await ctx.watch()
+
 
 // for debug purposes
 // fs.writeFileSync(path.join(dst, "meta.json"), JSON.stringify(result.metafile))
