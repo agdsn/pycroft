@@ -1,5 +1,7 @@
+#!/usr/bin/env bun
 import { parseArgs } from "util";
 import * as esbuild from 'esbuild';
+import { clean } from 'esbuild-plugin-clean';
 import fs from 'fs';
 import path from 'path';
 
@@ -69,7 +71,11 @@ const options: esbuild.BuildOptions = {
   inject: [path.join(src, "inject-jquery.js")],
   plugins: [{name: "manifest", setup(build){
     build.onEnd(result => generateManifest(result, src, dst))}
-  }]
+  }].concat(args.prod ? [ 
+    clean({
+      patterns: [dst + "/**"],
+    })
+  ] : [])
 }
 
 if (args.watch) {
