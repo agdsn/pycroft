@@ -2,6 +2,7 @@
 import { parseArgs } from "util";
 import * as esbuild from 'esbuild';
 import { clean } from 'esbuild-plugin-clean';
+import { summaryPlugin } from 'esbuild-plugin-summary';
 import fs from 'fs';
 import path from 'path';
 
@@ -75,6 +76,9 @@ const options: esbuild.BuildOptions = {
     clean({
       patterns: [dst + "/**"],
     })
+  ] : [])
+  .concat(args.watch ? [
+    summaryPlugin()
   ] : [])
 }
 

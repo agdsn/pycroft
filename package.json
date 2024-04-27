@@ -51,6 +51,7 @@
     "esbuild": "^0.20.2",
     "esbuild-loader": "^4.1.0",
     "esbuild-plugin-clean": "^1.0.1",
+    "esbuild-plugin-summary": "^0.0.2",
     "eslint": "^8.16.0",
     "expose-loader": "^5.0.0",
     "fast-glob": "^3.3.2",
