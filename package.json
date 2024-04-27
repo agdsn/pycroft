@@ -71,8 +71,8 @@
     "webpack-manifest-plugin": "^5.0.0"
   },
   "scripts": {
-    "webpack": "webpack",
-    "build": "webpack --profile --progress"
+    "bundle": "./bundle.ts",
+    "bundle-watch": "./bundle.ts --watch"
   },
   "trustedDependencies": [
     "@fortawesome/fontawesome-free",
