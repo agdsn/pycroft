@@ -46,6 +46,7 @@ const options: esbuild.BuildOptions = {
   bundle: true,
   splitting: args.prod,
   minify: args.prod,
+  treeShaking: args.prod,
   sourcemap: true,
   target: 'es2016',
   format: 'esm',
