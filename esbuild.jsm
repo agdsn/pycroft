@@ -1,3 +1,4 @@
+import { parseArgs } from "util";
 import * as esbuild from 'esbuild';
 import fs from 'fs';
 import path from 'path';
@@ -26,12 +27,22 @@ const entryPoints = [
   {out: x[0], in: path.join(src, x[1])}
 ))
 
+const { values: args } = parseArgs({
+  args: Bun.argv,
+  options: {
+    watch: { type: 'boolean' },
+    prod: { type: 'boolean' },
+  },
+  strict: true,
+  allowPositionals: true,
+})
+
 const options = {
   logLevel: "info",
 
   bundle: true,
-  // splitting: true,
-  // minify: true,
+  splitting: args.prod,
+  minify: args.prod,
   sourcemap: true,
   target: 'es2016',
   format: 'esm',
@@ -61,9 +72,12 @@ const options = {
   }]
 }
 
-// esbuild.build(options)
-const ctx = await esbuild.context(options)
-await ctx.watch()
+if (args.watch) {
+  const ctx = await esbuild.context(options)
+  await ctx.watch()
+} else {
+  esbuild.build(options)
+}
 
 
 // for debug purposes
