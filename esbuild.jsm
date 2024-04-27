@@ -56,21 +56,28 @@ let result = await esbuild.build({
   },
 
   inject: [path.join(src, "inject-jquery.js")],
+  plugins: [{name: "manifest", setup(build){
+    build.onEnd(result => generateManifest(result, src, dst))}
+  }]
 })
 
-fs.writeFileSync(path.join(dst, "meta.json"), JSON.stringify(result.metafile))
+// for debug purposes
+// fs.writeFileSync(path.join(dst, "meta.json"), JSON.stringify(result.metafile))
 
-const outs = result.metafile.outputs
+// cleanup jobs: turn `result.metafile` into manifest.
+function generateManifest(result, src, dst) {
+  const outs = result.metafile.outputs
 
-let entries = {}
-for (const [outname_, outprops] of Object.entries(outs)) {
-  const outname = rebase(outname_, src, dst)
-  const entry = deriveEntryName(outname, outprops)
-  if (entry !== undefined) {
-    entries[entry] = outname
+  let entries = {}
+  for (const [outname_, outprops] of Object.entries(outs)) {
+    const outname = rebase(outname_, src, dst)
+    const entry = deriveEntryName(outname, outprops)
+    if (entry !== undefined) {
+      entries[entry] = outname
+    }
   }
+  fs.writeFileSync(path.join(dst, "manifest.json"), JSON.stringify(entries))
 }
-fs.writeFileSync(path.join(dst, "manifest.json"), JSON.stringify(entries))
 
 function deriveEntryName(outname, outprops) {
   const {entryPoint, inputs: inputs_} = outprops
