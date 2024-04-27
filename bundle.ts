@@ -113,7 +113,7 @@ function deriveEntryName(outname, outprops) {
   else if (inputs !== undefined && inputs.length == 1) {
     return inputs[0]
   }
-  else {
+  else if (!outname.includes("chunk")) {
     throw Error(`output asset ${outname} has no entrypoint and has no unique input (inputs: ${inputs})`)
   }
 }
