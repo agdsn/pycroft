@@ -10,7 +10,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    {{ resources.link_css("vendor.css" | require) }}
+    {# {{ resources.link_css("vendor.css" | require) }} #}
     {{ resources.link_css("main.css" | require) }}
     {% block page_css %}{% endblock %}
     <link rel="icon" href="{{ "img/pycroft.svg" | require }}"/>
@@ -176,13 +176,13 @@
             </footer>
          {%- endblock %}
     </div> <!-- /container -->
-<script type="text/javascript" src="{{ 'vendor.js' | require }}"></script>
+{# <script type="text/javascript" src="{{ 'vendor.js' | require }}"></script> #}
 <script type="text/javascript">
     {# See http://flask.pocoo.org/docs/patterns/jquery/#where-is-my-site #}
     var $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
 </script>
-<script type="text/javascript" src="{{ 'runtime.js' | require }}"></script>
-<script type="text/javascript" src="{{ 'main.js' | require }}"></script>
+{# <script type="text/javascript" src="{{ 'runtime.js' | require }}"></script> #}
+<script type="module" src="{{ 'main.js' | require }}"></script>
 {{ resources.linked_script_files() }}
 {{ resources.ready_scripts() }}
 {% block page_script %}{% endblock %}

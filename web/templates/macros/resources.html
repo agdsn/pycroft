@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="{{ path }}">
 {%- endmacro -%}
 
-{%- macro link_script_file(path, mime_type="text/javascript") -%}
+{%- macro link_script_file(path, mime_type="module") -%}
     <script type="{{ mime_type }}" src="{{ path }}"></script>
 {% endmacro %}
 

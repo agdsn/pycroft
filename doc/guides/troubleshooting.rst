@@ -10,12 +10,12 @@ Due to laziness, prefix every bash-snippet with
 Webpack appears to be missing a library
 ---------------------------------------
 
-Re-Install everything using npm, and re-run the webpack entrypoint.
+Re-Install everything using npm, and restart the bundling
 
 .. code:: sh
 
-   drc run --rm dev-app shell npm ci
-   drc run --rm dev-app webpack
+   drc run --rm dev-app bun i --frozen-lockfile
+   drc run --rm dev-app bun run bundle
 
 Pip appears to be missing a dependency
 --------------------------------------
