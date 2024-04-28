@@ -17,7 +17,7 @@ services:
         condition: service_healthy
       dev-mq:
         condition: service_healthy
-      dev-webpack:
+      dev-bundler:
         condition: service_started
     networks:
       dev:
@@ -30,11 +30,11 @@ services:
       test: curl --fail http://localhost:5000
       interval: 2s
       start_period: 10s
-  dev-webpack:
+  dev-bundler:
     extends:
       file: docker-compose.base.yml
       service: dev
-    command: ["webpack", "--watch"]
+    command: ["bun", "run", "bundle", "--watch"]
   dev-docs:
     extends:
       file: docker-compose.base.yml

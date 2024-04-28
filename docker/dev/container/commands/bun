@@ -1,0 +1,17 @@
+#!/bin/bash
+
+set -euo pipefail
+
+readonly USAGE=("[args]")
+
+readonly DESCRIPTION=(
+	"Run bun in project root. Optional arguments are passed to bun."
+)
+
+run() {
+	set -x
+	cd /opt/pycroft/app
+	exec bun "$@"
+}
+
+[[ "$0" == "$BASH_SOURCE" ]] && run "$@" || :
