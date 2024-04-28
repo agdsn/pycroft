@@ -20,7 +20,7 @@ RUN bun install --frozen-lockfile
 
 # Build Pycroft wheel
 COPY --chown=pycroft:pycroft . .
-RUN bun run --prod build
+RUN bun run bundle --prod
 RUN /opt/pycroft/venv/bin/pip wheel --no-deps --wheel-dir /opt/pycroft/wheel .
 
 FROM pycroft-base
