@@ -4,115 +4,67 @@
  * the Apache License, Version 2.0. See the LICENSE file for details.
  */
 
-import $ from 'jquery';
-// TODO fix once we have a replacement
-nv = {addGraph: _ => ({})}
-import * as binaryPrefix from './binary-prefix';
-import * as d3 from 'd3';
+import ApexCharts from 'apexcharts';
+import { formatBytes } from 'bytes-formatter';
 
-$(() => {
-    const dateFormat = d3.utcFormat('%Y-%m-%d');
+const options = {
+    chart: {
+        type: 'bar',
+        stacked: true,
+        height: 200,
+        animations: {
+            enabled: false,
+        },
+    },
+    noData: "No data available.",
+    legend: {
+        position: 'right',
+        offsetY: 40
+    },
+    plotOptions: {
+        bar: { dataLabels: { total: { enabled: true } } }
+    },
+    xaxis: {
+        type: "datetime",
+        labels: {
+            datetimeFormatter: {
+                day: "ddd MM-dd"
+            }
+        },
+    },
+    yaxis: { labels: { formatter: formatBytes } },
+    dataLabels: { formatter: formatBytes },
+    colors: ["#1f77b4", "#b55d1f"],
+}
 
-    function setChartSize(graph) {
-        const width = graph.parent.node().getBoundingClientRect().width;
-        const height = 200;
+function renderChart(el, json) {
+    const chart = new ApexCharts(el, {
+        ...options,
+        series: [  // TODO transpose the JSON response on the backend
+            { name: 'Download', data: json.map(x => x.ingress) },
+            { name: 'Upload', data: json.map(x => x.egress) },
+        ],
+        xaxis: {
+            ...options.xaxis,
+            categories: json.map(x => x.timestamp),
+        },
+    })
+    chart.render();
+}
 
-        graph.chart
-            .width(width)
-            .height(height);
-
-        graph.data
-            .attr('width', width)
-            .attr('height', height);
-    }
-
-    const el = document.getElementById('tab-traffic');
-    if (!el) {
+document.addEventListener('DOMContentLoaded', () => {
+    const tabEl = document.getElementById('tab-traffic');
+    if (!tabEl) {
         console.warning("No element of id tab-traffic exists!")
         return
     }
-    el.addEventListener('shown.bs.tab', () => {
-        d3.select(".traffic-graph").each(function () {
-            const trafficGraph = {
-                parent: d3.select(this),
-                url: this.dataset.url,
-                days: this.dataset.days,
-            };
-
-            nv.addGraph({
-                generate: () => {
-                    trafficGraph.chart = nv.models.multiBarChart()
-                        .margin({top: 25, right: 75, bottom: 30, left: 60})
-                        .stacked(true)
-                        .groupSpacing(0.4)
-                        .color(["#b55d1f", "#1f77b4"]);
-                    trafficGraph.chart.yScale(binaryPrefix.linearScale());
-                    trafficGraph.chart.yAxis.tickFormat(binaryPrefix.format);
-
-                    trafficGraph.data = trafficGraph.parent.append("svg");
-
-                    setChartSize(trafficGraph);
-
-                    return trafficGraph.chart;
-                },
-                callback: graph => {
-                    nv.utils.windowResize(() => {
-                        setChartSize(trafficGraph);
-
-                        trafficGraph.data
-                            .transition().duration(0)
-                            .call(graph);
-                    });
-
-                    loadTrafficData(trafficGraph);
-                },
-            });
-        });
-    }, {once: true});
-
-    function loadTrafficData(trafficGraph) {
-        d3.json(`${trafficGraph.url}/${trafficGraph.days}`,
-            (error, resp) => {
-            if (error) throw error;
-
-            // Normalize data
-            const traffic = resp;
-            traffic.forEach(d => {
-                d.timestamp = d3.utcParse(d.timestamp);
-            });
-
-            // Traffic graph
-            const data = [{
-                key: "Upload",
-                nonStackable: false,
-                values: traffic.map(d => ({
-                    x: d.timestamp,
-                    y: d.egress,
-                })),
-            },
-                {
-                    key: "Download",
-                    nonStackable: false,
-                    values: traffic.map(d => ({
-                        x: d.timestamp,
-                        y: d.ingress,
-                    })),
-                }];
-
-            trafficGraph.chart.xAxis.tickFormat(d => dateFormat(d));
-
-            if (!traffic.some(d => !!d.ingress || !!d.egress))
-                trafficGraph.chart.forceY([0, 1000]);
-
-            trafficGraph.data.datum(data).transition().duration(250).call(trafficGraph.chart);
-        });
-    }
-
-    const selectDays = document.querySelector('.select-days');
-    if (!selectDays) {
-        // TODO find out why that field does not exist anymore
-        console.warn("No element of selector `.select-days`!");
-        return
-    }
-    selectDays.addEventListener('change', ev => loadTrafficData(ev.target));
+    tabEl.addEventListener('shown.bs.tab', () => {
+        document.querySelectorAll(".traffic-graph").forEach(el => {
+            const { url } = el.dataset;
+            fetch(url)
+                .then(data => data.json())
+                .catch(e => console.log(e))
+                .then(json => renderChart(el, json))
+        })
+    }, { once: true });
 });

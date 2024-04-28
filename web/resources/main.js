@@ -22,7 +22,6 @@ import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap-datepicker/dist/css/bootstrap-datepicker3.css';
 import 'bootstrap-table/dist/bootstrap-table.css';
 import 'dc/dist/style/dc.css';
-import 'nvd3/build/nv.d3.css';
 
 import './js/color-mode';
 import './js/account-typeahead';
