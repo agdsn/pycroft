@@ -103,15 +103,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
+    - uses: oven-sh/setup-bun@v1
       with:
-        node-version: 16
-    - run: npm ci
-    - run: npm run build
+        bun-version: 1.1.3
+    - run: bun install --frozen-lockfile
+    - run: bun run bundle --prod
     - name: Check for outdated NPM packages
-      run: |
-        (npm outdated --json | tee outdated.json) || [[ $? == 1 ]]
-        python ./scripts/render_outdated.py outdated.json >> "${GITHUB_STEP_SUMMARY}"
+      run: bun x npm-check-updates --root --format group >> "${GITHUB_STEP_SUMMARY}"
   build:
     runs-on: ubuntu-latest
     steps:
@@ -159,9 +157,11 @@ jobs:
       - name: Run test-app entrypoints
         run: docker compose -f docker-compose.test.yml run --rm --no-deps test-app
       - name: Start
-        run: docker compose -f docker-compose.test.yml up --wait --wait-timeout=60 test-app
-      - name: Run webpack
-        run: docker compose -f docker-compose.test.yml run --rm test-app webpack --mode production
+        run: docker compose -f docker-compose.test.yml up --quiet-pull --wait --wait-timeout=60 test-app
+      - name: list npm packages for debug output
+        run: docker compose -f docker-compose.test.yml run --rm test-app shell bun pm ls --all
+      - name: Run esbuild
+        run: docker compose -f docker-compose.test.yml run --rm test-app bun run bundle --prod
       - name: Run tests
         run: >
           docker compose -f docker-compose.test.yml run --rm test-app

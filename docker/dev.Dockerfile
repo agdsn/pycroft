@@ -1,7 +1,19 @@
-# syntax=docker/dockerfile:1.4
+# syntax=docker/dockerfile:1.6
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+FROM alpine:latest AS bunzipper
+RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
+    apk add unzip curl
+RUN <<EOF ash
+    set -euo pipefail
+    curl -sSfLO https://github.com/oven-sh/bun/releases/download/bun-v1.1.3/bun-linux-x64-baseline.zip
+    unzip -j bun-linux-x64-baseline.zip bun-linux-x64-baseline/bun -d /opt
+    echo "e1c94765691f95ca593cf921c89d7bba951cd6e876d28f67ee37a3feeb288f55  /opt/bun" \
+        | sha256sum -c -
+EOF
+
+# syntax=docker/dockerfile:1.4
 FROM pycroft-base
 
 USER root
@@ -23,13 +35,12 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         git \
         less \
         libpq-dev \
-        nodejs \
-        npm \
         postgresql-client \
         strace \
         unzip \
         vim \
     && apt-get clean
+COPY --chmod=755 --from=bunzipper /opt/bun /usr/local/bin/bun
 
 COPY --link . /
 COPY --link --chmod=755 ./container /container

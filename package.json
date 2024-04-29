@@ -16,19 +16,20 @@
   "dependencies": {
     "@fortawesome/fontawesome-free": "^6.1.1",
     "@popperjs/core": "^2.9.2",
+    "apexcharts": "^3.49.0",
     "bootstrap": "^5.3.1",
     "bootstrap-3-typeahead": "^4.0.2",
     "bootstrap-datepicker": "^1.7.1",
     "bootstrap-table": "^1.20.2",
+    "bytes-formatter": "^21.6.12",
     "core-js": "^3.22.6",
     "crossfilter": "^1.3.12",
-    "d3": "^3.5.17",
+    "d3": "^7.9.0",
     "dc": "^4.0.5",
     "javascript-time-ago": "^2.5.3",
     "jquery": "^3.3.1",
     "matchheight": "^0.1.2",
     "moment": "^2.29.4",
-    "nvd3": "^1.8.6",
     "regenerator-runtime": "^0.13.5",
     "typeahead.js": "^0.11.1",
     "underscore": "^1.12.1",
@@ -46,27 +47,20 @@
     "@typescript-eslint/eslint-plugin": "^5.26.0",
     "@typescript-eslint/parser": "^5.26.0",
     "autocomplete.js": "^0.38.1",
-    "clean-webpack-plugin": "^4.0.0",
-    "css-loader": "^6.7.1",
-    "esbuild-loader": "^4.1.0",
+    "esbuild": "^0.20.2",
+    "esbuild-plugin-clean": "^1.0.1",
+    "esbuild-plugin-summary": "^0.0.2",
     "eslint": "^8.16.0",
-    "expose-loader": "^4.0.0",
-    "imports-loader": "^4.0.0",
-    "mini-css-extract-plugin": "^2.6.0",
-    "null-loader": "^4.0.0",
-    "postcss-loader": "^7.0.0",
-    "sass-loader": "^13.0.0",
-    "shim-loader": "^1.0.1",
-    "source-map-loader": "^3.0.1",
-    "style-loader": "^3.3.1",
-    "ts-loader": "^9.3.0",
-    "typescript": "^4.1.3",
-    "webpack": "^5.76.0",
-    "webpack-cli": "^4.9.2",
-    "webpack-manifest-plugin": "^5.0.0"
+    "npm-check-updates": "^16.14.18",
+    "typescript": "^4.1.3"
   },
   "scripts": {
-    "webpack": "webpack",
-    "build": "webpack --profile --progress"
-  }
+    "bundle": "./bundle.ts",
+    "bundle-watch": "./bundle.ts --watch"
+  },
+  "trustedDependencies": [
+    "@fortawesome/fontawesome-free",
+    "core-js",
+    "esbuild"
+  ]
 }
