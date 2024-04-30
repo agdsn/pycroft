@@ -30,7 +30,7 @@ repos:
       name: "pip-compile: requirements.prod.txt"
       args: [pyproject.toml, --generate-hashes, --extra, prod, --quiet, -o, requirements.prod.txt]
       files: ^(pyproject.toml|requirements.prod.txt)$
-- repo: https://github.com/returntocorp/semgrep
+- repo: https://github.com/semgrep/pre-commit
   rev: 'v1.70.0'
   hooks:
   - id: semgrep
