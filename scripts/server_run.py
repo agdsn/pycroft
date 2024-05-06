@@ -7,6 +7,7 @@ import logging
 import os
 import sys
 import time
+import tomllib
 
 from babel.support import Translations
 from flask import g, request
@@ -38,8 +39,8 @@ def prepare_server(echo=False) -> PycroftFlask:
     logging.getLogger('pycroft').addHandler(default_handler)
 
     app = make_app()
-    # TODO rename to `default_config.toml`
-    app.config.from_pyfile("flask.cfg")
+    app.config.from_file("default_config.toml", load=tomllib.load, text=False)
+    app.config.from_prefixed_env()
 
     engine = create_engine(get_connection_string())
     with engine.connect() as connection:
