@@ -14,6 +14,7 @@ from pycroft.model.host import Switch, SwitchPort
 from pycroft.model.net import Subnet
 from pycroft.model.port import PatchPort
 from tests import factories as f
+from tests.assertions import assert_one
 from web.blueprints.infrastructure import format_address_range
 from .assertions import TestClient
 
@@ -63,9 +64,7 @@ class TestSwitch:
 
     def test_switches_json(self, client: TestClient, switch):
         response = client.assert_url_ok(url_for("infrastructure.switches_json"))
-        assert "items" in (j := response.json)
-        assert len(j["items"]) == 1
-        [it] = j["items"]
+        it = assert_one(response.json.get("items", []))
         assert it["id"] == switch.host_id
         assert "edit_link" in it
         assert "delete_link" in it
@@ -93,8 +92,7 @@ class TestSwitch:
         response = client.assert_url_ok(
             url_for("infrastructure.switch_show_json", switch_id=switch.host_id)
         )
-        assert "items" in (j := response.json)
-        assert len(j["items"]) == 1
+        assert_one(response.json.get("items", []))
 
 
 @pytest.mark.usefixtures("admin_logged_in", "session")
