@@ -10,6 +10,7 @@ from pycroft.model.user import User
 from tests import factories
 from . import ExampleUserData
 from .task_helpers import create_task_and_execute
+from .assertions import assert_mail_reasonable
 
 
 @pytest.fixture(scope="module")
@@ -38,7 +39,7 @@ class TestUserMoveIn:
     def user_data(self):
         return ExampleUserData
 
-    def test_move_in(self, session, user, room, processor, config, mac):
+    def test_move_in(self, session, user, room, processor, config, mac, mail_capture):
         lib_user.move_in(
             user,
             building_id=room.building.id,
@@ -63,8 +64,10 @@ class TestUserMoveIn:
             assert group in active_user_groups
 
         assert not user.has_property("reduced_membership_fee")
+        assert len(mail_capture) == 1
+        assert_mail_reasonable(mail_capture[0], subject_re="Wohnortänderung")
 
-    def test_move_in_scheduling(self, session, utcnow, user, room, processor, config):
+    def test_move_in_scheduling(self, session, utcnow, user, room, processor, config, mail_capture):
         processing_user = processor
         test_mac = '00:de:ad:be:ef:00'
         lib_user.move_in(
@@ -83,10 +86,11 @@ class TestUserMoveIn:
             room_number="1",
             mac=test_mac,
         )
+        assert len(mail_capture) == 0
 
 
 class TestMoveInImpl:
-    def test_successful_move_in_execution_without_mac(self, session, user, room):
+    def test_successful_move_in_execution_without_mac(self, session, user, room, mail_capture):
         task = create_task_and_execute(
             TaskType.USER_MOVE_IN,
             user,
@@ -98,9 +102,11 @@ class TestMoveInImpl:
         )
         assert isinstance(task, UserTask)
         assert_successful_move_in_execution(task, room)
+        assert len(mail_capture) == 1
+        assert_mail_reasonable(mail_capture[0], subject_re="Wohnortänderung")
         assert not user.hosts
 
-    def test_successful_move_in_execution_minimal(self, session, user, room, mac):
+    def test_successful_move_in_execution_minimal(self, session, user, room, mac, mail_capture):
         task = create_task_and_execute(
             TaskType.USER_MOVE_IN,
             user,
@@ -116,6 +122,8 @@ class TestMoveInImpl:
         assert len(hosts := user.hosts) == 1
         assert len(interfaces := hosts[0].interfaces) == 1
         assert interfaces[0].mac == mac
+        assert len(mail_capture) == 1
+        assert_mail_reasonable(mail_capture[0], subject_re="Wohnortänderung")
 
 
 def assert_successful_move_in_execution(task: UserTask, room: Room):
