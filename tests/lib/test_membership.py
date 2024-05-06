@@ -6,6 +6,7 @@ from tests import factories as f
 
 def test_user_change_membership(session, membership, processor, utcnow):
     change_membership_active_during(
+        session,
         membership.id,
         begins_at=utcnow,
         ends_at=utcnow,

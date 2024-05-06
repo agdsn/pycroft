@@ -810,9 +810,12 @@ def edit_membership(user_id: int, membership_id: int) -> ResponseReturnValue:
 
     if form.validate_on_submit():
         change_membership_active_during(
-            membership_id,
-            form.begins_at.data,
-            None if form.ends_at.unlimited.data else utc.with_min_time(form.ends_at.date.data),
+            session=session.session,
+            membership_id=membership_id,
+            begins_at=utc.with_min_time(form.begins_at.data),
+            ends_at=(
+                None if form.ends_at.unlimited.data else utc.with_min_time(form.ends_at.date.data)
+            ),
             processor=current_user,
         )
         session.session.commit()
