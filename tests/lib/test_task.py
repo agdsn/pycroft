@@ -9,6 +9,7 @@ from pycroft.helpers import utc
 from pycroft.lib.task import cancel_task, manually_execute_task, reschedule_task
 from pycroft.model.task import TaskType, TaskStatus
 from pycroft.model.task_serialization import UserMoveParams
+from tests.assertions import assert_one
 from tests.factories import UserFactory, UserTaskFactory, RoomFactory
 
 
@@ -56,8 +57,7 @@ class TestTaskExecution:
         assert user.room == new_room
         assert task.status == TaskStatus.EXECUTED
         assert task.due == now
-        assert len(logs := task.log_entries) == 1
-        assert logs[0].author == processor
+        assert assert_one(task.log_entries).author == processor
 
     def test_task_reschedule(self, task, processor, old_room, user):
         new_due_date = utc.ensure_tz(datetime.datetime.utcnow() + datetime.timedelta(days=5))

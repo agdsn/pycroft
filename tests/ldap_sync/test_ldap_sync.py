@@ -34,6 +34,7 @@ from ldap_sync.sources.ldap import (
     fetch_ldap_users,
 )
 from pycroft.model.user import PropertyGroup, User
+from tests.assertions import assert_one
 from tests.factories import PropertyGroupFactory, UserFactory, MembershipFactory
 from tests.ldap_sync import _cleanup_conn
 
@@ -75,24 +76,19 @@ class TestOneUserFetch:
         )
 
     def test_one_user_fetched(self, session):
-        users = _fetch_db_users(session, required_property=self.PROPNAME)
-        assert len(users) == 1, f"Not a list of length one: {users}"
+        assert_one(_fetch_db_users(session, required_property=self.PROPNAME))
 
     def test_one_group_fetched(self, session, propgroup, user):
-        groups = [
-            group
-            for group in _fetch_db_groups(session)
-            if group.Group.name == propgroup.name
-        ]
-        assert len(groups) == 1
-        assert set(groups[0].members) == {user.login}
+        group = assert_one(
+            [group for group in _fetch_db_groups(session) if group.Group.name == propgroup.name]
+        )
+        assert set(group.members) == {user.login}
 
     def test_one_property_fetched(self, session, user):
-        properties = [
-            prop for prop in _fetch_db_properties(session) if prop.name == self.PROPNAME
-        ]
-        assert len(properties) == 1
-        assert set(properties[0].members) == {user.login}
+        property = assert_one(
+            [prop for prop in _fetch_db_properties(session) if prop.name == self.PROPNAME]
+        )
+        assert set(property.members) == {user.login}
 
 
 class TestMultipleUsersFilter:
@@ -131,8 +127,7 @@ def test_adding_an_entry_works(conn, clean_ldap_base, sync_config):
     assert conn.search(
         base_dn, "(objectclass=inetOrgPerson)"
     ), f"Base DN subtree search failed: {conn.result}"
-    relevant_entries = [r for r in conn.response if r["dn"] != base_dn]
-    assert len(relevant_entries) == 1
+    assert_one([r for r in conn.response if r["dn"] != base_dn])
 
 
 @pytest.mark.usefixtures("clean_ldap_base")
@@ -468,9 +463,8 @@ class TestLdapSyncerOnceSynced(LdapSyncerTestBase):
             ).values()
         )
         # we get 3 actions
-        relevant_actions = [a for a in actions if not isinstance(a, IdleAction)]
-        assert len(relevant_actions) == 1
-        assert type(relevant_actions[0]) == ModifyAction
+        relevant_action = assert_one([a for a in actions if not isinstance(a, IdleAction)])
+        assert type(relevant_action) == ModifyAction
         for a in actions:
             execute_real(a, conn)
 

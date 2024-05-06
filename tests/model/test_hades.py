@@ -8,6 +8,7 @@ from pycroft.model import hades
 from pycroft.model.host import Switch, Host
 from pycroft.model.net import VLAN
 from pycroft.model.user import PropertyGroup, User, Membership
+from tests.assertions import assert_one
 from tests.factories import PropertyGroupFactory, MembershipFactory, \
     SwitchFactory, PatchPortFactory, UserFactory
 
@@ -58,7 +59,7 @@ def switch(module_session, user) -> Switch:
     PatchPortFactory.create_batch(
         2, patched=True, switch_port__switch=switch,
         # This needs to be the HOSTS room!
-        room=user.hosts[0].room
+        room=user.hosts[0].room,
     )
     return switch
 
@@ -95,7 +96,7 @@ class TestHadesView:
         # We have one interface with a MAC whose room has two ports on the same switch
         rows = session.query(hades.radcheck.table).all()
         host = user.hosts[0]
-        mac = host.interfaces[0].mac
+        mac = assert_one(host.interfaces).mac
         for row in rows:
             assert row.UserName == mac
             assert row.NASIPAddress == switch.management_ip
@@ -108,9 +109,7 @@ class TestHadesView:
             == {port.switch_port.name for port in host.room.patch_ports}
 
     def test_radgroupcheck(self, session):
-        rows = session.query(hades.radgroupcheck.table).all()
-        assert len(rows) == 1
-        row = rows[0]
+        row = assert_one(session.query(hades.radgroupcheck.table).all())
         assert row == ("unknown", "Auth-Type", ":=", "Accept", 10)
 
     # Radreply is empty by default...
@@ -151,10 +150,10 @@ class TestHadesView:
     def test_radusergroup_access(self, session, user):
         host = user.hosts[0]
         switch_ports = [p.switch_port for p in host.room.connected_patch_ports]
-        assert len(host.ips) == 1
-        assert len(host.interfaces) == 1
-        mac = host.interfaces[0].mac
-        group = f"{host.ips[0].subnet.vlan.name}_untagged"
+        interface = assert_one(host.interfaces)
+        mac = interface.mac
+        ip = assert_one(interface.ips)
+        group = f"{ip.subnet.vlan.name}_untagged"
 
         rows = session.query(hades.radusergroup.table).all()
         for switch_port in switch_ports:
@@ -162,18 +161,16 @@ class TestHadesView:
                 in rows
 
     def test_dhcphost_access(self, session, user):
-        rows = session.query(hades.dhcphost.table).all()
-        assert len(rows) == 1
-        row = rows[0]
+        row = assert_one(session.query(hades.dhcphost.table).all())
         host = user.hosts[0]
-        assert row == (host.interfaces[0].mac, str(host.ips[0].address), host.name)
+        interface = assert_one(host.interfaces)
+        ip = assert_one(interface.ips)
+        assert row == (interface.mac, str(ip.address), host.name)
 
 
 def mac_from_host(host: Host):
-    assert len(host.ips) == 1
-    assert len(host.interfaces) == 1
-    mac = host.interfaces[0].mac
-    return mac
+    assert_one(host.ips)
+    return assert_one(host.interfaces).mac
 
 
 class TestFinanceBlocking:

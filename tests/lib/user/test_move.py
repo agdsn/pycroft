@@ -52,9 +52,7 @@ class TestUserMove:
             processor=processor,
             when=when,
         )
-        tasks = session.query(Task).all()
-        assert len(tasks) == 1
-        [task] = tasks
+        task = assert_one(session.query(Task).all())
         assert isinstance(task, UserTask)
         assert task.user == user
         assert task.parameters == UserMoveParams(
@@ -145,8 +143,5 @@ class TestMoveImpl:
         with assert_unchanged(lambda: user.room):
             task = create_task_and_execute(TaskType.USER_MOVE, user, params)
         assert task.status == TaskStatus.FAILED
-        assert len(task.errors) == 1
-        [error] = task.errors
-        assert error_needle in error.lower()
-
         assert not mail_capture
+        assert error_needle in assert_one(task.errors).lower()
