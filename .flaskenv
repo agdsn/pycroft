@@ -1,1 +1,1 @@
-FLASK_APP=web.app
+FLASK_APP=scripts.server_run:prepare_server
