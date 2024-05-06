@@ -1,20 +1,23 @@
-from datetime import datetime
+import pytest
 
 from pycroft.lib.membership import change_membership_active_during 
-from tests import FactoryDataTestBase
-from tests.factories import UserFactory, MembershipFactory, PropertyGroupFactory
+from tests import factories as f
 
-class TestMembershipChangeTestCase(FactoryDataTestBase):
 
-    def create_factories(self):
-        super().create_factories()
-        self.admin = UserFactory()
-        self.group = PropertyGroupFactory()
-        self.membership = MembershipFactory(group=self.group)
+def test_user_change_membership(session, membership, processor, utcnow):
+    change_membership_active_during(
+        membership.id,
+        begins_at=utcnow,
+        ends_at=utcnow,
+        processor=processor,
+    )
+    assert len(les := membership.user.log_entries) == 1
+    log_entry = les[0]
+    assert "Edited the membership" in log_entry.message
 
-    def test_user_change_membership(self):
-        change_membership_active_during(self.membership.id, datetime.utcnow(), datetime.utcnow(), self.admin)
-        #self.session.refresh()
-        assert self.membership.user.log_entries != []
-        log_entry = self.membership.user.log_entries[0]
-        assert "Edited the membership" in log_entry.message
+
+@pytest.fixture
+def membership(module_session):
+    m = f.MembershipFactory(group=f.PropertyGroupFactory())
+    module_session.flush()
+    return m
