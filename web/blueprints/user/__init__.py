@@ -816,8 +816,6 @@ def edit_membership(user_id: int, membership_id: int) -> ResponseReturnValue:
             None if form.ends_at.unlimited.data else utc.with_min_time(form.ends_at.date.data),
             processor=current_user
         )
-        
-        #todo
         session.session.commit()
         flash('Gruppenmitgliedschaft bearbeitet', 'success')
         return redirect(url_for('.user_show',
