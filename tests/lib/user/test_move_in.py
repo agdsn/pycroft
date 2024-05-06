@@ -8,6 +8,7 @@ from pycroft.model.task import Task, TaskStatus, TaskType, UserTask
 from pycroft.model.task_serialization import UserMoveInParams
 from pycroft.model.user import User
 from tests import factories
+from tests.assertions import assert_one
 from . import ExampleUserData
 from .task_helpers import create_task_and_execute
 from .assertions import assert_mail_reasonable
@@ -52,11 +53,9 @@ class TestUserMoveIn:
         assert user.room == room
         assert user.address == user.room.address
 
-        assert len(hosts := user.hosts) == 1
-        assert len(interfaces := hosts[0].interfaces) == 1
-        user_interface = interfaces[0]
-        assert len(user_interface.ips) == 1
+        user_interface = assert_one(assert_one(user.hosts).interfaces)
         assert user_interface.mac == mac
+        assert_one(user_interface.ips)
 
         # checks the initial group memberships
         active_user_groups = user.active_property_groups()
@@ -64,8 +63,7 @@ class TestUserMoveIn:
             assert group in active_user_groups
 
         assert not user.has_property("reduced_membership_fee")
-        assert len(mail_capture) == 1
-        assert_mail_reasonable(mail_capture[0], subject_re="Wohnortänderung")
+        assert_mail_reasonable(assert_one(mail_capture), subject_re="Wohnortänderung")
 
     def test_move_in_scheduling(self, session, utcnow, user, room, processor, config, mail_capture):
         processing_user = processor
@@ -86,7 +84,7 @@ class TestUserMoveIn:
             room_number="1",
             mac=test_mac,
         )
-        assert len(mail_capture) == 0
+        assert not mail_capture
 
 
 class TestMoveInImpl:
@@ -102,8 +100,7 @@ class TestMoveInImpl:
         )
         assert isinstance(task, UserTask)
         assert_successful_move_in_execution(task, room)
-        assert len(mail_capture) == 1
-        assert_mail_reasonable(mail_capture[0], subject_re="Wohnortänderung")
+        assert_mail_reasonable(assert_one(mail_capture), subject_re="Wohnortänderung")
         assert not user.hosts
 
     def test_successful_move_in_execution_minimal(self, session, user, room, mac, mail_capture):
@@ -119,11 +116,9 @@ class TestMoveInImpl:
         )
         assert isinstance(task, UserTask)
         assert_successful_move_in_execution(task, room)
-        assert len(hosts := user.hosts) == 1
-        assert len(interfaces := hosts[0].interfaces) == 1
-        assert interfaces[0].mac == mac
-        assert len(mail_capture) == 1
-        assert_mail_reasonable(mail_capture[0], subject_re="Wohnortänderung")
+        interface = assert_one(assert_one(user.hosts).interfaces)
+        assert interface.mac == mac
+        assert_mail_reasonable(assert_one(mail_capture), subject_re="Wohnortänderung")
 
 
 def assert_successful_move_in_execution(task: UserTask, room: Room):
@@ -133,7 +128,5 @@ def assert_successful_move_in_execution(task: UserTask, room: Room):
 
 def assert_failing_move_execution(task: UserTask, error_needle: str):
     assert task.status == TaskStatus.FAILED
-    assert len(task.errors) == 1
-    [error] = task.errors
-    assert error_needle in error.lower()
+    assert error_needle in assert_one(task.errors).lower()
     assert task.user.room is None
