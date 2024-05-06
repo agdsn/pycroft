@@ -1,6 +1,6 @@
 import pytest
 
-from pycroft.lib.membership import change_membership_active_during 
+from pycroft.lib.membership import change_membership_active_during
 from tests import factories as f
 
 
