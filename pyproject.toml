@@ -56,7 +56,7 @@ dependencies = [
     "simplejson ~= 3.11.1",  # decimal serialization
     "SQLAlchemy >= 2.0.1",
     "webargs ~= 8.3.0",
-    "Werkzeug ~= 2.3.6",
+    "Werkzeug ~= 3.0.3",
     "wrapt ~= 1.14.1",
     "WTForms ~= 2.3.3",
     "wtforms-widgets",  # note: use `pip install -e deps/wtforms-widgets` for development
