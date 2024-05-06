@@ -208,11 +208,12 @@ def user_memberships_query(
 
 
 def change_membership_active_during(
-    membership_id: int, begins_at: datetime, ends_at: datetime | None, processor: User
-):
-    """
-    modify the active_during field of a user
-    """
+    membership_id: int,
+    begins_at: datetime,
+    ends_at: datetime | None,
+    processor: User,
+) -> None:
+    """modify the active_during field of a membership"""
 
     membership: Membership = Membership.get(membership_id)
     membership.active_during = closedopen(utc.with_min_time(begins_at), ends_at)
