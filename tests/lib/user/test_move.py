@@ -12,6 +12,8 @@ from tests import factories
 from tests.assertions import assert_unchanged
 from tests.lib.user.task_helpers import create_task_and_execute
 
+from .assertions import assert_mail_reasonable
+
 
 class TestUserMove:
     @pytest.fixture(scope="class")
@@ -61,15 +63,17 @@ class TestUserMove:
             room_number=new_room_other_building.number,
         )
 
-    def test_moves_into_same_room(self, session, user, processor):
+    def test_moves_into_same_room(self, session, user, processor, mail_capture):
         old_room = user.room
         with pytest.raises(AssertionError):
             lib_user.move(
                 user, old_room.building.id, old_room.level, old_room.number, processor
             )
 
+        assert not mail_capture
+
     def test_moves_into_other_building(
-        self, session, user, processor, new_room_other_building
+        self, session, user, processor, new_room_other_building, mail_capture
     ):
         lib_user.move(
             user,
@@ -81,6 +85,9 @@ class TestUserMove:
         assert user.room == new_room_other_building
         assert user.hosts[0].room == new_room_other_building
         # TODO test for changing ip
+
+        assert len(mail_capture) == 1
+        assert_mail_reasonable(mail_capture[0], subject_re="Wohnortänderung")
 
 
 class TestMoveImpl:
@@ -110,10 +117,13 @@ class TestMoveImpl:
             "room_number": new_room.number,
         }
 
-    def test_successful_move_execution(self, session, user, new_room, full_params):
+    def test_successful_move_execution(self, session, user, new_room, full_params, mail_capture):
         task = create_task_and_execute(TaskType.USER_MOVE, user, full_params)
         assert task.status == TaskStatus.EXECUTED
         assert user.room == new_room
+
+        assert len(mail_capture) == 1
+        assert_mail_reasonable(mail_capture[0], subject_re="Wohnortänderung")
 
     @pytest.mark.parametrize(
         "param_keys, error_needle",
@@ -131,6 +141,7 @@ class TestMoveImpl:
         full_params,
         param_keys: t.Iterable[str],
         error_needle: str,
+        mail_capture,
     ):
         params = {k: v for k, v in full_params.items() if k in param_keys}
         with assert_unchanged(lambda: user.room):
@@ -139,3 +150,5 @@ class TestMoveImpl:
         assert len(task.errors) == 1
         [error] = task.errors
         assert error_needle in error.lower()
+
+        assert not mail_capture
