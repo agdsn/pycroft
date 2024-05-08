@@ -9,7 +9,7 @@ from pycroft.model.task import Task, UserTask, TaskStatus, TaskType
 from pycroft.model.task_serialization import UserMoveParams
 from pycroft.model.user import User
 from tests import factories
-from tests.assertions import assert_unchanged
+from tests.assertions import assert_one, assert_unchanged
 from tests.lib.user.task_helpers import create_task_and_execute
 
 from .assertions import assert_mail_reasonable
@@ -86,8 +86,7 @@ class TestUserMove:
         assert user.hosts[0].room == new_room_other_building
         # TODO test for changing ip
 
-        assert len(mail_capture) == 1
-        assert_mail_reasonable(mail_capture[0], subject_re="Wohnortänderung")
+        assert_mail_reasonable(assert_one(mail_capture), subject_re="Wohnortänderung")
 
 
 class TestMoveImpl:
@@ -122,8 +121,7 @@ class TestMoveImpl:
         assert task.status == TaskStatus.EXECUTED
         assert user.room == new_room
 
-        assert len(mail_capture) == 1
-        assert_mail_reasonable(mail_capture[0], subject_re="Wohnortänderung")
+        assert_mail_reasonable(assert_one(mail_capture), subject_re="Wohnortänderung")
 
     @pytest.mark.parametrize(
         "param_keys, error_needle",

@@ -6,6 +6,7 @@ import pytest
 from pycroft.lib.user import create_user
 from pycroft.model.logging import LogEntry
 from tests import factories
+from tests.assertions import assert_one
 
 from .assertions import (
     assert_account_name,
@@ -104,5 +105,4 @@ class TestUserCreation:
             address=room.address,
         )
 
-        assert len(mail_capture) == 1
-        assert_mail_reasonable(mail_capture[0], subject_re="Willkommen")
+        assert_mail_reasonable(assert_one(mail_capture), subject_re="Willkommen")
