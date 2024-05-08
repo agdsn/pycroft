@@ -214,3 +214,17 @@ rules:
     severity: ERROR
     paths:
       include: ["web"]
+
+  - id: no-plain-a-tags-in-mails
+    pattern: <a href="$HREF">$TEXT</a>
+    message: |
+      Don't use `<a>` tags in a mail template.
+      Use the mode-aware `render_link` macro instead.
+      Please do not forget to add {{ link.render_link_list() }} at end of the email.
+    fix: >
+      {{ link.render_link("$TEXT", "$HREF") }}
+    severity: ERROR
+    languages: [ html ]
+    paths:
+      include:
+        - "pycroft/templates/mail/*.html"

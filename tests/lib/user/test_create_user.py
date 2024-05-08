@@ -6,7 +6,14 @@ import pytest
 from pycroft.lib.user import create_user
 from pycroft.model.logging import LogEntry
 from tests import factories
-from .assertions import assert_account_name, assert_membership_groups, assert_logmessage_startswith
+from tests.assertions import assert_one
+
+from .assertions import (
+    assert_account_name,
+    assert_logmessage_startswith,
+    assert_mail_reasonable,
+    assert_membership_groups,
+)
 
 
 @dataclasses.dataclass
@@ -37,25 +44,20 @@ class TestUserCreation:
             birthdate=date.fromisoformat("1990-01-01"),
         )
 
-    @pytest.fixture(scope="class")
-    def user_mail_capture(self):
-        # TODO actually test whether mails are sent out correctly instead of mocking
-        # mocking is only done because we don't test for the mails anyway
-        from unittest.mock import patch
-        with patch("pycroft.lib.user.user_send_mails") as p:
-            yield p
-
     @pytest.fixture(scope="class", autouse=True)
-    def new_user(self, class_session, user_data, room, processor, member_group, user_mail_capture):
-        new_user, _ = create_user(
-            user_data.name,
-            user_data.login,
-            user_data.email,
-            user_data.birthdate,
-            processor=processor,
-            groups=(member_group,),
-            address=room.address,
-        )
+    def new_user(self, class_session, user_data, room, processor, member_group):
+        from unittest.mock import patch
+
+        with patch("pycroft.lib.user.user_send_mails"):
+            new_user, _ = create_user(
+                user_data.name,
+                user_data.login,
+                user_data.email,
+                user_data.birthdate,
+                processor=processor,
+                groups=(member_group,),
+                address=room.address,
+            )
         return new_user
 
     def test_user_base_data(self, new_user, user_data, room):
@@ -92,5 +94,15 @@ class TestUserCreation:
         assert new_user.account is not None
         assert new_user.account.balance == 0
 
-    def test_one_mail_sent(self, user_mail_capture):
-        user_mail_capture.assert_called()
+    def test_mail_content(self, processor, member_group, room, mail_capture):
+        create_user(
+            "Jane Doe",
+            "janed",
+            "jane.doe@example.org",
+            date.fromisoformat("2000-03-14"),
+            processor=processor,
+            groups=(member_group,),
+            address=room.address,
+        )
+
+        assert_mail_reasonable(assert_one(mail_capture), subject_re="Willkommen")
