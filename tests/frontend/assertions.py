@@ -89,9 +89,7 @@ class TestClient(flask.testing.FlaskClient):
         __tracebackhide__ = True
         resp = self.open(url, method=method, **kw)
         status = resp.status_code
-        assert (
-            status == 403
-        ), f"Access to {url} expected to be forbidden, got status {status}"
+        assert status == 403, f"Access to {url} expected to be forbidden, got status {status}"
         return resp
 
     def assert_forbidden(self, endpoint: str, method: str = "HEAD", **kw) -> Response:
