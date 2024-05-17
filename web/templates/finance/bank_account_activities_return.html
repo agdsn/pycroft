@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+
+{% set page_title = "Unzuordenbare Überweisungen zurücküberweisen" %}
+
+{% block content %}
+    <form action="{{ url_for('.bank_account_activities_return_do') }}" method="POST">
+    <div class="row">
+        <div class="col-md-12">
+            {{ form.csrf_token }}
+            <table class="table table-striped table-responsive activities">
+              <thead>
+                <th></th>
+                <th>Bankkonto</th>
+                <th>Name</th>
+                <th>Gültig am</th>
+                <th>Verwendungszweck</th>
+                <th>Betrag</th>
+              </thead>
+              <tbody>
+                {% for field in form %}{% if field.type != 'CSRFTokenField' %}
+                  <tr>
+                    <td>{{ field }}</td>
+                    <td>{{ activities[field.id]["bank_account"] }}</td>
+                    <td>{{ activities[field.id]["name"] }}</td>
+                    <td>{{ activities[field.id]["valid_on"] }}</td>
+                    <td>{{ activities[field.id]["reference"] }}</td>
+                    <td>{{ activities[field.id]["amount"] }} &euro;</td>
+                  </tr>
+                {% endif %}{% endfor %}
+              </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <button type="submit" class="btn btn-primary">SEPA-XML generieren</button>
+        </div>
+    </div>
+    </form>
+{% endblock %}

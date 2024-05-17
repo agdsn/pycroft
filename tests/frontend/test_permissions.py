@@ -104,26 +104,26 @@ class TestPermissionsUser:
             yield
 
     def test_access_user(self, client: TestClient, blueprint_urls: BlueprintUrls):
-        for url in blueprint_urls("user"):
-            client.assert_url_forbidden(url)
+        for url, method in blueprint_urls("user"):
+            client.assert_url_forbidden(url, method=method)
 
     def test_access_finance(self, client: TestClient, blueprint_urls: BlueprintUrls):
-        for url in blueprint_urls("finance"):
-            client.assert_url_forbidden(url)
+        for url, method in blueprint_urls("finance"):
+            client.assert_url_forbidden(url, method=method)
 
     def test_access_buildings(self, client: TestClient, blueprint_urls: BlueprintUrls):
-        for url in blueprint_urls("facilities"):
-            client.assert_url_forbidden(url)
+        for url, method in blueprint_urls("facilities"):
+            client.assert_url_forbidden(url, method=method)
 
     def test_access_infrastructure(
         self, client: TestClient, blueprint_urls: BlueprintUrls
     ):
-        for url in blueprint_urls("infrastructure"):
-            client.assert_url_forbidden(url)
+        for url, method in blueprint_urls("infrastructure"):
+            client.assert_url_forbidden(url, method=method)
 
     def test_access_properties(self, client: TestClient, blueprint_urls: BlueprintUrls):
-        for url in blueprint_urls("properties"):
-            client.assert_url_forbidden(url)
+        for url, method in blueprint_urls("properties"):
+            client.assert_url_forbidden(url, method=method)
 
     def test_access_login(self, client: TestClient, blueprint_urls: BlueprintUrls):
         # Login see Test_010_Anonymous

@@ -34,11 +34,12 @@ class BankAccountFactory(BaseFactory):
     class Meta:
         model = BankAccount
 
-    name = Faker('word')
-    bank = Faker('word')
-    account_number = Faker('random_number', digits=10)
-    routing_number = Faker('random_number', digits=8)
-    iban = Faker('iban')
+    name = Faker("word")
+    bank = Faker("word")
+    owner = Faker("word")
+    account_number = Faker("random_number", digits=10)
+    routing_number = Faker("random_number", digits=8)
+    iban = Faker("iban")
     bic = Faker("swift", length=11)
     fints_endpoint = Faker('url')
     account = SubFactory(AccountFactory, type='BANK_ASSET')
@@ -51,8 +52,8 @@ class BankAccountActivityFactory(BaseFactory):
     bank_account = SubFactory(BankAccountFactory)
     amount = Faker('random_number', digits=5)
     reference = Sequence(lambda n: f"Reference {n}")
-    other_account_number = Faker('random_number', digits=10)
-    other_routing_number = Faker('random_number', digits=8)
+    other_account_number = Faker("iban")
+    other_routing_number = Faker("swift")
     other_name = Faker('word')
     imported_at = LazyAttribute(lambda o: session.utcnow().date() - timedelta(days=4))
     posted_on = LazyAttribute(lambda o: o.imported_at + timedelta(days=1))

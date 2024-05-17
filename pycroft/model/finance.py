@@ -339,6 +339,7 @@ event.listen(Transaction, "before_update", check_transaction_on_save)
 class BankAccount(IntegerIdModel):
     name: Mapped[str255]
     bank: Mapped[str255]
+    owner: Mapped[str255]
     account_number: Mapped[str] = mapped_column(String(10))
     routing_number: Mapped[str] = mapped_column(String(8))
     iban: Mapped[str] = mapped_column(String(34))

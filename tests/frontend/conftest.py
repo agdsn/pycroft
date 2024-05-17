@@ -72,10 +72,13 @@ def config(module_session: Session) -> Config:
 
 @pytest.fixture(scope="session")
 def blueprint_urls(app: PycroftFlask) -> BlueprintUrls:
-    def _blueprint_urls(blueprint_name: str) -> list[str]:
+    def _blueprint_urls(
+        blueprint_name: str, methods: set[str] = {"GET", "POST"}  # noqa: B006
+    ) -> list[str]:
         return [
-            _build_rule(request_ctx.url_adapter, rule)
+            (_build_rule(request_ctx.url_adapter, rule), method)
             for rule in app.url_map.iter_rules()
+            for method in rule.methods & methods
             if rule.endpoint.startswith(f"{blueprint_name}.")
         ]
     return _blueprint_urls
