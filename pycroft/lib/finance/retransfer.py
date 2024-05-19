@@ -39,7 +39,9 @@ def generate_activities_return_sepaxml(activities: list[BankAccountActivity]) ->
             "BIC": activity.other_routing_number,
             "amount": int(activity.amount * 100),
             "execution_date": datetime.now().date(),
-            "description": f"Rücküberweisung nicht zuordenbarer Überweisung vom {activity.posted_on} mit Referenz {activity.reference}",
+            "description": f"Rücküberweisung nicht zuordenbarer Überweisung vom {activity.posted_on} mit Referenz {activity.reference}"[
+                :140
+            ],
         }
         sepa.add_payment(payment)
 

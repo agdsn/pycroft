@@ -716,6 +716,9 @@ class TestReturnNonAttributable:
 
     def test_generate_sepa_xml(self, session: Session, utcnow):
         BankAccountActivityFactory.create(imported_at=utcnow.date() - timedelta(days=20))
-        BankAccountActivityFactory.create(imported_at=utcnow.date() - timedelta(days=21))
+        BankAccountActivityFactory.create(
+            imported_at=utcnow.date() - timedelta(days=21),
+            reference=200 * "a"
+        )
 
         generate_activities_return_sepaxml(get_activities_to_return(session))
