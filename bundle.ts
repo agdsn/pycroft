@@ -44,7 +44,7 @@ const options: esbuild.BuildOptions = {
   logLevel: "info",
 
   bundle: true,
-  splitting: args.prod,
+  splitting: true,
   minify: args.prod,
   treeShaking: args.prod,
   sourcemap: true,
@@ -73,7 +73,7 @@ const options: esbuild.BuildOptions = {
   inject: [path.join(src, "inject-jquery.js")],
   plugins: [{name: "manifest", setup(build){
     build.onEnd(result => generateManifest(result, src, dst))}
-  }].concat(args.prod ? [ 
+  }].concat(args.prod ? [
     clean({
       patterns: [dst + "/**"],
     })

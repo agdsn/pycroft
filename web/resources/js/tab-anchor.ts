@@ -26,7 +26,7 @@ function updateLocationHash(this: HTMLElement, _: MouseEvent){
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('load', () => {
     navigateToAnchorTab();
 
     for (const el of document.querySelectorAll<HTMLElement>('.nav-tabs [role="tab"]')) {
