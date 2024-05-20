@@ -2,12 +2,11 @@
 import logging
 import sys
 from dataclasses import dataclass
-from importlib import resources
 
 import click
-import pycroft
 from alembic import command
 from alembic.config import Config
+from pycroft.model.alembic import get_alembic_config
 
 from .connection import get_connection_string, try_create_connection
 
@@ -31,7 +30,7 @@ def cli(ctx, verbose: bool):
                                  echo=verbose)
     ctx.obj = ContextObject(
         logger=logger,
-        alembic_cfg=Config(resources.files(pycroft.model) / "alembic.ini"),
+        alembic_cfg=get_alembic_config(),
     )
 
 

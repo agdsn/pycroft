@@ -21,7 +21,7 @@ import web
 from pycroft.helpers.i18n import set_translation_lookup, get_locale
 from pycroft.model.session import set_scoped_session
 from scripts.connection import get_connection_string
-from scripts.schema import determine_schema_state
+from pycroft.model.alembic import determine_schema_state
 from web import make_app, PycroftFlask
 
 default_handler = logging.StreamHandler(sys.stdout)
