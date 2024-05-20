@@ -24,5 +24,6 @@ T = t.TypeVar("T")
 
 def assert_one(seq: abc.Sequence[T]) -> T:
     """assert whether a sequence contains only one element and return it"""
+    __tracebackhide__ = True
     assert (l := len(seq)) == 1, f"Expected one element in sequence, found {l} (sequence: {seq!r})"
     return seq[0]

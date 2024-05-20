@@ -3,6 +3,7 @@ import pytest
 from pycroft.lib.user import move, move_out, move_in
 from pycroft.model.facilities import Room
 from pycroft.model.user import RoomHistoryEntry, User
+from tests.assertions import assert_one
 from tests.factories import AddressFactory, RoomFactory, UserFactory
 
 
@@ -24,8 +25,7 @@ def room(module_session) -> Room:
 @pytest.mark.usefixtures("config", "session")
 class TestUserRoomHistory:
     def test_room_history_create(self, session, user):
-        assert len(rhes := user.room_history_entries) == 1, "more than one room history entry"
-        rhe: RoomHistoryEntry = rhes[0]
+        rhe: RoomHistoryEntry = assert_one(user.room_history_entries)
         assert user.room == rhe.room
         assert rhe.active_during.begin is not None
         assert rhe.active_during.end is None

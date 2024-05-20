@@ -11,6 +11,7 @@ from pycroft.model.port import PatchPort
 from web.blueprints.facilities.address import ADDRESS_ENTITIES
 from web.blueprints.facilities.tables import RoomTenanciesRow
 from tests import factories as f
+from tests.assertions import assert_one
 from tests.factories import RoomFactory
 from .assertions import TestClient
 
@@ -153,9 +154,8 @@ class TestRoomTenancies:
                 room_id=room.id,
             )
         )
-        assert (items := resp.json.get("items"))
-        assert len(items) == 1
-        tenancy_row = RoomTenanciesRow.model_validate(items[0])
+        item = assert_one(resp.json.get("items"))
+        tenancy_row = RoomTenanciesRow.model_validate(item)
         assert tenancy_row.inhabitant.title == user.name
 
 
@@ -180,7 +180,7 @@ class TestOvercrowdedRooms:
 
     def test_overcrowded_rooms_json(self, client):
         resp = client.assert_url_ok(url_for("facilities.overcrowded_json"))
-        assert len(resp.json.get("items")) == 1
+        assert_one(resp.json.get("items"))
 
     def test_per_building_overcrowded_rooms(self, client, building):
         with client.renders_template("facilities/room_overcrowded.html"):
@@ -190,7 +190,7 @@ class TestOvercrowdedRooms:
         resp = client.assert_url_ok(
             url_for("facilities.overcrowded_json", building=building.id)
         )
-        assert len(resp.json.get("items")) == 1
+        assert_one(resp.json.get("items"))
 
 
 class TestRoomCreate:

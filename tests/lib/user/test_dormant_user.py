@@ -11,7 +11,7 @@ from pycroft.model.facilities import Room
 from pycroft.model.task import Task, TaskType, TaskStatus
 from pycroft.model.task_serialization import UserMoveOutParams
 from pycroft.model.user import User
-from tests.assertions import assert_unchanged
+from tests.assertions import assert_unchanged, assert_one
 from tests.factories import RoomFactory, AddressFactory, UserFactory
 from tests.lib.user.task_helpers import create_task_and_execute
 
@@ -100,9 +100,7 @@ class TestMovedInUser:
             end_membership=end_membership,
         )
         assert user.room == old_room
-        tasks = session.query(Task).all()
-        assert len(tasks) == 1
-        [task] = tasks
+        task = assert_one(session.query(Task).all())
         assert task.type == TaskType.USER_MOVE_OUT
         assert task.parameters == UserMoveOutParams(
             comment="", end_membership=end_membership
@@ -140,7 +138,5 @@ class TestMoveOutImpl:
         session.refresh(user)
 
         assert task.status == TaskStatus.FAILED
-        assert len(task.errors) == 1
-        [error] = task.errors
-        assert error_needle in error.lower()
+        assert error_needle in assert_one(task.errors).lower()
         assert user.room is not None

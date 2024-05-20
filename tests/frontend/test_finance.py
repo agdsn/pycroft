@@ -25,6 +25,7 @@ from pycroft.model.finance import (
     Split,
     MembershipFee,
 )
+from tests.assertions import assert_one
 from tests.frontend.assertions import TestClient
 from .fixture_helpers import serialize_formdata
 
@@ -199,9 +200,7 @@ class TestAccount:
     def test_list_accounts(self, session, client: TestClient, account):
         with client.renders_template("finance/accounts_list.html") as recorded:
             client.assert_ok("finance.accounts_list")
-
-        assert len(recorded) == 1
-        [(_template, ctx)] = recorded
+        (_template, ctx) = assert_one(recorded)
         accounts_by_type = ctx["accounts"]
         assert account in [*chain(*accounts_by_type.values())]
 
@@ -262,8 +261,8 @@ class TestAccount:
         resp = client.assert_url_ok(
             url_for("finance.json_accounts_user_search", query=query)
         )
-        assert len(a := resp.json["accounts"]) == 1
-        assert a[0]["account_id"] == member_account.id
+        account = assert_one(resp.json.get("accounts", []))
+        assert account["account_id"] == member_account.id
 
     @pytest.mark.parametrize("invert", [False, True])
     def test_user_account_balance_json(self, member_account, client, invert):
@@ -438,7 +437,7 @@ class TestUnconfirmedTransaction:
 
     def test_transactions_unconfirmed_json(self, client: TestClient):
         resp = client.assert_url_ok(url_for("finance.transactions_unconfirmed_json"))
-        assert len(resp.json["items"]) == 1
+        assert_one(resp.json.get("items", []))
 
     def test_transactions_all(self, client: TestClient):
         with client.renders_template("finance/transactions_overview.html"):
@@ -647,8 +646,7 @@ class TestMembershipFeeUsersDue:
                 fee_id=membership_fee.id,
             )
         )
-        assert "items" in resp.json
-        assert len(resp.json["items"]) == 1
+        assert_one(resp.json.get("items", []))
 
     def test_404(self, client):
         client.assert_url_response_code(

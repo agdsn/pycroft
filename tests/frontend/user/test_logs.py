@@ -10,6 +10,7 @@ from pycroft.model.session import Session
 from pycroft.model.user import User
 from tests.factories import UserFactory, RoomLogEntryFactory, \
     UserLogEntryFactory
+from tests.assertions import assert_one
 from web import make_app, PycroftFlask
 from ..assertions import TestClient
 from ..fixture_helpers import prepare_app_for_testing, login_context
@@ -74,8 +75,8 @@ class TestAppWithoutHadesLogs:
         )
 
     def test_warning_log_tab_hades(self, logs: GetLogs):
-        assert len(hades_items := logs(logtype="hades")) == 1
-        self.assert_hades_message(hades_items[0]["message"])
+        log = assert_one(logs(logtype="hades"))
+        self.assert_hades_message(log["message"])
 
     def test_warning_log_tab_user(self, logs: GetLogs):
         assert not logs(logtype="user")
@@ -84,8 +85,8 @@ class TestAppWithoutHadesLogs:
         assert not logs(logtype="room")
 
     def test_warning_log_tab_all(self, logs: GetLogs):
-        assert len(logs := logs()) == 1
-        self.assert_hades_message(logs[0]["message"])
+        log = assert_one(logs())
+        self.assert_hades_message(log["message"])
 
 
 @pytest.mark.usefixtures("admin")
@@ -120,8 +121,7 @@ class TestRoomAndUserLogDisplay:
 
     @staticmethod
     def assert_one_log(got_logs, expected_entry):
-        assert len(got_logs) == 1
-        item = got_logs[0]
+        item = assert_one(got_logs)
         assert item['message'] == expected_entry.message
         assert item['user']['title'] == expected_entry.author.name
 
@@ -134,9 +134,7 @@ class TestRoomAndUserLogDisplay:
         self.assert_one_log(items, user_log_entry)
 
     def test_no_hades_log_exists(self, logs: GetLogs):
-        items = logs(logtype="hades")
-        assert len(items) == 1
-        item = items[0]
+        item = assert_one(logs(logtype="hades"))
         assert " cannot be displayed" in item['message'].lower()
         assert " connected room" in item['message'].lower()
 
@@ -191,6 +189,6 @@ class TestDummyHadesLogs:
 
     @pytest.mark.hades_logs
     def test_disconnected_user_emits_warning(self, logs: GetLogs, other_user: User):
-        assert len(logs := logs(user_id=other_user.id, logtype="hades")) == 1
-        assert "are in a connected room" in logs[0]['message'].lower()
-        assert "logs cannot be displayed" in logs[0]['message'].lower()
+        log = assert_one(logs(user_id=other_user.id, logtype="hades"))
+        assert "are in a connected room" in log["message"].lower()
+        assert "logs cannot be displayed" in log["message"].lower()

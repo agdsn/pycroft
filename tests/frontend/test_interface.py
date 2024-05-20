@@ -7,6 +7,7 @@ from flask import url_for
 
 from pycroft.model.host import Host, Interface
 from tests import factories as f
+from tests.assertions import assert_one
 
 from .assertions import TestClient
 
@@ -39,11 +40,7 @@ class TestInterfacesJson:
         resp = client.assert_url_ok(
             url_for("host.host_interfaces_json", host_id=interface.host.id)
         )
-
-        assert "items" in resp.json
-        items = resp.json["items"]
-        assert len(items) == 1
-        [item] = items
+        item = assert_one(resp.json.get("items", []))
         assert item["id"] == interface.id
         assert len(item["actions"]) == 2
         assert item["ips"] != ""

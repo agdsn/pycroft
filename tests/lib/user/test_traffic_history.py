@@ -4,6 +4,7 @@ import pytest
 
 from pycroft.lib.user import traffic_history
 from pycroft.model.user import User
+from tests.assertions import assert_one
 from tests.factories import TrafficVolumeLastWeekFactory, UserFactory
 
 
@@ -15,9 +16,7 @@ class TestTrafficHistory:
     @pytest.fixture(scope="class", autouse=True)
     def traffic(self, class_session, user) -> None:
         TrafficVolumeLastWeekFactory.create_batch(
-            7,
-            ip=user.hosts[0].interfaces[0].ips[0],
-            user=user
+            7, ip=assert_one(assert_one(user.hosts).ips), user=user
         )
         class_session.flush()
 

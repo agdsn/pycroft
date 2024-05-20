@@ -11,6 +11,7 @@ from pycroft.exc import PycroftException
 from pycroft.model.host import Host
 from pycroft.model.user import User
 from tests import factories as f
+from tests.assertions import assert_one
 
 from .assertions import TestClient
 
@@ -142,9 +143,8 @@ class TestHostCreate:
             session.refresh(owner)
             # assert len(owner.hosts) == 1
             # assert owner.hosts[0].name == "test-host"
-            new_hosts = set(owner.hosts) - {host}
-            assert len(new_hosts) == 1
-            assert list(new_hosts)[0].name == "test-host"
+            new_hosts = list(set(owner.hosts) - {host})
+            assert assert_one(new_hosts).name == "test-host"
 
     def test_create_host_post_invalid_data(self, session, client, owner, url):
         client.assert_url_ok(
@@ -158,16 +158,13 @@ class TestHostCreate:
             },
         )
         session.refresh(owner)
-        assert len(owner.hosts) == 1
+        assert_one(owner.hosts)
 
 
 def test_user_hosts(client, host):
     resp = client.assert_url_ok(url_for("host.user_hosts_json", user_id=host.owner.id))
 
-    assert "items" in resp.json
-    items = resp.json["items"]
-    assert len(items) == 1
-    [item] = items
+    item = assert_one(resp.json.get("items", []))
     assert item["switch"]
     assert item["port"]
     assert item["id"] == host.id
@@ -183,7 +180,6 @@ def test_user_host_without_room(client, host_without_room):
     resp = client.assert_url_ok(
         url_for("host.user_hosts_json", user_id=host_without_room.owner.id)
     )
-    assert len(resp.json["items"]) == 1
-    [it] = resp.json["items"]
+    it = assert_one(resp.json.get("items", []))
     assert it["switch"] == []
     assert it["port"] is None
