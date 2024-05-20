@@ -270,9 +270,9 @@ flask==3.0.3 \
     #   flask-restful
     #   flask-wtf
     #   sentry-sdk
-flask-babel==3.1.0 \
-    --hash=sha256:be015772c5d7f046f3b99c508dcf618636eb93d21b713b356db79f3e79f69f39 \
-    --hash=sha256:deb3ee272d5adf97f5974ed09ab501243d63e7fb4a047501a00de4bd4aca4830
+flask-babel==4.0.0 \
+    --hash=sha256:638194cf91f8b301380f36d70e2034c77ee25b98cb5d80a1626820df9a6d4625 \
+    --hash=sha256:dbeab4027a3f4a87678a11686496e98e1492eb793cbdd77ab50f4e9a2602a593
 flask-login==0.6.3 \
     --hash=sha256:5e23d14a607ef12806c699590b89d0f0e0d67baeec599d75947bf9c147330333 \
     --hash=sha256:849b25b82a436bf830a054e74214074af59097171562ab10bfa999e6b78aae5d
