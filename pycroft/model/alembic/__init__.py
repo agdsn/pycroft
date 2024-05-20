@@ -10,7 +10,7 @@ import pycroft
 
 
 def get_alembic_config() -> Config:
-    Config(resources.files(pycroft.model) / "alembic.ini")
+    return Config(resources.files(pycroft.model) / "alembic.ini")
 
 
 class SchemaState(t.NamedTuple):
