@@ -3,10 +3,14 @@
 #  the Apache License, Version 2.0. See the LICENSE file for details
 import typing as t
 import os
+from importlib import resources
 
 import click
+from alembic.config import Config
+from alembic import command
 from flask import Flask
 
+import pycroft
 from pycroft.model import create_db_model
 from pycroft.model import create_engine, drop_db_model
 
@@ -29,3 +33,16 @@ def register_commands(app: Flask) -> None:
                       ' Are you absolutely sure?', abort=True)
         with engine.begin() as connection:
             drop_db_model(bind=connection)
+
+    @cli.command("migrate", help="Apply the latest migrations (`alembic upgrade head`)")
+    def upgrade_schema() -> None:
+        engine = create_engine(os.getenv("PYCROFT_DB_URI"))
+        config_path = resources.files(pycroft.model) / "alembic.ini"
+        app.logger.info("using alembic config %r", config_path)
+        alembic_cfg = Config(config_path)
+
+        app.logger.info("> alembic upgrade head…")
+        with engine.begin() as conn:
+            alembic_cfg.attributes["connection"] = conn
+            command.upgrade(alembic_cfg, "head")
+        app.logger.info("…done ")

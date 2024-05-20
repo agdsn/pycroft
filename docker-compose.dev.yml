@@ -13,6 +13,8 @@ services:
     depends_on:
       dev-db:
         condition: service_healthy
+      dev-migrate:
+        condition: service_completed_successfully
       dev-ldap:
         condition: service_healthy
       dev-mq:
@@ -30,6 +32,16 @@ services:
       test: curl --fail http://localhost:5000
       interval: 2s
       start_period: 10s
+  dev-migrate:
+    extends:
+      file: docker-compose.base.yml
+      service: dev
+    networks:
+      dev:
+    command: ["shell", "flask", "migrate"]
+    depends_on:
+      dev-db:
+        condition: service_healthy
   dev-bundler:
     extends:
       file: docker-compose.base.yml
