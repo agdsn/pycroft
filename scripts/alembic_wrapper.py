@@ -2,16 +2,19 @@
 import logging
 import sys
 from dataclasses import dataclass
+from importlib import resources
 
 import click
+import pycroft
+from alembic import command
+from alembic.config import Config
 
 from .connection import get_connection_string, try_create_connection
-from .schema import AlembicHelper
 
 
 @dataclass
 class ContextObject:
-    alembic_helper: AlembicHelper
+    alembic_cfg: Config
     logger: logging.Logger
 
 
@@ -26,30 +29,40 @@ def cli(ctx, verbose: bool):
 
     conn, engine = try_create_connection(get_connection_string(), logger=logger, wait_for_db=False,
                                  echo=verbose)
-    ctx.obj = ContextObject(logger=logger, alembic_helper=AlembicHelper(conn))
+    ctx.obj = ContextObject(
+        logger=logger,
+        alembic_cfg=Config(resources.files(pycroft.model) / "alembic.ini"),
+    )
 
 
 assert isinstance(cli, click.Group)
 
 
-@cli.command()
+@cli.command(help=command.current.__doc__)
 @click.pass_obj
 def current(obj: ContextObject):
-    click.echo(obj.alembic_helper.running_version)
+    command.current(obj.alembic_cfg)
 
 
-@cli.command()
+@cli.command(help=command.upgrade.__doc__)
 @click.pass_obj
 @click.argument('revision')
 def upgrade(obj: ContextObject, revision: str):
-    obj.alembic_helper.upgrade(revision)
+    command.upgrade(obj.alembic_cfg, revision)
 
 
-@cli.command()
+@cli.command(help=command.downgrade.__doc__)
 @click.pass_obj
 @click.argument('revision')
 def downgrade(obj: ContextObject, revision: str):
-    obj.alembic_helper.downgrade(revision)
+    command.downgrade(obj.alembic_cfg, revision)
+
+
+@cli.command(help=command.stamp.__doc__)
+@click.pass_obj
+@click.argument("revision")
+def stamp(obj: ContextObject, revision: str):
+    command.stamp(obj.alembic_cfg, revision)
 
 
 if __name__ == '__main__':

@@ -95,9 +95,11 @@ dev = [
 ]
 
 [project.scripts]
-pycroft = "scripts.server_run:main"
+pycroft = "flask.cli:main"
 pycroft_ldap_sync = "ldap_sync.__main__:main"
-alembic_wrapper = "scripts.alembic_wrapper:cli"
+
+[project.entry-points."flask.commands"]
+alembic = "scripts.alembic_wrapper:cli"
 
 [tool.setuptools]
 include-package-data = true

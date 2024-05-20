@@ -1,3 +1,5 @@
+import warnings as w
+
 from alembic.config import Config
 from alembic.operations.base import Operations
 from alembic.runtime.migration import MigrationContext
@@ -29,9 +31,12 @@ class AlembicHelper:
         return self.scr.get_current_head()
 
     def stamp(self, revision='head'):
+        w.warn("do not use `AlembicHelper.run`", DeprecationWarning, stacklevel=2)
         self.context.stamp(self.scr, revision)
 
     def upgrade(self, revision='head', **kwargs):
+        w.warn("do not use `AlembicHelper.upgrade`", DeprecationWarning, stacklevel=2)
+
         def upgrade(rev, context):
             # noinspection PyProtectedMember
             return self.scr._upgrade_revs(destination=revision, current_rev=rev)
@@ -44,6 +49,8 @@ class AlembicHelper:
                 upgrade_bound_ctx.run_migrations(**kwargs)
 
     def downgrade(self, revision, **kwargs):
+        w.warn("do not use `AlembicHelper.downgrade`", DeprecationWarning, stacklevel=2)
+
         def downgrade(rev, context):
             # noinspection PyProtectedMember
             return self.scr._downgrade_revs(destination=revision, current_rev=rev)
@@ -72,6 +79,11 @@ class SchemaStrategist:
         :param AlembicHelper helper: Al helper to investigate the state of our
         alembic configuratior
         """
+        w.warn(
+            "Do not use SchemaStrategist, use dependencies instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self.helper = helper
 
     #: A function ``Connection -> : bool`` determining whether the

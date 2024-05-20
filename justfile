@@ -102,7 +102,7 @@ dev-shell *args:
 
 # run an alembic command against the `dev-db`
 alembic command *args:
-    {{ drc }} --progress=none run --rm dev-app alembic {{ command }} {{ args }}
+    {{ drc }} --progress=none run --rm dev-app shell flask alembic {{ command }} {{ args }}
 
 # run an interactive postgres shell in the dev-db container
 dev-psql *args: (_up "dev-db")
