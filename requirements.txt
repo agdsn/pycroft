@@ -261,9 +261,9 @@ email-validator==1.1.3 \
 fints==3.1.0 \
     --hash=sha256:426f6af1a79dce75ef9d475da926c8fc407c1bb3da13acf9fb52f5f0449b58d8 \
     --hash=sha256:f4fb814f26d447257249c3af24f8abbb2bf2726dbbb0ee0e1ad832a9a010b487
-flask==2.3.3 \
-    --hash=sha256:09c347a92aa7ff4a8e7f3206795f30d826654baf38b873d0744cd571ca609efc \
-    --hash=sha256:f69fcd559dc907ed196ab9df0e48471709175e696d6e698dd4dbe940f96ce66b
+flask==3.0.3 \
+    --hash=sha256:34e815dfaa43340d1d15a5c3a02b8476004037eb4840b34910c6e21679d288f3 \
+    --hash=sha256:ceb27b0af3823ea2737928a4d99d125a06175b8512c445cbd9a9ce200ef76842
     # via
     #   flask-babel
     #   flask-login
@@ -1120,9 +1120,9 @@ webencodings==0.5.1 \
     --hash=sha256:a0af1213f3c2226497a97e2b3aa01a7e4bee4f403f95be16fc9acd2947514a78 \
     --hash=sha256:b36a1c245f2d304965eb4e0a82848379241dc04b865afcc4aab16748587e1923
     # via bleach
-werkzeug==2.3.8 \
-    --hash=sha256:554b257c74bbeb7a0d254160a4f8ffe185243f52a52035060b761ca62d977f03 \
-    --hash=sha256:bba1f19f8ec89d4d607a3bd62f1904bd2e609472d93cd85e9d4e178f472c3748
+werkzeug==3.0.3 \
+    --hash=sha256:097e5bfda9f0aba8da6b8545146def481d06aa7d3266e7448e2cccf67dd8bd18 \
+    --hash=sha256:fc9645dc43e03e4d630d23143a04a7f947a9a3b5727cd535fdfe155a17cc48c8
     # via
     #   flask
     #   flask-login
