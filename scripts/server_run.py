@@ -14,7 +14,6 @@ from flask import g, request
 from flask.globals import request_ctx
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
-from sqlalchemy.ext.declarative import DeferredReflection
 from werkzeug.middleware.profiler import ProfilerMiddleware
 
 import pycroft
@@ -46,7 +45,6 @@ def prepare_server(echo=False) -> PycroftFlask:
     with engine.connect() as connection:
         _ensure_schema_up_to_date(connection)
     _setup_simple_profiling(app)
-    DeferredReflection.prepare(engine)  # TODO for what is this used?
     set_scoped_session(
         scoped_session(
             sessionmaker(bind=engine),
