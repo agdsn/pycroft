@@ -5,10 +5,12 @@ import typing as t
 import os
 
 import click
+from alembic import command
 from flask import Flask
 
 from pycroft.model import create_db_model
 from pycroft.model import create_engine, drop_db_model
+from pycroft.model.alembic import get_alembic_config
 
 
 def register_commands(app: Flask) -> None:
@@ -29,3 +31,14 @@ def register_commands(app: Flask) -> None:
                       ' Are you absolutely sure?', abort=True)
         with engine.begin() as connection:
             drop_db_model(bind=connection)
+
+    @cli.command("migrate", help="Apply the latest migrations (`alembic upgrade head`)")
+    def upgrade_schema() -> None:
+        engine = create_engine(os.getenv("PYCROFT_DB_URI"))
+        alembic_cfg = get_alembic_config()
+
+        app.logger.info("> alembic upgrade head…")
+        with engine.begin() as conn:
+            alembic_cfg.attributes["connection"] = conn
+            command.upgrade(alembic_cfg, "head")
+        app.logger.info("…done ")
