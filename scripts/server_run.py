@@ -10,7 +10,7 @@ import time
 import tomllib
 
 from babel.support import Translations
-from flask import g, request
+from flask import g, request, Flask
 from flask.globals import request_ctx
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -21,7 +21,7 @@ import web
 from pycroft.helpers.i18n import set_translation_lookup, get_locale
 from pycroft.model.session import set_scoped_session
 from scripts.connection import get_connection_string
-from scripts.schema import AlembicHelper, SchemaStrategist
+from scripts.schema import AlembicHelper
 from web import make_app, PycroftFlask
 
 default_handler = logging.StreamHandler(sys.stdout)
@@ -43,7 +43,7 @@ def prepare_server(echo=False) -> PycroftFlask:
 
     engine = create_engine(get_connection_string())
     with engine.connect() as connection:
-        _ensure_schema_up_to_date(connection)
+        _ensure_schema_up_to_date(app, connection)
     _setup_simple_profiling(app)
     set_scoped_session(
         scoped_session(
@@ -57,10 +57,16 @@ def prepare_server(echo=False) -> PycroftFlask:
     return app
 
 
-def _ensure_schema_up_to_date(connection):
+def _ensure_schema_up_to_date(app: Flask, connection):
     state = AlembicHelper(connection)
-    strategy = SchemaStrategist(state).determine_schema_strategy()
-    strategy()
+    if not state.running_version:
+        _msg = "No alembic_version found. Please import data or create the schema."
+        app.logger.critical(_msg)
+        exit(1)
+    if state.running_version != state.desired_version:
+        _msg = "Schema out of date. Please upgrade."
+        app.logger.critical(_msg)
+        exit(1)
 
 
 def _setup_translations():

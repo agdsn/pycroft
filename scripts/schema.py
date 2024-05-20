@@ -7,8 +7,6 @@ from alembic.script import ScriptDirectory
 from pkg_resources import resource_filename
 from sqlalchemy import text
 
-from pycroft.model import create_db_model
-
 
 class AlembicHelper:
     def __init__(self, connection, config_file=None):
@@ -71,63 +69,3 @@ def db_has_nontrivial_objects(connection):
     )).scalar()
     return num_objects > 0
 
-
-class SchemaStrategist:
-    def __init__(self, helper):
-        """create a new strategist
-
-        :param AlembicHelper helper: Al helper to investigate the state of our
-        alembic configuratior
-        """
-        w.warn(
-            "Do not use SchemaStrategist, use dependencies instead",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        self.helper = helper
-
-    #: A function ``Connection -> : bool`` determining whether the
-    #: schema can be assumed to be : empty.
-    db_filled_heuristic = staticmethod(db_has_nontrivial_objects)
-
-    @property
-    def is_up_to_date(self):
-        return self.helper.running_version == self.helper.desired_version
-
-    def determine_schema_strategy(self):
-        """Determine the strategy
-
-        :param AlembicHelper state:
-        """
-        if self.is_up_to_date:
-            # Q: why is `run` run on an empty database?
-            print("Determined strategy 'run'")
-            return self.run
-        if self.helper.running_version is not None:
-            print("Determined strategy 'upgrade'")
-            return self.upgrade
-        if self.db_filled_heuristic(self.helper.connection):
-            # db not empty, but not running version is None
-            print("Determined strategy 'manual_intervention'")
-            return self.manual_intervention
-        print("Determined strategy 'create_then_stamp'")
-        return self.create_then_stamp
-
-    def run(self):
-        print(f"Schema is up to date (revision: {self.helper.running_version})")
-
-    def upgrade(self):
-        print("Running upgrade from {} to {}...".format(self.helper.running_version,
-                                                        self.helper.desired_version))
-        self.helper.upgrade()
-
-    @staticmethod
-    def manual_intervention():
-        print("The database is filled, but not equipped with an alembic revision."
-              " Please use an empty database or manually stamp it"
-              " if you know what you're doing.")
-        exit(1)
-
-    def create_then_stamp(self):
-        create_db_model(self.helper.connection)
-        self.helper.stamp()
