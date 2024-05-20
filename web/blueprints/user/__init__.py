@@ -338,7 +338,7 @@ def user_show(user_id: int) -> ResponseReturnValue:
         log_table_user=LogTableSpecific(data_url=_log_endpoint(logtype="user")),
         log_table_room=LogTableSpecific(data_url=_log_endpoint(logtype="room")),
         log_table_hades=LogTableSpecific(data_url=_log_endpoint(logtype="hades")),
-        log_table_tasks=LogTableSpecific(data_url=_log_endpoint(logtype="tasks")),
+        log_table_tasks=LogTableSpecific(data_url=_log_endpoint(logtype="task")),
         membership_table_all=MembershipTable(
             user_id=user.id,
             data_url=_membership_endpoint(),
