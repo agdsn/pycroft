@@ -38,7 +38,7 @@ services:
       service: dev
     networks:
       dev:
-    command: ["shell", "flask", "migrate"]
+    command: ["shell", "flask", "alembic", "upgrade", "head"]
     depends_on:
       dev-db:
         condition: service_healthy
