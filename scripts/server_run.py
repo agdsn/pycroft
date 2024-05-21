@@ -64,8 +64,8 @@ def _ensure_schema_up_to_date(app: Flask, connection):
         app.logger.critical(_msg)
         exit(1)
     if state.running_version != state.desired_version:
-        _msg = "Schema out of date. Please upgrade."
-        app.logger.critical(_msg)
+        _msg = "Schema out of date (current: %s, needed: %s). Please upgrade."
+        app.logger.critical(_msg, state.running_version, state.desired_version)
         exit(1)
 
 
