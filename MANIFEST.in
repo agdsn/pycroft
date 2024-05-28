@@ -1,4 +1,4 @@
-include AUTHORS LICENSE NOTICE pycroft/model/alembic.ini web/flask.cfg
+include AUTHORS LICENSE NOTICE pycroft/model/alembic.ini web/default_config.toml
 recursive-include pycroft/templates/ *
 recursive-include pycroft/helpers/printing/assets *
 recursive-include pycroft/messages *.mo *.po *.pot
