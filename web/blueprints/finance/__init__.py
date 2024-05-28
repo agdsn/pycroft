@@ -270,7 +270,7 @@ def flash_fints_errors() -> t.Iterator[None]:
 def bank_accounts_import() -> ResponseReturnValue:
     form = BankAccountActivitiesImportForm()
     form.account.choices = [
-        (acc.id, acc.name) for acc in get_all_bank_accounts(session)
+        (acc.id, acc.name) for acc in get_all_bank_accounts(session) if not acc.account.legacy
     ]
     imported = ImportedTransactions([], [], [])
 
@@ -287,6 +287,8 @@ def bank_accounts_import() -> ResponseReturnValue:
     if not form.is_submitted():
         del (form.start_date)
         form.end_date.data = date.today() - timedelta(days=1)
+        form.account.data = config.membership_fee_bank_account_id
+
         return display_form_response(imported)
 
     if not form.validate():
