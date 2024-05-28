@@ -153,7 +153,9 @@ def bank_accounts_list() -> ResponseReturnValue:
         create_account=privilege_check(current_user, 'finance_change'))
 
     bank_account_activity_table = BankAccountActivityTable(
-        data_url=url_for('.bank_accounts_activities_json'))
+        data_url=url_for(".bank_accounts_activities_json"),
+        finance_change=privilege_check(current_user, "finance_change"),
+    )
 
     return render_template(
         'finance/bank_accounts_list.html',
@@ -180,7 +182,7 @@ def bank_accounts_list_json() -> ResponseReturnValue:
                 last_imported_at=(
                     str(datetime.date(i))
                     if (i := bank_account.last_imported_at) is not None
-                    else "nie"
+                    else "-"
                 ),
             )
             for bank_account in get_all_bank_accounts(session)
@@ -268,7 +270,7 @@ def flash_fints_errors() -> t.Iterator[None]:
 def bank_accounts_import() -> ResponseReturnValue:
     form = BankAccountActivitiesImportForm()
     form.account.choices = [
-        (acc.id, acc.name) for acc in get_all_bank_accounts(session)
+        (acc.id, acc.name) for acc in get_all_bank_accounts(session) if not acc.account.legacy
     ]
     imported = ImportedTransactions([], [], [])
 
@@ -285,6 +287,8 @@ def bank_accounts_import() -> ResponseReturnValue:
     if not form.is_submitted():
         del (form.start_date)
         form.end_date.data = date.today() - timedelta(days=1)
+        form.account.data = config.membership_fee_bank_account_id
+
         return display_form_response(imported)
 
     if not form.validate():
@@ -1364,8 +1368,9 @@ def membership_fee_users_due_json(fee_id: int) -> ResponseReturnValue:
     ).model_dump()
 
 
-@bp.route("/membership_fees", methods=['GET', 'POST'])
-@nav.navigate("Beiträge", icon='fa-hand-holding-usd')
+@bp.route("/membership_fees", methods=["GET", "POST"])
+@nav.navigate("Beiträge", icon="fa-hand-holding-usd")
+@access.require("finance_change")
 def membership_fees() -> ResponseReturnValue:
     table = MembershipFeeTable(data_url=url_for('.membership_fees_json'))
     return render_template('finance/membership_fees.html', table=table)

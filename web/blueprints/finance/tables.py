@@ -208,6 +208,12 @@ class BankAccountTable(BootstrapTable):
         href = url_for(".bank_accounts_create")
         return button_toolbar(gettext("Neues Bankkonto anlegen"), href)
 
+    class Meta:
+        table_args = {
+            "data-sort-order": "desc",
+            "data-sort-name": "last_imported_at",
+        }
+
 
 class BankAccountRow(BaseModel):
     name: str
@@ -231,7 +237,9 @@ class BankAccountActivityTable(BootstrapTable):
     amount = Column("Betrag", width=1, formatter="table.euroFormatter")
     actions = MultiBtnColumn("Aktionen", width=1)
 
-    def __init__(self, **kw: t.Any) -> None:
+    def __init__(self, *, finance_change: bool = False, **kw: t.Any) -> None:
+        self.finance_change = finance_change
+
         table_args = kw.pop('table_args', {})
         table_args.setdefault('data-detail-view', "true")
         table_args.setdefault('data-row-style', "table.financeRowFormatter")
@@ -239,6 +247,23 @@ class BankAccountActivityTable(BootstrapTable):
         kw['table_args'] = table_args
 
         super().__init__(**kw)
+
+    @property
+    @lazy_join
+    def toolbar(self) -> t.Iterator[str] | None:
+        """Do operations on BankAccountActivities"""
+        if not self.finance_change:
+            return None
+        yield from button_toolbar(
+            "Kontobewegungen zuordnen",
+            url_for(".bank_account_activities_match"),
+            icon="fa-check",
+        )
+        yield from button_toolbar(
+            "Kontobewegungen rücküberweisen",
+            url_for(".bank_account_activities_return"),
+            icon="fa-rotate-left",
+        )
 
     class Meta:
         table_args = {
