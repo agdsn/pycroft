@@ -153,7 +153,9 @@ def bank_accounts_list() -> ResponseReturnValue:
         create_account=privilege_check(current_user, 'finance_change'))
 
     bank_account_activity_table = BankAccountActivityTable(
-        data_url=url_for('.bank_accounts_activities_json'))
+        data_url=url_for(".bank_accounts_activities_json"),
+        finance_change=privilege_check(current_user, "finance_change"),
+    )
 
     return render_template(
         'finance/bank_accounts_list.html',
