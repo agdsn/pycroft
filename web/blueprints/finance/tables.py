@@ -208,6 +208,12 @@ class BankAccountTable(BootstrapTable):
         href = url_for(".bank_accounts_create")
         return button_toolbar(gettext("Neues Bankkonto anlegen"), href)
 
+    class Meta:
+        table_args = {
+            "data-sort-order": "desc",
+            "data-sort-name": "last_imported_at",
+        }
+
 
 class BankAccountRow(BaseModel):
     name: str

@@ -182,7 +182,7 @@ def bank_accounts_list_json() -> ResponseReturnValue:
                 last_imported_at=(
                     str(datetime.date(i))
                     if (i := bank_account.last_imported_at) is not None
-                    else "nie"
+                    else "-"
                 ),
             )
             for bank_account in get_all_bank_accounts(session)
