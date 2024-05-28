@@ -249,22 +249,20 @@ class BankAccountActivityTable(BootstrapTable):
         super().__init__(**kw)
 
     @property
-    def toolbar(self) -> HasDunderStr | None:
+    @lazy_join
+    def toolbar(self) -> t.Iterator[str] | None:
         """Do operations on BankAccountActivities"""
         if not self.finance_change:
             return None
-        return str(
-            button_toolbar(
-                "Kontobewegungen zuordnen",
-                url_for(".bank_account_activities_match"),
-                icon="fa-check",
-            )
-        ) + str(
-            button_toolbar(
-                "Kontobewegungen rücküberweisen",
-                url_for(".bank_account_activities_return"),
-                icon="fa-rotate-left",
-            )
+        yield from button_toolbar(
+            "Kontobewegungen zuordnen",
+            url_for(".bank_account_activities_match"),
+            icon="fa-check",
+        )
+        yield from button_toolbar(
+            "Kontobewegungen rücküberweisen",
+            url_for(".bank_account_activities_return"),
+            icon="fa-rotate-left",
         )
 
     class Meta:
