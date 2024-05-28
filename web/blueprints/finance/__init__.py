@@ -1368,8 +1368,9 @@ def membership_fee_users_due_json(fee_id: int) -> ResponseReturnValue:
     ).model_dump()
 
 
-@bp.route("/membership_fees", methods=['GET', 'POST'])
-@nav.navigate("Beiträge", icon='fa-hand-holding-usd')
+@bp.route("/membership_fees", methods=["GET", "POST"])
+@nav.navigate("Beiträge", icon="fa-hand-holding-usd")
+@access.require("finance_change")
 def membership_fees() -> ResponseReturnValue:
     table = MembershipFeeTable(data_url=url_for('.membership_fees_json'))
     return render_template('finance/membership_fees.html', table=table)
