@@ -23,16 +23,46 @@
 </div>
 <br>
 
-
 <ul class="nav nav-tabs">
-    <li class="nav-item"><a class="nav-link active" href="#memberships-active" data-bs-toggle="tab">Aktiv</a></li>
-    <li class="nav-item"><a class="nav-link" href="#memberships-all" data-bs-toggle="tab">Alle</a></li>
+    <li class="nav-item"><a class="nav-link active" href="#memberships-chart" data-bs-toggle="tab">
+        <i class="fa-solid fa-chart-gantt"></i> Chart
+    </a></li>
+    <li class="nav-item"><a class="nav-link" href="#memberships-active" data-bs-toggle="tab">
+        <i class="fa-solid fa-list-ul"></i> Aktiv
+    </a></li>
+    <li class="nav-item"><a class="nav-link" href="#memberships-all" data-bs-toggle="tab">
+        <i class="fa-solid fa-list-ul"></i> Alle
+    </a></li>
 </ul>
 <div class="tab-content">
-    <div class="tab-pane fade in active show" id="memberships-active">
+    <div class="tab-pane fade in active show" id="memberships-chart">
+        <div id="memberships-timeline" data-url="{{ url_for(".user_show_groups_json", user_id=user.id) }}"></div>
+    </div>
+    <div class="tab-pane fade" id="memberships-active">
         {{ membership_table_active.render("active-memberships") }}
     </div>
     <div class="tab-pane fade" id="memberships-all">
         {{ membership_table_all.render("memberships")}}
     </div>
+
+    
+  <div id="group-detail-modal" class="modal fade" tabindex="-1"
+      aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 id="group-detail-title" class="modal-title">Edit membership</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <a type="button" id="group-detail-terminate" href="#" class="btn btn-outline-danger">
+            <i class="fa-solid fa-power-off"></i>Beenden
+          </a>
+          <a type="button" id="group-detail-edit" href="#" class="btn btn-primary">
+            <i class="fa-solid fa-pencil"></i>Bearbeiten
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

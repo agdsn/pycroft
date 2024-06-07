@@ -54,9 +54,12 @@ class MembershipTable(BootstrapTable):
 
 
 class MembershipRow(BaseModel):
+    id: int
     group_name: str
     begins_at: DateColResponse
     ends_at: DateColResponse
+    url_edit: str
+    url_end: str | None = None
     actions: list[BtnColResponse]
     # used by membershipRowAttributes
     grants: list[str | None]

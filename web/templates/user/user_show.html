@@ -9,6 +9,57 @@
 {% import "macros/forms.html" as forms %}
 {% import "macros/resources.html" as resources %}
 
+{% set tabs =  [
+    {
+        'id': 'hosts',
+        'icon': 'fa-laptop',
+        'name': 'Hosts',
+        'badge': user.hosts | length
+    },
+    {
+        'id': 'tasks',
+        'icon': 'fa-clipboard-check',
+        'name': 'Tasks',
+        'badge': user.tasks | length,
+        'badge_color': '#d9534f' if user.tasks | length > 0 else None
+    },
+    {
+        'id': 'logs',
+        'icon': 'fa-list-ul',
+        'name': 'Logs',
+        'badge': user.log_entries | length
+    },
+    {
+        'id': 'traffic',
+        'icon': 'fa-chart-area',
+        'name': 'Traffic',
+    },
+    {
+        'id': 'finance',
+        'icon': 'fa-euro-sign',
+        'name': 'Finanzen',
+    },
+    {
+        'id': 'groups',
+        'icon': 'fa-users-cog',
+        'name': 'Gruppen',
+        'badge': user.active_memberships() | length
+    },
+    {
+        'id': 'room_history',
+        'icon': 'fa-history',
+        'name': 'Wohnorte',
+        'badge': user.room_history_entries | length
+    },
+    {
+        'id': 'tenancies',
+        'icon': 'fa-file-signature',
+        'name': 'Mietverträge',
+        'badge': user.tenancies | length,
+        'disabled': user.tenancies | length == 0,
+    },
+]
+%}
 {% block content %}
   {# Stammdaten #}
   <section id="master-data">
@@ -60,4 +111,5 @@
 {% block page_script %}
     {{ resources.link_script_file('tab-anchor.js' | require) }}
   {{ resources.link_script_file('user-suite.js' | require) }}
+  {{ resources.link_script_file('memberships-chart.js' | require) }}
 {% endblock %}
