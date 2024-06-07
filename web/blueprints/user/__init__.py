@@ -381,56 +381,6 @@ def user_show(user_id: int) -> ResponseReturnValue:
         tenancy_table=TenancyTable(
             data_url=url_for(".tenancies_json", user_id=user.id)
         ),
-        tabs=[
-            {
-                'id': 'hosts',
-                'icon': 'fa-laptop',
-                'name': 'Hosts',
-                'badge': len(user.hosts)
-            },
-            {
-                'id': 'tasks',
-                'icon': 'fa-clipboard-check',
-                'name': 'Tasks',
-                'badge': len(user.tasks),
-                'badge_color': '#d9534f' if len(user.tasks) > 0 else None
-            },
-            {
-                'id': 'logs',
-                'icon': 'fa-list-ul',
-                'name': 'Logs',
-                'badge': len(user.log_entries)
-            },
-            {
-                'id': 'traffic',
-                'icon': 'fa-chart-area',
-                'name': 'Traffic',
-            },
-            {
-                'id': 'finance',
-                'icon': 'fa-euro-sign',
-                'name': 'Finanzen',
-            },
-            {
-                'id': 'groups',
-                'icon': 'fa-users-cog',
-                'name': 'Gruppen',
-                'badge': len(user.active_memberships())
-            },
-            {
-                'id': 'room_history',
-                'icon': 'fa-history',
-                'name': 'Wohnorte',
-                'badge': len(user.room_history_entries)
-            },
-            {
-                'id': 'tenancies',
-                'icon': 'fa-file-signature',
-                'name': 'Mietverträge',
-                'badge': len(user.tenancies),
-                'disabled': len(user.tenancies) == 0,
-            },
-        ]
     )
 
 
