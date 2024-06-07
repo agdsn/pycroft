@@ -484,6 +484,7 @@ def user_show_groups_json(
     return TableResponse[MembershipRow](
         items=[
             MembershipRow(
+                id=membership.id,
                 group_name=membership.group.name,
                 begins_at=datetime_format(
                     membership.active_during.begin,
@@ -496,13 +497,27 @@ def user_show_groups_json(
                 grants=granted or [],
                 denies=denied or [],
                 active=(active := (session.utcnow() in membership.active_during)),
-                actions=[
-                    BtnColResponse(
-                        href=url_for(
-                            ".edit_membership",
+                url_edit=(
+                    url_edit := url_for(
+                        ".edit_membership",
+                        user_id=user_id,
+                        membership_id=membership.id,
+                    )
+                ),
+                url_end=(
+                    url_end := (
+                        url_for(
+                            ".end_membership",
                             user_id=user_id,
                             membership_id=membership.id,
-                        ),
+                        )
+                        if active
+                        else None
+                    )
+                ),
+                actions=[
+                    BtnColResponse(
+                        href=url_edit,
                         title="Bearbeiten",
                         icon="fa-edit",
                         btn_class="btn-link",
@@ -511,11 +526,7 @@ def user_show_groups_json(
                 + (
                     [
                         BtnColResponse(
-                            href=url_for(
-                                ".end_membership",
-                                user_id=user_id,
-                                membership_id=membership.id,
-                            ),
+                            href=url_end,
                             title="Beenden",
                             icon="fa-power-off",
                             btn_class="btn-link",
