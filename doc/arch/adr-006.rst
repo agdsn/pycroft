@@ -1,0 +1,148 @@
+ADR006
+======
+
+:Number: 006
+:Title: Combined tombstoning of uid and login
+:Author: Lukas Juhrich, Jakob Müller
+:Created: 2023-01-15
+:Status: Postulated
+
+.. contents:: Table of Contents
+
+Context
+-------
+In the light of data economy, we should not store the login of a :class:`User` –
+which implicitly is a (partial) property of the :class:`UnixAccount` –
+more than necessary.
+
+The only reason to keep the login is to avoid assigning the same mail address
+to multiple people across time; otherwise,
+mails might be send to the wrong addressee.
+
+Thus it has been decided (external from the development team) to store
+the login in form of a hash whenever it stops being required for providing
+services to a user.
+
+Requirements
+~~~~~~~~~~~~
+The implementation has to ensure
+
+1. absence of the ``login`` whenever it is not needed *(legal requirement)*
+2. that no login is doubly assigned *(legal / business requirement)*
+
+Consequently, we need to track the ``login`` hash in some kind of “tombstone”,
+such that
+
+* it is referenced by a ``User`` or a ``UnixAccount``
+* it exists in all scenarios and is never deleted
+
+Since the ``login`` and the ``uid`` have the same lifecycle, and both
+require tombstoning –
+albeit the ``uid`` needs to be kept only for technical reasons,
+not for legal ones –
+it makes sense to let such a ``tombstone`` maintain both pieces of data.
+
+Current model
+~~~~~~~~~~~~~
+
+In the current model, the relevant entities are related as follows:
+
+1. ``User``: has a ``login`` (nullable) and a ``unix_account_id`` (nullable).
+2. ``UnixAccount``: Has the columns ``uid``, ``gid``, ``home``, and ``login_shell``,
+   but no ``login``.
+3. An ldap account (Derived entity):
+   If a ``User`` has a ``UnixAccount`` and the correct permissions,
+   this causes an LDAP account to be exported by the ldap syncer.
+
+Since ``user.unix_account`` is a foreign key constraint,
+we have the following possible states (``U``: User, ``UA``: UnixAccount):
+
+========== === ========= =================== ====
+#          ∃U? ∃U.login? ∃U.unix_account_id? ∃UA?
+========== === ========= =================== ====
+1          ✓   ✗         ✗                   ✗
+2          ✓   ✗         ✓                   ✓
+3          ✓   ✓         ✗                   ✗
+4          ✓   ✓         ✓                   ✓
+---------- --- --------- ------------------- ----
+5          ✗   ✗         ✗                   ✓
+6          ✗   ✗         ✗                   ✗
+========== === ========= =================== ====
+
+With regards to tombstoning, the states imply the following requirements:
+
+State 1. No login, no unix account
+    No requirements.
+
+State 2. No login, but unix account
+    This is currently allowed, but issues a warning in the ldap syncer.
+    Indeed, without the login the unix account cannot be exported.
+    With tombstones however, we require
+
+    * :math:`(T_u)` there shall exist a tombstone with the same uid as the account
+
+State 3. Login, but no unix account
+    * :math:`(T_l)` there shall exist a tombstone with the implied login hash
+
+State 4. Login and unix account
+    * :math:`(T_u)` there shall exist a tombstone with the same uid as the account
+    * :math:`(T_l)` there shall exist a tombstone with the implied login hash
+    * :math:`(E_{ul})` both tombstones in question should be equal
+
+State 5. Unix account without user
+    * :math:`(T_u)` there shall exist a tombstone with the same uid as the account
+
+State 6. Tautological state
+    Nothing exists
+
+
+Decision
+--------
+
+There shall be
+
+1. A new entity ``unix_tombstone(uid int, login_hash text)`` satisfying
+
+   * ``uid`` is unique
+   * ``login_hash`` is unique
+   * Either column may be ``null``, but not both
+   * ``uid`` and ``login_hash`` form the primary key
+
+2. A generated column ``login_hash`` on the ``user`` relation
+   (see :class:`sqlalchemy.schema.Computed`)
+3. :math:`(T_l)`: A foreign key constraint ``User.login_hash → UnixTombstone.login_hash``
+4. :math:`(T_l)`: A foreign key constraint ``UnixAccount.uid → UnixTombstone.uid``
+5. :math:`(E_{ul})`: A constraint checking consistency for users with login and unix account:
+   In this case, the tombstone induced by the ``account.uid`` should agree
+   with the tombstone induced by the ``user.login_hash``
+
+Consequences
+------------
+
+* That the ``login_hash`` is optional allows for
+  ``unix_accounts`` which don't have a ``unix_login`` associated to them
+  to have valid tombstones as well.
+  However, this implies that were one to couple these accounts to users again,
+  the tombstone has to be modified to reflect the user's ``login`` (if it exists).
+
+* using a combined entity instead of an entity for the ``login`` and ``uid``,
+  respectively, has the advantage that one can identify ``login`` tombstones
+  which never had a respective ``unix_account``.
+  Database administrators can then decide on whether to keep these entries or not,
+  since technically these logins have not been used anywhere.
+  This might not serve any particular purpose but the
+
+* In the most frequent use case of creating a user with login and unix account,
+  A tombstone has to be created as well.  This is slightly more effort
+  than the current implementation.
+  To avoid this, triggers may be created that take care of this automatically.
+
+  .. note:: This ADR does not take a stance on whether or not to add triggers
+      as it is mainly concerned with ensuring the critical legal and business
+      requirements.
+
+* Tests have to be written to ensure that with any state change of the ``user``
+  or ``unix_account`` relations,
+  the information contained in the ``tombstone`` tables is monotonous,
+  i.e that neither does a tombstone get deleted via a cascade
+  nor is a field set to ``null`` when it has been non-null before.
