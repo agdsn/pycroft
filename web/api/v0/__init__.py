@@ -7,6 +7,7 @@ from ipaddress import IPv4Address, IPv6Address
 from flask import jsonify, current_app, Response
 from flask.typing import ResponseReturnValue
 from flask_restful import Api, Resource as FlaskRestfulResource, abort
+from schwifty import IBAN
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload, selectinload, undefer, with_polymorphic
@@ -16,7 +17,7 @@ from webargs.flaskparser import use_kwargs
 
 from pycroft.helpers import utc
 from pycroft.helpers.i18n import Message
-from pycroft.lib.finance import estimate_balance, get_last_import_date
+from pycroft.lib.finance import estimate_balance, get_last_import_date, IBANField
 from pycroft.lib.host import change_mac, host_create, interface_create, host_edit
 from pycroft.lib.net import SubnetFullException
 from pycroft.lib.swdd import get_swdd_person_id, get_relevant_tenancies, \
@@ -796,3 +797,26 @@ class ResetPasswordResource(Resource):
 
 
 api.add_resource(ResetPasswordResource, '/user/reset-password')
+
+
+class RequestRepaymentResource(Resource):
+    def get(self, user_id: int) -> Response:
+        current_app.logger.warning("RECEIVED GET FOR REQUEST_REPAYMENT.")
+        return jsonify(False)
+
+    @use_kwargs(
+        {
+            "beneficiary": fields.Str(required=True),
+            "iban": IBANField(required=True),
+            "amount": fields.Decimal(required=True),
+        },
+        location="form",
+    )
+    def post(
+        self, user_id: int, beneficiary: str, iban: str, amount: Decimal
+    ) -> Response:
+        current_app.logger.warning({beneficiary, iban, amount})
+        return jsonify({"success": True})
+
+
+api.add_resource(RequestRepaymentResource, "/user/<int:user_id>/request-repayment")

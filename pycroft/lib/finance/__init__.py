@@ -55,6 +55,9 @@ from .transaction_crud import (
     process_transactions,
     ImportedTransactions,
 )
+from .repayment.fields import (
+    IBANField,
+)
 
 
 def user_has_paid(user: User) -> bool:
