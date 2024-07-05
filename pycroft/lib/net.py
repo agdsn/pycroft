@@ -5,7 +5,6 @@
 pycroft.lib.net
 ~~~~~~~~~~~~~~~
 """
-import sys
 import typing as t
 from itertools import islice
 
@@ -30,43 +29,24 @@ class MacExistsException(PycroftLibException):
         super().__init__("MAC address already exists")
 
 
-def get_subnet_unused_ips(subnet: Subnet) -> t.Iterator[netaddr.IPAddress]:
-    """Get unused IPs from a subnet, omitting reserved addresses.
-
-    :invariant: the element's version is the same as :obj:`subnet.version`.
-    """
-    reserved_bottom = subnet.reserved_addresses_bottom or 0
-    reserved_top = subnet.reserved_addresses_top or 0
-    used_ips = frozenset(ip.address for ip in subnet.ips)
-    unreserved = islice(
-        subnet.address,
-        reserved_bottom,
-        # Stop argument must be None or an integer: 0 <= x <= sys.maxsize.
-        # IPv6 subnets can exceed this boundary on 32 bit python builds.
-        min(subnet.address.size - reserved_top - 2, sys.maxsize),
-    )
-    return (ip for ip in unreserved if ip not in used_ips)
-
-
 def get_unused_ips(
     subnets: t.Iterable[Subnet],
 ) -> dict[Subnet, t.Iterator[netaddr.IPAddress]]:
-    return {subnet: get_subnet_unused_ips(subnet) for subnet in subnets}
+    import warnings
+
+    warnings.warn(
+        "Use `subnet.iter_unused_ips()` instead of `net.get_unused_ips`",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return {subnet: subnet.unused_ips_iter() for subnet in subnets}
 
 
 def get_free_ip(subnets: t.Iterable[Subnet]) -> tuple[netaddr.IPAddress, Subnet]:
-    unused = get_unused_ips(subnets)
-
-    for subnet, ips in unused.items():
-        try:
-            ip = next(ips)
-
-            if ip is not None and subnet is not None:
-                return ip, subnet
-        except StopIteration:
-            continue
-
-    raise SubnetFullException()
+    try:
+        return next((ip, subnet) for subnet in subnets for ip in subnet.unused_ips_iter())
+    except StopIteration:
+        raise SubnetFullException from None
 
 
 #TODO: Implement this in the model
@@ -82,12 +62,12 @@ def get_subnets_for_room(room: Room) -> list[Subnet]:
 
 
 def calculate_max_ips(subnet: Subnet) -> int:
-    max_ips = subnet.address.size - 2
-    if subnet.reserved_addresses_bottom:
-        max_ips -= subnet.reserved_addresses_bottom
-    if subnet.reserved_addresses_top:
-        max_ips -= subnet.reserved_addresses_top
-    return max_ips
+    import warnings
+
+    warnings.warn(
+        "Use `Subnet.usable_size` instead of calculate_max_ips", DeprecationWarning, stacklevel=2
+    )
+    return subnet.usable_size
 
 
 class SubnetUsage(t.NamedTuple):

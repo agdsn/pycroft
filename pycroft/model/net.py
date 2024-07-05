@@ -55,6 +55,31 @@ class Subnet(IntegerIdModel):
     )
     # /backrefs
 
+    @property
+    def usable_ip_range(self) -> netaddr.IPRange | None:
+        """All IPs in this subnet which are not reserved."""
+        # takes care of host- and broadcast domains plus edge-cases (e.g. /32)
+        first_usable, last_usable = self.address._usable_range()
+
+        res_bottom = self.reserved_addresses_bottom or 0
+        res_top = self.reserved_addresses_top or 0
+        first_usable = first_usable + res_bottom
+        last_usable = last_usable + res_top
+        if last_usable < first_usable:
+            return None
+        return netaddr.IPRange(first_usable, last_usable)
+
+    @property
+    def usable_size(self) -> int:
+        """The number of IPs in this subnet which are not reserved."""
+        return self.usable_ip_range.size if self.usable_ip_range else 0
+
+    def unused_ips_iter(self) -> t.Iterator[netaddr.IPAddress]:
+        if not self.usable_ip_range:
+            return iter(())
+        used_ips = frozenset(ip.address for ip in self.ips)
+        return (ip for ip in self.usable_ip_range if ip not in used_ips)
+
 
 # Ensure that the gateway is contained in the subnet
 constraint = CheckConstraint(Subnet.gateway.op('<<')(Subnet.address))
