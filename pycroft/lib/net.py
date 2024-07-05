@@ -28,19 +28,6 @@ class MacExistsException(PycroftLibException):
         super().__init__("MAC address already exists")
 
 
-def get_unused_ips(
-    subnets: t.Iterable[Subnet],
-) -> dict[Subnet, t.Iterator[netaddr.IPAddress]]:
-    import warnings
-
-    warnings.warn(
-        "Use `subnet.iter_unused_ips()` instead of `net.get_unused_ips`",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    return {subnet: subnet.unused_ips_iter() for subnet in subnets}
-
-
 def get_free_ip(subnets: t.Iterable[Subnet]) -> tuple[netaddr.IPAddress, Subnet]:
     try:
         return next((ip, subnet) for subnet in subnets for ip in subnet.unused_ips_iter())
