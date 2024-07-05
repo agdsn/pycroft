@@ -58,12 +58,6 @@ def host(session):
     return factories.HostFactory()
 
 
-def calculate_usable_ips(net):
-    ips = netaddr.IPNetwork(net.address).size
-    reserved = net.reserved_addresses_bottom + net.reserved_addresses_top
-    return ips - reserved - 2
-
-
 def test_get_free_ip_simple(session, subnet):
     # TODO this has nothing to do with the helpers.
     ip, subnet2 = get_free_ip((subnet,))
@@ -78,13 +72,14 @@ def interface():
 
 @pytest.fixture
 def build_full_subnet(interface):
-    # depends on the functionality of `get_free_ip` (via `calculate_usable_ips`)
     def _build():
         net = factories.SubnetFactory.build()
+        from pycroft.model._all import Subnet
 
-        for _ in range(0, calculate_usable_ips(net)):
-            ip, _ = get_free_ip((net,))
-            net.ips.append(IP(address=ip, subnet=net, interface=interface))
+        assert isinstance(net, Subnet)
+        net.ips.extend(
+            IP(address=ip, subnet=net, interface=interface) for ip in net.usable_ip_range
+        )
         return net
     return _build
 
