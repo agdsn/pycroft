@@ -6,7 +6,6 @@ pycroft.lib.net
 ~~~~~~~~~~~~~~~
 """
 import typing as t
-from itertools import islice
 
 import netaddr
 from sqlalchemy import func, and_, cast
@@ -98,20 +97,6 @@ def get_subnets_with_usage() -> list[tuple[Subnet, SubnetUsage]]:
         (subnet, SubnetUsage(max_ips=calculate_max_ips(subnet), used_ips=used_ips))
         for subnet, used_ips in subnets_with_used_ips
     ]
-
-
-def ptr_name(network: netaddr.IPNetwork, ip_address: netaddr.IPAddress) -> str:
-    hostbits = network.max_prefixlen - network.prefixlen
-    if ip_address.version == 4:
-        num_octets = min((hostbits + 7 // 8), 1)
-        reversed_octets = reversed(ip_address.exploded.split('.'))
-        return '.'.join(islice(reversed_octets, num_octets))
-
-    if ip_address.version == 6:
-        num_chars = min((hostbits + 3 // 4), 1)
-        reversed_chars = reversed(ip_address.exploded.replace(':', ''))
-        return '.'.join(islice(reversed_chars, num_chars))
-    raise TypeError()
 
 
 def delete_ip(session: Session, ip: netaddr.IPAddress) -> None:
