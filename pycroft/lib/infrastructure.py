@@ -4,8 +4,7 @@ pycroft.lib.infrastructure
 """
 import typing as t
 
-import ipaddr
-from ipaddr import IPAddress
+from netaddr import IPAddress
 from sqlalchemy.orm import Session
 
 from pycroft.helpers.i18n import deferred_gettext
@@ -198,14 +197,14 @@ def edit_switch(
             .format(switch.host.name, str(switch.management_ip), management_ip)
         log_room_event(message.to_json(), processor, switch.host.room)
 
-        switch.management_ip = ipaddr.IPAddress(management_ip)
+        switch.management_ip = IPAddress(management_ip)
     session.add(switch)
 
 
 def create_switch(
     session: Session,
     name: str,
-    management_ip: ipaddr.IPv4Address,
+    management_ip: IPAddress,
     room: Room,
     processor: User,
 ) -> Switch:

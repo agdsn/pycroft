@@ -12,7 +12,7 @@
 import re
 import typing as t
 
-import ipaddr
+import netaddr
 from sqlalchemy import String
 from sqlalchemy.orm import (
     declared_attr,
@@ -51,8 +51,8 @@ class ModelBase(DeclarativeBase, metaclass=_ModelMeta):
         str255: String(255),
         # does not work yet: see https://github.com/sqlalchemy/sqlalchemy/issues/9175
         utc.DateTimeTz: pycroft_sqla_types.DateTimeTz,
-        ipaddr._BaseIP: IPAddress,
-        ipaddr._BaseNet: IPNetwork,
+        netaddr.IPAddress: IPAddress,
+        netaddr.IPNetwork: IPNetwork,
         mac_address: MACAddress,
     }
 

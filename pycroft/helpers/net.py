@@ -8,7 +8,7 @@ pycroft.helpers.net
 import re
 import typing as t
 
-import ipaddr
+import netaddr
 # Byte represented by 2 hexadecimal digits
 from mac_vendor_lookup import MacLookup
 
@@ -100,14 +100,15 @@ def port_name_sort_key(port_name: str) -> int:
             1024 * ord(letter.group(0) if letter else chr(ord("a") - 1)))
 
 
-def reverse_pointer(ip_address: ipaddr.IPv4Address | ipaddr.IPv6Address) -> str:
-    if isinstance(ip_address, ipaddr.IPv4Address):
-        reversed_octets = reversed(ip_address.exploded.split('.'))
-        return '.'.join(reversed_octets) + '.in-addr.arpa'
-    elif isinstance(ip_address, ipaddr.IPv6Address):
-        reversed_chars = reversed(ip_address.exploded.replace(':', ''))
-        return '.'.join(reversed_chars) + '.ip6.arpa'
-    raise TypeError()
+def reverse_pointer(ip_address: netaddr.IPAddress) -> str:
+    import warnings
+
+    warnings.warn(
+        "Omit helper function and use `IPAddress.reverse_dns()` instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return ip_address.reverse_dns
 
 
 def get_interface_manufacturer(mac: str) -> str | None:

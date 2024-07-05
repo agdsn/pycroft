@@ -8,7 +8,7 @@ pycroft.model.net
 from __future__ import annotations
 import typing as t
 
-import ipaddr
+import netaddr
 from sqlalchemy import CheckConstraint, ForeignKey, between, event, sql
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.schema import AddConstraint
@@ -39,8 +39,8 @@ class VLAN(IntegerIdModel):
 
 
 class Subnet(IntegerIdModel):
-    address: Mapped[ipaddr._BaseNet]
-    gateway: Mapped[ipaddr._BaseIP | None]
+    address: Mapped[netaddr.IPNetwork]
+    gateway: Mapped[netaddr.IPAddress | None]
     reserved_addresses_bottom: Mapped[int] = mapped_column(server_default=sql.text("0"))
     reserved_addresses_top: Mapped[int] = mapped_column(server_default=sql.text("0"))
     description: Mapped[str50 | None]

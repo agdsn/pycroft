@@ -8,7 +8,7 @@ pycroft.model.host
 from __future__ import annotations
 import typing as t
 
-import ipaddr
+import netaddr
 from sqlalchemy import ForeignKey, event, UniqueConstraint, Column
 from sqlalchemy.orm import relationship, validates, Mapped, mapped_column
 from sqlalchemy.schema import Table
@@ -74,7 +74,7 @@ class Switch(ModelBase):
         ForeignKey(Host.id), primary_key=True, index=True
     )
     host: Mapped[Host] = relationship(back_populates="switch")
-    management_ip: Mapped[ipaddr._BaseIP]
+    management_ip: Mapped[netaddr.IPAddress]
 
     # backrefs
     ports: Mapped[list[SwitchPort]] = relationship(
@@ -174,7 +174,7 @@ class SwitchPort(IntegerIdModel):
 
 
 class IP(IntegerIdModel):
-    address: Mapped[ipaddr._BaseIP] = mapped_column(unique=True)
+    address: Mapped[netaddr.IPAddress] = mapped_column(unique=True)
     interface_id: Mapped[int] = mapped_column(
         ForeignKey(Interface.id, ondelete="CASCADE")
     )
