@@ -3,7 +3,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from random import shuffle
 
-import ipaddr
+import netaddr
 import pytest
 
 from pycroft.helpers.net import port_name_sort_key
@@ -29,12 +29,17 @@ def test_port_sorting(port_names, shuffled_port_names):
     assert sorted(shuffled_port_names, key=port_name_sort_key) == port_names
 
 
-@pytest.mark.parametrize('address, expected', [
-    (ipaddr.IPv4Address(f"{byte1:d}.{byte2:d}.{byte3:d}.{byte4:d}"),
-     f"x{byte1:02x}{byte2:02x}{byte3:02x}{byte4:02x}")
-    for byte1, byte2, byte3, byte4 in [(141, 30, 228, 10), (10, 10, 10, 1), (127, 0, 0, 1)]
-])
-def test_hostname_generation(address: ipaddr.IPv4Address, expected: str):
+@pytest.mark.parametrize(
+    "address, expected",
+    [
+        (
+            netaddr.IPAddress(f"{byte1:d}.{byte2:d}.{byte3:d}.{byte4:d}"),
+            f"x{byte1:02x}{byte2:02x}{byte3:02x}{byte4:02x}",
+        )
+        for byte1, byte2, byte3, byte4 in [(141, 30, 228, 10), (10, 10, 10, 1), (127, 0, 0, 1)]
+    ],
+)
+def test_hostname_generation(address: netaddr.IPAddress, expected: str):
     assert generate_hostname(address) == expected
 
 
@@ -53,12 +58,6 @@ def host(session):
     return factories.HostFactory()
 
 
-def calculate_usable_ips(net):
-    ips = ipaddr.IPNetwork(net.address).numhosts
-    reserved = net.reserved_addresses_bottom + net.reserved_addresses_top
-    return ips - reserved - 2
-
-
 def test_get_free_ip_simple(session, subnet):
     # TODO this has nothing to do with the helpers.
     ip, subnet2 = get_free_ip((subnet,))
@@ -73,13 +72,14 @@ def interface():
 
 @pytest.fixture
 def build_full_subnet(interface):
-    # depends on the functionality of `get_free_ip` (via `calculate_usable_ips`)
     def _build():
         net = factories.SubnetFactory.build()
+        from pycroft.model._all import Subnet
 
-        for _ in range(0, calculate_usable_ips(net)):
-            ip, _ = get_free_ip((net,))
-            net.ips.append(IP(address=ip, subnet=net, interface=interface))
+        assert isinstance(net, Subnet)
+        net.ips.extend(
+            IP(address=ip, subnet=net, interface=interface) for ip in net.usable_ip_range
+        )
         return net
     return _build
 

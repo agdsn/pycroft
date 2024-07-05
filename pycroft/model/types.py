@@ -10,7 +10,7 @@ from decimal import Decimal
 from numbers import Number
 from typing import Any
 
-import ipaddr
+import netaddr
 from psycopg2._range import DateTimeTZRange
 from sqlalchemy import String, TypeDecorator, Integer, DateTime, literal
 from sqlalchemy.dialects.postgresql import MACADDR, INET, Range
@@ -49,13 +49,13 @@ class IPAddress(_IPType):
 
     def python_type(self):
         """"""
-        return ipaddr._BaseIP
+        return netaddr.IPAddress
 
     def process_result_value(self, value, dialect):
         """"""
         if value is None:
             return value
-        return ipaddr.IPAddress(value)
+        return netaddr.IPAddress(value)
 
 
 class IPNetwork(_IPType):
@@ -64,13 +64,13 @@ class IPNetwork(_IPType):
 
     def python_type(self):
         """"""
-        return ipaddr._BaseNet
+        return netaddr.IPNetwork
 
     def process_result_value(self, value, dialect):
         """"""
         if value is None:
             return value
-        return ipaddr.IPNetwork(value)
+        return netaddr.IPNetwork(value)
 
 
 class MACAddress(TypeDecorator):

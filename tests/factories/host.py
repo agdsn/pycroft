@@ -1,6 +1,6 @@
 import factory
 from faker.providers import BaseProvider
-from ipaddr import IPv4Network, IPv4Address
+from netaddr import IPNetwork, IPAddress
 
 from pycroft.model.host import Host, Switch, Interface, IP, SwitchPort
 from tests.factories.base import BaseFactory
@@ -26,9 +26,9 @@ class IPFactory(BaseFactory):
 
     # TODO is there a way to ensure that the IP address we generate is in the given subnet?
     str_address = factory.Faker('ipv4', network=False)
-    address = factory.LazyAttribute(lambda o: IPv4Address(o.str_address))
+    address = factory.LazyAttribute(lambda o: IPAddress(o.str_address))
     # interface = factory.SubFactory(InterfaceFactory)
-    subnet = factory.SubFactory(SubnetFactory, address=IPv4Network('0.0.0.0/0'))
+    subnet = factory.SubFactory(SubnetFactory, address=IPNetwork("0.0.0.0/0"))
 
 
 class InterfaceFactory(BaseFactory):

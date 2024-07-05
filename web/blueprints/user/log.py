@@ -7,7 +7,7 @@ a user.
 import logging
 import typing as t
 
-from ipaddr import _BaseIP
+from netaddr import IPAddress
 from sqlalchemy import select, Row
 from sqlalchemy.orm import Query
 
@@ -24,7 +24,7 @@ from ..helpers.log_tables import LogTableRow
 
 logger = logging.getLogger(__name__)
 
-def iter_hades_switch_ports(room: Room) -> t.Sequence[Row[tuple[str, _BaseIP]]]:
+def iter_hades_switch_ports(room: Room) -> t.Sequence[Row[tuple[str, IPAddress]]]:
     """Return all tuples of (nasportid, nasipaddress) for a room.
 
     :param room: The room to filter by

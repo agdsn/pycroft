@@ -4,12 +4,12 @@ from flask import Blueprint, flash, abort, redirect, url_for, render_template, r
 from flask.typing import ResponseReturnValue
 from flask_login import current_user
 from flask_wtf import FlaskForm
-from ipaddr import IPv4Address
+from netaddr import IPAddress
 
 from pycroft.exc import PycroftException
 from pycroft.helpers.net import mac_regex, get_interface_manufacturer
 from pycroft.lib import host as lib_host
-from pycroft.lib.net import get_subnets_for_room, get_unused_ips
+from pycroft.lib.net import get_subnets_for_room
 from pycroft.lib.facilities import get_room
 from pycroft.model import session
 from pycroft.model.host import Host, Interface
@@ -247,10 +247,10 @@ def interface_edit(interface_id: int) -> ResponseReturnValue:
 
     subnets = get_subnets_for_room(interface.host.room)
     current_ips = [ip.address for ip in interface.ips]
+    unused_ips = [ip for subnet in subnets for ip in subnet.unused_ips_iter()]
 
     form = InterfaceForm(obj=interface)
     form.meta.current_mac = interface.mac
-    unused_ips = [ip for ips in get_unused_ips(subnets).values() for ip in ips]
     form.ips.choices = [(str(ip), str(ip)) for ip in current_ips + unused_ips]
 
     def default_response() -> ResponseReturnValue:
@@ -269,7 +269,7 @@ def interface_edit(interface_id: int) -> ResponseReturnValue:
     if not form.validate():
         return default_response()
 
-    ips = {IPv4Address(ip) for ip in form.ips.data}
+    ips = {IPAddress(ip) for ip in form.ips.data}
 
     with abort_on_error(default_response), session.session.begin_nested():
         lib_host.interface_edit(
@@ -287,7 +287,7 @@ def interface_create(host_id: int) -> ResponseReturnValue:
     host = get_host_or_404(host_id)
     subnets = get_subnets_for_room(host.room)
     form = InterfaceForm()
-    unused_ips = [ip for ips in get_unused_ips(subnets).values() for ip in ips]
+    unused_ips = [ip for subnet in subnets for ip in subnet.unused_ips_iter()]
     form.ips.choices = [(str(ip), str(ip)) for ip in unused_ips]
 
     def default_response() -> ResponseReturnValue:
@@ -306,7 +306,7 @@ def interface_create(host_id: int) -> ResponseReturnValue:
     if not form.validate():
         return default_response()
 
-    ips = {IPv4Address(ip) for ip in form.ips.data}
+    ips = {IPAddress(ip) for ip in form.ips.data}
 
     try:
         lib_host.interface_create(

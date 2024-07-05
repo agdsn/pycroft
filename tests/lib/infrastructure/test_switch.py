@@ -1,7 +1,7 @@
 #  Copyright (c) 2022. The Pycroft Authors. See the AUTHORS file.
 #  This file is part of the Pycroft project and licensed under the terms of
 #  the Apache License, Version 2.0. See the LICENSE file for details
-import ipaddr
+from netaddr import IPAddress
 
 from pycroft.lib import infrastructure as infra
 from tests import factories
@@ -11,7 +11,7 @@ def test_create_switch(session, switch_room, processor):
     switch = infra.create_switch(
         session,
         name="Switch",
-        management_ip=ipaddr.IPv4Address("10.10.10.1"),
+        management_ip=IPAddress("10.10.10.1"),
         room=switch_room,
         processor=processor,
     )
@@ -44,7 +44,7 @@ def test_edit_switch_ip(session, switch, processor):
     )
     session.flush()
     session.refresh(switch)
-    assert switch.management_ip == ipaddr.IPv4Address("10.10.10.2")
+    assert switch.management_ip == IPAddress("10.10.10.2")
 
 
 def test_edit_switch_room(session, switch, processor):

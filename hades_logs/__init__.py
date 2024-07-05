@@ -118,12 +118,10 @@ class HadesLogs:
     ) -> t.Iterator[RadiusLogEntry]:
         """Fetch the auth logs of the given port
 
-        :param ipaddr nasipaddress: The IP address of the NAS
-        :param str nasportid: The port identifier (e.g. `C12`) of the
-            NAS port
+        :param nasipaddress: The IP address of the NAS.
+        :param nasportid: The port identifier (e.g. `C12`) of the NAS port
 
-        :returns: the result of the task (see
-                  ``get_port_auth_attempts`` in hades)
+        :returns: the result of the task (see ``get_port_auth_attempts`` in hades)
         :rtype: iterable (generator if :param:`reduced`)
 
         :raises HadesTimeout: raised when no response arrives in the time window

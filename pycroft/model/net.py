@@ -8,7 +8,7 @@ pycroft.model.net
 from __future__ import annotations
 import typing as t
 
-import ipaddr
+import netaddr
 from sqlalchemy import CheckConstraint, ForeignKey, between, event, sql
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.schema import AddConstraint
@@ -39,8 +39,8 @@ class VLAN(IntegerIdModel):
 
 
 class Subnet(IntegerIdModel):
-    address: Mapped[ipaddr._BaseNet]
-    gateway: Mapped[ipaddr._BaseIP | None]
+    address: Mapped[netaddr.IPNetwork]
+    gateway: Mapped[netaddr.IPAddress | None]
     reserved_addresses_bottom: Mapped[int] = mapped_column(server_default=sql.text("0"))
     reserved_addresses_top: Mapped[int] = mapped_column(server_default=sql.text("0"))
     description: Mapped[str50 | None]
@@ -54,6 +54,40 @@ class Subnet(IntegerIdModel):
         back_populates="subnet",
     )
     # /backrefs
+
+    @property
+    def reserved_ipset(self) -> netaddr.IPSet:
+        res_bottom = self.reserved_addresses_bottom or 0
+        res_top = self.reserved_addresses_top or 0
+        # takes care of host- and broadcast domains plus edge-cases (e.g. /32)
+        first_usable, last_usable = self.address._usable_range()
+        return netaddr.IPSet(
+            [
+                netaddr.IPRange(self.address[0], first_usable + res_bottom),
+                netaddr.IPRange(last_usable - res_top, self.address[-1]),
+            ]
+        )
+
+    def reserved_ip_ranges_iter(self) -> t.Iterator[netaddr.IPRange]:
+        return self.reserved_ipset.iter_ipranges()
+
+    @property
+    def usable_ip_range(self) -> netaddr.IPRange | None:
+        """All IPs in this subnet which are not reserved."""
+        usable = netaddr.IPSet(self.address) - self.reserved_ipset
+        assert usable.iscontiguous(), f"Complement of reserved ranges in {self} is not contiguous"
+        return usable.iprange()
+
+    @property
+    def usable_size(self) -> int:
+        """The number of IPs in this subnet which are not reserved."""
+        return self.usable_ip_range.size if self.usable_ip_range else 0
+
+    def unused_ips_iter(self) -> t.Iterator[netaddr.IPAddress]:
+        if not self.usable_ip_range:
+            return iter(())
+        used_ips = frozenset(ip.address for ip in self.ips)
+        return (ip for ip in self.usable_ip_range if ip not in used_ips)
 
 
 # Ensure that the gateway is contained in the subnet

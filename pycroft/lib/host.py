@@ -7,7 +7,7 @@ pycroft.lib.host
 """
 import typing as t
 
-import ipaddr
+import netaddr
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -43,14 +43,8 @@ def change_mac(interface: Interface, mac: str, processor: User) -> Interface:
     return interface
 
 
-def generate_hostname(ip_address: ipaddr.IPv4Address) -> str:
-    numeric_ip = int(ip_address)
-    return "x{:02x}{:02x}{:02x}{:02x}".format(
-        (numeric_ip >> 0x18) & 0xFF,
-        (numeric_ip >> 0x10) & 0xFF,
-        (numeric_ip >> 0x08) & 0xFF,
-        (numeric_ip >> 0x00) & 0xFF,
-    )
+def generate_hostname(ip_address: netaddr.IPAddress) -> str:
+    return f"x{int(ip_address):08x}"
 
 
 @with_transaction
@@ -117,7 +111,7 @@ def interface_create(
     host: Host,
     name: str,
     mac: str,
-    ips: t.Iterable[ipaddr.IPv4Address] | None,
+    ips: t.Iterable[netaddr.IPAddress] | None,
     processor: User,
 ) -> Interface:
     interface = Interface(host=host, mac=mac, name=name)
@@ -159,7 +153,7 @@ def interface_edit(
     interface: Interface,
     name: str,
     mac: str,
-    ips: t.Iterable[ipaddr._BaseIP],
+    ips: t.Iterable[netaddr.IPAddress],
     processor: User,
 ) -> None:
     message = "Edited interface ({}, {}) of host '{}'.".format(
@@ -201,7 +195,7 @@ def interface_edit(
                 session.add(IP(interface=interface, address=ip,
                                        subnet=subnet))
                 ips_changed = True
-                new_ips.add(ipaddr.IPAddress(ip))
+                new_ips.add(netaddr.IPAddress(ip))
 
     if ips_changed:
         message += " New IPs: {}.".format(', '.join(str(ip) for ip in
