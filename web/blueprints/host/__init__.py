@@ -4,7 +4,7 @@ from flask import Blueprint, flash, abort, redirect, url_for, render_template, r
 from flask.typing import ResponseReturnValue
 from flask_login import current_user
 from flask_wtf import FlaskForm
-from ipaddr import IPv4Address
+from netaddr import IPAddress
 
 from pycroft.exc import PycroftException
 from pycroft.helpers.net import mac_regex, get_interface_manufacturer
@@ -269,7 +269,7 @@ def interface_edit(interface_id: int) -> ResponseReturnValue:
     if not form.validate():
         return default_response()
 
-    ips = {IPv4Address(ip) for ip in form.ips.data}
+    ips = {IPAddress(ip) for ip in form.ips.data}
 
     with abort_on_error(default_response), session.session.begin_nested():
         lib_host.interface_edit(
@@ -306,7 +306,7 @@ def interface_create(host_id: int) -> ResponseReturnValue:
     if not form.validate():
         return default_response()
 
-    ips = {IPv4Address(ip) for ip in form.ips.data}
+    ips = {IPAddress(ip) for ip in form.ips.data}
 
     try:
         lib_host.interface_create(

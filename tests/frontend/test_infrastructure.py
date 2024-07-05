@@ -5,7 +5,7 @@ import re
 import typing as t
 
 import pytest
-from netaddr import IPAddress, IPNetwork
+from netaddr import IPNetwork
 from sqlalchemy.orm import Session
 from flask import url_for
 
@@ -15,7 +15,6 @@ from pycroft.model.net import Subnet
 from pycroft.model.port import PatchPort
 from tests import factories as f
 from tests.assertions import assert_one
-from web.blueprints.infrastructure import format_address_range
 from .assertions import TestClient
 
 
@@ -29,11 +28,6 @@ def switch(module_session: Session) -> Switch:
 @pytest.fixture(scope="module")
 def client(module_test_client: TestClient) -> TestClient:
     return module_test_client
-
-
-def test_format_empty_address_range():
-    with pytest.raises(ValueError):
-        format_address_range(IPAddress("141.30.228.39"), amount=0)
 
 
 @pytest.mark.usefixtures("admin_logged_in", "session")

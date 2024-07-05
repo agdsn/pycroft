@@ -14,7 +14,7 @@ from flask import Blueprint, abort, flash, redirect, render_template, url_for
 from flask.typing import ResponseValue
 from flask_login import current_user
 from flask_wtf import FlaskForm as Form
-from ipaddr import IPAddress, _BaseIP
+from netaddr import IPAddress
 from sqlalchemy.orm import joinedload
 
 from pycroft.lib.infrastructure import create_switch, \
@@ -56,27 +56,8 @@ def subnets() -> ResponseValue:
         subnet_table=SubnetTable(data_url=url_for(".subnets_json")))
 
 
-def format_address_range(base_address: _BaseIP, amount: int) -> str:
-    if amount == 0:
-        raise ValueError
-    if abs(amount) == 1:
-        return str(base_address)
-    if amount > 1:
-        return f'{str(base_address)} - {str(base_address + amount - 1)}'
-    return f'{str(base_address + amount + 1)} - {str(base_address)}'
-
-
 def format_reserved_addresses(subnet: Subnet) -> list[str]:
-    reserved = []
-    if subnet.reserved_addresses_bottom:
-        reserved.append(
-            format_address_range(subnet.address.network + 1,
-                                 subnet.reserved_addresses_bottom))
-    if subnet.reserved_addresses_top:
-        reserved.append(
-            format_address_range(subnet.address.broadcast - 1,
-                                 -subnet.reserved_addresses_top))
-    return reserved
+    return [str(range) for range in subnet.reserved_ip_ranges_iter()]
 
 
 @bp.route('/subnets/json')

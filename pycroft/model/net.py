@@ -56,18 +56,27 @@ class Subnet(IntegerIdModel):
     # /backrefs
 
     @property
-    def usable_ip_range(self) -> netaddr.IPRange | None:
-        """All IPs in this subnet which are not reserved."""
-        # takes care of host- and broadcast domains plus edge-cases (e.g. /32)
-        first_usable, last_usable = self.address._usable_range()
-
+    def reserved_ipset(self) -> netaddr.IPSet:
         res_bottom = self.reserved_addresses_bottom or 0
         res_top = self.reserved_addresses_top or 0
-        first_usable = first_usable + res_bottom
-        last_usable = last_usable + res_top
-        if last_usable < first_usable:
-            return None
-        return netaddr.IPRange(first_usable, last_usable)
+        # takes care of host- and broadcast domains plus edge-cases (e.g. /32)
+        first_usable, last_usable = self.address._usable_range()
+        return netaddr.IPSet(
+            [
+                netaddr.IPRange(self.address[0], first_usable + res_bottom),
+                netaddr.IPRange(last_usable - res_top, self.address[-1]),
+            ]
+        )
+
+    def reserved_ip_ranges_iter(self) -> t.Iterator[netaddr.IPRange]:
+        return self.reserved_ipset.iter_ipranges()
+
+    @property
+    def usable_ip_range(self) -> netaddr.IPRange | None:
+        """All IPs in this subnet which are not reserved."""
+        usable = netaddr.IPSet(self.address) - self.reserved_ipset
+        assert usable.iscontiguous(), f"Complement of reserved ranges in {self} is not contiguous"
+        return usable.iprange()
 
     @property
     def usable_size(self) -> int:
