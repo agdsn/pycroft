@@ -29,6 +29,7 @@ from sqlalchemy import (
     Sequence,
     func,
     UniqueConstraint,
+    ForeignKeyConstraint,
     Index,
     text,
     event,
@@ -212,6 +213,9 @@ class User(BaseUser, UserMixin):
     account_id: Mapped[int] = mapped_column(ForeignKey("account.id"), index=True)
     account: Mapped[Account] = relationship(back_populates="user")
 
+    tombstone: Mapped[UnixTombstone] = relationship(
+        viewonly=True, primaryjoin="UnixTombstone.login_hash == User.login_hash"
+    )
     unix_account_id: Mapped[int | None] = mapped_column(
         ForeignKey("unix_account.id"), unique=True
     )
@@ -462,7 +466,10 @@ class User(BaseUser, UserMixin):
     def email_internal(self):
         return f"{self.login}@agdsn.me"
 
-    __table_args__ = (UniqueConstraint('swdd_person_id'),)
+    __table_args__ = (
+        UniqueConstraint("swdd_person_id"),
+        ForeignKeyConstraint(("login_hash",), ("unix_tombstone.login_hash",), deferrable=True),
+    )
 
 
 @event.listens_for(User.__table__, "before_create")
@@ -701,11 +708,11 @@ manager.add_function(
               join unix_tombstone ts on u.login_hash = ts.login_hash
               where u.unix_account_id = NEW.id;
 
+          -- scenarios:
           -- 1) no user, no tombstone
           -- 2) no user, tombstone
           -- 3) user, no tombstone -> create
-          -- 4a) user, tombstone with different login hash
-          -- 4b) user, tombstone with matching login hash
+          -- 4) user + tombstone
 
           IF v_user IS NULL THEN
               IF v_ua_ts IS NULL THEN
@@ -716,12 +723,6 @@ manager.add_function(
           -- else: user not null
           IF v_ua_ts IS NULL THEN
               insert into unix_tombstone (uid, login_hash) values (NEW.uid, v_user.login_hash);
-          ELSE
-              IF v_ua_ts.login_hash <> v_user.login_hash THEN
-                  RAISE EXCEPTION 'unix_account %%: tombstone login hash (%%) differs from user login hash (%%)',
-                  NEW.id, v_ua_ts.login_hash, v_user.login_hash
-                  USING ERRCODE = 'integrity_constraint_violation';
-              END IF;
           END IF;
 
           RETURN NEW;
@@ -741,6 +742,149 @@ manager.add_trigger(
         ("INSERT",),
         "unix_account_ensure_tombstone()",
         when="BEFORE",
+    ),
+)
+
+manager.add_function(
+    User.__table__,
+    ddl.Function(
+        "user_ensure_tombstone",
+        [],
+        "trigger",
+        # This function ensures satisfaction of the user → tombstone foreign key constraint
+        #  (a "tuple generating dependency") which says ∀u: user ∃t: tombstone: t.login_hash = u.login_hash.
+        # it does _not_ enforce the consistency constraint ("equality generating dependency").
+        """
+        DECLARE
+          v_ua unix_account;
+          v_login_ts unix_tombstone;
+          v_ua_ts unix_tombstone;
+          v_u_login_hash character varying;
+        BEGIN
+          select * into v_ua from unix_account ua where ua.id = NEW.unix_account_id;
+          -- hash not generated yet, because we are a BEFORE trigger!
+          select digest(NEW.login, 'sha512') into v_u_login_hash;
+
+          select ts.* into v_login_ts from "user" u
+              join unix_tombstone ts on v_u_login_hash = ts.login_hash
+              where u.id = NEW.id;
+
+          IF v_ua IS NULL THEN 
+              IF v_login_ts IS NULL THEN
+                  -- TODO check whether this was a _set_ or an _update_.
+                  -- do we really want to automatically update this?
+                  -- NOTE: when an update caused this, this might create an inconsistent state (different tombstones for uid and login),
+                  --  however as soon as the check constraint fires the transaction will be aborted, anyway.
+                  insert into unix_tombstone (uid, login_hash) values (null, v_u_login_hash) on conflict do nothing;
+              END IF;
+              -- ELSE: user tombstone exists, no need to do anything
+          ELSE
+              select * into v_ua_ts from unix_tombstone ts where ts.uid = v_ua.uid;
+              IF v_ua_ts.login_hash IS NULL THEN 
+                  update unix_tombstone ts set login_hash = v_u_login_hash where ts.uid = v_ua_ts.uid;
+              END IF;
+          END IF;
+
+          RETURN NEW;
+        END;
+        """,
+        volatility="volatile",
+        strict=True,
+        language="plpgsql",
+    ),
+)
+
+manager.add_trigger(
+    User.__table__,
+    ddl.Trigger(
+        "user_ensure_tombstone_trigger",
+        User.__table__,
+        # TODO create different trigger on UPDATE which only fires if login or unix_account has changed
+        ("INSERT", "UPDATE OF unix_account_id, login"),
+        "user_ensure_tombstone()",
+        when="BEFORE",
+    ),
+)
+
+check_tombstone_consistency = ddl.Function(
+    name="check_tombstone_consistency",
+    arguments=[],
+    rtype="trigger",
+    definition="""
+    DECLARE
+        v_user "user";
+        v_ua unix_account;
+        v_user_ts unix_tombstone;
+        v_ua_ts unix_tombstone;
+    BEGIN
+        IF TG_TABLE_NAME = 'user' THEN
+            v_user := NEW;
+            select * into v_ua from unix_account where unix_account.id = NEW.unix_account_id;
+        ELSIF TG_TABLE_NAME = 'unix_account' THEN 
+            v_ua := NEW;
+            select * into v_user from "user" u where u.unix_account_id = NEW.id;
+        ELSE
+            RAISE EXCEPTION
+                'trigger can only be invoked on user or unix_account tables, not %%',
+                TG_TABLE_NAME
+            USING ERRCODE = 'feature_not_supported';
+        END IF;
+
+        IF v_ua IS NULL OR v_user IS NULL THEN
+            RETURN NEW; -- no consistency to satisfy
+        END IF;
+        ASSERT NOT v_user IS NULL, 'v_user is null!';
+        ASSERT NOT v_user.login IS NULL, format('user.login is null (%%s): %%s (type %%s)', v_user.login, v_user, pg_typeof(v_user));
+
+        select * into v_user_ts from unix_tombstone ts where ts.login_hash = v_user.login_hash;
+        select * into v_ua_ts from unix_tombstone ts where ts.uid = v_ua.uid;
+
+        -- this should already be ensured by the `ensure_*_tombstone` triggers,
+        -- but we are defensive here to ensure consistency no matter what
+        IF v_ua_ts IS NULL THEN
+            ASSERT NOT v_ua IS NULL, 'unix_account is null';
+            RAISE EXCEPTION
+                'unix account with id=%% (uid=%%) has no tombstone.', v_ua.id, v_ua.uid
+            USING ERRCODE = 'foreign_key_violation';
+        END IF;
+        IF v_user_ts IS NULL THEN
+            RAISE EXCEPTION
+                'user %% with id=%% (login=%%) has no tombstone.', v_user, v_user.id, v_user.login
+            USING ERRCODE = 'foreign_key_violation';
+        END IF;
+
+        if v_user_ts <> v_ua_ts THEN
+            RAISE EXCEPTION
+                'User tombstone (uid=%%, login_hash=%%) and unix account tombstone (uid=%%, login_hash=%%) differ!',
+                v_user_ts.uid, v_user_ts.login_hash, v_ua_ts.uid, v_ua_ts.login_hash
+            USING ERRCODE = 'check_violation';
+        END IF;
+
+        RETURN NEW;
+    END;
+    """,
+    strict=True,
+    language="plpgsql",
+)
+manager.add_function(User.__table__, check_tombstone_consistency)
+manager.add_constraint_trigger(
+    User.__table__,
+    ddl.ConstraintTrigger(
+        name="user_check_tombstone_consistency_trigger",
+        table=User.__table__,
+        events=("INSERT", "UPDATE OF unix_account_id, login"),
+        function_call=f"{check_tombstone_consistency.name}()",
+        deferrable=True,
+    ),
+)
+manager.add_constraint_trigger(
+    User.__table__,
+    ddl.ConstraintTrigger(
+        name="unix_account_check_tombstone_consistency_trigger",
+        table=UnixAccount.__table__,
+        events=("INSERT", "UPDATE OF uid"),
+        function_call=f"{check_tombstone_consistency.name}()",
+        deferrable=True,
     ),
 )
 
