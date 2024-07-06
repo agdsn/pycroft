@@ -1,14 +1,16 @@
 #  Copyright (c) 2023. The Pycroft Authors. See the AUTHORS file.
 #  This file is part of the Pycroft project and licensed under the terms of
 #  the Apache License, Version 2.0. See the LICENSE file for details
+import typing as t
+from contextlib import contextmanager
 from hashlib import sha512
 
 import pytest
-from sqlalchemy import inspect
+from sqlalchemy import inspect, update, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from pycroft.model.user import UnixTombstone
+from pycroft.model.user import UnixTombstone, User
 from tests import factories as f
 
 
@@ -91,11 +93,75 @@ class TestUserLoginHashFKey:
     pass
 
 
-class TestUserUnixAccountTombstoneConsistency:
-    # TODO test that modifications on user/unix_account
-    #  (e.g. creation, attr modification)
-    #  throw an error if both entities point to different tombstones
+@contextmanager
+def constraints_deferred(session: Session, constraints: t.LiteralString = "all"):
+    session.execute(text(f"set constraints {constraints} deferred"))
+    yield
+    session.execute(text(f"set constraints {constraints} immediate"))
 
-    # TODO test: adding a unix account pointing to user w/ tombstone w/ different uid
-    #  throws an error
-    pass
+
+class TestUserUnixAccountTombstoneConsistency:
+    @pytest.fixture(scope="class")
+    def user(self, class_session) -> User:
+        user = f.UserFactory(with_unix_account=True)
+        class_session.flush()
+        return user
+
+    def test_user_login_change_fails(self, session, user):
+        # changing `user.login` does not work due to custom validator
+        from sqlalchemy import update
+
+        with pytest.raises(IntegrityError, match="user_login_hash_fkey"):
+            stmt = (
+                update(User)
+                .where(User.id == user.id)
+                .values(login=user.login + "_")
+                .returning(User.login)
+            )
+            _new_login = session.scalars(stmt)
+
+    def test_user_login_change_works_when_changing_tombstone(self, session, user):
+        login_new = user.login + "_"
+        tombstone = user.tombstone
+        with constraints_deferred(session), session.begin_nested(), session.no_autoflush:
+            session.execute(
+                update(User).where(User.id == user.id).values(login=login_new).returning(User.login)
+            )
+            session.refresh(user)
+            tombstone.login_hash = user.login_hash
+            session.add(tombstone)
+
+    def test_user_login_change_fails_when_creating_new_tombstone(self, session, user):
+        login_new = user.login + "_"
+        hash_hew: bytes = sha512(login_new.encode()).digest()
+        MATCH_RE = "User tombstone.*and unix account tombstone.*differ"
+        with (
+            pytest.raises(IntegrityError, match=MATCH_RE),
+            session.begin_nested(),
+        ):
+            session.add(UnixTombstone(uid=None, login_hash=hash_hew))
+            session.execute(
+                update(User).where(User.id == user.id).values(login=login_new).returning(User.login)
+            )
+
+    def test_ua_uid_change_fails(self, session, user):
+        pytest.fail("TODO")
+
+    def test_ua_uid_change_works_when_changing_tombstone(self, session, user):
+        pytest.fail("TODO")
+
+    def test_ua_deletion(self, session, user):
+        pytest.fail("TODO")
+
+    def test_user_deletion(self, session, user):
+        pytest.fail("TODO")
+
+
+class TestTombstoneLifeCycle:
+    # TODO: FIXTURE: isolated unix tombstone, nothing else existing
+
+    def test_cannot_set_uid_null(self, session):
+        pytest.fail("TODO")
+
+    def test_cannot_set_login_hash_null(self, session):
+        pytest.fail("TODO")
