@@ -7,7 +7,8 @@ import pytest
 
 from pycroft.helpers.interval import single, starting_from
 from pycroft.helpers.user import generate_password, hash_password
-from pycroft.model.user import IllegalLoginError, Membership, User, UnixAccount
+from pycroft.model.user import IllegalLoginError, Membership, User
+from pycroft.model.unix_account import UnixAccount
 from tests import factories
 
 

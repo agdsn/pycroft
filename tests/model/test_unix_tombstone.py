@@ -10,7 +10,8 @@ from sqlalchemy import inspect, update, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from pycroft.model.user import UnixTombstone, User
+from pycroft.model.user import User
+from pycroft.model.unix_account import UnixTombstone
 from tests import factories as f
 
 

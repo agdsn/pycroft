@@ -56,13 +56,13 @@ from pycroft.model.traffic import TrafficHistoryEntry
 from pycroft.model.traffic import traffic_history as func_traffic_history
 from pycroft.model.user import (
     User,
-    UnixAccount,
     PreMember,
     BaseUser,
     RoomHistoryEntry,
     PropertyGroup,
     Membership,
 )
+from pycroft.model.unix_account import UnixAccount
 from pycroft.model.webstorage import WebStorage
 from pycroft.task import send_mails_async
 

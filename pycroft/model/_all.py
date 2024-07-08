@@ -24,6 +24,7 @@ from .swdd import *
 from .task import *
 from .traffic import *
 from .user import *
+from .unix_account import *
 from .webstorage import *
 
 # hades is special: it calls `configure_mappers()` at import time.

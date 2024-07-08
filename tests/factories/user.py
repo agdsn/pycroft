@@ -6,7 +6,8 @@ import factory
 from factory.faker import Faker
 
 from pycroft.helpers.interval import starting_from
-from pycroft.model.user import User, RoomHistoryEntry, UnixAccount
+from pycroft.model.user import User, RoomHistoryEntry
+from pycroft.model.unix_account import UnixAccount
 from .base import BaseFactory
 from .facilities import RoomFactory
 from .finance import AccountFactory
