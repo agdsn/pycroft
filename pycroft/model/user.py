@@ -689,6 +689,37 @@ class UnixTombstone(ModelBase):
     )
     __mapper_args__ = {"primary_key": (uid, login_hash)}  # fake PKey for mapper
 
+check_unix_tombstone_lifecycle_func = ddl.Function(
+    name="check_unix_tombstone_lifecycle",
+    arguments=[],
+    rtype="trigger",
+    definition="""
+    BEGIN
+        IF (NEW.login_hash IS NULL AND OLD.login_hash IS NOT NULL) THEN
+            RAISE EXCEPTION 'Removing login_hash from tombstone is invalid'
+                USING ERRCODE = 'check_violation';
+        END IF;
+        IF (NEW.uid IS NULL AND OLD.uid IS NOT NULL) THEN
+            RAISE EXCEPTION 'Removing uid from tombstone is invalid'
+                USING ERRCODE = 'check_violation';
+        END IF;
+        RETURN NEW;
+    END;
+    """,
+    volatility="stable",
+    language="plpgsql",
+)
+manager.add_function(UnixTombstone.__table__, check_unix_tombstone_lifecycle_func)
+manager.add_trigger(
+    UnixTombstone.__table__,
+    ddl.Trigger(
+        name="check_unix_tombstone_lifecycle_trigger",
+        table=UnixTombstone.__table__,
+        events=("UPDATE",),
+        function_call=f"{check_unix_tombstone_lifecycle_func.name}()",
+        when="BEFORE",
+    ),
+)
 
 # unix account creation
 manager.add_function(
