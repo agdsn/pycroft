@@ -14,7 +14,13 @@ from pycroft.model.user import UnixTombstone, User
 from tests import factories as f
 
 
-L_HASH = sha512(b"login").hexdigest()
+L_HASH: bytes = sha512(b"mylogin").digest()
+
+
+@pytest.mark.meta
+def test_login_hash_correct(session):
+    user = f.UserFactory(login="mylogin")
+    assert user.login_hash == L_HASH
 
 
 class TestTombstoneConstraints:
@@ -50,7 +56,7 @@ class TestTombstoneConstraints:
             for h, uid in (
                 (None, 10000),
                 (L_HASH, None),
-                (sha512(b"login2").hexdigest(), 10001),
+                (sha512(b"login2").digest(), 10001),
                 (None, 20000),
             )
         )

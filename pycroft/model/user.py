@@ -21,6 +21,7 @@ from flask_login import UserMixin
 from sqlalchemy import (
     ForeignKey,
     String,
+    LargeBinary,
     and_,
     exists,
     join,
@@ -34,6 +35,7 @@ from sqlalchemy import (
     text,
     event,
     CheckConstraint,
+    Column,
     Computed,
 )
 from sqlalchemy.dialects.postgresql import ExcludeConstraint
@@ -99,7 +101,7 @@ class BaseUser(IntegerIdModel):
     __abstract__ = True
 
     login: Mapped[str40] = mapped_column(unique=True)
-    login_hash: Mapped[str] = mapped_column(Computed("digest(login, 'sha512')"))
+    login_hash: Mapped[bytes] = Column(LargeBinary(512), Computed("digest(login, 'sha512')"))
     name: Mapped[str255]
     registered_at: Mapped[utc.DateTimeTz]
     passwd_hash: Mapped[str_deferred | None]
@@ -666,7 +668,7 @@ class UnixTombstone(ModelBase):
     from sqlalchemy import Column, Integer, String
 
     uid: Mapped[int] = Column(Integer, unique=True)
-    login_hash: Mapped[str] = Column(String, unique=True)
+    login_hash: Mapped[bytes] = Column(LargeBinary(512), unique=True)
 
     # backrefs
     unix_account: Mapped[UnixAccount] = relationship(viewonly=True, uselist=False)
@@ -763,7 +765,7 @@ manager.add_function(
           v_ua unix_account;
           v_login_ts unix_tombstone;
           v_ua_ts unix_tombstone;
-          v_u_login_hash character varying;
+          v_u_login_hash bytea;
         BEGIN
           select * into v_ua from unix_account ua where ua.id = NEW.unix_account_id;
           -- hash not generated yet, because we are a BEFORE trigger!
