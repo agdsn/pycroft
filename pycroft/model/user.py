@@ -217,10 +217,14 @@ class User(BaseUser, UserMixin):
         viewonly=True, primaryjoin="UnixTombstone.login_hash == User.login_hash"
     )
     unix_account_id: Mapped[int | None] = mapped_column(
-        ForeignKey("unix_account.id"), unique=True
+        # SET NULL because there might be scenarios where we want to delete a unix_account but not the user.
+        ForeignKey("unix_account.id", ondelete="SET NULL"),
+        unique=True,
     )
     unix_account: Mapped[UnixAccount] = relationship(
-        "UnixAccount"
+        "UnixAccount",
+        # most prominently, causes deletion of a user to propagate to the unix account.
+        cascade="all",
     )  # backref not really needed.
 
     address_id: Mapped[int] = mapped_column(ForeignKey(Address.id), index=True)
@@ -648,7 +652,7 @@ unix_account_uid_seq = Sequence('unix_account_uid_seq', start=1000,
 
 class UnixAccount(IntegerIdModel):
     uid: Mapped[int] = mapped_column(
-        ForeignKey("unix_tombstone.uid"),
+        ForeignKey("unix_tombstone.uid", deferrable=True),
         unique=True, server_default=unix_account_uid_seq.next_value()
     )
     tombstone: Mapped[UnixTombstone] = relationship(viewonly=True)

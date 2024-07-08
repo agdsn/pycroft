@@ -145,16 +145,35 @@ class TestUserUnixAccountTombstoneConsistency:
             )
 
     def test_ua_uid_change_fails(self, session, user):
-        pytest.fail("TODO")
+        ua = user.unix_account
+        with pytest.raises(IntegrityError, match="violates foreign key constraint"):
+            ua.uid = ua.uid + 5
+            session.add(ua)
+            session.flush()
 
     def test_ua_uid_change_works_when_changing_tombstone(self, session, user):
-        pytest.fail("TODO")
+        ua = user.unix_account
+        ts = ua.tombstone
+        new_uid = ua.uid + 5
+        with constraints_deferred(session), session.begin_nested():
+            ts.uid = new_uid
+            ua.uid = new_uid
+            session.add_all([ts, ua])
+            session.flush()
 
     def test_ua_deletion(self, session, user):
-        pytest.fail("TODO")
+        # Since a user exists, this should leave the user and the tombstone.
+        uid = user.unix_account.uid
+        with session.begin_nested():
+            session.delete(user.unix_account)
+        assert user.tombstone.uid == uid
 
     def test_user_deletion(self, session, user):
-        pytest.fail("TODO")
+        ua = user.unix_account
+        with session.begin_nested():
+            session.delete(user)
+        assert inspect(user).deleted, "user did not get deleted"
+        assert inspect(ua).deleted, "unix_account did not get deleted"
 
 
 class TestTombstoneLifeCycle:
