@@ -70,7 +70,6 @@ def visit_drop_constraint(drop_constraint: DropConstraint, compiler: Compiled, *
 
 
 class Function(schema.DDLElement):
-    on = "postgresql"
 
     def __init__(
         self,
@@ -148,8 +147,6 @@ class CreateFunction(schema.DDLElement):
     Represents a CREATE FUNCTION DDL statement
     """
 
-    on = "postgresql"
-
     def __init__(self, func: Function, or_replace: bool = False):
         self.function = func
         self.or_replace = or_replace
@@ -159,8 +156,6 @@ class DropFunction(schema.DDLElement):
     """
     Represents a DROP FUNCTION DDL statement
     """
-
-    on = "postgresql"
 
     def __init__(self, func: Function, if_exists: bool = False, cascade: bool = False):
         self.function = func
@@ -204,8 +199,6 @@ def visit_drop_function(element: DropFunction, compiler: Compiled, **kw: t.Any) 
 
 
 class Rule(schema.DDLElement):
-    on = "postgresql"
-
     def __init__(
         self,
         name: str,
@@ -232,8 +225,6 @@ class CreateRule(schema.DDLElement):
     Represents a CREATE RULE DDL statement
     """
 
-    on = "postgresql"
-
     def __init__(self, rule: Rule, or_replace: bool = False) -> None:
         self.rule = rule
         self.or_replace = or_replace
@@ -243,8 +234,6 @@ class DropRule(schema.DDLElement):
     """
     Represents a DROP RULE DDL statement
     """
-
-    on = "postgresql"
 
     def __init__(self, rule: Rule, if_exists: bool = False, cascade: bool = False) -> None:
         """
@@ -346,8 +335,6 @@ class ConstraintTrigger(Trigger):
 
 
 class CreateTrigger(schema.DDLElement):
-    on = "postgresql"
-
     def __init__(self, trigger: Trigger) -> None:
         self.trigger = trigger
 
@@ -357,8 +344,6 @@ class CreateConstraintTrigger(schema.DDLElement):
     Represents a CREATE CONSTRAINT TRIGGER DDL statement
     """
 
-    on = "postgresql"
-
     def __init__(self, constraint_trigger: ConstraintTrigger) -> None:
         self.constraint_trigger = constraint_trigger
 
@@ -367,8 +352,6 @@ class DropTrigger(schema.DDLElement):
     """
     Represents a DROP TRIGGER DDL statement.
     """
-
-    on = "postgresql"
 
     def __init__(self, trigger: Trigger, if_exists: bool = False, cascade: bool = False) -> None:
         self.trigger = trigger
