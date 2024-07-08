@@ -36,3 +36,4 @@ class ConfigFactory(BaseFactory):
     # `Account`s
     membership_fee_account = SubFactory(AccountFactory, type="REVENUE")
     membership_fee_bank_account = SubFactory(BankAccountFactory)
+    non_attributable_transactions_account = SubFactory(AccountFactory, type="REVENUE")
