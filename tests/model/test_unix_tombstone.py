@@ -183,10 +183,22 @@ class TestUserUnixAccountTombstoneConsistency:
 
 
 class TestTombstoneLifeCycle:
-    # TODO: FIXTURE: isolated unix tombstone, nothing else existing
+    @pytest.fixture(scope="class")
+    def tombstone(self, class_session):
+        tombstone = UnixTombstone(uid=999, login_hash=L_HASH)
+        class_session.add(tombstone)
+        return tombstone
 
-    def test_cannot_set_uid_null(self, session):
-        pytest.fail("TODO")
+    def test_cannot_set_uid_null(self, session, tombstone):
+        with pytest.raises(IntegrityError), session.begin_nested():
+            session.execute(
+                update(UnixTombstone).values(uid=None).where(UnixTombstone.uid == tombstone.uid)
+            )
 
-    def test_cannot_set_login_hash_null(self, session):
-        pytest.fail("TODO")
+    def test_cannot_set_login_hash_null(self, session, tombstone):
+        with pytest.raises(IntegrityError), session.begin_nested():
+            session.execute(
+                update(UnixTombstone)
+                .values(login_hash=None)
+                .where(UnixTombstone.uid == tombstone.uid)
+            )
