@@ -9,7 +9,8 @@ import inspect
 import typing as t
 from collections import OrderedDict
 from collections.abc import Iterable
-from functools import partial, cached_property
+from dataclasses import dataclass, field
+from functools import partial
 
 from sqlalchemy import event as sqla_event, schema, table, text, Constraint, Table
 from sqlalchemy.dialects import postgresql
@@ -69,64 +70,57 @@ def visit_drop_constraint(drop_constraint: DropConstraint, compiler: Compiled, *
         constraint_name, opt_drop_behavior)
 
 
-class Function(schema.DDLElement):
+def _process(value: str | Selectable) -> str:
+    if isinstance(value, str):
+        return inspect.cleandoc(value)
 
-    def __init__(
-        self,
-        name: str,
-        arguments: t.Iterable[str],
-        rtype: str,
-        definition: str | Selectable,
-        volatility: t.Literal["volatile", "stable", "immutable"] = "volatile",
-        strict: bool = False,
-        leakproof: bool = False,
-        language: str = "sql",
-        quote_tag: str = "",
-    ):
-        """
-        Represents PostgreSQL function
-
-        :param name: Name of the function (excluding arguments).
-        :param arguments: Arguments of the function.  A function
-            identifier of ``new_function(integer, integer)`` would
-            result in ``arguments=['integer', 'integer']``.
-        :param rtype: Return type
-        :param definition: Definition
-        :param volatility: Either 'volatile', 'stable', or
-            'immutable'
-        :param strict: Function should be declared STRICT
-        :param leakproof: Function should be declared LEAKPROOF
-        :param str language: Language the function is defined in
-        :param str quote_tag: Dollar quote tag to enclose the function
-            definition
-        """
-        if volatility not in ('volatile', 'stable', 'immutable'):
-            raise ValueError("volatility must be 'volatile', 'stable', or "
-                             "'immutable'")
-        self.name = name
-        self.arguments = arguments
-        self._definition = definition
-        self.volatility = volatility
-        self.strict = strict
-        self.rtype = rtype
-        self.language = language
-        self.leakproof = leakproof
-        self.quote_tag = quote_tag
-
-    @cached_property
-    def definition(self) -> str:
-        if isinstance(self._definition, str):
-            return inspect.cleandoc(self._definition)
-
-        if isinstance(self._definition, Selectable):
-            return str(
-                self._definition.compile(
-                    dialect=t.cast(type[Dialect], postgresql.dialect)(),
-                    compile_kwargs={"literal_binds": True},
-                )
+    if isinstance(value, Selectable):
+        return str(
+            value.compile(
+                dialect=t.cast(type[Dialect], postgresql.dialect)(),
+                compile_kwargs={"literal_binds": True},
             )
+        )
+        raise ValueError(f"Definition must be str or Selectable, not {type(value)}")
 
-        raise ValueError(f"definition must be str or Selectable, not {type(self._definition)}")
+
+class LazilyComiledDefDescriptor:
+    def __set_name__(self, owner, name):
+        self._name = f"_{name}"
+
+    def __get__(self, obj, type) -> str:
+        # TODO cache this thing
+        if obj is None:
+            # this is interpreted as the default by the `dataclass` decorator
+            return None
+        value_unprocessed = getattr(obj, self._name)
+        return _process(value_unprocessed)
+
+    def __set__(self, obj, value: str | Selectable):
+        setattr(obj, self._name, value)
+
+
+@dataclass
+class Function(schema.DDLElement):
+    #: Name of the function (excluding arguments).
+    name: str
+    #: Arguments of the function.  A function
+    #:   identifier of ``new_function(integer, integer)`` would
+    #:   result in ``arguments=['integer', 'integer']``.
+    arguments: t.Iterable[str]
+    #: Return type
+    rtype: str
+    #: Definition
+    definition: LazilyComiledDefDescriptor = LazilyComiledDefDescriptor()
+    volatility: t.Literal["volatile", "stable", "immutable"] = "volatile"
+    #: Function should be declared ``STRICT``
+    strict: bool = False
+    #: Function should be declared ``LEAKPROOF``
+    leakproof: bool = False
+    #: Language the function is defined in (e.g. ``plpgsql`` for trigger functions)
+    language: str = "sql"
+    #: Dollar quote tag to enclose the function definition
+    quote_tag: str = ""
 
     def build_quoted_identifier(self, quoter: t.Callable[[str], str]) -> str:
         """Compile the function identifier from name and arguments.
@@ -136,20 +130,27 @@ class Function(schema.DDLElement):
         :returns: The compiled string, like
                   ``"my_function_name"(integer, account_type)``
         """
-        return "{name}({args})".format(
-            name=quoter(self.name),
-            args=", ".join(self.arguments),
-        )
+        name = quoter(self.name)
+        args = ", ".join(self.arguments)
+        return f"{name}({args})"
+
+    def __hash__(self):
+        return hash(self.name)
 
 
+@dataclass(unsafe_hash=True)
 class CreateFunction(schema.DDLElement):
     """
     Represents a CREATE FUNCTION DDL statement
     """
 
-    def __init__(self, func: Function, or_replace: bool = False):
-        self.function = func
-        self.or_replace = or_replace
+    func: Function
+
+    @property
+    def function(self) -> Function:
+        return self.func
+
+    or_replace: bool = False
 
 
 class DropFunction(schema.DDLElement):
@@ -198,52 +199,43 @@ def visit_drop_function(element: DropFunction, compiler: Compiled, **kw: t.Any) 
                         function_name, opt_drop_behavior)
 
 
+@dataclass
 class Rule(schema.DDLElement):
-    def __init__(
-        self,
-        name: str,
-        table: Table,
-        event: str,
-        command_or_commands: str | t.Sequence[str],
-        condition: str | None = None,
-        do_instead: bool = False,
-    ) -> None:
-        self.name = name
-        self.table = table
-        self.event = event
-        self.condition = condition
-        self.do_instead = do_instead
-        self.commands: tuple[str, ...]
-        if isinstance(command_or_commands, Iterable) and not isinstance(command_or_commands, str):
-            self.commands = tuple(command_or_commands)
+    name: str
+    table: Table
+    event: str
+    command_or_commands: str | t.Sequence[str]
+    commands: tuple[str, ...] = field(init=False)
+    condition: str | None = None
+    do_instead: bool = False
+
+    def __post_init__(self):
+        cs = self.command_or_commands
+        if isinstance(cs, Iterable) and not isinstance(cs, str):
+            self.commands = tuple(cs)
         else:
-            self.commands = (command_or_commands,)
+            self.commands = (cs,)
 
 
+@dataclass(unsafe_hash=True)
 class CreateRule(schema.DDLElement):
     """
     Represents a CREATE RULE DDL statement
     """
 
-    def __init__(self, rule: Rule, or_replace: bool = False) -> None:
-        self.rule = rule
-        self.or_replace = or_replace
+    rule: Rule
+    or_replace: bool = False
 
 
+@dataclass
 class DropRule(schema.DDLElement):
     """
     Represents a DROP RULE DDL statement
     """
 
-    def __init__(self, rule: Rule, if_exists: bool = False, cascade: bool = False) -> None:
-        """
-        :param rule:
-        :param if_exists:
-        :param cascade:
-        """
-        self.rule = rule
-        self.if_exists = if_exists
-        self.cascade = cascade
+    rule: Rule
+    if_exists: bool = False
+    cascade: bool = False
 
 
 # noinspection PyUnusedLocal
@@ -286,77 +278,62 @@ def visit_drop_rule(element: DropRule, compiler: Compiled, **kw: t.Any) -> str:
         opt_drop_behavior)
 
 
-# TODO add type hints
+@dataclass
 class Trigger(schema.DDLElement):
-    def __init__(
-        self,
-        name: str,
-        table: Table,
-        events: t.Sequence[str],
-        function_call: str,
-        when: t.Literal["BEFORE", "AFTER", "INSTEAD OF"] = "AFTER",
-    ) -> None:
-        """Construct a trigger
+    #: Name of the trigger
+    name: str
+    #: Table the trigger is for
+    table: Table
+    #: list of events (INSERT, UPDATE, DELETE)
+    events: t.Sequence[str]
+    #: call of the trigger function
+    function_call: str
+    #: Mode of execution
+    when: t.Literal["BEFORE", "AFTER", "INSTEAD OF"] = "AFTER"
 
-        :param name: Name of the trigger
-        :param table: Table the trigger is for
-        :param events: list of events (INSERT, UPDATE, DELETE)
-        :param function_call: call of the trigger function
-        :param when: Mode of execution
-        """
-        self.name = name
-        self.table = table
-        self.events = events
-        self.function_call = function_call
-        if when not in {"BEFORE", "AFTER", "INSTEAD OF"}:
-            raise ValueError("`when` must be one of BEFORE, AFTER, INSTEAD OF")
-        self.when = when
+    def __hash__(self):
+        return hash(self.name)
 
 
+@dataclass
 class ConstraintTrigger(Trigger):
-    def __init__(
-        self,
-        *args: t.Any,
-        deferrable: bool = False,
-        initially_deferred: bool = False,
-        **kwargs: t.Any,
-    ) -> None:
-        """Construct a Constraint Trigger
+    #: Constraint can be deferred
+    deferrable: bool = False
+    #: Constrait is ste to deferred
+    initially_deferred: bool = False
 
-        :param deferrable: Constraint can be deferred
-        :param initially_deferred: Constraint is set to deferred
-        """
-        super().__init__(*args, **kwargs)
-        self.deferrable = deferrable
-        if not deferrable and initially_deferred:
+    def __post_init__(self):
+        if not self.deferrable and self.initially_deferred:
             raise ValueError("Constraint declared INITIALLY DEFERRED must be "
                              "DEFERRABLE.")
-        self.initially_deferred = initially_deferred
+
+    def __hash__(self):
+        return super().__hash__()
 
 
+@dataclass(unsafe_hash=True)
 class CreateTrigger(schema.DDLElement):
-    def __init__(self, trigger: Trigger) -> None:
-        self.trigger = trigger
+    trigger: Trigger
 
 
+@dataclass(unsafe_hash=True)
 class CreateConstraintTrigger(schema.DDLElement):
     """
     Represents a CREATE CONSTRAINT TRIGGER DDL statement
     """
 
-    def __init__(self, constraint_trigger: ConstraintTrigger) -> None:
-        self.constraint_trigger = constraint_trigger
+    constraint_trigger: ConstraintTrigger
 
 
+@dataclass(unsafe_hash=True)
 class DropTrigger(schema.DDLElement):
     """
     Represents a DROP TRIGGER DDL statement.
     """
 
-    def __init__(self, trigger: Trigger, if_exists: bool = False, cascade: bool = False) -> None:
-        self.trigger = trigger
-        self.if_exists = if_exists
-        self.cascade = cascade
+    trigger: Trigger
+    if_exists: bool = False
+    cascade: bool = False
 
 
 # noinspection PyUnusedLocal
@@ -411,48 +388,37 @@ def visit_drop_trigger(element: DropTrigger, compiler: Compiled, **kw: t.Any) ->
         opt_drop_behavior)
 
 
+@dataclass
 class View(schema.DDLElement):
-    def __init__(
-        self,
-        name: str,
-        query: SelectBase,
-        column_names: t.Sequence[str] = None,
-        temporary: bool = False,
-        view_options: t.Mapping[str, t.Any] = None,
-        check_option: t.Literal["local", "cascaded"] | None = None,
-        materialized: bool = False,
-    ) -> None:
-        """DDL Element representing a VIEW
+    #: The name of the view
+    name: str
+    #: the query it represents
+    query: SelectBase
+    column_names: t.Sequence[str] = None
+    temporary: bool = False
+    #: Must be something that can be passed to OrderedDict, so a simple dict suffices.
+    view_options: t.Mapping[str, t.Any] = None
+    #: Must be one of ``None``, ``'local'``, ``'cascaded'``.
+    check_option: t.Literal["local", "cascaded"] | None = None
+    #: Is materialized view
+    materialized: bool = False
 
-        :param name: The name of the view
-        :param query: the query it represents
-        :param column_names:
-        :param temporary:
-        :param view_options: Must be something that can be passed to
-            OrderedDict, so a simple dict suffices.
-        :param check_option: Must be one of ``None``, ``'local'``,
-            ``'cascaded'``.
-        :param materialized: Is materialized view
-        """
-        self.name = name
-        self.query = query
-        self.table = table(name)
-        self.temporary = temporary
-        self.column_names = column_names
+    table: Table = field(init=False)
+
+    def __post_init__(self) -> None:
+        self.table = table(self.name)
         self._init_table_columns()
-        if view_options is None:
-            view_options = OrderedDict()
+        if self.view_options is None:
+            self.view_options = OrderedDict()
         else:
-            view_options = OrderedDict(view_options)
-        self.view_options = view_options
-        if check_option not in (None, 'local', 'cascaded'):
+            self.view_options = OrderedDict(self.view_options)
+
+        if self.check_option not in (None, "local", "cascaded"):
             raise ValueError("check_option must be either None, 'local', or "
                              "'cascaded'")
-        if check_option is not None and 'check_option' in view_options:
+        if self.check_option is not None and "check_option" in self.view_options:
             raise ValueError('Parameter "check_option" specified more than '
                              'once')
-        self.check_option = check_option
-        self.materialized = materialized
 
     def _init_table_columns(self):
         if self.column_names is not None:
@@ -479,19 +445,22 @@ class View(schema.DDLElement):
         _con = "CONCURRENTLY " if concurrently else ""
         session.execute(text("REFRESH MATERIALIZED VIEW " + _con + self.name))
 
+    def __hash__(self):
+        return hash(self.name)
 
+
+@dataclass(unsafe_hash=True)
 class CreateView(schema.DDLElement):
-    def __init__(self, view: View, or_replace: bool = False, if_not_exists: bool = False) -> None:
-        self.view = view
-        self.or_replace = or_replace
-        self.if_not_exists = if_not_exists
+    view: View
+    or_replace: bool = False
+    if_not_exists: bool = False
 
 
+@dataclass(unsafe_hash=True)
 class DropView(schema.DDLElement):
-    def __init__(self, view: View, if_exists: bool = False, cascade: bool = False) -> None:
-        self.view = view
-        self.if_exists = if_exists
-        self.cascade = cascade
+    view: View
+    if_exists: bool = False
+    cascade: bool = False
 
 
 # noinspection PyUnusedLocal
