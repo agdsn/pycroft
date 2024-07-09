@@ -145,7 +145,7 @@ class Account(IntegerIdModel):
             .where(Split.account_id == cls.id)\
             .label("balance")
 
-    @hybrid_property
+    @property
     def in_default_days(self):
         first_overdue = False
         split_sum = 0
@@ -372,18 +372,23 @@ class BankAccount(IntegerIdModel):
 
     @_balance.expression
     def balance(cls) -> Select[tuple[Decimal]]:
-        return select(
-            [func.coalesce(func.sum(BankAccountActivity.amount), 0)]
-        ).where(
-            BankAccountActivity.bank_account_id == cls.id
-        ).label("balance")
+        return (
+            select(func.coalesce(func.sum(BankAccountActivity.amount), 0))
+            .where(BankAccountActivity.bank_account_id == cls.id)
+            .label("balance")
+        )
 
-    @hybrid_property
+    @property
     def last_imported_at(self) -> DateTimeTz:
-        return object_session(self).execute(
-                    select(func.max(BankAccountActivity.imported_at))
-                    .where(BankAccountActivity.bank_account_id == self.id)
-                ).fetchone()[0]
+        return (
+            object_session(self)
+            .execute(
+                select(func.max(BankAccountActivity.imported_at)).where(
+                    BankAccountActivity.bank_account_id == self.id
+                )
+            )
+            .fetchone()[0]
+        )
 
 
 class BankAccountActivity(IntegerIdModel):
