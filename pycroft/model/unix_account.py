@@ -1,3 +1,12 @@
+"""
+
+pycroft.model.unix_account
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This module contains the :class:`UnixAccount` and :class:`UnixTombstone` classes.
+
+
+"""
 from __future__ import annotations
 import typing as t
 from sqlalchemy import (
@@ -5,6 +14,7 @@ from sqlalchemy import (
     Column,
     ForeignKey,
     Index,
+    Integer,
     LargeBinary,
     Sequence,
     UniqueConstraint,
@@ -46,9 +56,48 @@ class UnixAccount(IntegerIdModel):
 
 
 class UnixTombstone(ModelBase):
-    # mapped_column does not work yet for reference in `__mapper_args__`, unfortunately.
-    from sqlalchemy import Integer, String
+    """A tombstone for uids and logins, preventing their re-use.
 
+    A tombstone relates to a :class:`pycroft.model.user.User` and :class:`UnixAccount`
+    via three relationships, as depicted in the ER diagram below.
+    The hash is stored in the generated column
+    :attr:`User.login_hash <pycroft.model.user.User.login_hash>`,
+    which has a foreign key on the :class:`Tombstone`.
+    Furthermore, the associated `UnixAccount` has a `uid`,
+    which also points to a :class:`Tombstone`.
+
+    There is a trigger which checks that if both of these objects exist,
+    they point to the same tombstone.
+
+    .. mermaid::
+
+        ---
+        title: Tombstone Consistency
+        config:
+          fontFamily: monospace
+        ---
+        erDiagram
+            User {
+                int unix_account_id
+                str login
+                str login_hash "generated always as digest(login, 'sha512')"
+            }
+            UnixAccount {
+                int id
+                int uid
+            }
+            UnixTombStone {
+                int uid
+                str login_hash
+            }
+
+            User |o--o| UnixAccount: "user_unix_account_id_fkey"
+            User ||--o| UnixTombStone: "user_login_hash_fkey"
+            UnixAccount ||--o| UnixTombStone: "unix_account_uid_fkey"
+
+    The lifecycle of a tombstone is restricted by
+    :attr:`check_unix_tombstone_lifecycle_func`.
+    """
     uid: Mapped[int] = Column(Integer, unique=True)
     login_hash: Mapped[bytes] = Column(LargeBinary(512), unique=True)
 
@@ -68,7 +117,6 @@ class UnixTombstone(ModelBase):
         CheckConstraint("uid is not null or login_hash is not null"),
     )
     __mapper_args__ = {"primary_key": (uid, login_hash)}  # fake PKey for mapper
-
 
 check_unix_tombstone_lifecycle_func = ddl.Function(
     name="check_unix_tombstone_lifecycle",
@@ -90,6 +138,30 @@ check_unix_tombstone_lifecycle_func = ddl.Function(
     volatility="stable",
     language="plpgsql",
 )
+"""
+Trigger function ensuring proper tombstone lifecycle (see :class:`UnixTombstone`).
+
+.. mermaid::
+
+    ---
+    title: Tombstone Lifecycle
+    config:
+      fontFamily: monospace
+    ---
+    stateDiagram-v2
+        s0: ¬uid, ¬login_hash
+        s1: uid, ¬login_hash
+        s2: ¬uid, login_hash
+        s3: uid, login_hash
+        s0 --> s1: set uid
+        s0 --> s2: set login_hash
+        s1 --> s1
+        s2 --> s2
+        s1 --> s3: set login_hash
+        s2 --> s3: set uid
+        s3 --> s3
+"""
+
 manager.add_function(UnixTombstone.__table__, check_unix_tombstone_lifecycle_func)
 manager.add_trigger(
     UnixTombstone.__table__,
@@ -102,55 +174,49 @@ manager.add_trigger(
     ),
 )
 
-# unix account creation
-manager.add_function(
-    User.__table__,
-    ddl.Function(
-        "unix_account_ensure_tombstone",
-        [],
-        "trigger",
-        # IF unix_account has a corresponding user
-        # THEN use that tombstone.
-        # However, in the scenario where the user's tombstone exists and points to a different uid,
-        # we throw an error instead.
-        """
-        DECLARE
-          v_user "user";
-          v_login_ts unix_tombstone;
-          v_ua_ts unix_tombstone;
-        BEGIN
-          select * into v_user from "user" u where u.unix_account_id = NEW.id;
-          select * into v_ua_ts from unix_tombstone ts where ts.uid = NEW.uid;
+unix_account_ensure_tombstone_func = ddl.Function(
+    "unix_account_ensure_tombstone",
+    [],
+    "trigger",
+    """
+    DECLARE
+      v_user "user";
+      v_login_ts unix_tombstone;
+      v_ua_ts unix_tombstone;
+    BEGIN
+      select * into v_user from "user" u where u.unix_account_id = NEW.id;
+      select * into v_ua_ts from unix_tombstone ts where ts.uid = NEW.uid;
 
-          select ts.* into v_login_ts from "user" u
-              join unix_tombstone ts on u.login_hash = ts.login_hash
-              where u.unix_account_id = NEW.id;
+      select ts.* into v_login_ts from "user" u
+          join unix_tombstone ts on u.login_hash = ts.login_hash
+          where u.unix_account_id = NEW.id;
 
-          -- scenarios:
-          -- 1) no user, no tombstone
-          -- 2) no user, tombstone
-          -- 3) user, no tombstone -> create
-          -- 4) user + tombstone
-
-          IF v_user IS NULL THEN
-              IF v_ua_ts IS NULL THEN
-                  insert into unix_tombstone (uid) values (NEW.uid);
-              END IF;
-              RETURN NEW;
-          END IF;
-          -- else: user not null
+      IF v_user IS NULL THEN
           IF v_ua_ts IS NULL THEN
-              insert into unix_tombstone (uid, login_hash) values (NEW.uid, v_user.login_hash);
+              insert into unix_tombstone (uid) values (NEW.uid);
           END IF;
-
           RETURN NEW;
-        END;
-        """,
-        volatility="volatile",
-        strict=True,
-        language="plpgsql",
-    ),
+      END IF;
+
+      -- TODO we're missing: if we create a unix account,
+      -- but the user exists, then probably the tombstone _will already exist!_.
+      -- → missing test case: user not null, unix account null!
+      IF v_ua_ts IS NULL THEN
+          insert into unix_tombstone (uid, login_hash) values (NEW.uid, v_user.login_hash);
+      END IF;
+
+      RETURN NEW;
+    END;
+    """,
+    volatility="volatile",
+    strict=True,
+    language="plpgsql",
 )
+""" Trigger function ensuring automatic generation of a tombstone
+on :class:`UnixAccount` inserts.
+"""
+
+manager.add_function(User.__table__, unix_account_ensure_tombstone_func)
 
 manager.add_trigger(
     User.__table__,
@@ -208,6 +274,9 @@ ensure_tombstone = ddl.Function(
     strict=True,
     language="plpgsql",
 )
+""" Trigger function ensuring automatic generation of a tombstone
+on :class:`User` updates. """
+
 
 manager.add_function(User.__table__, ensure_tombstone)
 
@@ -283,6 +352,12 @@ check_tombstone_consistency = ddl.Function(
     strict=True,
     language="plpgsql",
 )
+"""
+Trigger function checking whether :class:`User` and associated :class:`UnixAccount` refer to the same :class:`Tombstone`.
+
+See :class:`Tombstone` for an illustration.
+"""
+
 manager.add_function(User.__table__, check_tombstone_consistency)
 manager.add_constraint_trigger(
     User.__table__,

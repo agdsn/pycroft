@@ -28,5 +28,6 @@ pycroft.model
 .. automodule:: pycroft.model.task_serialization
 .. automodule:: pycroft.model.traffic
 .. automodule:: pycroft.model.types
+.. automodule:: pycroft.model.unix_account
 .. automodule:: pycroft.model.user
 .. automodule:: pycroft.model.webstorage

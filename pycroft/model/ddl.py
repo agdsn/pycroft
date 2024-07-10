@@ -111,7 +111,7 @@ class Function(schema.DDLElement):
     #: Return type
     rtype: str
     #: Definition
-    definition: LazilyComiledDefDescriptor = LazilyComiledDefDescriptor()
+    definition: LazilyComiledDefDescriptor = field(default=LazilyComiledDefDescriptor(), repr=False)
     volatility: t.Literal["volatile", "stable", "immutable"] = "volatile"
     #: Function should be declared ``STRICT``
     strict: bool = False
