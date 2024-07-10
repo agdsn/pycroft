@@ -11,7 +11,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from pycroft.model.user import User
-from pycroft.model.unix_account import UnixTombstone
+from pycroft.model.unix_account import UnixTombstone, UnixAccount
 from tests import factories as f
 
 
@@ -181,6 +181,38 @@ class TestUserUnixAccountTombstoneConsistency:
             session.delete(user)
         assert inspect(user).deleted, "user did not get deleted"
         assert inspect(ua).deleted, "unix_account did not get deleted"
+
+    def test_user_change_unix_account(self, session, user):
+        with pytest.raises(IntegrityError), session.begin_nested():
+            ua = f.UnixAccountFactory()
+            user.unix_account = ua
+            session.add(user)
+
+
+class TestUserNoUnixAccount:
+    @pytest.fixture(scope="class")
+    def user(self, class_session) -> User:
+        user = f.UserFactory()
+        class_session.flush()
+        return user
+
+    def test_create_unix_account(self, session, user):
+        with session.begin_nested():
+            ua = f.UnixAccountFactory()
+            user.unix_account = ua
+            session.add(user)
+
+
+class TestUnixAccountNoUser:
+    @pytest.fixture(scope="class")
+    def unix_account(self, class_session) -> UnixAccount:
+        ua = f.UnixAccountFactory()
+        class_session.flush()
+        return ua
+
+    def test_create_user(self, session, ua):
+        with pytest.raises(IntegrityError), session.begin_nested():
+            session.add(f.UserFactory(unix_account=ua))
 
 
 class TestTombstoneLifeCycle:
