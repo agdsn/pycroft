@@ -573,7 +573,7 @@ def edit_email(
     :param email_forwarded: Boolean if emails should be forwarded
     :param processor: User object of the processor, which issues the change
     :param is_confirmed: If the email address is already confirmed
-    :return:Changed user object
+    :return: Changed user object
     """
 
     if not can_target(user, processor):
@@ -623,8 +623,8 @@ def edit_birthdate(user: User, birthdate: date, processor: User) -> User:
 
     :param user: User object to change
     :param birthdate: New birthdate
-    :param processor:User object of the processor, which issues the change
-    :return:Changed user object
+    :param processor: User object of the processor, which issues the change
+    :return: Changed user object
     """
 
     if not birthdate:

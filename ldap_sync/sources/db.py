@@ -47,7 +47,7 @@ def _fetch_db_users(
 ) -> list[_UserProxyType]:
     """Fetch users to be synced, plus whether ``ldap_login_enabled`` is set.
 
-    If the `` ldap_login_enabled`` flag is not present,
+    If the ``ldap_login_enabled`` flag is not present,
     we interpret this as ``should_be_blocked``.
 
     :param session: The SQLAlchemy session to use
@@ -199,7 +199,7 @@ class _PropertyProxyType(NamedTuple):
 def _fetch_db_properties(session: Session) -> list[_PropertyProxyType]:
     """Fetch the groups who should be synced.
 
-    Explicitly, this returns everything in :ref:`EXPORTED_PROPERTIES` together with
+    Explicitly, this returns everything in :data:`EXPORTED_PROPERTIES` together with
     the current users having the respective property as members.
 
     :param session: The SQLAlchemy session to use
@@ -246,6 +246,7 @@ def fetch_db_properties(
         )
 
 
+#: The properties of a user we export to LDAP.
 EXPORTED_PROPERTIES = frozenset(
     [
         "network_access",
