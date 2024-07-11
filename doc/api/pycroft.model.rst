@@ -17,7 +17,6 @@ pycroft.model
 .. automodule:: pycroft.model.functions
 .. automodule:: pycroft.model.hades
 .. automodule:: pycroft.model.host
-.. automodule:: pycroft.model.interval_base
 .. automodule:: pycroft.model.logging
 .. automodule:: pycroft.model.net
 .. automodule:: pycroft.model.port
