@@ -7,6 +7,7 @@ This module contains the :class:`UnixAccount` and :class:`UnixTombstone` classes
 
 
 """
+
 from __future__ import annotations
 import typing as t
 from sqlalchemy import (
@@ -98,6 +99,7 @@ class UnixTombstone(ModelBase):
     The lifecycle of a tombstone is restricted by
     :attr:`check_unix_tombstone_lifecycle_func`.
     """
+
     uid: Mapped[int] = Column(Integer, unique=True)
     login_hash: Mapped[bytes] = Column(LargeBinary(512), unique=True)
 
@@ -117,6 +119,7 @@ class UnixTombstone(ModelBase):
         CheckConstraint("uid is not null or login_hash is not null"),
     )
     __mapper_args__ = {"primary_key": (uid, login_hash)}  # fake PKey for mapper
+
 
 check_unix_tombstone_lifecycle_func = ddl.Function(
     name="check_unix_tombstone_lifecycle",
