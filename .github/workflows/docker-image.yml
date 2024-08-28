@@ -109,7 +109,7 @@ jobs:
     - run: bun install --frozen-lockfile
     - run: bun run bundle --prod
     - name: Check for outdated NPM packages
-      run: bun x npm-check-updates --root --format group >> "${GITHUB_STEP_SUMMARY}"
+      run: ./scripts/bun_outdated.sh | tee "${GITHUB_STEP_SUMMARY}"
   build:
     runs-on: ubuntu-latest
     steps:
