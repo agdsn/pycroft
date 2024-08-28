@@ -197,10 +197,9 @@ unix_account_ensure_tombstone_func = ddl.Function(
           END IF;
           RETURN NEW;
       END IF;
+      -- NOTE: v_user not null implies that we are in an UPDATE, not a CREATE,
+      -- because otherwise it would be impossible for an existing user to reference this UA.
 
-      -- TODO we're missing: if we create a unix account,
-      -- but the user exists, then probably the tombstone _will already exist!_.
-      -- → missing test case: user not null, unix account null!
       IF v_ua_ts IS NULL THEN
           insert into unix_tombstone (uid, login_hash) values (NEW.uid, v_user.login_hash);
       END IF;
@@ -251,22 +250,81 @@ ensure_tombstone = ddl.Function(
           join unix_tombstone ts on v_u_login_hash = ts.login_hash
           where u.id = NEW.id;
 
-      IF v_ua IS NULL THEN 
-          IF v_login_ts IS NULL THEN
-              -- TODO check whether this was a _set_ or an _update_.
-              -- do we really want to automatically update this?
-              -- NOTE: when an update caused this, this might create an inconsistent state (different tombstones for uid and login),
-              --  however as soon as the check constraint fires the transaction will be aborted, anyway.
-              insert into unix_tombstone (uid, login_hash) values (null, v_u_login_hash) on conflict do nothing;
+      IF TG_OP = 'INSERT' THEN
+          IF not v_login_ts IS NULL THEN
+              RAISE EXCEPTION
+                  'User with login=%% already exists. Please choose a different login.',
+                  NEW.login
+                  USING ERRCODE = 'foreign_key_violation';
           END IF;
-          -- ELSE: user tombstone exists, no need to do anything
+
+          IF v_ua IS NULL THEN
+              insert into unix_tombstone (uid, login_hash) values (null, v_u_login_hash);
+              -- on conflict: raise! want to prohibit re-use after all.
+          ELSE
+              IF v_ua_ts.login_hash IS NOT NULL AND v_ua_ts.login_hash != v_login_ts.login_hash THEN
+                  RAISE EXCEPTION
+                      'Refusing to re-couple user (login=%%), which had a unix account in the past, '
+                      'to a new unix-account (uid=%%). '
+                      'Manually update the tombstones if you know what you are doing.',
+                      NEW.login, v_ua.uid
+                      USING ERRCODE = 'check_violation';
+              END IF;
+              update unix_tombstone ts set login_hash = v_u_login_hash where ts.uid = v_ua.uid;
+          END IF;
+          RETURN NEW;
+      END IF;
+
+      ------------
+      -- UPDATE --
+      ------------
+
+      IF NEW.unix_account_id = OLD.unix_account_id THEN
+          -- NOTE: this also means we _do nothing_ on a `login` update.
+          -- This is a conscious decision, because we want the SQL operator
+          -- to handle tombstones explicitly in this scenario.
+          RETURN NEW;
+      END IF;
+
+      IF v_ua IS NULL THEN 
+          -- this is an UPDATE user SET unix_account_id=null. Nothing to do.
+          RETURN NEW;
+      END IF;
+
+      -----------------------
+      -- User → UA exists; --
+      -----------------------
+      select * into v_ua_ts from unix_tombstone ts where ts.uid = v_ua.uid;
+
+      IF NOT v_ua_ts.login_hash IS NULL AND v_ua_ts.login_hash <> v_u_login_hash THEN
+          RAISE EXCEPTION
+              'Refusing to re-couple unix-account (uid=%%), which belonged to a user in the past, to another user (login=%%).'
+              'Manually update the tombstones if you know what you are doing.',
+              v_ua.uid, NEW.login
+              USING ERRCODE = 'check_violation';
+      END IF;
+
+      ASSERT NOT v_login_ts IS NULL, 'existing user %% does not have a tombstone', NEW.login;
+      IF v_login_ts.uid IS NULL THEN
+          -- gonna update ua's tombstone, so let's throw away user's tombstone
+          set constraints user_login_hash_fkey deferred;
+          delete from unix_tombstone where login_hash = v_u_login_hash;
+          update unix_tombstone ts set login_hash = v_u_login_hash where ts.uid = v_ua_ts.uid;
+          set constraints user_login_hash_fkey immediate;
       ELSE
-          select * into v_ua_ts from unix_tombstone ts where ts.uid = v_ua.uid;
-          IF v_ua_ts.login_hash IS NULL THEN 
-              update unix_tombstone ts set login_hash = v_u_login_hash where ts.uid = v_ua_ts.uid;
+          -- this smells wrong: either they already share a tombstone,
+          -- or the user already _had_ a unix account!
+          IF NOT v_ua_ts.login_hash IS NULL AND v_ua_ts.login_hash != v_login_ts.login_hash THEN
+              RAISE EXCEPTION
+                  'Refusing to re-couple user (login=%%), which had a unix account in the past, '
+                  'to a new unix-account (uid=%%). '
+                  'Manually update the tombstones if you know what you are doing.',
+                  NEW.login, v_ua.uid
+                  USING ERRCODE = 'check_violation';
           END IF;
       END IF;
 
+      update unix_tombstone ts set login_hash = v_u_login_hash where ts.uid = v_ua_ts.uid;
       RETURN NEW;
     END;
     """,
@@ -285,7 +343,6 @@ manager.add_trigger(
     ddl.Trigger(
         "user_ensure_tombstone_trigger",
         User.__table__,
-        # TODO create different trigger on UPDATE which only fires if login or unix_account has changed
         ("INSERT", "UPDATE OF unix_account_id, login"),
         "user_ensure_tombstone()",
         when="BEFORE",

@@ -474,7 +474,12 @@ class User(BaseUser, UserMixin):
 
     __table_args__ = (
         UniqueConstraint("swdd_person_id"),
-        ForeignKeyConstraint(("login_hash",), ("unix_tombstone.login_hash",), deferrable=True),
+        ForeignKeyConstraint(
+            ("login_hash",),
+            ("unix_tombstone.login_hash",),
+            name="user_login_hash_fkey",
+            deferrable=True,
+        ),
     )
 
 

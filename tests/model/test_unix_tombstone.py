@@ -196,7 +196,10 @@ class TestUserNoUnixAccount:
         class_session.flush()
         return user
 
-    def test_create_unix_account(self, session, user):
+    def test_add_new_unix_account_to_user(self, session, user):
+        # should also not throw an error.
+        # not sure why we care about this use case,
+        # but this should be possible in principle (think external users).
         with session.begin_nested():
             ua = f.UnixAccountFactory()
             user.unix_account = ua
@@ -210,9 +213,15 @@ class TestUnixAccountNoUser:
         class_session.flush()
         return ua
 
-    def test_create_user(self, session, ua):
-        with pytest.raises(IntegrityError), session.begin_nested():
-            session.add(f.UserFactory(unix_account=ua))
+    def test_create_user_with_existing_unix_account(self, session, unix_account):
+        # this should not throw an error,
+        # because "UA then User" is the usual order of operations when creating a new user.
+        ua = unix_account
+        try:
+            with session.begin_nested():
+                session.add(f.UserFactory(unix_account=ua))
+        except IntegrityError:
+            pytest.fail("Creating user raised IntegrityError.")
 
 
 class TestTombstoneLifeCycle:
