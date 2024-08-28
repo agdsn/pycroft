@@ -334,9 +334,14 @@ def move_in(
 ) -> User | UserTask:
     """Move in a user in a given room and do some initialization.
 
-    The user is given a new Host with an interface of the given mac, a
-    UnixAccount, a finance Account, and is made member of important
-    groups.  Networking is set up.
+    The user is given a new Host with an interface of the given mac,
+    a finance Account, and is made member of important groups.
+    Networking is set up.
+
+    Preconditions
+    ~~~~~~~~~~~~~
+
+    - User has a unix account.
 
     :param user: The user to move in
     :param building_id:
@@ -344,7 +349,7 @@ def move_in(
     :param room_number:
     :param mac: The mac address of the users pc.
     :param processor:
-    :param birthdate: Date of birth`
+    :param birthdate: Date of birth
     :param host_annex: when true: if MAC already in use,
         annex host to new user
     :param begin_membership: Starts a membership if true
