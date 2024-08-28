@@ -170,6 +170,11 @@ html_logo = "../web/resources/img/pycroft.svg"
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
+mermaid_version = ""
+html_js_files = [
+    "js/mermaid.min.js",
+]
+
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
 #html_last_updated_fmt = '%b %d, %Y'
