@@ -1231,27 +1231,24 @@ def check_new_user_data(
     ignore_similar_name: bool = False,
     allow_existing: bool = False,
 ) -> None:
-    user_swdd_person_id = get_user_by_swdd_person_id(swdd_person_id)
-
-    if user_swdd_person_id and not allow_existing:
-        raise UserExistsException
-
-    user_login = User.q.filter_by(login=login).first()
-
-    if user_login is not None and not allow_existing:
-        raise LoginTakenException
-
-    user_email = User.q.filter_by(email=email).first()
-
-    if user_email is not None and not allow_existing:
-        raise EmailTakenException
-
     if room is not None and not ignore_similar_name:
         check_similar_user_in_room(name, room)
 
     if move_in_date is not None:
         if move_in_date > (session.utcnow() + timedelta(days=180)).date() or move_in_date < session.utcnow().date():
             raise MoveInDateInvalidException
+
+    user_swdd_person_id = get_user_by_swdd_person_id(swdd_person_id)
+    if user_swdd_person_id and not allow_existing:
+        raise UserExistsException
+
+    user_login = User.q.filter_by(login=login).first()
+    if user_login is not None and not allow_existing:
+        raise LoginTakenException
+
+    user_email = User.q.filter_by(email=email).first()
+    if user_email is not None and not allow_existing:
+        raise EmailTakenException
 
 
 @with_transaction
