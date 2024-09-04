@@ -1190,18 +1190,16 @@ class MoveInDateInvalidException(PycroftLibException):
 
 
 def get_similar_users_in_room(name: str, room: Room, ratio: float = 0.75) -> list[User]:
-    """
-    Get users with a 75% name match already exists in the room
+    """Get inhabitants of a room with a name similar to the given name.
+
+    Eagerloading hints:
+    - `room.users`
     """
 
     if room is None:
         return []
 
-    return [
-        user
-        for user in (User.q.filter_by(room=room).all())
-        if SequenceMatcher(None, name, user.name).ratio() > ratio
-    ]
+    return [user for user in room.users if SequenceMatcher(None, name, user.name).ratio() > ratio]
 
 
 def check_similar_user_in_room(name: str, room: Room) -> None:
@@ -1209,7 +1207,7 @@ def check_similar_user_in_room(name: str, room: Room) -> None:
     Raise an error if an user with a 75% name match already exists in the room
     """
 
-    if len(get_similar_users_in_room(name, room)) > 0:
+    if get_similar_users_in_room(name, room):
         raise UserExistsInRoomException
 
 
