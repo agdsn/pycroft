@@ -64,5 +64,13 @@ def stamp(obj: ContextObject, revision: str):
     command.stamp(obj.alembic_cfg, revision)
 
 
+@cli.command(help=command.stamp.__doc__)
+@click.pass_obj
+@click.option("-m", "--message", "message")
+@click.option("--autogenerate", is_flag=True, default=False)
+def revision(obj: ContextObject, message: str, autogenerate: bool):
+    command.revision(obj.alembic_cfg, message=message, autogenerate=autogenerate)
+
+
 if __name__ == '__main__':
     cli()
