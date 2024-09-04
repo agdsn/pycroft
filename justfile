@@ -93,24 +93,30 @@ _ensure_schema_dir:
 run: (_up "dev-app")
 
 # spawn a shell in the `test-app` container
+[positional-arguments]
 test-shell *args:
-    {{ drc }} run --rm test-app shell {{ args }}
+    {{ drc }} run --rm test-app shell "$@"
 
 # spawn a shell in the `dev-app` container
+[positional-arguments]
 dev-shell *args:
-    {{ drc }} run --rm dev-app shell {{ args }}
+    {{ drc }} run --rm dev-app shell "$@"
 
 # run an alembic command against the `dev-db`
-alembic command *args:
-    {{ drc }} --progress=none run --rm dev-migrate shell flask alembic {{ command }} {{ args }}
+[positional-arguments]
+alembic *args:
+    {{ drc }} --progress=none run --rm dev-migrate shell flask alembic "$@"
+
 
 # run an interactive postgres shell in the dev-db container
+[positional-arguments]
 dev-psql *args: (_up "dev-db")
-    {{ dev-psql }} {{ args }}
+    {{ dev-psql }} "$@"
 
 # run an interactive postgres shell in the test-db container
+[positional-arguments]
 test-psql *args: (_up "test-db")
-    {{ test-psql }} {{ args }}
+    {{ test-psql }} "$@"
 
 # give a quick overview over the schema in the dev-db.
 
