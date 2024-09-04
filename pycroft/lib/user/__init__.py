@@ -2,12 +2,7 @@ from ._old import (
     setup_ipv4_networking,
     store_user_sheet,
     get_user_sheet,
-    reset_password,
     can_target,
-    reset_wifi_password,
-    maybe_setup_wifi,
-    change_password,
-    generate_wifi_password,
     create_user,
     login_available,
     move_in,
@@ -40,7 +35,6 @@ from ._old import (
     get_name_from_first_last,
     get_user_by_id_or_login,
     send_password_reset_mail,
-    change_password_from_token,
     find_similar_users,
     are_names_similar,
 )
@@ -57,6 +51,14 @@ from .edit import (
     edit_birthdate,
     edit_person_id,
     edit_address,
+)
+from .passwords import (
+    maybe_setup_wifi,
+    reset_password,
+    reset_wifi_password,
+    change_password,
+    generate_wifi_password,
+    change_password_from_token,
 )
 from .member_request import (
     create_member_request,
