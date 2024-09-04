@@ -1320,21 +1320,18 @@ def finish_member_request(
     check_new_user_data(prm.login, prm.email, prm.name, prm.swdd_person_id, prm.room,
                         prm.move_in_date, ignore_similar_name)
 
-    user, _ = create_user(prm.name, prm.login, prm.email, prm.birthdate, groups=[],
-                          processor=processor, address=prm.room.address, passwd_hash=prm.passwd_hash)
-
-    processor = processor if processor is not None else user
-
-    user.swdd_person_id = prm.swdd_person_id
-    user.email_confirmed = prm.email_confirmed
+    user = user_from_pre_member(prm, processor=processor)
 
     move_in_datetime = utc.with_min_time(prm.move_in_date)
-
-    move_in(user, prm.room.building_id, prm.room.level, prm.room.number, None,
-            processor if processor is not None else user, when=move_in_datetime)
-
-    message = deferred_gettext("Created from registration {}.").format(str(prm.id)).to_json()
-    log_user_event(message, processor, user)
+    move_in(
+        user,
+        prm.room.building_id,
+        prm.room.level,
+        prm.room.number,
+        None,
+        processor if processor is not None else user,
+        when=move_in_datetime,
+    )
 
     if move_in_datetime > utcnow:
         make_member_of(user, config.pre_member_group, processor, closed(utcnow, None))
@@ -1342,6 +1339,29 @@ def finish_member_request(
     session.session.delete(prm)
 
     return user
+
+
+def user_from_pre_member(pre_member: PreMember, processor: User) -> User:
+    user, _ = create_user(
+        pre_member.name,
+        pre_member.login,
+        pre_member.email,
+        pre_member.birthdate,
+        groups=[],
+        processor=processor,
+        address=pre_member.room.address,
+        passwd_hash=pre_member.passwd_hash,
+    )
+
+    processor = processor if processor is not None else user
+
+    user.swdd_person_id = pre_member.swdd_person_id
+    user.email_confirmed = pre_member.email_confirmed
+
+    message = deferred_gettext("Created from registration {}.").format(str(pre_member.id)).to_json()
+    log_user_event(message, processor, user)
+    return user
+
 
 
 @with_transaction
