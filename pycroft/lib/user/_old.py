@@ -135,12 +135,6 @@ def get_user_sheet(sheet_id: int) -> bytes | None:
     return storage.data
 
 
-def can_target(user: User, processor: User) -> bool:
-    if user != processor:
-        return user.permission_level < processor.permission_level
-    else:
-        return True
-
 def create_user(
     name: str, login: str, email: str, birthdate: date,
     groups: t.Iterable[PropertyGroup], processor: User | None, address: Address,

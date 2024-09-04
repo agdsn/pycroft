@@ -2,7 +2,6 @@ from ._old import (
     setup_ipv4_networking,
     store_user_sheet,
     get_user_sheet,
-    can_target,
     create_user,
     login_available,
     move_in,
@@ -76,6 +75,7 @@ from .mail import (
 from .mail_confirmation import (
     confirm_mail_address,
 )
+from .permission import can_target
 
 from .exc import (
     HostAliasExists,
