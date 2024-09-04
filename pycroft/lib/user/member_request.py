@@ -22,16 +22,18 @@ from ._old import (
     create_user,
     move_in,
     move,
-    edit_birthdate,
-    edit_name,
-    edit_email,
-    edit_person_id,
     get_user_by_swdd_person_id,
     get_similar_users_in_room,
     check_similar_user_in_room,
     login_available,
     send_confirmation_email,
     user_send_mail,
+)
+from .edit import (
+    edit_birthdate,
+    edit_name,
+    edit_email,
+    edit_person_id,
 )
 from .exc import (
     LoginTakenException,

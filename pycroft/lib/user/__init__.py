@@ -13,11 +13,6 @@ from ._old import (
     move_in,
     migrate_user_host,
     move,
-    edit_name,
-    edit_email,
-    edit_birthdate,
-    edit_person_id,
-    edit_address,
     traffic_history,
     has_balance_of_at_least,
     has_positive_balance,
@@ -55,6 +50,13 @@ from .user_id import (
     encode_type2_user_id,
     decode_type2_user_id,
     check_user_id,
+)
+from .edit import (
+    edit_name,
+    edit_email,
+    edit_birthdate,
+    edit_person_id,
+    edit_address,
 )
 from .member_request import (
     create_member_request,
