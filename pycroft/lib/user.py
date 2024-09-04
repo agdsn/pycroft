@@ -1239,16 +1239,28 @@ def check_new_user_data(
         if not utcnow.date() <= move_in_date <= (utcnow + timedelta(days=180)).date():
             raise MoveInDateInvalidException
 
+    if not allow_existing:
+        check_new_user_data_unused(login=login, email=email, swdd_person_id=swdd_person_id)
+
+
+def check_new_user_data_unused(login: str, email: str, swdd_person_id: int) -> None:
+    """Check whether some user data from a member request is already used.
+
+    :raises UserExistsException:
+    :raises LoginTakenException:
+    :raises EmailTakenException:
+    """
     user_swdd_person_id = get_user_by_swdd_person_id(swdd_person_id)
-    if user_swdd_person_id and not allow_existing:
+    if user_swdd_person_id:
         raise UserExistsException
 
+    # This is broken: add test to verify!
     user_login = User.q.filter_by(login=login).first()
-    if user_login is not None and not allow_existing:
+    if user_login is not None:
         raise LoginTakenException
 
     user_email = User.q.filter_by(email=email).first()
-    if user_email is not None and not allow_existing:
+    if user_email is not None:
         raise EmailTakenException
 
 
