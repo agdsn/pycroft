@@ -1312,8 +1312,10 @@ def finish_member_request(
     if prm.room is None:
         raise ValueError("Room is None")
 
-    if prm.move_in_date is not None and prm.move_in_date < session.utcnow().date():
-        prm.move_in_date = session.utcnow().date()
+    utcnow = session.utcnow()
+
+    if prm.move_in_date is not None and prm.move_in_date < utcnow.date():
+        prm.move_in_date = utcnow.date()
 
     check_new_user_data(prm.login, prm.email, prm.name, prm.swdd_person_id, prm.room,
                         prm.move_in_date, ignore_similar_name)
@@ -1334,9 +1336,8 @@ def finish_member_request(
     message = deferred_gettext("Created from registration {}.").format(str(prm.id)).to_json()
     log_user_event(message, processor, user)
 
-    if move_in_datetime > session.utcnow():
-        make_member_of(user, config.pre_member_group, processor,
-                       closed(session.utcnow(), None))
+    if move_in_datetime > utcnow:
+        make_member_of(user, config.pre_member_group, processor, closed(utcnow, None))
 
     session.session.delete(prm)
 
