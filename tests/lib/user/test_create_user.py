@@ -26,40 +26,6 @@ class UserData:
 
 
 class TestUserCreation:
-    @pytest.fixture(scope="class")
-    def member_group(self, class_session):
-        return factories.property.MemberPropertyGroupFactory.create()
-
-    @pytest.fixture(scope="class")
-    def room(self, class_session):
-        return factories.RoomFactory.create(patched_with_subnet=True)
-
-    @pytest.fixture(scope="class")
-    def user_data(self) -> UserData:
-        return UserData(
-            name="Hans",
-            login="hans66",
-            email="hans@hans.de",
-            mac="12:11:11:11:11:11",
-            birthdate=date.fromisoformat("1990-01-01"),
-        )
-
-    @pytest.fixture(scope="class", autouse=True)
-    def new_user(self, class_session, user_data, room, processor, member_group):
-        from unittest.mock import patch
-
-        with patch("pycroft.lib.user.user_send_mails"):
-            new_user, _ = create_user(
-                user_data.name,
-                user_data.login,
-                user_data.email,
-                user_data.birthdate,
-                processor=processor,
-                groups=(member_group,),
-                address=room.address,
-            )
-        return new_user
-
     def test_user_base_data(self, new_user, user_data, room):
         assert new_user.name == user_data.name
         assert new_user.login == user_data.login
@@ -106,3 +72,37 @@ class TestUserCreation:
         )
 
         assert_mail_reasonable(assert_one(mail_capture), subject_re="Willkommen")
+
+    @pytest.fixture(scope="class")
+    def member_group(self, class_session):
+        return factories.property.MemberPropertyGroupFactory.create()
+
+    @pytest.fixture(scope="class")
+    def room(self, class_session):
+        return factories.RoomFactory.create(patched_with_subnet=True)
+
+    @pytest.fixture(scope="class")
+    def user_data(self) -> UserData:
+        return UserData(
+            name="Hans",
+            login="hans66",
+            email="hans@hans.de",
+            mac="12:11:11:11:11:11",
+            birthdate=date.fromisoformat("1990-01-01"),
+        )
+
+    @pytest.fixture(scope="class", autouse=True)
+    def new_user(self, class_session, user_data, room, processor, member_group):
+        from unittest.mock import patch
+
+        with patch("pycroft.lib.user.user_send_mails"):
+            new_user, _ = create_user(
+                user_data.name,
+                user_data.login,
+                user_data.email,
+                user_data.birthdate,
+                processor=processor,
+                groups=(member_group,),
+                address=room.address,
+            )
+        return new_user
