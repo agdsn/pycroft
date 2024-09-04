@@ -1229,7 +1229,6 @@ def check_new_user_data(
     room: Room | None,
     move_in_date: date | None,
     ignore_similar_name: bool = False,
-    allow_existing: bool = False,
 ) -> None:
     if room is not None and not ignore_similar_name:
         check_similar_user_in_room(name, room)
@@ -1238,9 +1237,6 @@ def check_new_user_data(
         utcnow = session.utcnow()
         if not utcnow.date() <= move_in_date <= (utcnow + timedelta(days=180)).date():
             raise MoveInDateInvalidException
-
-    if not allow_existing:
-        check_new_user_data_unused(login=login, email=email, swdd_person_id=swdd_person_id)
 
 
 def check_new_user_data_unused(login: str, email: str, swdd_person_id: int) -> None:
@@ -1283,8 +1279,9 @@ def create_member_request(
         swdd_person_id,
         room,
         move_in_date,
-        allow_existing=previous_dorm is not None,
     )
+    if previous_dorm is None:
+        check_new_user_data_unused(login=login, email=email, swdd_person_id=swdd_person_id)
 
     if swdd_person_id is not None and room is not None:
         tenancies = get_relevant_tenancies(swdd_person_id)
