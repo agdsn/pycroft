@@ -1235,7 +1235,8 @@ def check_new_user_data(
         check_similar_user_in_room(name, room)
 
     if move_in_date is not None:
-        if move_in_date > (session.utcnow() + timedelta(days=180)).date() or move_in_date < session.utcnow().date():
+        utcnow = session.utcnow()
+        if not utcnow.date() <= move_in_date <= (utcnow + timedelta(days=180)).date():
             raise MoveInDateInvalidException
 
     user_swdd_person_id = get_user_by_swdd_person_id(swdd_person_id)
