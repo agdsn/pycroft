@@ -1363,7 +1363,6 @@ def user_from_pre_member(pre_member: PreMember, processor: User) -> User:
     return user
 
 
-
 @with_transaction
 def confirm_mail_address(
     key: str,
