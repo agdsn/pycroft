@@ -3,22 +3,21 @@
 #  the Apache License, Version 2.0. See the LICENSE file for details
 import typing as t
 from contextlib import contextmanager
-from hashlib import sha512
 
 import pytest
 from sqlalchemy import inspect, update, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from pycroft.helpers.user import login_hash
 from pycroft.model.user import User
 from pycroft.model.unix_account import UnixTombstone, UnixAccount
 from tests import factories as f
 
 
-L_HASH: bytes = sha512(b"mylogin").digest()
+L_HASH: bytes = login_hash("mylogin")
 
 
-@pytest.mark.meta
 def test_login_hash_correct(session):
     user = f.UserFactory(login="mylogin")
     assert user.login_hash == L_HASH
@@ -57,7 +56,7 @@ class TestTombstoneConstraints:
             for h, uid in (
                 (None, 10000),
                 (L_HASH, None),
-                (sha512(b"login2").digest(), 10001),
+                (login_hash("login2"), 10001),
                 (None, 20000),
             )
         )
@@ -140,7 +139,7 @@ class TestUserUnixAccountTombstoneConsistency:
 
     def test_user_login_change_fails_when_creating_new_tombstone(self, session, user):
         login_new = user.login + "_"
-        hash_hew: bytes = sha512(login_new.encode()).digest()
+        hash_hew: bytes = login_hash(login_new)
         MATCH_RE = "User tombstone.*and unix account tombstone.*differ"
         with (
             pytest.raises(IntegrityError, match=MATCH_RE),
