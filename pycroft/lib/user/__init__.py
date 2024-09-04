@@ -1,9 +1,4 @@
 from ._old import (
-    encode_type1_user_id,
-    decode_type1_user_id,
-    encode_type2_user_id,
-    decode_type2_user_id,
-    check_user_id,
     setup_ipv4_networking,
     store_user_sheet,
     get_user_sheet,
@@ -53,6 +48,13 @@ from ._old import (
     change_password_from_token,
     find_similar_users,
     are_names_similar,
+)
+from .user_id import (
+    encode_type1_user_id,
+    decode_type1_user_id,
+    encode_type2_user_id,
+    decode_type2_user_id,
+    check_user_id,
 )
 from .member_request import (
     create_member_request,

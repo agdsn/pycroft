@@ -26,7 +26,6 @@ from ._old import (
     edit_name,
     edit_email,
     edit_person_id,
-    encode_type2_user_id,
     get_user_by_swdd_person_id,
     get_similar_users_in_room,
     check_similar_user_in_room,
@@ -41,6 +40,7 @@ from .exc import (
     NoTenancyForRoomException,
     MoveInDateInvalidException,
 )
+from .user_id import encode_type2_user_id
 
 
 @with_transaction
