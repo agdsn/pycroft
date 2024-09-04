@@ -17,7 +17,7 @@ from datetime import timedelta, date
 from difflib import SequenceMatcher
 from collections.abc import Iterable
 
-from sqlalchemy import func, select, Boolean, String, ColumnElement, ScalarResult
+from sqlalchemy import exists, func, select, Boolean, String, ColumnElement, ScalarResult
 from sqlalchemy.orm import Session
 
 from pycroft import config, property
@@ -26,7 +26,7 @@ from pycroft.helpers.errorcode import Type1Code, Type2Code
 from pycroft.helpers.i18n import deferred_gettext
 from pycroft.helpers.interval import closed, Interval, starting_from
 from pycroft.helpers.printing import generate_user_sheet as generate_pdf
-from pycroft.helpers.user import generate_random_str
+from pycroft.helpers.user import generate_random_str, login_hash
 from pycroft.helpers.utc import DateTimeTz
 from pycroft.lib.address import get_or_create_address
 from pycroft.lib.exc import PycroftLibException
@@ -62,7 +62,7 @@ from pycroft.model.user import (
     PropertyGroup,
     Membership,
 )
-from pycroft.model.unix_account import UnixAccount
+from pycroft.model.unix_account import UnixAccount, UnixTombstone
 from pycroft.model.webstorage import WebStorage
 from pycroft.task import send_mails_async
 
@@ -274,9 +274,15 @@ def create_user(
     :param passwd_hash: Use password hash instead of generating a new password
     :param send_confirm_mail: If a confirmation mail should be send to the user
     :return:
+
+    :raises LoginTakenException: if the login is used or has been used in the past
     """
 
     now = session.utcnow()
+
+    if not login_available(login, session.session):
+        raise LoginTakenException(login)
+
     plain_password: str | None = user_helper.generate_password(12)
     # create a new user
     new_user = User(
@@ -319,6 +325,20 @@ def create_user(
         send_confirmation_email(new_user)
 
     return new_user, plain_password
+
+
+def login_available(login: str, session: Session) -> bool:
+    """Check whether there is a tombstone with the hash of the given login"""
+    hash = login_hash(login)
+    stmt = select(
+        ~exists(
+            select()
+            .select_from(UnixTombstone)
+            .filter(UnixTombstone.login_hash == hash)
+            .add_columns(1)
+        )
+    )
+    return session.scalar(stmt)
 
 
 @with_transaction
@@ -1139,8 +1159,9 @@ def send_confirmation_email(user: BaseUser) -> None:
 
 
 class LoginTakenException(PycroftLibException):
-    def __init__(self) -> None:
-        super().__init__("Login already taken")
+    def __init__(self, login: str | None = None) -> None:
+        msg = "Login already taken" if not login else f"Login {login!r} already taken"
+        super().__init__(msg)
 
 
 class EmailTakenException(PycroftLibException):
