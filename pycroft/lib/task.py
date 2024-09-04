@@ -114,12 +114,13 @@ class UserMoveTaskImpl(UserTaskImpl[UserMoveParams]):
 
     def _execute(self, task: UserTask, parameters: UserMoveParams) -> None:
         from pycroft.lib import user as lib_user
+        from pycroft.lib.facilities import get_room
         if task.user.room is None:
             self.errors.append("Tried to move in user, "
                                "but user was already living in a dormitory.")
             return
 
-        room = lib_user.get_room(
+        room = get_room(
             room_number=parameters.room_number,
             level=parameters.level,
             building_id=parameters.building_id,
@@ -147,13 +148,14 @@ class UserMoveInTaskImpl(UserTaskImpl):
 
     def _execute(self, task: UserTask, parameters: UserMoveInParams) -> None:
         from pycroft.lib import user as lib_user
+        from pycroft.lib.facilities import get_room
 
         if task.user.room is not None:
             self.errors.append("Tried to move in user, "
                                "but user was already living in a dormitory.")
             return
 
-        room = lib_user.get_room(
+        room = get_room(
             room_number=parameters.room_number,
             level=parameters.level,
             building_id=parameters.building_id,
