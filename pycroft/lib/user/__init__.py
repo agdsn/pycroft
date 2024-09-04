@@ -22,13 +22,6 @@ from ._old import (
     membership_end_date,
     membership_beginning_task,
     membership_begin_date,
-    format_user_mail,
-    user_send_mails,
-    user_send_mail,
-    get_active_users,
-    group_send_mail,
-    send_member_request_merged_email,
-    send_confirmation_email,
     get_similar_users_in_room,
     check_similar_user_in_room,
     get_user_by_swdd_person_id,
@@ -71,7 +64,15 @@ from .member_request import (
     check_new_user_data,
     check_new_user_data_unused,
 )
-
+from .mail import (
+    format_user_mail,
+    user_send_mails,
+    user_send_mail,
+    get_active_users,
+    group_send_mail,
+    send_member_request_merged_email,
+    send_confirmation_email,
+)
 from .mail_confirmation import (
     confirm_mail_address,
 )
