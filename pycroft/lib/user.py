@@ -1250,9 +1250,7 @@ def check_new_user_data_unused(login: str, email: str, swdd_person_id: int) -> N
     if user_swdd_person_id:
         raise UserExistsException
 
-    # This is broken: add test to verify!
-    user_login = User.q.filter_by(login=login).first()
-    if user_login is not None:
+    if not login_available(login, session=session.session):
         raise LoginTakenException
 
     user_email = User.q.filter_by(email=email).first()
