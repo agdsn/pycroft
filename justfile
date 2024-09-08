@@ -126,7 +126,9 @@ schema-status: (_up "dev-db")
     	`{{ dev-psql }} -q -t -c 'table pycroft.alembic_version'`
     @echo "Schema version in {{ sql_dump }}: " \
     	`grep 'COPY.*alembic_version' -A1 {{ sql_dump }} | sed -n '2p'`
-    {{ drc }} --progress=none run --rm dev-app alembic check 2>&1 | tail -n1
+    {{ drc }} --progress=none run --rm dev-app flask alembic check 2>&1 | tail -n1
+
+schema-diff: (_up "dev-db") (alembic "diff")
 
 # upgrade the (imported or created) schema to the current revision
 schema-upgrade: (_up "dev-db") (alembic "upgrade" "head")
