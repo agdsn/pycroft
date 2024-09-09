@@ -73,7 +73,14 @@ def diff(obj: ContextObject):
 @cli.command(help=command.upgrade.__doc__)
 @click.pass_obj
 @click.argument('revision')
-def upgrade(obj: ContextObject, revision: str):
+@click.option("--sql", is_flag=True)
+@click.option("--tag")
+def upgrade(
+    obj: ContextObject,
+    revision: str,
+    sql: bool = False,
+    tag: str | None = None,
+):
     command.upgrade(obj.alembic_cfg, revision)
 
 
