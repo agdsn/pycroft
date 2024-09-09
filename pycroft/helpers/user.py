@@ -8,6 +8,7 @@ pycroft.helpers.user
 import random
 import string
 import typing as t
+from hashlib import sha512
 
 from passlib.apps import ldap_context
 from passlib.context import CryptContext
@@ -64,6 +65,11 @@ def verify_password(plaintext_password: str, hash: str) -> bool:
     # TypeError is required for user entries not having a hash
     except (ValueError, TypeError):
         return False
+
+
+def login_hash(login: str) -> bytes:
+    """Hashes a login with sha512, as is done in the `User.login_hash` generated column."""
+    return sha512(login.encode()).digest()
 
 
 def generate_random_str(length: int) -> str:

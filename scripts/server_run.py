@@ -30,7 +30,7 @@ default_handler.setFormatter(
 )
 
 
-def prepare_server(echo=False) -> PycroftFlask:
+def prepare_server(echo=False, ensure_schema=False) -> PycroftFlask:
     if echo:
         logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
         logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
@@ -42,8 +42,10 @@ def prepare_server(echo=False) -> PycroftFlask:
     app.config.from_prefixed_env()
 
     engine = create_engine(get_connection_string())
-    with engine.connect() as connection:
-        _ensure_schema_up_to_date(app, connection)
+    if ensure_schema:
+        with engine.connect() as connection:
+            _ensure_schema_up_to_date(app, connection)
+
     _setup_simple_profiling(app)
     set_scoped_session(
         scoped_session(

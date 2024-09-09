@@ -40,6 +40,7 @@ you only need to do the following:
 #. Set up a virtual environment
 
    .. code:: shell
+
        uv venv
        uv pip sync requirements.dev.txt && uv pip install -e deps/wtforms-widgets -e '.[dev]'
 

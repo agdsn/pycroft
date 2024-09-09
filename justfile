@@ -93,24 +93,30 @@ _ensure_schema_dir:
 run: (_up "dev-app")
 
 # spawn a shell in the `test-app` container
+[positional-arguments]
 test-shell *args:
-    {{ drc }} run --rm test-app shell {{ args }}
+    {{ drc }} run --rm test-app shell "$@"
 
 # spawn a shell in the `dev-app` container
+[positional-arguments]
 dev-shell *args:
-    {{ drc }} run --rm dev-app shell {{ args }}
+    {{ drc }} run --rm dev-app shell "$@"
 
 # run an alembic command against the `dev-db`
-alembic command *args:
-    {{ drc }} --progress=none run --rm dev-migrate shell flask alembic {{ command }} {{ args }}
+[positional-arguments]
+alembic *args:
+    {{ drc }} --progress=none run --rm dev-migrate shell flask alembic "$@"
+
 
 # run an interactive postgres shell in the dev-db container
+[positional-arguments]
 dev-psql *args: (_up "dev-db")
-    {{ dev-psql }} {{ args }}
+    {{ dev-psql }} "$@"
 
 # run an interactive postgres shell in the test-db container
+[positional-arguments]
 test-psql *args: (_up "test-db")
-    {{ test-psql }} {{ args }}
+    {{ test-psql }} "$@"
 
 # give a quick overview over the schema in the dev-db.
 
@@ -120,10 +126,14 @@ schema-status: (_up "dev-db")
     	`{{ dev-psql }} -q -t -c 'table pycroft.alembic_version'`
     @echo "Schema version in {{ sql_dump }}: " \
     	`grep 'COPY.*alembic_version' -A1 {{ sql_dump }} | sed -n '2p'`
-    {{ drc }} --progress=none run --rm dev-app alembic check 2>&1 | tail -n1
+    {{ drc }} --progress=none run --rm dev-app flask alembic check 2>&1 | tail -n1
+
+schema-diff: (_up "dev-db") (alembic "diff")
 
 # upgrade the (imported or created) schema to the current revision
 schema-upgrade: (_up "dev-db") (alembic "upgrade" "head")
+
+# extract `requirements` lockfiles from `pyproject.toml` dependency spec
 deps-compile:
     uv pip compile pyproject.toml --generate-hashes -o requirements.txt
     uv pip compile pyproject.toml --generate-hashes --extra dev -o requirements.dev.txt

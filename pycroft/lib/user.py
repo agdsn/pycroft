@@ -17,7 +17,7 @@ from datetime import timedelta, date
 from difflib import SequenceMatcher
 from collections.abc import Iterable
 
-from sqlalchemy import func, select, Boolean, String, ColumnElement, ScalarResult
+from sqlalchemy import exists, func, select, Boolean, String, ColumnElement, ScalarResult
 from sqlalchemy.orm import Session
 
 from pycroft import config, property
@@ -26,7 +26,7 @@ from pycroft.helpers.errorcode import Type1Code, Type2Code
 from pycroft.helpers.i18n import deferred_gettext
 from pycroft.helpers.interval import closed, Interval, starting_from
 from pycroft.helpers.printing import generate_user_sheet as generate_pdf
-from pycroft.helpers.user import generate_random_str
+from pycroft.helpers.user import generate_random_str, login_hash
 from pycroft.helpers.utc import DateTimeTz
 from pycroft.lib.address import get_or_create_address
 from pycroft.lib.exc import PycroftLibException
@@ -56,13 +56,13 @@ from pycroft.model.traffic import TrafficHistoryEntry
 from pycroft.model.traffic import traffic_history as func_traffic_history
 from pycroft.model.user import (
     User,
-    UnixAccount,
     PreMember,
     BaseUser,
     RoomHistoryEntry,
     PropertyGroup,
     Membership,
 )
+from pycroft.model.unix_account import UnixAccount, UnixTombstone
 from pycroft.model.webstorage import WebStorage
 from pycroft.task import send_mails_async
 
@@ -274,9 +274,15 @@ def create_user(
     :param passwd_hash: Use password hash instead of generating a new password
     :param send_confirm_mail: If a confirmation mail should be send to the user
     :return:
+
+    :raises LoginTakenException: if the login is used or has been used in the past
     """
 
     now = session.utcnow()
+
+    if not login_available(login, session.session):
+        raise LoginTakenException(login)
+
     plain_password: str | None = user_helper.generate_password(12)
     # create a new user
     new_user = User(
@@ -321,6 +327,20 @@ def create_user(
     return new_user, plain_password
 
 
+def login_available(login: str, session: Session) -> bool:
+    """Check whether there is a tombstone with the hash of the given login"""
+    hash = login_hash(login)
+    stmt = select(
+        ~exists(
+            select()
+            .select_from(UnixTombstone)
+            .filter(UnixTombstone.login_hash == hash)
+            .add_columns(1)
+        )
+    )
+    return session.scalar(stmt)
+
+
 @with_transaction
 def move_in(
     user: User,
@@ -334,9 +354,14 @@ def move_in(
 ) -> User | UserTask:
     """Move in a user in a given room and do some initialization.
 
-    The user is given a new Host with an interface of the given mac, a
-    UnixAccount, a finance Account, and is made member of important
-    groups.  Networking is set up.
+    The user is given a new Host with an interface of the given mac,
+    a finance Account, and is made member of important groups.
+    Networking is set up.
+
+    Preconditions
+    ~~~~~~~~~~~~~
+
+    - User has a unix account.
 
     :param user: The user to move in
     :param building_id:
@@ -344,7 +369,7 @@ def move_in(
     :param room_number:
     :param mac: The mac address of the users pc.
     :param processor:
-    :param birthdate: Date of birth`
+    :param birthdate: Date of birth
     :param host_annex: when true: if MAC already in use,
         annex host to new user
     :param begin_membership: Starts a membership if true
@@ -573,7 +598,7 @@ def edit_email(
     :param email_forwarded: Boolean if emails should be forwarded
     :param processor: User object of the processor, which issues the change
     :param is_confirmed: If the email address is already confirmed
-    :return:Changed user object
+    :return: Changed user object
     """
 
     if not can_target(user, processor):
@@ -623,8 +648,8 @@ def edit_birthdate(user: User, birthdate: date, processor: User) -> User:
 
     :param user: User object to change
     :param birthdate: New birthdate
-    :param processor:User object of the processor, which issues the change
-    :return:Changed user object
+    :param processor: User object of the processor, which issues the change
+    :return: Changed user object
     """
 
     if not birthdate:
@@ -1134,8 +1159,9 @@ def send_confirmation_email(user: BaseUser) -> None:
 
 
 class LoginTakenException(PycroftLibException):
-    def __init__(self) -> None:
-        super().__init__("Login already taken")
+    def __init__(self, login: str | None = None) -> None:
+        msg = "Login already taken" if not login else f"Login {login!r} already taken"
+        super().__init__(msg)
 
 
 class EmailTakenException(PycroftLibException):
@@ -1164,18 +1190,16 @@ class MoveInDateInvalidException(PycroftLibException):
 
 
 def get_similar_users_in_room(name: str, room: Room, ratio: float = 0.75) -> list[User]:
-    """
-    Get users with a 75% name match already exists in the room
+    """Get inhabitants of a room with a name similar to the given name.
+
+    Eagerloading hints:
+    - `room.users`
     """
 
     if room is None:
         return []
 
-    return [
-        user
-        for user in (User.q.filter_by(room=room).all())
-        if SequenceMatcher(None, name, user.name).ratio() > ratio
-    ]
+    return [user for user in room.users if SequenceMatcher(None, name, user.name).ratio() > ratio]
 
 
 def check_similar_user_in_room(name: str, room: Room) -> None:
@@ -1183,7 +1207,7 @@ def check_similar_user_in_room(name: str, room: Room) -> None:
     Raise an error if an user with a 75% name match already exists in the room
     """
 
-    if len(get_similar_users_in_room(name, room)) > 0:
+    if get_similar_users_in_room(name, room):
         raise UserExistsInRoomException
 
 
@@ -1205,29 +1229,33 @@ def check_new_user_data(
     room: Room | None,
     move_in_date: date | None,
     ignore_similar_name: bool = False,
-    allow_existing: bool = False,
 ) -> None:
-    user_swdd_person_id = get_user_by_swdd_person_id(swdd_person_id)
-
-    if user_swdd_person_id and not allow_existing:
-        raise UserExistsException
-
-    user_login = User.q.filter_by(login=login).first()
-
-    if user_login is not None and not allow_existing:
-        raise LoginTakenException
-
-    user_email = User.q.filter_by(email=email).first()
-
-    if user_email is not None and not allow_existing:
-        raise EmailTakenException
-
     if room is not None and not ignore_similar_name:
         check_similar_user_in_room(name, room)
 
     if move_in_date is not None:
-        if move_in_date > (session.utcnow() + timedelta(days=180)).date() or move_in_date < session.utcnow().date():
+        utcnow = session.utcnow()
+        if not utcnow.date() <= move_in_date <= (utcnow + timedelta(days=180)).date():
             raise MoveInDateInvalidException
+
+
+def check_new_user_data_unused(login: str, email: str, swdd_person_id: int) -> None:
+    """Check whether some user data from a member request is already used.
+
+    :raises UserExistsException:
+    :raises LoginTakenException:
+    :raises EmailTakenException:
+    """
+    user_swdd_person_id = get_user_by_swdd_person_id(swdd_person_id)
+    if user_swdd_person_id:
+        raise UserExistsException
+
+    if not login_available(login, session=session.session):
+        raise LoginTakenException
+
+    user_email = User.q.filter_by(email=email).first()
+    if user_email is not None:
+        raise EmailTakenException
 
 
 @with_transaction
@@ -1249,8 +1277,9 @@ def create_member_request(
         swdd_person_id,
         room,
         move_in_date,
-        allow_existing=previous_dorm is not None,
     )
+    if previous_dorm is None:
+        check_new_user_data_unused(login=login, email=email, swdd_person_id=swdd_person_id)
 
     if swdd_person_id is not None and room is not None:
         tenancies = get_relevant_tenancies(swdd_person_id)
@@ -1281,35 +1310,56 @@ def finish_member_request(
     if prm.room is None:
         raise ValueError("Room is None")
 
-    if prm.move_in_date is not None and prm.move_in_date < session.utcnow().date():
-        prm.move_in_date = session.utcnow().date()
+    utcnow = session.utcnow()
+
+    if prm.move_in_date is not None and prm.move_in_date < utcnow.date():
+        prm.move_in_date = utcnow.date()
 
     check_new_user_data(prm.login, prm.email, prm.name, prm.swdd_person_id, prm.room,
                         prm.move_in_date, ignore_similar_name)
 
-    user, _ = create_user(prm.name, prm.login, prm.email, prm.birthdate, groups=[],
-                          processor=processor, address=prm.room.address, passwd_hash=prm.passwd_hash)
-
-    processor = processor if processor is not None else user
-
-    user.swdd_person_id = prm.swdd_person_id
-    user.email_confirmed = prm.email_confirmed
+    user = user_from_pre_member(prm, processor=processor)
 
     move_in_datetime = utc.with_min_time(prm.move_in_date)
+    move_in(
+        user,
+        prm.room.building_id,
+        prm.room.level,
+        prm.room.number,
+        None,
+        processor if processor is not None else user,
+        when=move_in_datetime,
+    )
 
-    move_in(user, prm.room.building_id, prm.room.level, prm.room.number, None,
-            processor if processor is not None else user, when=move_in_datetime)
-
-    message = deferred_gettext("Created from registration {}.").format(str(prm.id)).to_json()
-    log_user_event(message, processor, user)
-
-    if move_in_datetime > session.utcnow():
-        make_member_of(user, config.pre_member_group, processor,
-                       closed(session.utcnow(), None))
+    if move_in_datetime > utcnow:
+        make_member_of(user, config.pre_member_group, processor, closed(utcnow, None))
 
     session.session.delete(prm)
 
     return user
+
+
+def user_from_pre_member(pre_member: PreMember, processor: User) -> User:
+    user, _ = create_user(
+        pre_member.name,
+        pre_member.login,
+        pre_member.email,
+        pre_member.birthdate,
+        groups=[],
+        processor=processor,
+        address=pre_member.room.address,
+        passwd_hash=pre_member.passwd_hash,
+    )
+
+    processor = processor if processor is not None else user
+
+    user.swdd_person_id = pre_member.swdd_person_id
+    user.email_confirmed = pre_member.email_confirmed
+
+    message = deferred_gettext("Created from registration {}.").format(str(pre_member.id)).to_json()
+    log_user_event(message, processor, user)
+    return user
+
 
 
 @with_transaction

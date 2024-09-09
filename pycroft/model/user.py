@@ -21,17 +21,20 @@ from flask_login import UserMixin
 from sqlalchemy import (
     ForeignKey,
     String,
+    LargeBinary,
     and_,
     exists,
     join,
     null,
     select,
-    Sequence,
     func,
     UniqueConstraint,
+    ForeignKeyConstraint,
     Index,
     text,
     event,
+    Column,
+    Computed,
 )
 from sqlalchemy.dialects.postgresql import ExcludeConstraint
 from sqlalchemy.ext.associationproxy import association_proxy
@@ -55,7 +58,7 @@ from pycroft.helpers.user import hash_password, verify_password, \
 from pycroft.helpers import utc
 from pycroft.model import session, ddl
 from pycroft.model.address import Address, address_remove_orphans
-from pycroft.model.base import ModelBase, IntegerIdModel
+from pycroft.model.base import IntegerIdModel
 from pycroft.model.exc import PycroftModelException
 from pycroft.model.facilities import Room
 from pycroft.model.types import TsTzRange
@@ -67,6 +70,7 @@ if t.TYPE_CHECKING:
     # FKeys
     from .finance import Account
     from .property import CurrentProperty
+    from .unix_account import UnixAccount, UnixTombstone
 
     # Backrefs
     from .logging import LogEntry, UserLogEntry, TaskLogEntry
@@ -96,6 +100,8 @@ class BaseUser(IntegerIdModel):
     __abstract__ = True
 
     login: Mapped[str40] = mapped_column(unique=True)
+    #: Auto-generated sha512 hash of :attr:`login`.
+    login_hash: Mapped[bytes] = Column(LargeBinary(512), Computed("digest(login, 'sha512')"))
     name: Mapped[str255]
     registered_at: Mapped[utc.DateTimeTz]
     passwd_hash: Mapped[str_deferred | None]
@@ -209,11 +215,18 @@ class User(BaseUser, UserMixin):
     account_id: Mapped[int] = mapped_column(ForeignKey("account.id"), index=True)
     account: Mapped[Account] = relationship(back_populates="user")
 
+    tombstone: Mapped[UnixTombstone] = relationship(
+        viewonly=True, primaryjoin="UnixTombstone.login_hash == User.login_hash"
+    )
     unix_account_id: Mapped[int | None] = mapped_column(
-        ForeignKey("unix_account.id"), unique=True
+        # SET NULL because there might be scenarios where we want to delete a unix_account but not the user.
+        ForeignKey("unix_account.id", ondelete="SET NULL"),
+        unique=True,
     )
     unix_account: Mapped[UnixAccount] = relationship(
-        "UnixAccount"
+        "UnixAccount",
+        # most prominently, causes deletion of a user to propagate to the unix account.
+        cascade="all",
     )  # backref not really needed.
 
     address_id: Mapped[int] = mapped_column(ForeignKey(Address.id), index=True)
@@ -459,7 +472,20 @@ class User(BaseUser, UserMixin):
     def email_internal(self):
         return f"{self.login}@agdsn.me"
 
-    __table_args__ = (UniqueConstraint('swdd_person_id'),)
+    __table_args__ = (
+        UniqueConstraint("swdd_person_id"),
+        ForeignKeyConstraint(
+            ("login_hash",),
+            ("unix_tombstone.login_hash",),
+            name="user_login_hash_fkey",
+            deferrable=True,
+        ),
+    )
+
+
+@event.listens_for(User.__table__, "before_create")
+def create_pgcrypto(target, connection, **kw):
+    connection.execute(text("create extension if not exists pgcrypto"))
 
 
 manager.add_function(
@@ -625,19 +651,6 @@ class Property(IntegerIdModel):
     )
     # TODO prüfen, ob cascade Properties löscht, wenn zugehörige PGroup deleted
     property_group: Mapped[PropertyGroup] = relationship(back_populates="properties")
-
-
-unix_account_uid_seq = Sequence('unix_account_uid_seq', start=1000,
-                                metadata=ModelBase.metadata)
-
-
-class UnixAccount(IntegerIdModel):
-    uid: Mapped[int] = mapped_column(
-        unique=True, server_default=unix_account_uid_seq.next_value()
-    )
-    gid: Mapped[int] = mapped_column(default=100)
-    login_shell: Mapped[str] = mapped_column(default="/bin/bash")
-    home_directory: Mapped[str] = mapped_column(unique=True)
 
 
 class RoomHistoryEntry(IntegerIdModel):
