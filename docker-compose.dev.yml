@@ -57,7 +57,7 @@ services:
       "--watch", "doc/_static",
       "--watch", "ldap_sync",
       "--watch", "web",
-    ]
+      ]
     healthcheck:
       test: curl --fail http://localhost:8000
     ports:
