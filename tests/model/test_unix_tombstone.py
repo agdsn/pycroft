@@ -94,11 +94,6 @@ class TestUnixAccountUidFKey:
             session.flush()
 
 
-class TestUserLoginHashFKey:
-    # TODO test user add, modify, delete
-    pass
-
-
 @contextmanager
 def constraints_deferred(session: Session, constraints: t.LiteralString = "all"):
     session.execute(text(f"set constraints {constraints} deferred"))
