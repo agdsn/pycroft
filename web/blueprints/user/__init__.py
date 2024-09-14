@@ -68,6 +68,7 @@ from web.blueprints.helpers.exception import abort_on_error
 from web.blueprints.helpers.form import refill_room_data
 from web.blueprints.helpers.user import get_user_or_404, get_pre_member_or_404
 from web.blueprints.host.tables import HostTable
+from web.blueprints.wlanhost.tables import WlanHostTable
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.task.tables import TaskTable
 from web.blueprints.user.forms import (
@@ -348,6 +349,8 @@ def user_show(user_id: int) -> ResponseReturnValue:
             data_url=_membership_endpoint(group_filter="active"),
         ),
         host_table=HostTable(data_url=url_for("host.user_hosts_json", user_id=user.id),
+                             user_id=user.id),
+        wlan_host_table=WlanHostTable(data_url=url_for("wlan-host.user_hosts_json", user_id=user.id),
                              user_id=user.id),
         task_table=TaskTable(data_url=url_for("task.json_tasks_for_user", user_id=user.id),
                              hidden_columns=['user']),
