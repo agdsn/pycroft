@@ -9,7 +9,7 @@ from pycroft.helpers.i18n import deferred_gettext
 
 
 @with_transaction
-def host_delete(host: MSPKClient, processor: User) -> None:
+def mpsk_delete(host: MSPKClient, processor: User) -> None:
     message = deferred_gettext("Deleted host '{}'.").format(host.name)
     log_user_event(author=processor, user=host.owner, message=message.to_json())
 
@@ -30,8 +30,8 @@ def change_mac(client: MSPKClient, mac: str, processor: User) -> MSPKClient:
     old_mac = client.mac
     client.mac = mac
     message = deferred_gettext("Changed MAC address from {} to {}.").format(old_mac, mac)
-    if client.host.owner:
-        log_user_event(message.to_json(), processor, client.host.owner)
+    if client.owner:
+        log_user_event(message.to_json(), processor, client.owner)
     return client
 
 

@@ -18,7 +18,7 @@ from pycroft.model.user import User
 
 class MSPKClient(IntegerIdModel):
 
-    name: Mapped[str | None] = mapped_column(String)
+    name: Mapped[str] = mapped_column(String, nullable=False)
 
     owner_id: Mapped[int | None] = mapped_column(
         ForeignKey(User.id, ondelete="CASCADE"), index=True
