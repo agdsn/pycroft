@@ -75,6 +75,7 @@ if t.TYPE_CHECKING:
     # Backrefs
     from .logging import LogEntry, UserLogEntry, TaskLogEntry
     from .host import Host
+    from .mspk_client import MSPKClient
     from .swdd import Tenancy
     from .task import UserTask
     from .traffic import TrafficVolume
@@ -252,6 +253,11 @@ class User(BaseUser, UserMixin):
     hosts: Mapped[list[Host]] = relationship(
         back_populates="owner", cascade="all, delete-orphan"
     )
+
+    mspks: Mapped[list[MSPKClient]] = relationship(
+        back_populates="owner", cascade="all, delete-orphan"
+    )
+
     authored_log_entries: Mapped[list[LogEntry]] = relationship(
         back_populates="author", viewonly=True
     )
