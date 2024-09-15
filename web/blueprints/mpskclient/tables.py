@@ -14,36 +14,20 @@ from web.table.table import (
     button_toolbar,
     MultiBtnColumn,
     BtnColResponse,
-    MultiLinkColumn,
-    LinkColResponse,
 )
 
-class HostRow(BaseModel):
-    name: str | None = None
-    actions: list[BtnColResponse]
-    interfaces_table_link: str
-    interface_create_link: str
-    id: int
 
+class MPSKTable(BootstrapTable):
+    """A table for displaying hosts"""
 
-class WlanHostTable(BootstrapTable):
-    """A table for displaying hosts
-    """
     name = Column("Name")
-    interface_create_link = Column("Mac")
+    mac = Column("Mac")
     actions = MultiBtnColumn("Aktionen", hide_if=no_hosts_change, width=3)
-    #interfaces_table_link = Column("", hide_if=lambda: True)
+    # interfaces_table_link = Column("", hide_if=lambda: True)
 
     id = Column("", hide_if=lambda: True)
 
     def __init__(self, *, user_id: int | None = None, **kw: t.Any) -> None:
-        table_args = kw.pop('table_args', {})
-        table_args.setdefault('data-load-subtables', "true")
-        table_args.setdefault('data-detail-view', "true")
-        table_args.setdefault('data-detail-formatter', "table.hostDetailFormatter")
-        table_args.setdefault('data-response-handler', "table.userHostResponseHandler")
-        kw['table_args'] = table_args
-
         super().__init__(**kw)
         self.user_id = user_id
 
@@ -55,4 +39,11 @@ class WlanHostTable(BootstrapTable):
             return None
 
         href = url_for("wlan-host.host_create", user_id=self.user_id)
-        return button_toolbar("Host", href)
+        return button_toolbar("Client", href)
+
+
+class MSPKRow(BaseModel):
+    name: str | None = None
+    mac: str
+    actions: list[BtnColResponse]
+    id: int
