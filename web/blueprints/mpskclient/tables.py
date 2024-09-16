@@ -38,7 +38,7 @@ class MPSKTable(BootstrapTable):
         if no_hosts_change():
             return None
 
-        href = url_for("wlan-host.host_create", user_id=self.user_id)
+        href = url_for("wifi-mpsk.host_create", user_id=self.user_id)
         return button_toolbar("Client", href)
 
 

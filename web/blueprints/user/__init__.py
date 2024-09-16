@@ -351,8 +351,8 @@ def user_show(user_id: int) -> ResponseReturnValue:
         host_table=HostTable(
             data_url=url_for("host.user_hosts_json", user_id=user.id), user_id=user.id
         ),
-        wlan_host_table=MPSKTable(
-            data_url=url_for("wlan-host.user_hosts_json", user_id=user.id), user_id=user.id
+        wifi_client_table=MPSKTable(
+            data_url=url_for("wifi-mpsk.user_clients_json", user_id=user.id), user_id=user.id
         ),
         task_table=TaskTable(
             data_url=url_for("task.json_tasks_for_user", user_id=user.id), hidden_columns=["user"]

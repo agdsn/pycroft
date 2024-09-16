@@ -21,11 +21,11 @@ from web.blueprints.helpers.form import refill_room_data
 from web.blueprints.helpers.user import get_user_or_404
 from web.blueprints.host.forms import InterfaceForm, HostForm
 from web.blueprints.host.tables import InterfaceTable, HostTable, HostRow, InterfaceRow
-from web.blueprints.mpskclient.forms import WLANInterfaceForm
+from web.blueprints.mpskclient.forms import WiFiInterfaceForm
 from web.blueprints.mpskclient.tables import MSPKRow
 from web.table.table import TableResponse, BtnColResponse, LinkColResponse
 
-bp = Blueprint("wlan-host", __name__)
+bp = Blueprint("wifi-mpsk", __name__)
 access = BlueprintAccess(bp, required_properties=["user_show"])
 
 
@@ -40,7 +40,7 @@ def get_mpsk_client_or_404(mspk_id: int) -> MSPKClient:
 @access.require("hosts_change")
 def host_create() -> ResponseReturnValue:
     user = get_user_or_404(request.args.get("user_id", default=None, type=int))
-    form = WLANInterfaceForm(owner_id=user.id)
+    form = WiFiInterfaceForm(owner_id=user.id)
 
     def default_response() -> ResponseReturnValue:
         form_args = {"form": form, "cancel_to": url_for("user.user_show", user_id=user.id)}
@@ -66,7 +66,7 @@ def host_create() -> ResponseReturnValue:
         )
     session.session.commit()
 
-    flash("MSPK Client erfolgreich erstellt.", "success")
+    flash("MPSK Client erfolgreich erstellt.", "success")
     return redirect(url_for("user.user_show", user_id=host.owner.id, _anchor="mspks"))
 
 
@@ -105,7 +105,7 @@ def mpsk_delete(mpsk_id: int) -> ResponseReturnValue:
 def mpsk_edit(mpsk_id: int) -> ResponseReturnValue:
     mpsk = get_mpsk_client_or_404(mpsk_id)
 
-    form = WLANInterfaceForm(obj=mpsk)
+    form = WiFiInterfaceForm(obj=mpsk)
 
     def default_response() -> ResponseReturnValue:
         form_args = {"form": form, "cancel_to": url_for("user.user_show", user_id=mpsk.owner_id)}
@@ -125,7 +125,7 @@ def mpsk_edit(mpsk_id: int) -> ResponseReturnValue:
 
 
 @bp.route("/<int:user_id>")
-def user_hosts_json(user_id: int) -> ResponseReturnValue:
+def user_clients_json(user_id: int) -> ResponseReturnValue:
     user = get_user_or_404(user_id)
     # TODO: Importend when the for the returning of actual mpsk mac addresses for MPSK devices
     # return ""

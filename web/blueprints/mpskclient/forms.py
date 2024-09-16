@@ -12,7 +12,7 @@ from web.blueprints.helpers.host import UniqueMac
 from web.form.widgets import UserIDField
 
 
-class WLANInterfaceForm(Form):
+class WiFiInterfaceForm(Form):
     name = TextField("Name", validators=[DataRequired(message="Es muss ein Name gesetzt werden!")])
     owner_id = UserIDField("Besitzer-ID")
 

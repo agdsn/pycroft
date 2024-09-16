@@ -107,7 +107,7 @@ def make_app(hades_logs: bool = True) -> PycroftFlask:
     app.register_blueprint(login.bp)
     app.register_blueprint(api.bp, url_prefix="/api/v0")
     app.register_blueprint(health.bp, url_prefix="/health")
-    app.register_blueprint(mpskclient.bp, url_prefix="/wlan-host")
+    app.register_blueprint(mpskclient.bp, url_prefix="/wifi-mpsk")
 
     template_filters.register_filters(app)
     template_tests.register_checks(app)
