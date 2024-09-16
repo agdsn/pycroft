@@ -42,7 +42,7 @@ class MPSKTable(BootstrapTable):
         return button_toolbar("Client", href)
 
 
-class MSPKRow(BaseModel):
+class MPSKRow(BaseModel):
     name: str | None = None
     mac: str
     actions: list[BtnColResponse]

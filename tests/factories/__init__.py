@@ -19,6 +19,7 @@ from .host import (
     SwitchFactory,
     SwitchPortFactory,
 )
+from .mpsk import MPSKFactory, BareMPSKFactory
 from .net import SubnetFactory, VLANFactory
 from .property import (
     PropertyGroupFactory,

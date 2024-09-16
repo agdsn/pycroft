@@ -16,14 +16,14 @@ from pycroft.model.types import InvalidMACAddressException
 from pycroft.model.user import User
 
 
-class MSPKClient(IntegerIdModel):
+class MPSKClient(IntegerIdModel):
 
     name: Mapped[str] = mapped_column(String, nullable=False)
 
     owner_id: Mapped[int | None] = mapped_column(
         ForeignKey(User.id, ondelete="CASCADE"), index=True
     )
-    owner: Mapped[User] = relationship(User, back_populates="mspks")
+    owner: Mapped[User] = relationship(User, back_populates="mpsks")
     mac: Mapped[mac_address] = mapped_column(unique=True)
 
     @validates("mac")

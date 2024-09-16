@@ -16,7 +16,7 @@ from .config import *
 from .facilities import *
 from .finance import *
 from .host import *
-from .mspk_client import *
+from .mpsk_client import *
 from .logging import *
 from .net import *
 from .port import *

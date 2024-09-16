@@ -8,12 +8,12 @@ from netaddr import IPAddress
 
 from pycroft.exc import PycroftException
 from pycroft.helpers.net import mac_regex, get_interface_manufacturer
-from pycroft.lib import mpsk_client as lib_mspk
+from pycroft.lib import mpsk_client as lib_mpsk
 from pycroft.lib.net import get_subnets_for_room
 from pycroft.lib.facilities import get_room
 from pycroft.model import session
 from pycroft.model.host import Host, Interface
-from pycroft.model.mspk_client import MSPKClient
+from pycroft.model.mpsk_client import MPSKClient
 from pycroft.model.user import User
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.helpers.exception import abort_on_error
@@ -22,18 +22,18 @@ from web.blueprints.helpers.user import get_user_or_404
 from web.blueprints.host.forms import InterfaceForm, HostForm
 from web.blueprints.host.tables import InterfaceTable, HostTable, HostRow, InterfaceRow
 from web.blueprints.mpskclient.forms import WiFiInterfaceForm
-from web.blueprints.mpskclient.tables import MSPKRow
+from web.blueprints.mpskclient.tables import MPSKRow
 from web.table.table import TableResponse, BtnColResponse, LinkColResponse
 
 bp = Blueprint("wifi-mpsk", __name__)
 access = BlueprintAccess(bp, required_properties=["user_show"])
 
 
-def get_mpsk_client_or_404(mspk_id: int) -> MSPKClient:
-    if (mspk := session.session.get(MSPKClient, mspk_id)) is None:
+def get_mpsk_client_or_404(mpsk_id: int) -> MPSKClient:
+    if (mpsk := session.session.get(MPSKClient, mpsk_id)) is None:
         flash("Host existiert nicht.", "error")
         abort(404)
-    return mspk
+    return mpsk
 
 
 @bp.route("/create", methods=["GET", "POST"])
@@ -46,7 +46,7 @@ def host_create() -> ResponseReturnValue:
         form_args = {"form": form, "cancel_to": url_for("user.user_show", user_id=user.id)}
 
         return render_template(
-            "generic_form.html", page_title="MSPK Client erstellen", form_args=form_args, form=form
+            "generic_form.html", page_title="MPSK Client erstellen", form_args=form_args, form=form
         )
 
     if not form.is_submitted():
@@ -61,13 +61,13 @@ def host_create() -> ResponseReturnValue:
     owner = session.session.get(User, form.owner_id.data)
     with abort_on_error(default_response), session.session.begin_nested():
 
-        host = lib_mspk.mpsk_client_create(
+        host = lib_mpsk.mpsk_client_create(
             owner, form.name.data, form.mac.data, processor=current_user
         )
     session.session.commit()
 
     flash("MPSK Client erfolgreich erstellt.", "success")
-    return redirect(url_for("user.user_show", user_id=host.owner.id, _anchor="mspks"))
+    return redirect(url_for("user.user_show", user_id=host.owner.id, _anchor="mpsks"))
 
 
 @bp.route("/<int:mpsk_id>/delete", methods=["GET", "POST"])
@@ -93,11 +93,11 @@ def mpsk_delete(mpsk_id: int) -> ResponseReturnValue:
         return default_response()
 
     with abort_on_error(default_response), session.session.begin_nested():
-        lib_mspk.mpsk_delete(mpsk, current_user)
+        lib_mpsk.mpsk_delete(mpsk, current_user)
     session.session.commit()
 
     flash("MPSK Client erfolgreich gelöscht.", "success")
-    return redirect(url_for("user.user_show", user_id=owner.id, _anchor="mspks"))
+    return redirect(url_for("user.user_show", user_id=owner.id, _anchor="mpsks"))
 
 
 @bp.route("/<int:mpsk_id>/edit", methods=["GET", "POST"])
@@ -118,10 +118,10 @@ def mpsk_edit(mpsk_id: int) -> ResponseReturnValue:
         return default_response()
 
     with abort_on_error(default_response), session.session.begin_nested():
-        lib_mspk.mpsk_edit(mpsk, mpsk.owner, form.name.data, form.mac.data, current_user)
+        lib_mpsk.mpsk_edit(mpsk, mpsk.owner, form.name.data, form.mac.data, current_user)
     session.session.commit()
     flash("MPSK Client erfolgreich bearbeitet.", "success")
-    return redirect(url_for("user.user_show", user_id=mpsk.owner_id, _anchor="mspks"))
+    return redirect(url_for("user.user_show", user_id=mpsk.owner_id, _anchor="mpsks"))
 
 
 @bp.route("/<int:user_id>")
@@ -129,15 +129,15 @@ def user_clients_json(user_id: int) -> ResponseReturnValue:
     user = get_user_or_404(user_id)
     # TODO: Importend when the for the returning of actual mpsk mac addresses for MPSK devices
     # return ""
-    return TableResponse[MSPKRow](
-        items=[_mspk_row(mpsk, user_id) for mpsk in user.mspks]
+    return TableResponse[MPSKRow](
+        items=[_mpsk_row(mpsk, user_id) for mpsk in user.mpsks]
     ).model_dump()
 
 
-def _mspk_row(client, user_id: int) -> MSPKRow:
+def _mpsk_row(client, user_id: int) -> MPSKRow:
     # println(f"{client}")
     # client = get_wlan_host_or_404(client)
-    return MSPKRow(
+    return MPSKRow(
         id=client.id,
         name=client.name,
         mac=client.mac,
