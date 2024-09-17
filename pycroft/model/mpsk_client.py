@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+from packaging.utils import InvalidName
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship, validates, Mapped, mapped_column
 from sqlalchemy.types import String
@@ -21,7 +22,7 @@ class MPSKClient(IntegerIdModel):
     name: Mapped[str] = mapped_column(String, nullable=False)
 
     owner_id: Mapped[int | None] = mapped_column(
-        ForeignKey(User.id, ondelete="CASCADE"), index=True
+        ForeignKey(User.id, ondelete="CASCADE"), index=True, nullable=False
     )
     owner: Mapped[User] = relationship(User, back_populates="mpsks")
     mac: Mapped[mac_address] = mapped_column(unique=True)
@@ -34,3 +35,10 @@ class MPSKClient(IntegerIdModel):
         if int(mac_address[0:2], base=16) & 1:
             raise MulticastFlagException("Multicast bit set in MAC address")
         return mac_address
+
+    @validates("name")
+    def validate_name(self, _, name):
+        if len(name.replace(" ", "")) == 0:
+            raise InvalidName("Name cannot be empty")
+
+        return name
