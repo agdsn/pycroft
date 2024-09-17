@@ -1,7 +1,5 @@
 from ._old import (
     setup_ipv4_networking,
-    store_user_sheet,
-    get_user_sheet,
     create_user,
     login_available,
     move_in,
@@ -16,7 +14,6 @@ from ._old import (
     move_out,
     UserStatus,
     status,
-    generate_user_sheet,
     membership_ending_task,
     membership_end_date,
     membership_beginning_task,
@@ -76,6 +73,11 @@ from .mail_confirmation import (
     confirm_mail_address,
 )
 from .permission import can_target
+from .user_sheet import (
+    generate_user_sheet,
+    get_user_sheet,
+    store_user_sheet,
+)
 
 from .exc import (
     HostAliasExists,
