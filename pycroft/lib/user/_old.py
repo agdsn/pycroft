@@ -10,14 +10,10 @@ This module contains.
 :copyright: (c) 2012 by AG DSN.
 """
 import os
-import re
-import typing
 import typing as t
 from datetime import date
-from difflib import SequenceMatcher
-from collections.abc import Iterable
 
-from sqlalchemy import exists, func, select, Boolean, String, ColumnElement
+from sqlalchemy import exists, select, Boolean, String, ColumnElement
 from sqlalchemy.orm import Session
 
 from pycroft import config, property
@@ -51,18 +47,11 @@ from pycroft.model.traffic import TrafficHistoryEntry
 from pycroft.model.traffic import traffic_history as func_traffic_history
 from pycroft.model.user import (
     User,
-    BaseUser,
-    RoomHistoryEntry,
     PropertyGroup,
 )
 from pycroft.model.unix_account import UnixAccount, UnixTombstone
 
-from .exc import LoginTakenException, UserExistsInRoomException
-from .user_id import (
-    decode_type1_user_id,
-    decode_type2_user_id,
-    check_user_id,
-)
+from .exc import LoginTakenException
 from .passwords import generate_wifi_password
 from .mail import user_send_mail, send_confirmation_email
 
@@ -657,66 +646,6 @@ def membership_begin_date(user: User) -> date | None:
     return end_date
 
 
-def get_similar_users_in_room(name: str, room: Room, ratio: float = 0.75) -> list[User]:
-    """Get inhabitants of a room with a name similar to the given name.
-
-    Eagerloading hints:
-    - `room.users`
-    """
-
-    if room is None:
-        return []
-
-    return [user for user in room.users if SequenceMatcher(None, name, user.name).ratio() > ratio]
-
-
-def check_similar_user_in_room(name: str, room: Room) -> None:
-    """
-    Raise an error if an user with a 75% name match already exists in the room
-    """
-
-    if get_similar_users_in_room(name, room):
-        raise UserExistsInRoomException
-
-
-def get_user_by_swdd_person_id(swdd_person_id: int | None) -> User | None:
-    if swdd_person_id is None:
-        return None
-
-    return typing.cast(
-        User | None,
-        User.q.filter_by(swdd_person_id=swdd_person_id).first()
-    )
-
-
-def get_name_from_first_last(first_name: str, last_name: str) -> str:
-    return f"{first_name} {last_name}" if last_name else first_name
-
-
-def get_user_by_id_or_login(ident: str, email: str) -> User | None:
-    re_uid1 = r"^\d{4,6}-\d{1}$"
-    re_uid2 = r"^\d{4,6}-\d{2}$"
-
-    user = User.q.filter(func.lower(User.email) == email.lower())
-
-    if re.match(re_uid1, ident):
-        if not check_user_id(ident):
-            return None
-        user_id, _ = decode_type1_user_id(ident)
-        user = user.filter_by(id=user_id)
-    elif re.match(re_uid2, ident):
-        if not check_user_id(ident):
-            return None
-        user_id, _ = decode_type2_user_id(ident)
-        user = user.filter_by(id=user_id)
-    elif re.match(BaseUser.login_regex, ident):
-        user = user.filter_by(login=ident)
-    else:
-        return None
-
-    return t.cast(User | None, user.one_or_none())
-
-
 @with_transaction
 def send_password_reset_mail(user: User) -> bool:
     user.password_reset_token = generate_random_str(64)
@@ -733,22 +662,3 @@ def send_password_reset_mail(user: User) -> bool:
         return False
 
     return True
-
-
-
-def find_similar_users(name: str, room: Room, ratio: float) -> Iterable[User]:
-    """Given a potential user's name and a room, find users of similar name living in that room.
-
-    :param name: The potential user's name
-    :param room: the room whose inhabitants to search
-    :param ratio: the threshold which determines which matches are included in this list.
-      For that, the `difflib.SequenceMatcher.ratio` must be greater than the given value.
-    """
-    relevant_users_q = (session.session.query(User)
-        .join(RoomHistoryEntry)
-        .filter(RoomHistoryEntry.room == room))
-    return [u for u in relevant_users_q if are_names_similar(name, u.name, threshold=ratio)]
-
-
-def are_names_similar(one: str, other: str, threshold: float) -> bool:
-    return SequenceMatcher(a=one, b=other).ratio() > threshold

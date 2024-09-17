@@ -18,14 +18,7 @@ from ._old import (
     membership_end_date,
     membership_beginning_task,
     membership_begin_date,
-    get_similar_users_in_room,
-    check_similar_user_in_room,
-    get_user_by_swdd_person_id,
-    get_name_from_first_last,
-    get_user_by_id_or_login,
     send_password_reset_mail,
-    find_similar_users,
-    are_names_similar,
 )
 from .user_id import (
     encode_type1_user_id,
@@ -59,6 +52,13 @@ from .member_request import (
     get_possible_existing_users_for_pre_member,
     check_new_user_data,
     check_new_user_data_unused,
+    get_similar_users_in_room,
+    check_similar_user_in_room,
+    get_user_by_swdd_person_id,
+    get_name_from_first_last,
+    get_user_by_id_or_login,
+    find_similar_users,
+    are_names_similar,
 )
 from .mail import (
     format_user_mail,
