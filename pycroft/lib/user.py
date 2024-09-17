@@ -1319,6 +1319,8 @@ def finish_member_request(
                         prm.move_in_date, ignore_similar_name)
 
     user = user_from_pre_member(prm, processor=processor)
+    processor = processor or user
+    assert processor is not None
 
     move_in_datetime = utc.with_min_time(prm.move_in_date)
     move_in(
@@ -1327,7 +1329,7 @@ def finish_member_request(
         prm.room.level,
         prm.room.number,
         None,
-        processor if processor is not None else user,
+        processor,
         when=move_in_datetime,
     )
 
