@@ -5,15 +5,10 @@ from ._old import (
     move_in,
     migrate_user_host,
     move,
-    traffic_history,
-    has_balance_of_at_least,
-    has_positive_balance,
     get_blocked_groups,
     block,
     unblock,
     move_out,
-    UserStatus,
-    status,
     membership_ending_task,
     membership_end_date,
     membership_beginning_task,
@@ -33,6 +28,11 @@ from .edit import (
     edit_birthdate,
     edit_person_id,
     edit_address,
+)
+from .info import (
+    UserStatus,
+    status,
+    traffic_history,
 )
 from .passwords import (
     maybe_setup_wifi,

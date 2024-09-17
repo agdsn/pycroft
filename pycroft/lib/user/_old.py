@@ -13,17 +13,16 @@ import os
 import typing as t
 from datetime import date
 
-from sqlalchemy import exists, select, Boolean, String, ColumnElement
+from sqlalchemy import exists, select, Boolean, String
 from sqlalchemy.orm import Session
 
-from pycroft import config, property
+from pycroft import config
 from pycroft.helpers import user as user_helper
 from pycroft.helpers.i18n import deferred_gettext
 from pycroft.helpers.interval import closed, Interval, starting_from
 from pycroft.helpers.user import generate_random_str, login_hash
 from pycroft.helpers.utc import DateTimeTz
 from pycroft.lib.facilities import get_room
-from pycroft.lib.finance import user_has_paid
 from pycroft.lib.logging import log_user_event
 from pycroft.lib.mail import (
     UserCreatedTemplate,
@@ -43,8 +42,6 @@ from pycroft.model.session import with_transaction
 from pycroft.model.task import TaskType, UserTask, TaskStatus
 from pycroft.model.task_serialization import UserMoveParams, UserMoveOutParams, \
     UserMoveInParams
-from pycroft.model.traffic import TrafficHistoryEntry
-from pycroft.model.traffic import traffic_history as func_traffic_history
 from pycroft.model.user import (
     User,
     PropertyGroup,
@@ -375,43 +372,6 @@ def move(
     return user
 
 
-def traffic_history(
-    user_id: int,
-    start: DateTimeTz | ColumnElement[DateTimeTz],
-    end: DateTimeTz | ColumnElement[DateTimeTz],
-) -> list[TrafficHistoryEntry]:
-    result = session.session.execute(
-        select("*")
-        .select_from(func_traffic_history(user_id, start, end))
-    ).fetchall()
-    return [TrafficHistoryEntry(**row._asdict()) for row in result]
-
-
-def has_balance_of_at_least(user: User, amount: int) -> bool:
-    """Check whether the given user's balance is at least the given
-    amount.
-
-    If a user does not have an account, we treat his balance as if it
-    were exactly zero.
-
-    :param user: The user we are interested in.
-    :param amount: The amount we want to check for.
-    :return: True if and only if the user's balance is at least the given
-        amount (and False otherwise).
-    """
-    balance = t.cast(int, user.account.balance if user.account else 0)
-    return balance >= amount
-
-
-def has_positive_balance(user: User) -> bool:
-    """Check whether the given user's balance is (weakly) positive.
-
-    :param user: The user we are interested in.
-    :return: True if and only if the user's balance is at least zero.
-    """
-    return has_balance_of_at_least(user, 0)
-
-
 def get_blocked_groups() -> list[PropertyGroup]:
     return [config.violation_group, config.payment_in_default_group,
                       config.blocked_group]
@@ -554,35 +514,6 @@ def move_out(
         )
 
     return user
-
-
-admin_properties = property.property_categories["Nutzerverwaltung"].keys()
-
-
-class UserStatus(t.NamedTuple):
-    member: bool
-    traffic_exceeded: bool
-    network_access: bool
-    wifi_access: bool
-    account_balanced: bool
-    violation: bool
-    ldap: bool
-    admin: bool
-
-
-def status(user: User) -> UserStatus:
-    has_interface = any(h.interfaces for h in user.hosts)
-    has_access = user.has_property("network_access")
-    return UserStatus(
-        member=user.has_property("member"),
-        traffic_exceeded=user.has_property("traffic_limit_exceeded"),
-        network_access=has_access and has_interface,
-        wifi_access=user.has_wifi_access and has_access,
-        account_balanced=user_has_paid(user),
-        violation=user.has_property("violation"),
-        ldap=user.has_property("ldap"),
-        admin=any(prop in user.current_properties for prop in admin_properties),
-    )
 
 
 def membership_ending_task(user: User) -> UserTask:
