@@ -38,7 +38,7 @@ class MPSKClient(IntegerIdModel):
 
     @validates("name")
     def validate_name(self, _, name):
-        if len(name.replace(" ", "")) == 0:
+        if name.strip():
             raise InvalidName("Name cannot be empty")
 
         return name
