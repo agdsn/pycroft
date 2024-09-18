@@ -385,7 +385,7 @@ class MPSKSClientDeleteResource(Resource):
             abort(401, message="You are not the owner of the mpsk.")
 
         mpsk_delete(mpsk)
-        session.session().commit()
+        session.session.commit()
 
         return "mpsk client was deleted"
 
