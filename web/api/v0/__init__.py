@@ -408,7 +408,7 @@ class MPSKSClientChangeResource(Resource):
         user = get_authenticated_user(user_id, password)
         mpsk = get_mpsk_client_or_404(mpsks_id)
 
-        if not user == mpsk.owner:
+        if user != mpsk.owner:
             abort(404, message=f"User {user_id} does not the mpsk client with the id {mpsks_id}")
 
         try:
