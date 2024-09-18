@@ -31,7 +31,7 @@ class MPSKClient(IntegerIdModel):
     def validate_mac(self, _, mac_address):
         match = mac_regex.match(mac_address)
         if not match:
-            raise InvalidMACAddressException("MAC address '" + mac_address + "' is not valid")
+            raise InvalidMACAddressException(f"MAC address {mac_address!r} is not valid")
         if int(mac_address[0:2], base=16) & 1:
             raise MulticastFlagException("Multicast bit set in MAC address")
         return mac_address
