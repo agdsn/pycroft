@@ -14,16 +14,6 @@ from .. import factories
 
 class TestMPSKValidators:
 
-    @pytest.fixture(scope="class")
-    def user(self, class_session):
-        user = factories.UserFactory.build(with_host=True)
-        class_session.add(user)
-        return user
-
-    @pytest.fixture(scope="class")
-    def mpsk_client(self, user):
-        return factories.MPSKFactory()
-
     @pytest.mark.parametrize(
         "mac",
         [
@@ -78,3 +68,13 @@ class TestMPSKValidators:
     def test_names(self, session, user, name):
         mpsk_client = MPSKClient(mac="00:00:00:00:00:00", name=name, owner=user)
         assert mpsk_client.name == name
+
+    @pytest.fixture(scope="class")
+    def user(self, class_session):
+        user = factories.UserFactory.build(with_host=True)
+        class_session.add(user)
+        return user
+
+    @pytest.fixture(scope="class")
+    def mpsk_client(self):
+        return factories.MPSKFactory()
