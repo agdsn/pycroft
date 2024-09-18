@@ -35,7 +35,6 @@ class TestMPSKValidators:
         ],
     )
     def test_bad_macs(self, session, user, mac):
-
         mpsk_client = MPSKClient(
             name="the needs of the many outweigh the needs of the few", owner=user
         )
