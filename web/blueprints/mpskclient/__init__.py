@@ -118,6 +118,7 @@ def mpsk_edit(mpsk_id: int) -> ResponseReturnValue:
 
     with abort_on_error(default_response), session.session.begin_nested():
         lib_mpsk.mpsk_edit(mpsk, mpsk.owner, form.name.data, form.mac.data, current_user)
+    session.session.add(mpsk)
     session.session.commit()
     flash("MPSK Client erfolgreich bearbeitet.", "success")
     return redirect(url_for("user.user_show", user_id=mpsk.owner_id, _anchor="mpsks"))
@@ -133,9 +134,7 @@ def user_clients_json(user_id: int) -> ResponseReturnValue:
     ).model_dump()
 
 
-def _mpsk_row(client, user_id: int) -> MPSKRow:
-    # println(f"{client}")
-    # client = get_wlan_host_or_404(client)
+def _mpsk_row(client: MPSKClient, user_id: int) -> MPSKRow:
     return MPSKRow(
         id=client.id,
         name=client.name,
