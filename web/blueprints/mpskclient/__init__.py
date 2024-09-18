@@ -60,7 +60,6 @@ def host_create() -> ResponseReturnValue:
     # TODO can't we provide an attribute for that on the form?
     owner = session.session.get(User, form.owner_id.data)
     with abort_on_error(default_response), session.session.begin_nested():
-
         host = lib_mpsk.mpsk_client_create(
             owner, form.name.data, form.mac.data, processor=current_user
         )
