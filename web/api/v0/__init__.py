@@ -7,6 +7,7 @@ from ipaddress import IPv4Address, IPv6Address
 from flask import jsonify, current_app, Response
 from flask.typing import ResponseReturnValue
 from flask_restful import Api, Resource as FlaskRestfulResource, abort
+from packaging.utils import InvalidName
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload, selectinload, undefer, with_polymorphic
@@ -56,7 +57,7 @@ from pycroft.model.finance import Account, Split
 from pycroft.model.host import IP, Interface, Host
 from pycroft.model.session import current_timestamp
 from pycroft.model.task import Task
-from pycroft.model.types import IPAddress, InvalidMACAddressException
+from pycroft.model.types import IPAddress, InvalidMACAddressException, AmountExceededError
 from pycroft.model.user import User, IllegalEmailError, IllegalLoginError
 from web.blueprints.mpskclient import get_mpsk_client_or_404
 
@@ -364,6 +365,10 @@ class MPSKSClientAddResource(Resource):
             abort(400, message="Invalid MAC address.")
         except IntegrityError:
             abort(400, message="Mac address is already in use.")
+        except InvalidName:
+            abort(400, message="No proper name was provided.")
+        except AmountExceededError:
+            abort(400, message="User has the maximum count of mpsk clients.")
         return "mpsk has been added."
 
 
@@ -419,6 +424,8 @@ class MPSKSClientChangeResource(Resource):
             abort(400, message="Invalid MAC address.")
         except IntegrityError:
             abort(400, message="Mac address is already in use.")
+        except InvalidName:
+            abort(400, message="No proper name was provided.")
         return "mpsk has been changed."
 
 
