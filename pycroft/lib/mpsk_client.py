@@ -18,10 +18,10 @@ def mpsk_delete(host: MPSKClient, processor: User) -> None:
 
 def change_mac(client: MPSKClient, mac: str, processor: User) -> MPSKClient:
     """
-    This method will change the mac address of the given interface to the new
+    This method will change the mac address of the given mpsks client to the new
     mac address.
 
-    :param interface: the interface which should become a new mac address.
+    :param client: the mpsks which should become a new mac address.
     :param mac: the new mac address.
     :param processor: the user who initiated the mac address change.
     :return: the changed interface with the new mac address.
@@ -34,9 +34,17 @@ def change_mac(client: MPSKClient, mac: str, processor: User) -> MPSKClient:
     return client
 
 
-def mpsk_client_create(owner: User, name: str, mac: str, processor: User) -> MPSKClient:
+def mpsk_client_create(owner: User, name: str, mac: str, processor: User, api=False) -> MPSKClient:
+    """
+    creates a mpsks client for a given user with a mac address.
 
-    if len(owner.mpsks) >= 10:
+    :param owner: the user who initiated the mac address change.
+    :param name: the name of the mpsks client.
+    :param mac: the new mac address.
+    :param processor: the user who initiated the mac address change.
+    :param api: whether to create an api client or not. If set Ture checks rather a user exceeds the maximum of clients (set to 10).
+    """
+    if len(owner.mpsks) >= 10 and api:
         raise AmountExceededError(
             "the limit of added mpsks clients is exceeded", limit=10, actual=len(owner.mpsks)
         )
