@@ -70,11 +70,11 @@ class TestMPSKValidators:
         mpsk_client = MPSKClient(mac="00:00:00:00:00:00", name=name, owner=user)
         assert mpsk_client.name == name
 
-    def test_exceeds_max(self, session, user):
+    def test_exceeds_max_api(self, session, user):
         mac = "00:00:00:00:00:0"
         for i in range(10):
             mac_client = mac + hex(i)[2:]
-            c = mpsk_client_create(user, "Hallo", mac_client, user)
+            c = mpsk_client_create(user, "Hallo", mac_client, user, api=True)
             user.mpsks.append(c)
             session.flush()
             assert len(user.mpsks) == i + 1
@@ -82,7 +82,16 @@ class TestMPSKValidators:
         for i in range(10, 15):
             mac_client = mac + hex(i)[2:]
             with pytest.raises(AmountExceededError):
-                c = mpsk_client_create(user, "Hallo", mac_client, user)
+                c = mpsk_client_create(user, "Hallo", mac_client, user, api=True)
+
+    def test_admin_exceeds(self, session, user):
+        mac = "00:00:00:00:00:0"
+        for i in range(15):
+            mac_client = mac + hex(i)[2:]
+            c = mpsk_client_create(user, "Hallo", mac_client, user, api=False)
+            user.mpsks.append(c)
+            session.flush()
+            assert len(user.mpsks) == i + 1
 
     @pytest.fixture(scope="class")
     def user(self, class_session):
