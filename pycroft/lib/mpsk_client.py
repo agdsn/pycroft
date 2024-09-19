@@ -44,9 +44,9 @@ def mpsk_client_create(owner: User, name: str, mac: str, processor: User, api=Fa
     :param processor: the user who initiated the mac address change.
     :param api: whether to create an api client or not. If set Ture checks rather a user exceeds the maximum of clients (set to 10).
     """
-    if len(owner.mpsks) >= 10 and api:
+    if len(owner.mpsks) >= 30 and api:
         raise AmountExceededError(
-            "the limit of added mpsks clients is exceeded", limit=10, actual=len(owner.mpsks)
+            "the limit of added mpsks clients is exceeded", limit=30, actual=len(owner.mpsks)
         )
 
     client = MPSKClient(name=name, owner_id=owner.id, mac=mac)
