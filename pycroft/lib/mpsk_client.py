@@ -2,6 +2,7 @@
 #  This file is part of the Pycroft project and licensed under the terms of
 #  the Apache License, Version 2.0. See the LICENSE file for details
 from pycroft.model.mpsk_client import MPSKClient
+from pycroft.model.types import AmountExceededError
 from pycroft.model.user import User
 from pycroft.model.session import session
 from pycroft.lib.logging import log_user_event
@@ -34,6 +35,12 @@ def change_mac(client: MPSKClient, mac: str, processor: User) -> MPSKClient:
 
 
 def mpsk_client_create(owner: User, name: str, mac: str, processor: User) -> MPSKClient:
+
+    if len(owner.mpsks) >= 10:
+        raise AmountExceededError(
+            "the limit of added mpsks clients is exceeded", limit=10, actual=len(owner.mpsks)
+        )
+
     client = MPSKClient(name=name, owner_id=owner.id, mac=mac)
 
     session.add(client)
