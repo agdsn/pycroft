@@ -359,7 +359,7 @@ class MPSKSClientAddResource(Resource):
         user = get_authenticated_user(user_id, password)
 
         try:
-            mpsk_client_create(user, mac, name, user)
+            mpsk_client_create(user, mac, name, user, api=True)
             session.session.commit()
         except InvalidMACAddressException:
             abort(400, message="Invalid MAC address.")
