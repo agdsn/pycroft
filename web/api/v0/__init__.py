@@ -414,7 +414,7 @@ class MPSKSClientChangeResource(Resource):
         mpsk = get_mpsk_client_or_404(mpsks_id)
 
         if user != mpsk.owner:
-            abort(404, message=f"User {user_id} does not the mpsk client with the id {mpsks_id}")
+            abort(404, message=f"User {user_id} does not own the mpsk client with the id {mpsks_id}")
 
         try:
             mpsk_edit(mpsk, user, name, mac, user)
