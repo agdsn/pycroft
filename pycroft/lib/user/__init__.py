@@ -1,7 +1,4 @@
 from ._old import (
-    get_blocked_groups,
-    block,
-    unblock,
     send_password_reset_mail,
 )
 from .user_id import (
@@ -10,6 +7,11 @@ from .user_id import (
     encode_type2_user_id,
     decode_type2_user_id,
     check_user_id,
+)
+from .blocking import (
+    block,
+    unblock,
+    get_blocked_groups,
 )
 from .edit import (
     edit_name,
