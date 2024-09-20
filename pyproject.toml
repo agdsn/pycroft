@@ -171,6 +171,7 @@ disallow_untyped_globals = true
 [[tool.mypy.overrides]]
 module = [
     "pycroft.lib.finance",
+    "pycroft.lib.user.mail_confirmation",
 ]
 strict_optional = true
 
