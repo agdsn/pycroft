@@ -24,11 +24,6 @@ from pycroft.model.user import (
 )
 
 from ._old import (
-    create_user,
-    login_available,
-    move_in,
-    move,
-    send_confirmation_email,
     user_send_mail,
 )
 from .edit import (
@@ -44,6 +39,15 @@ from .exc import (
     UserExistsInRoomException,
     NoTenancyForRoomException,
     MoveInDateInvalidException,
+)
+from .lifecycle import (
+    create_user,
+    login_available,
+    move_in,
+    move,
+)
+from .mail import (
+    send_confirmation_email,
 )
 from .user_id import (
     check_user_id,

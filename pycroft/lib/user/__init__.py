@@ -1,12 +1,7 @@
 from ._old import (
-    create_user,
-    login_available,
-    move_in,
-    move,
     get_blocked_groups,
     block,
     unblock,
-    move_out,
     send_password_reset_mail,
 )
 from .user_id import (
@@ -31,6 +26,13 @@ from .info import (
     scheduled_membership_start,
     membership_ending_task,
     membership_beginning_task,
+)
+from .lifecycle import (
+    create_user,
+    login_available,
+    move_in,
+    move,
+    move_out,
 )
 from .passwords import (
     maybe_setup_wifi,

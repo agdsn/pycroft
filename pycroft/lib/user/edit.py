@@ -7,7 +7,7 @@ from pycroft.lib.logging import log_user_event
 from pycroft.model.session import with_transaction
 from pycroft.model.user import User
 
-from ._old import send_confirmation_email
+from .mail import send_confirmation_email
 from .permission import can_target
 
 
