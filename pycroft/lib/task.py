@@ -197,7 +197,7 @@ def schedule_user_task(
     due: DateTimeTz,
     user: User,
     parameters: TaskParams,
-    processor: User,
+    processor: User | None,
 ) -> UserTask:
     if due < session.utcnow():
         raise ValueError("the due date must be in the future")

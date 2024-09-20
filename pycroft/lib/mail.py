@@ -68,12 +68,12 @@ class MailTemplate:
 
 
 def compose_mail(mail: Mail) -> MIMEMultipart:
-    msg = MIMEMultipart('alternative', _charset='utf-8')
-    msg['Message-Id'] = make_msgid()
-    msg['From'] = mail_from
-    msg['To'] = Header(mail.to_address)
-    msg['Subject'] = mail.subject
-    msg['Date'] = formatdate(localtime=True)
+    msg = MIMEMultipart("alternative", _charset="utf-8")
+    msg["Message-Id"] = make_msgid()
+    msg["From"] = mail_from
+    msg["To"] = str(Header(mail.to_address))
+    msg["Subject"] = mail.subject
+    msg["Date"] = formatdate(localtime=True)
 
     msg.attach(MIMEText(mail.body_plain, 'plain', _charset='utf-8'))
 
