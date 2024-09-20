@@ -13,7 +13,7 @@ import os
 import typing as t
 from datetime import date
 
-from sqlalchemy import exists, select, Boolean, String
+from sqlalchemy import exists, select
 from sqlalchemy.orm import Session
 
 from pycroft import config
@@ -39,7 +39,7 @@ from pycroft.model.facilities import Room
 from pycroft.model.finance import Account
 from pycroft.model.host import Host, Interface
 from pycroft.model.session import with_transaction
-from pycroft.model.task import TaskType, UserTask, TaskStatus
+from pycroft.model.task import TaskType, UserTask
 from pycroft.model.task_serialization import UserMoveParams, UserMoveOutParams, \
     UserMoveInParams
 from pycroft.model.user import (
@@ -459,67 +459,6 @@ def move_out(
         )
 
     return user
-
-
-def membership_ending_task(user: User) -> UserTask:
-    """
-    :return: Next task that will end the membership of the user
-    """
-
-    return t.cast(
-        UserTask,
-        UserTask.q.filter_by(
-            user_id=user.id, status=TaskStatus.OPEN, type=TaskType.USER_MOVE_OUT
-        )
-        # Casting jsonb -> bool directly is only supported since PG v11
-        .filter(
-            UserTask.parameters_json["end_membership"].cast(String).cast(Boolean)
-        )
-        .order_by(UserTask.due.asc())
-        .first(),
-    )
-
-
-def membership_end_date(user: User) -> date | None:
-    """
-    :return: The due date of the task that will end the membership; None if not
-             existent
-    """
-
-    ending_task = membership_ending_task(user)
-
-    end_date = None if ending_task is None else ending_task.due.date()
-
-    return end_date
-
-
-def membership_beginning_task(user: User) -> UserTask:
-    """
-    :return: Next task that will end the membership of the user
-    """
-
-    return t.cast(
-        UserTask,
-        UserTask.q.filter_by(
-            user_id=user.id, status=TaskStatus.OPEN, type=TaskType.USER_MOVE_IN
-        )
-        .filter(UserTask.parameters_json["begin_membership"].cast(Boolean))
-        .order_by(UserTask.due.asc())
-        .first(),
-    )
-
-
-def membership_begin_date(user: User) -> date | None:
-    """
-    :return: The due date of the task that will begin a membership; None if not
-             existent
-    """
-
-    begin_task = membership_beginning_task(user)
-
-    end_date = None if begin_task is None else begin_task.due.date()
-
-    return end_date
 
 
 @with_transaction

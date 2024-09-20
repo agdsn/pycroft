@@ -7,10 +7,6 @@ from ._old import (
     block,
     unblock,
     move_out,
-    membership_ending_task,
-    membership_end_date,
-    membership_beginning_task,
-    membership_begin_date,
     send_password_reset_mail,
 )
 from .user_id import (
@@ -31,6 +27,10 @@ from .info import (
     UserStatus,
     status,
     traffic_history,
+    membership_end_date,
+    membership_begin_date,
+    membership_ending_task,
+    membership_beginning_task,
 )
 from .passwords import (
     maybe_setup_wifi,

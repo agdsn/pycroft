@@ -1,11 +1,12 @@
 import typing as t
+from datetime import date
 
-
-from sqlalchemy import select, ColumnElement
+from sqlalchemy import select, ColumnElement, Boolean, String
 
 from pycroft import property
 from pycroft.helpers.utc import DateTimeTz
 from pycroft.model import session
+from pycroft.model.task import TaskStatus, TaskType, UserTask
 from pycroft.model.traffic import TrafficHistoryEntry
 from pycroft.model.traffic import traffic_history as func_traffic_history
 from pycroft.model.user import (
@@ -52,3 +53,58 @@ def traffic_history(
         select("*").select_from(func_traffic_history(user_id, start, end))
     ).fetchall()
     return [TrafficHistoryEntry(**row._asdict()) for row in result]
+
+
+def membership_begin_date(user: User) -> date | None:
+    """
+    :return: The due date of the task that will begin a membership; None if not
+             existent
+    """
+
+    begin_task = membership_beginning_task(user)
+
+    end_date = None if begin_task is None else begin_task.due.date()
+
+    return end_date
+
+
+def membership_end_date(user: User) -> date | None:
+    """
+    :return: The due date of the task that will end the membership; None if not
+             existent
+    """
+
+    ending_task = membership_ending_task(user)
+
+    end_date = None if ending_task is None else ending_task.due.date()
+
+    return end_date
+
+
+def membership_beginning_task(user: User) -> UserTask:
+    """
+    :return: Next task that will end the membership of the user
+    """
+
+    return t.cast(
+        UserTask,
+        UserTask.q.filter_by(user_id=user.id, status=TaskStatus.OPEN, type=TaskType.USER_MOVE_IN)
+        .filter(UserTask.parameters_json["begin_membership"].cast(Boolean))
+        .order_by(UserTask.due.asc())
+        .first(),
+    )
+
+
+def membership_ending_task(user: User) -> UserTask:
+    """
+    :return: Next task that will end the membership of the user
+    """
+
+    return t.cast(
+        UserTask,
+        UserTask.q.filter_by(user_id=user.id, status=TaskStatus.OPEN, type=TaskType.USER_MOVE_OUT)
+        # Casting jsonb -> bool directly is only supported since PG v11
+        .filter(UserTask.parameters_json["end_membership"].cast(String).cast(Boolean))
+        .order_by(UserTask.due.asc())
+        .first(),
+    )
