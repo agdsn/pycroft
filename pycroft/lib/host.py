@@ -94,10 +94,10 @@ def host_edit(host: Host, owner: User, room: Room, name: str, processor: User) -
         host.owner = owner
 
     if host.room != room:
-        migrate_host(host, room, processor)
+        migrate_host(session, host, room, processor)
 
 
-def migrate_host(host: Host, new_room: Room, processor: User) -> None:
+def migrate_host(session: Session, host: Host, new_room: Room, processor: User) -> None:
     """
     Migrate a Host to a new room and if necessary to a new subnet.
     If the host changes subnet, it will get a new IP address.

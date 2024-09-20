@@ -236,7 +236,7 @@ def move_in(
                     host_existing.owner_id = user.id
 
                     session.session.add(host_existing)
-                    migrate_host(host_existing, user.room, processor)
+                    migrate_host(session.session, host_existing, user.room, processor)
                 else:
                     raise MacExistsException
             else:
@@ -322,7 +322,7 @@ def move(
 
     for user_host in user.hosts:
         if user_host.room == old_room:
-            migrate_host(user_host, new_room, processor)
+            migrate_host(session.session, user_host, new_room, processor)
 
     user_send_mail(user, UserMovedInTemplate(), True)
 
