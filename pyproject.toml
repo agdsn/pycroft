@@ -145,6 +145,7 @@ module = [
     "ldap_sync.*",
     "pycroft.lib",
     "pycroft.lib.*",
+    "pycroft.lib.user.*",
     "pycroft.external_services",
     "pycroft.external_services.*",
     "pycroft.helpers",
