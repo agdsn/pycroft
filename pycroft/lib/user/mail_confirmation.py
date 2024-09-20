@@ -9,7 +9,7 @@ from pycroft.model.user import (
 )
 
 from .member_request import finish_member_request
-from ._old import user_send_mail
+from .mail import user_send_mail
 
 
 @with_transaction

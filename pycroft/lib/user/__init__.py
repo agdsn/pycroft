@@ -1,6 +1,3 @@
-from ._old import (
-    send_password_reset_mail,
-)
 from .user_id import (
     encode_type1_user_id,
     decode_type1_user_id,
@@ -70,6 +67,7 @@ from .mail import (
     group_send_mail,
     send_member_request_merged_email,
     send_confirmation_email,
+    send_password_reset_mail,
 )
 from .mail_confirmation import (
     confirm_mail_address,

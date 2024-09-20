@@ -23,9 +23,6 @@ from pycroft.model.user import (
     RoomHistoryEntry,
 )
 
-from ._old import (
-    user_send_mail,
-)
 from .edit import (
     edit_birthdate,
     edit_name,
@@ -48,6 +45,7 @@ from .lifecycle import (
 )
 from .mail import (
     send_confirmation_email,
+    user_send_mail,
 )
 from .user_id import (
     check_user_id,

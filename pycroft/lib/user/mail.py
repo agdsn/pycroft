@@ -9,6 +9,7 @@ from pycroft.lib.mail import (
     MailTemplate,
     Mail,
     UserConfirmEmailTemplate,
+    UserResetPasswordTemplate,
     MemberRequestMergedTemplate,
 )
 from pycroft.model import session
@@ -27,6 +28,7 @@ from .user_id import (
 )
 
 mail_confirm_url = os.getenv("MAIL_CONFIRM_URL")
+password_reset_url = os.getenv("PASSWORD_RESET_URL")
 
 
 def format_user_mail(user: User, text: str) -> str:
@@ -159,3 +161,24 @@ def send_confirmation_email(user: BaseUser) -> None:
             email_confirm_url=mail_confirm_url.format(user.email_confirmation_key)
         ),
     )
+
+
+def send_password_reset_mail(user: User) -> bool:
+    user.password_reset_token = generate_random_str(64)
+
+    if not password_reset_url:
+        raise ValueError("No url specified in PASSWORD_RESET_URL")
+
+    try:
+        user_send_mail(
+            user,
+            UserResetPasswordTemplate(
+                password_reset_url=password_reset_url.format(user.password_reset_token)
+            ),
+            use_internal=False,
+        )
+    except ValueError:
+        user.password_reset_token = None
+        return False
+
+    return True
