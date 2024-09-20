@@ -55,7 +55,7 @@ def traffic_history(
     return [TrafficHistoryEntry(**row._asdict()) for row in result]
 
 
-def membership_begin_date(user: User) -> date | None:
+def scheduled_membership_start(user: User) -> date | None:
     """
     :return: The due date of the task that will begin a membership; None if not
              existent
@@ -68,7 +68,7 @@ def membership_begin_date(user: User) -> date | None:
     return end_date
 
 
-def membership_end_date(user: User) -> date | None:
+def scheduled_membership_end(user: User) -> date | None:
     """
     :return: The due date of the task that will end the membership; None if not
              existent

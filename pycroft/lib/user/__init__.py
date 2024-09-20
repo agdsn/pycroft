@@ -27,8 +27,8 @@ from .info import (
     UserStatus,
     status,
     traffic_history,
-    membership_end_date,
-    membership_begin_date,
+    scheduled_membership_end,
+    scheduled_membership_start,
     membership_ending_task,
     membership_beginning_task,
 )

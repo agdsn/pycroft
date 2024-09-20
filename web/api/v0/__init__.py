@@ -22,16 +22,33 @@ from pycroft.lib.net import SubnetFullException
 from pycroft.lib.swdd import get_swdd_person_id, get_relevant_tenancies, \
     get_first_tenancy_with_room
 from pycroft.lib.task import cancel_task
-from pycroft.lib.user import encode_type2_user_id, edit_email, change_password, \
-    status, traffic_history as func_traffic_history, membership_end_date, \
-    move_out, membership_ending_task, reset_wifi_password, \
-    create_member_request, \
-    NoTenancyForRoomException, UserExistsException, UserExistsInRoomException, \
-    EmailTakenException, \
-    LoginTakenException, MoveInDateInvalidException, check_similar_user_in_room, \
-    get_name_from_first_last, confirm_mail_address, get_user_by_swdd_person_id, \
-    membership_begin_date, send_confirmation_email, get_user_by_id_or_login, \
-    send_password_reset_mail, change_password_from_token
+from pycroft.lib.user import (
+    encode_type2_user_id,
+    edit_email,
+    change_password,
+    status,
+    traffic_history as func_traffic_history,
+    scheduled_membership_end,
+    move_out,
+    membership_ending_task,
+    reset_wifi_password,
+    create_member_request,
+    NoTenancyForRoomException,
+    UserExistsException,
+    UserExistsInRoomException,
+    EmailTakenException,
+    LoginTakenException,
+    MoveInDateInvalidException,
+    check_similar_user_in_room,
+    get_name_from_first_last,
+    confirm_mail_address,
+    get_user_by_swdd_person_id,
+    scheduled_membership_start,
+    send_confirmation_email,
+    get_user_by_id_or_login,
+    send_password_reset_mail,
+    change_password_from_token,
+)
 from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.finance import Account, Split
@@ -143,8 +160,8 @@ def generate_user_data(user: User) -> Response:
     except ValueError:
         wifi_password = None
 
-    med = membership_end_date(user)
-    mbd = membership_begin_date(user)
+    med = scheduled_membership_end(user)
+    mbd = scheduled_membership_start(user)
 
     interface_info = [{
         'id': i.id,
