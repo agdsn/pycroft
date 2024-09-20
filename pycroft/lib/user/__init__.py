@@ -1,9 +1,7 @@
 from ._old import (
-    setup_ipv4_networking,
     create_user,
     login_available,
     move_in,
-    migrate_user_host,
     move,
     get_blocked_groups,
     block,

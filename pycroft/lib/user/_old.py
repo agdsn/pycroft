@@ -23,6 +23,7 @@ from pycroft.helpers.interval import closed, Interval, starting_from
 from pycroft.helpers.user import generate_random_str, login_hash
 from pycroft.helpers.utc import DateTimeTz
 from pycroft.lib.facilities import get_room
+from pycroft.lib.host import migrate_host
 from pycroft.lib.logging import log_user_event
 from pycroft.lib.mail import (
     UserCreatedTemplate,
@@ -235,7 +236,7 @@ def move_in(
                     host_existing.owner_id = user.id
 
                     session.session.add(host_existing)
-                    migrate_user_host(host_existing, user.room, processor)
+                    migrate_host(host_existing, user.room, processor)
                 else:
                     raise MacExistsException
             else:
@@ -253,50 +254,6 @@ def move_in(
                    user=user)
 
     return user
-
-
-def migrate_user_host(host: Host, new_room: Room, processor: User) -> None:
-    """
-    Migrate a UserHost to a new room and if necessary to a new subnet.
-    If the host changes subnet, it will get a new IP address.
-
-    :param host: Host to be migrated
-    :param new_room: new room of the host
-    :param processor: User processing the migration
-    :return:
-    """
-    old_room = host.room
-    host.room = new_room
-
-    subnets_old = get_subnets_for_room(old_room)
-    subnets = get_subnets_for_room(new_room)
-
-    if subnets_old != subnets:
-        for interface in host.interfaces:
-            old_ips = tuple(ip for ip in interface.ips)
-            for old_ip in old_ips:
-                ip_address, subnet = get_free_ip(subnets)
-                new_ip = IP(interface=interface, address=ip_address, subnet=subnet)
-                session.session.add(new_ip)
-
-                old_address = old_ip.address
-                session.session.delete(old_ip)
-
-                message = deferred_gettext("Changed IP of {mac} from {old_ip} to {new_ip}.").format(
-                    old_ip=str(old_address), new_ip=str(new_ip.address), mac=interface.mac)
-                log_user_event(author=processor, user=host.owner,
-                               message=message.to_json())
-
-    message = (
-        deferred_gettext("Moved host '{name}' from {room_old} to {room_new}.")
-        .format(
-            name=host.name, room_old=old_room.short_name, room_new=new_room.short_name
-        )
-    )
-
-    log_user_event(author=processor,
-                   user=host.owner,
-                   message=message.to_json())
 
 
 #TODO ensure serializability
@@ -365,7 +322,7 @@ def move(
 
     for user_host in user.hosts:
         if user_host.room == old_room:
-            migrate_user_host(user_host, new_room, processor)
+            migrate_host(user_host, new_room, processor)
 
     user_send_mail(user, UserMovedInTemplate(), True)
 
