@@ -272,3 +272,13 @@ def get_conflicting_interface(
     if new_mac == current_mac:
         return None
     return session.scalar(select(Interface).filter_by(mac=new_mac))
+
+
+def setup_ipv4_networking(session: Session, host: Host) -> None:
+    """Add suitable ips for every interface of a host"""
+    subnets = get_subnets_for_room(host.room)
+
+    for interface in host.interfaces:
+        ip_address, subnet = get_free_ip(subnets)
+        new_ip = IP(interface=interface, address=ip_address, subnet=subnet)
+        session.add(new_ip)

@@ -23,7 +23,7 @@ from pycroft.helpers.interval import closed, Interval, starting_from
 from pycroft.helpers.user import generate_random_str, login_hash
 from pycroft.helpers.utc import DateTimeTz
 from pycroft.lib.facilities import get_room
-from pycroft.lib.host import migrate_host
+from pycroft.lib.host import migrate_host, setup_ipv4_networking
 from pycroft.lib.logging import log_user_event
 from pycroft.lib.mail import (
     UserCreatedTemplate,
@@ -31,14 +31,13 @@ from pycroft.lib.mail import (
     UserResetPasswordTemplate,
 )
 from pycroft.lib.membership import make_member_of, remove_member_of
-from pycroft.lib.net import get_free_ip, MacExistsException, \
-    get_subnets_for_room
+from pycroft.lib.net import MacExistsException
 from pycroft.lib.task import schedule_user_task
 from pycroft.model import session
 from pycroft.model.address import Address
 from pycroft.model.facilities import Room
 from pycroft.model.finance import Account
-from pycroft.model.host import IP, Host, Interface
+from pycroft.model.host import Host, Interface
 from pycroft.model.session import with_transaction
 from pycroft.model.task import TaskType, UserTask, TaskStatus
 from pycroft.model.task_serialization import UserMoveParams, UserMoveOutParams, \
@@ -55,17 +54,6 @@ from .mail import user_send_mail, send_confirmation_email
 
 
 password_reset_url = os.getenv('PASSWORD_RESET_URL')
-
-
-def setup_ipv4_networking(host: Host) -> None:
-    """Add suitable ips for every interface of a host"""
-    subnets = get_subnets_for_room(host.room)
-
-    for interface in host.interfaces:
-        ip_address, subnet = get_free_ip(subnets)
-        new_ip = IP(interface=interface, address=ip_address,
-                    subnet=subnet)
-        session.session.add(new_ip)
 
 
 def create_user(
@@ -243,7 +231,7 @@ def move_in(
                 new_host = Host(owner=user, room=room)
                 session.session.add(new_host)
                 session.session.add(Interface(mac=mac, host=new_host))
-                setup_ipv4_networking(new_host)
+                setup_ipv4_networking(session.session, new_host)
 
     user_send_mail(user, UserMovedInTemplate(), True)
 
