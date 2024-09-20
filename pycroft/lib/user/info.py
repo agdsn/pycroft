@@ -60,12 +60,9 @@ def scheduled_membership_start(user: User) -> date | None:
     :return: The due date of the task that will begin a membership; None if not
              existent
     """
-
-    begin_task = membership_beginning_task(user)
-
-    end_date = None if begin_task is None else begin_task.due.date()
-
-    return end_date
+    if (task := membership_beginning_task(user)) is None:
+        return None
+    return task.due.date()
 
 
 def scheduled_membership_end(user: User) -> date | None:
@@ -73,12 +70,9 @@ def scheduled_membership_end(user: User) -> date | None:
     :return: The due date of the task that will end the membership; None if not
              existent
     """
-
-    ending_task = membership_ending_task(user)
-
-    end_date = None if ending_task is None else ending_task.due.date()
-
-    return end_date
+    if (task := membership_ending_task(user)) is None:
+        return None
+    return task.due.date()
 
 
 def membership_beginning_task(user: User) -> UserTask:
