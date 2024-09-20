@@ -145,7 +145,6 @@ module = [
     "ldap_sync.*",
     "pycroft.lib",
     "pycroft.lib.*",
-    "pycroft.lib.user.*",
     "pycroft.external_services",
     "pycroft.external_services.*",
     "pycroft.helpers",
@@ -172,9 +171,9 @@ disallow_untyped_globals = true
 module = [
     "pycroft.model.task_serialization",
     "pycroft.lib.finance",
-    "pycroft.lib.user.lifecycle",
-    "pycroft.lib.user.mail_confirmation",
-    "pycroft.lib.user.member_request",
+    "pycroft.lib.mail",
+    "pycroft.lib.user",
+    "pycroft.lib.user.*",
 ]
 strict_optional = true
 

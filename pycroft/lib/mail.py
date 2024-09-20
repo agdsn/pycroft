@@ -18,13 +18,13 @@ import jinja2
 
 from pycroft.lib.exc import PycroftLibException
 
-mail_envelope_from = os.environ.get('PYCROFT_MAIL_ENVELOPE_FROM')
-mail_from = os.environ.get('PYCROFT_MAIL_FROM')
-mail_reply_to = os.environ.get('PYCROFT_MAIL_REPLY_TO')
-smtp_host = os.environ.get('PYCROFT_SMTP_HOST')
+mail_envelope_from = os.environ["PYCROFT_MAIL_ENVELOPE_FROM"]
+mail_from = os.environ["PYCROFT_MAIL_FROM"]
+mail_reply_to = os.environ["PYCROFT_MAIL_REPLY_TO"]
+smtp_host = os.environ["PYCROFT_SMTP_HOST"]
 smtp_port = int(os.environ.get('PYCROFT_SMTP_PORT', 465))
-smtp_user = os.environ.get('PYCROFT_SMTP_USER')
-smtp_password = os.environ.get('PYCROFT_SMTP_PASSWORD')
+smtp_user = os.environ["PYCROFT_SMTP_USER"]
+smtp_password = os.environ["PYCROFT_SMTP_PASSWORD"]
 smtp_ssl = os.environ.get('PYCROFT_SMTP_SSL', 'ssl')
 template_path_type = os.environ.get('PYCROFT_TEMPLATE_PATH_TYPE', 'filesystem')
 template_path = os.environ.get('PYCROFT_TEMPLATE_PATH', 'pycroft/templates')

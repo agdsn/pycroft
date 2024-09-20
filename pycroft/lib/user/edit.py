@@ -98,7 +98,7 @@ def edit_email(
 
 
 @with_transaction
-def edit_birthdate(user: User, birthdate: date, processor: User) -> User:
+def edit_birthdate(user: User, birthdate: date | None, processor: User) -> User:
     """
     Changes the birthdate of a user and creates a log entry.
 
