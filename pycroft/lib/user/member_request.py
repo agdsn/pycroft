@@ -68,8 +68,6 @@ def create_member_request(
     previous_dorm: str | None,
 ) -> PreMember:
     check_new_user_data(
-        login,
-        email,
         name,
         swdd_person_id,
         room,
@@ -121,13 +119,19 @@ def finish_member_request(
         prm.move_in_date = utcnow.date()
 
     check_new_user_data(
-        prm.login,
-        prm.email,
         prm.name,
         prm.swdd_person_id,
         prm.room,
         prm.move_in_date,
         ignore_similar_name,
+    )
+    assert (
+        prm.email is not None
+    ), f"Called finish_member_request with non-persisted PreMember {prm!r}"
+    check_new_user_data_unused(
+        login=prm.login,
+        email=prm.email,
+        swdd_person_id=prm.swdd_person_id,
     )
 
     user = user_from_pre_member(prm, processor=processor)
@@ -310,8 +314,6 @@ def get_possible_existing_users_for_pre_member(prm: PreMember) -> set[User]:
 
 
 def check_new_user_data(
-    login: str,
-    email: str,
     name: str,
     swdd_person_id: int | None,
     room: Room | None,
