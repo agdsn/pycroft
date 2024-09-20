@@ -2,8 +2,10 @@ import re
 import typing as t
 from datetime import timedelta, date
 from difflib import SequenceMatcher
+from itertools import chain
 
-from sqlalchemy import func
+from sqlalchemy import func, select
+from sqlalchemy.orm import Session
 
 from pycroft import config
 from pycroft.helpers import utc
@@ -48,7 +50,6 @@ from .mail import (
     user_send_mail,
 )
 from .user_id import (
-    check_user_id,
     decode_type1_user_id,
     decode_type2_user_id,
     encode_type2_user_id,
@@ -110,6 +111,9 @@ def create_member_request(
 def finish_member_request(
     prm: PreMember, processor: User | None, ignore_similar_name: bool = False
 ) -> User:
+    assert prm.email is not None, f"{prm!r} not persisted"
+    assert prm.move_in_date is not None, f"{prm!r} not persisted"
+
     if prm.room is None:
         raise ValueError("Room is None")
 
@@ -125,9 +129,6 @@ def finish_member_request(
         prm.move_in_date,
         ignore_similar_name,
     )
-    assert (
-        prm.email is not None
-    ), f"Called finish_member_request with non-persisted PreMember {prm!r}"
     check_new_user_data_unused(
         login=prm.login,
         email=prm.email,
@@ -157,7 +158,9 @@ def finish_member_request(
     return user
 
 
-def user_from_pre_member(pre_member: PreMember, processor: User) -> User:
+def user_from_pre_member(pre_member: PreMember, processor: User | None) -> User:
+    assert pre_member.email is not None, f"{pre_member!r} not persisted"
+    assert pre_member.birthdate is not None, f"{pre_member!r} not persisted"
     user, _ = create_user(
         pre_member.name,
         pre_member.login,
@@ -233,8 +236,10 @@ def merge_member_request(
         )
 
     if merge_person_id:
+        assert prm.swdd_person_id is not None
         user = edit_person_id(user, prm.swdd_person_id, processor)
 
+    assert prm.move_in_date is not None
     move_in_datetime = utc.with_min_time(prm.move_in_date)
 
     if merge_room:
@@ -297,16 +302,20 @@ def merge_member_request(
 
 
 def get_possible_existing_users_for_pre_member(prm: PreMember) -> set[User]:
-    user_swdd_person_id = get_user_by_swdd_person_id(prm.swdd_person_id)
-    user_login = User.q.filter_by(login=prm.login).first()
-    user_email = User.q.filter(func.lower(User.email) == prm.email.lower()).first()
+    sess: Session = session.session  # TODO make parameter
 
-    users_name = User.q.filter_by(name=prm.name).all()
+    assert prm.email is not None, f"{prm!r} not persisted!"
+
+    user_swdd_person_id = get_user_by_swdd_person_id(prm.swdd_person_id)
+    user_login = sess.scalar(select(User).filter_by(login=prm.login))
+    user_email = sess.scalar(select(User).where(func.lower(User.email) == prm.email.lower()))
+
+    users_name = sess.scalars(select(User).filter_by(name=prm.name)).all()
     users_similar = get_similar_users_in_room(prm.name, prm.room, 0.5)
 
     users = {
         user
-        for user in [user_swdd_person_id, user_login, user_email] + users_name + users_similar
+        for user in chain((user_swdd_person_id, user_login, user_email), users_name, users_similar)
         if user is not None
     }
 
@@ -329,7 +338,7 @@ def check_new_user_data(
             raise MoveInDateInvalidException
 
 
-def check_new_user_data_unused(login: str, email: str, swdd_person_id: int) -> None:
+def check_new_user_data_unused(login: str, email: str, swdd_person_id: int | None) -> None:
     """Check whether some user data from a member request is already used.
 
     :raises UserExistsException:
@@ -384,27 +393,20 @@ def get_name_from_first_last(first_name: str, last_name: str) -> str:
 
 
 def get_user_by_id_or_login(ident: str, email: str) -> User | None:
-    re_uid1 = r"^\d{4,6}-\d{1}$"
-    re_uid2 = r"^\d{4,6}-\d{2}$"
+    stmt = select(User).where(func.lower(User.email) == email.lower())
 
-    user = User.q.filter(func.lower(User.email) == email.lower())
-
-    if re.match(re_uid1, ident):
-        if not check_user_id(ident):
-            return None
-        user_id, _ = decode_type1_user_id(ident)
-        user = user.filter_by(id=user_id)
-    elif re.match(re_uid2, ident):
-        if not check_user_id(ident):
-            return None
-        user_id, _ = decode_type2_user_id(ident)
-        user = user.filter_by(id=user_id)
+    if (d := decode_type1_user_id(ident)) is not None:
+        user_id, _ = d
+        stmt = stmt.filter_by(id=user_id)
+    elif (d := decode_type2_user_id(ident)) is not None:
+        user_id, _ = d
+        stmt = stmt.filter_by(id=user_id)
     elif re.match(BaseUser.login_regex, ident):
-        user = user.filter_by(login=ident)
+        stmt = stmt.filter_by(login=ident)
     else:
         return None
 
-    return t.cast(User | None, user.one_or_none())
+    return session.session.scalar(stmt)
 
 
 def find_similar_users(name: str, room: Room, ratio: float) -> t.Iterable[User]:

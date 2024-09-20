@@ -172,6 +172,7 @@ disallow_untyped_globals = true
 module = [
     "pycroft.lib.finance",
     "pycroft.lib.user.mail_confirmation",
+    "pycroft.lib.user.member_request",
 ]
 strict_optional = true
 
