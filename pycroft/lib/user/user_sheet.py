@@ -13,9 +13,9 @@ from .user_id import encode_type2_user_id
 def store_user_sheet(
     new_user: bool,
     wifi: bool,
-    user: User | None = None,
+    user: User,
     timeout: int = 15,
-    plain_user_password: str = None,
+    plain_user_password: str | None = None,
     generation_purpose: str = "",
     plain_wifi_password: str = "",
 ) -> WebStorage:
@@ -65,7 +65,7 @@ def get_user_sheet(sheet_id: int) -> bytes | None:
 def generate_user_sheet(
     new_user: bool,
     wifi: bool,
-    user: User | None = None,
+    user: User,
     plain_user_password: str | None = None,
     generation_purpose: str = "",
     plain_wifi_password: str = "",

@@ -38,7 +38,7 @@ def format_user_mail(user: User, text: str) -> str:
         id=encode_type2_user_id(user.id),
         email=user.email if user.email else "-",
         email_internal=user.email_internal,
-        room_short=user.room.short_name if user.room_id is not None else "-",
+        room_short=user.room.short_name if user.room is not None else "-",
         swdd_person_id=user.swdd_person_id if user.swdd_person_id else "-",
     )
 
@@ -48,8 +48,8 @@ def user_send_mails(
     template: MailTemplate | None = None,
     soft_fail: bool = False,
     use_internal: bool = True,
-    body_plain: str = None,
-    subject: str = None,
+    body_plain: str | None = None,
+    subject: str | None = None,
     **kwargs: t.Any,
 ) -> None:
     """
@@ -94,6 +94,8 @@ def user_send_mails(
             # No template given, use formatted body_mail instead.
             if not isinstance(user, User):
                 raise ValueError("Plaintext email not supported for other User types.")
+            if body_plain is None:
+                raise ValueError("Must use either template or body_plain")
 
             html = None
             plaintext = format_user_mail(user, body_plain)

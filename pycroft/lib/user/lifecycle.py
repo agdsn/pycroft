@@ -58,9 +58,9 @@ def create_user(
     groups: t.Iterable[PropertyGroup],
     processor: User | None,
     address: Address,
-    passwd_hash: str = None,
+    passwd_hash: str | None = None,
     send_confirm_mail: bool = False,
-) -> tuple[User, str]:
+) -> tuple[User, str | None]:
     """Create a new member
 
     Create a new user with a generated password, finance- and unix account, and make him member
@@ -139,7 +139,7 @@ def login_available(login: str, session: Session) -> bool:
             .add_columns(1)
         )
     )
-    return session.scalar(stmt)
+    return session.scalars(stmt).one()
 
 
 @with_transaction
@@ -150,7 +150,7 @@ def move_in(
     room_number: str,
     mac: str | None,
     processor: User | None = None,
-    birthdate: date = None,
+    birthdate: date | None = None,
     host_annex: bool = False,
     begin_membership: bool = True,
     when: DateTimeTz | None = None,
@@ -180,6 +180,7 @@ def move_in(
 
     :return: The user object.
     """
+    processor = processor if processor is not None else user
 
     if when and when > session.utcnow():
         task_params = UserMoveInParams(
@@ -237,13 +238,15 @@ def move_in(
                 session.session.add(Interface(mac=mac, host=new_host))
                 setup_ipv4_networking(session.session, new_host)
 
+        msg = deferred_gettext("Moved in: {room}").format(room=room.short_name)
+    else:
+        msg = deferred_gettext("Moved in!")
+
     user_send_mail(user, UserMovedInTemplate(), True)
 
-    msg = deferred_gettext("Moved in: {room}")
-
     log_user_event(
-        author=processor if processor is not None else user,
-        message=msg.format(room=room.short_name).to_json(),
+        author=processor,
+        message=msg.to_json(),
         user=user,
     )
 

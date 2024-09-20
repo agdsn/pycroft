@@ -100,7 +100,7 @@ def generate_user_sheet(
     new_user: bool,
     wifi: bool,
     bank_account: BankAccount,
-    user: User | None = None,
+    user: User = None,
     user_id: str | None = None,
     plain_user_password: str | None = None,
     generation_purpose: str = "",

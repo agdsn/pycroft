@@ -29,7 +29,7 @@ def block(
     user: User,
     reason: str,
     processor: User,
-    during: Interval[DateTimeTz] = None,
+    during: Interval[DateTimeTz] | None = None,
     violation: bool = True,
 ) -> User:
     """Suspend a user during a given interval.

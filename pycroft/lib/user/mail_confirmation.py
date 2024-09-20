@@ -30,6 +30,7 @@ def confirm_mail_address(
     # else: one of {mr, user} is not None
 
     if user is None:
+        assert mr is not None
         if mr.email_confirmed:
             raise ValueError("E-Mail already confirmed")
 
@@ -51,6 +52,7 @@ def confirm_mail_address(
 
         return "pre_member", reg_result
     elif mr is None:
+        assert user is not None
         user.email_confirmed = True
         user.email_confirmation_key = None
 
