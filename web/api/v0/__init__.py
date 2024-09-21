@@ -359,7 +359,14 @@ class MPSKSClientAddResource(Resource):
         user = get_authenticated_user(user_id, password)
 
         try:
-            mpsk_client_create(user, mac, name, user, api=True)
+            # checks rather the user has all settable mpsks clients created
+            if len(user.mpsks) > current_app.config.get("MAX_MPSKS", 30):
+                abort(400, message="User has the maximum count of mpsk clients.")
+
+            if not user.wifi_password:
+                abort(400, message="Legacy wifi password change of password is required.")
+
+            mpsk_client_create(session, user, mac, name, user)
             session.session.commit()
         except InvalidMACAddressException:
             abort(400, message="Invalid MAC address.")
@@ -389,7 +396,7 @@ class MPSKSClientDeleteResource(Resource):
         if not user == mpsk.owner:
             abort(401, message="You are not the owner of the mpsk.")
 
-        mpsk_delete(mpsk, user)
+        mpsk_delete(session, mpsk, user)
         session.session.commit()
 
         return "mpsk client was deleted"
@@ -414,11 +421,12 @@ class MPSKSClientChangeResource(Resource):
         mpsk = get_mpsk_client_or_404(mpsks_id)
 
         if user != mpsk.owner:
-            abort(404, message=f"User {user_id} does not own the mpsk client with the id {mpsks_id}")
+            abort(
+                404, message=f"User {user_id} does not own the mpsk client with the id {mpsks_id}"
+            )
 
         try:
-            mpsk_edit(mpsk, user, name, mac, user)
-            session.session.add(mpsk)
+            mpsk_edit(session, mpsk, user, name, mac, user)
             session.session.commit()
         except InvalidMACAddressException:
             abort(400, message="Invalid MAC address.")

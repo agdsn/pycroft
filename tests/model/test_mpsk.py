@@ -9,7 +9,7 @@ from sqlalchemy.orm.base import object_state
 
 from pycroft.lib.mpsk_client import mpsk_client_create
 from pycroft.model.mpsk_client import MPSKClient
-from pycroft.model.types import InvalidMACAddressException, AmountExceededError
+from pycroft.model.types import InvalidMACAddressException
 from .. import factories
 
 
@@ -70,26 +70,12 @@ class TestMPSKValidators:
         mpsk_client = MPSKClient(mac="00:00:00:00:00:00", name=name, owner=user)
         assert mpsk_client.name == name
 
-    def test_exceeds_max_api(self, session, user):
-        mac = "00:00:00:00:00:"
-        for j in range(1, 4):
-            for i in range(10):
-                mac_client = mac + hex(j)[2:] + hex(i)[2:]
-                c = mpsk_client_create(user, "Hallo", mac_client, user, api=True)
-                user.mpsks.append(c)
-                session.flush()
-
-        for i in range(15):
-            mac_client = mac + "0" + hex(i)[2:]
-            with pytest.raises(AmountExceededError):
-                mpsk_client_create(user, "Hallo", mac_client, user, api=True)
-
     def test_admin_exceeds(self, session, user):
         mac = "00:00:00:00:00:"
         for j in range(0, 4):
             for i in range(15):
                 mac_client = mac + hex(j)[2:] + hex(i)[2:]
-                c = mpsk_client_create(user, "Hallo", mac_client, user)
+                c = mpsk_client_create(session, user, "Hallo", mac_client, user)
                 user.mpsks.append(c)
                 session.flush()
 

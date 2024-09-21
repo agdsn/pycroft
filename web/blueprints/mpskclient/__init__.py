@@ -61,7 +61,7 @@ def host_create() -> ResponseReturnValue:
     owner = session.session.get(User, form.owner_id.data)
     with abort_on_error(default_response), session.session.begin_nested():
         host = lib_mpsk.mpsk_client_create(
-            owner, form.name.data, form.mac.data, processor=current_user
+            session.session, owner, form.name.data, form.mac.data, processor=current_user
         )
     session.session.commit()
 
@@ -92,7 +92,7 @@ def mpsk_delete(mpsk_id: int) -> ResponseReturnValue:
         return default_response()
 
     with abort_on_error(default_response), session.session.begin_nested():
-        lib_mpsk.mpsk_delete(mpsk, current_user)
+        lib_mpsk.mpsk_delete(session.session, mpsk, current_user)
     session.session.commit()
 
     flash("MPSK Client erfolgreich gelöscht.", "success")
@@ -117,7 +117,9 @@ def mpsk_edit(mpsk_id: int) -> ResponseReturnValue:
         return default_response()
 
     with abort_on_error(default_response), session.session.begin_nested():
-        lib_mpsk.mpsk_edit(mpsk, mpsk.owner, form.name.data, form.mac.data, current_user)
+        lib_mpsk.mpsk_edit(
+            session.session, mpsk, mpsk.owner, form.name.data, form.mac.data, current_user
+        )
     session.session.add(mpsk)
     session.session.commit()
     flash("MPSK Client erfolgreich bearbeitet.", "success")
