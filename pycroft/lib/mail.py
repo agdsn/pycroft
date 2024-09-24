@@ -2,44 +2,38 @@
 pycroft.lib.mail
 ~~~~~~~~~~~~~~~~
 """
+
+from __future__ import annotations
 import logging
 import os
 import smtplib
 import ssl
 import traceback
 import typing as t
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from email.header import Header
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import make_msgid, formatdate
+from functools import lru_cache
 
 import jinja2
 
 from pycroft.lib.exc import PycroftLibException
 
-mail_envelope_from = os.environ["PYCROFT_MAIL_ENVELOPE_FROM"]
-mail_from = os.environ["PYCROFT_MAIL_FROM"]
-mail_reply_to = os.environ["PYCROFT_MAIL_REPLY_TO"]
-smtp_host = os.environ["PYCROFT_SMTP_HOST"]
-smtp_port = int(os.environ.get('PYCROFT_SMTP_PORT', 465))
-smtp_user = os.environ["PYCROFT_SMTP_USER"]
-smtp_password = os.environ["PYCROFT_SMTP_PASSWORD"]
-smtp_ssl = os.environ.get('PYCROFT_SMTP_SSL', 'ssl')
-template_path_type = os.environ.get('PYCROFT_TEMPLATE_PATH_TYPE', 'filesystem')
-template_path = os.environ.get('PYCROFT_TEMPLATE_PATH', 'pycroft/templates')
+
+# TODO proxy and DI; set at app init
+config: MailConfig | None = None
+
+
+def set_config(value: MailConfig) -> None:
+    global config
+    config = value
+    return
+
 
 logger = logging.getLogger('mail')
 logger.setLevel(logging.INFO)
-
-template_loader: jinja2.BaseLoader
-if template_path_type == 'filesystem':
-    template_loader = jinja2.FileSystemLoader(searchpath=f'{template_path}/mail')
-else:
-    template_loader = jinja2.PackageLoader(package_name='pycroft',
-                                           package_path=f'{template_path}/mail')
-
-template_env = jinja2.Environment(loader=template_loader)
 
 
 @dataclass
@@ -61,13 +55,24 @@ class MailTemplate:
         self.args = kwargs
 
     def render(self, **kwargs: t.Any) -> tuple[str, str]:
-        plain = template_env.get_template(self.template).render(mode='plain', **self.args, **kwargs)
-        html = template_env.get_template(self.template).render(mode='html', **self.args, **kwargs)
+        plain = self.jinja_template.render(mode="plain", **self.args, **kwargs)
+        html = self.jinja_template.render(mode="html", **self.args, **kwargs)
 
         return plain, html
 
+    @property
+    def jinja_template(self) -> jinja2.Template:
+        return _get_template(self.template)
 
-def compose_mail(mail: Mail, from_: str) -> MIMEMultipart:
+
+@lru_cache(maxsize=None)
+def _get_template(template_location: str) -> jinja2.Template:
+    if config is None:
+        raise RuntimeError("`mail.config` not set up!")
+    return config.template_env.get_template(template_location)
+
+
+def compose_mail(mail: Mail, from_: str, default_reply_to: str) -> MIMEMultipart:
     msg = MIMEMultipart("alternative", _charset="utf-8")
     msg["Message-Id"] = make_msgid()
     msg["From"] = from_
@@ -81,7 +86,7 @@ def compose_mail(mail: Mail, from_: str) -> MIMEMultipart:
         msg.attach(MIMEText(mail.body_html, 'html', _charset='utf-8'))
 
     if mail.reply_to is not None or mail.reply_to is not None:
-        msg['Reply-To'] = mail_reply_to if mail.reply_to is None else mail.reply_to
+        msg["Reply-To"] = default_reply_to if mail.reply_to is None else mail.reply_to
 
     print(msg)
 
@@ -101,11 +106,17 @@ def send_mails(mails: list[Mail]) -> tuple[bool, int]:
 
     :returns: Whether the transmission succeeded
     """
+    if config is None:
+        raise RuntimeError("`mail.config` not set up!")
 
-    if not smtp_host:
-        logger.critical("No mailserver config available")
-
-        raise RuntimeError
+    mail_envelope_from = config.mail_envelope_from
+    mail_from = config.mail_from
+    mail_reply_to = config.mail_reply_to
+    smtp_host = config.smtp_host
+    smtp_port = config.smtp_port
+    smtp_user = config.smtp_user
+    smtp_password = config.smtp_password
+    smtp_ssl = config.smtp_ssl
 
     use_ssl = smtp_ssl == 'ssl'
     use_starttls = smtp_ssl == 'starttls'
@@ -159,7 +170,7 @@ def send_mails(mails: list[Mail]) -> tuple[bool, int]:
 
         for mail in mails:
             try:
-                mime_mail = compose_mail(mail, from_=mail_from)
+                mime_mail = compose_mail(mail, from_=mail_from, default_reply_to=mail_reply_to)
                 assert mail_envelope_from is not None
                 smtp.sendmail(from_addr=mail_envelope_from, to_addrs=mail.to_address,
                               msg=mime_mail.as_string())
@@ -248,3 +259,49 @@ def send_template_mails(
     from pycroft.task import send_mails_async
 
     send_mails_async.delay(mails)
+
+
+@dataclass
+class MailConfig:
+    mail_envelope_from: str
+    mail_from: str
+    mail_reply_to: str
+    smtp_host: str
+    smtp_port: int
+    smtp_user: str
+    smtp_password: str
+    smtp_ssl: str
+    template_path_type: str
+    template_path: str
+    template_env: jinja2.Environment = field(init=False)
+
+    @classmethod
+    def from_env(cls) -> t.Self:
+        env = os.environ
+        return cls(
+            mail_envelope_from=env["PYCROFT_MAIL_ENVELOPE_FROM"],
+            mail_from=env["PYCROFT_MAIL_FROM"],
+            mail_reply_to=env["PYCROFT_MAIL_REPLY_TO"],
+            smtp_host=env["PYCROFT_SMTP_HOST"],
+            smtp_port=int(env.get("PYCROFT_SMTP_PORT", 465)),
+            smtp_user=env["PYCROFT_SMTP_USER"],
+            smtp_password=env["PYCROFT_SMTP_PASSWORD"],
+            smtp_ssl=env.get("PYCROFT_SMTP_SSL", "ssl"),
+            template_path_type=env.get("PYCROFT_TEMPLATE_PATH_TYPE", "filesystem"),
+            template_path=env.get("PYCROFT_TEMPLATE_PATH", "pycroft/templates"),
+        )
+
+    def __post_init__(self) -> None:
+        template_loader: jinja2.BaseLoader
+        if self.template_path_type == "filesystem":
+            template_loader = jinja2.FileSystemLoader(searchpath=f"{self.template_path}/mail")
+        else:
+            template_loader = jinja2.PackageLoader(
+                package_name="pycroft", package_path=f"{self.template_path}/mail"
+            )
+
+        self.template_env = jinja2.Environment(loader=template_loader)
+
+
+# TODO do on demand at initialization; replace `config` by proxy to `_config`
+set_config(MailConfig.from_env())
