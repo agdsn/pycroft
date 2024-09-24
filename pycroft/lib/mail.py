@@ -67,10 +67,10 @@ class MailTemplate:
         return plain, html
 
 
-def compose_mail(mail: Mail) -> MIMEMultipart:
+def compose_mail(mail: Mail, from_: str) -> MIMEMultipart:
     msg = MIMEMultipart("alternative", _charset="utf-8")
     msg["Message-Id"] = make_msgid()
-    msg["From"] = mail_from
+    msg["From"] = from_
     msg["To"] = str(Header(mail.to_address))
     msg["Subject"] = mail.subject
     msg["Date"] = formatdate(localtime=True)
@@ -159,7 +159,7 @@ def send_mails(mails: list[Mail]) -> tuple[bool, int]:
 
         for mail in mails:
             try:
-                mime_mail = compose_mail(mail)
+                mime_mail = compose_mail(mail, from_=mail_from)
                 assert mail_envelope_from is not None
                 smtp.sendmail(from_addr=mail_envelope_from, to_addrs=mail.to_address,
                               msg=mime_mail.as_string())
