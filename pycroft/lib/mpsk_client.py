@@ -1,24 +1,27 @@
 #  Copyright (c) 2024. The Pycroft Authors. See the AUTHORS file.
 #  This file is part of the Pycroft project and licensed under the terms of
 #  the Apache License, Version 2.0. See the LICENSE file for details
+from sqlalchemy.orm import Session
+
 from pycroft.model.mpsk_client import MPSKClient
 from pycroft.model.user import User
 from pycroft.lib.logging import log_user_event
 from pycroft.helpers.i18n import deferred_gettext
 
 
-def mpsk_delete(session, mpsk_client: MPSKClient, processor: User) -> None:
+def mpsk_delete(session: Session, mpsk_client: MPSKClient, processor: User) -> None:
     message = deferred_gettext("Deleted mpsk client '{}'.").format(mpsk_client.name)
     log_user_event(author=processor, user=mpsk_client.owner, message=message.to_json())
 
     session.delete(mpsk_client)
 
 
-def change_mac(session, client: MPSKClient, mac: str, processor: User) -> MPSKClient:
+def change_mac(session: Session, client: MPSKClient, mac: str, processor: User) -> MPSKClient:
     """
     This method will change the mac address of the given mpsks client to the new
     mac address.
 
+    :param session: session to use with the database.
     :param client: the mpsks which should become a new mac address.
     :param mac: the new mac address.
     :param processor: the user who initiated the mac address change.
@@ -33,7 +36,9 @@ def change_mac(session, client: MPSKClient, mac: str, processor: User) -> MPSKCl
     return client
 
 
-def mpsk_client_create(session, owner: User, name: str, mac: str, processor: User) -> MPSKClient:
+def mpsk_client_create(
+    session: Session, owner: User, name: str, mac: str, processor: User
+) -> MPSKClient:
     """
     creates a mpsks client for a given user with a mac address.
 
@@ -58,7 +63,7 @@ def mpsk_client_create(session, owner: User, name: str, mac: str, processor: Use
 
 
 def mpsk_edit(
-    session, client: MPSKClient, owner: User, name: str, mac: str, processor: User
+    session: Session, client: MPSKClient, owner: User, name: str, mac: str, processor: User
 ) -> None:
     if client.name != name:
         message = deferred_gettext("Changed name of client '{}' to '{}'.").format(client.name, name)
