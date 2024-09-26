@@ -162,6 +162,21 @@ def remove_member_of(
                    user=user, author=processor)
 
 
+def delete_membership(
+    session: Session,
+    membership_id: int,
+    processor: User,
+) -> None:
+    membership = session.get(Membership, membership_id)
+    session.delete(membership)
+    message = deferred_gettext("Deleted membership of  group {group}.")
+    log_user_event(
+        message.format(group=membership.group.name).to_json(),
+        user=membership.user,
+        author=processor,
+    )
+
+
 @with_transaction
 def edit_property_group(
     group: PropertyGroup, name: str, permission_level: int, processor: User
