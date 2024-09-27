@@ -191,7 +191,6 @@ class BankAccountTable(BootstrapTable):
     name = Column("Name")
     bank = Column("Bank")
     iban = IbanColumn("IBAN")
-    bic = Column("SWIFT-BIC")
     balance = Column("Saldo")
     last_imported_at = Column("Zuletzt importiert")
     actions = MultiBtnColumn("Aktionen")
@@ -219,7 +218,6 @@ class BankAccountRow(BaseModel):
     name: str
     bank: str
     iban: str
-    bic: str
     balance: str
     last_imported_at: str  # TODO perhaps date
     actions: list[BtnColResponse]

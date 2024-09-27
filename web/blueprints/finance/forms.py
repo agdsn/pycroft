@@ -111,7 +111,6 @@ class BankAccountActivityEditForm(BankAccountActivityReadForm):
 
 
 class BankAccountActivitiesImportForm(Form):
-    account = SelectField("Bankkonto", coerce=int)
     user = StringField("Loginname", validators=[DataRequired()])
     secret_pin = PasswordField("PIN", validators=[DataRequired()])
     start_date = DateField("Startdatum")

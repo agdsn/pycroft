@@ -169,11 +169,17 @@ def bank_accounts_list_json() -> ResponseReturnValue:
     def actions(bank_account: BankAccount) -> list[BtnColResponse]:
         return [
             BtnColResponse(
-                href=url_for('.accounts_show', account_id=bank_account.account_id),
+                href=url_for(".accounts_show", account_id=bank_account.account_id),
                 title="",
-                btn_class="btn-primary",
+                btn_class="btn-primary btn-sm",
                 icon="fa-eye",
-            )
+            ),
+            BtnColResponse(
+                href=url_for(".bank_accounts_import", bank_account_id=bank_account.id),
+                title="",
+                btn_class="btn-primary btn-sm",
+                icon="fa-file-import",
+            ),
         ]
 
     return TableResponse[BankAccountRow](
@@ -182,7 +188,6 @@ def bank_accounts_list_json() -> ResponseReturnValue:
                 name=bank_account.name,
                 bank=bank_account.bank,
                 iban=bank_account.iban,
-                bic=bank_account.bic,
                 balance=money_filter(bank_account.balance),
                 last_imported_at=(
                     str(datetime.date(i))
@@ -270,14 +275,11 @@ def flash_fints_errors() -> t.Iterator[None]:
                 nicht erreicht werden.', 'error')
         raise PycroftException from e
 
-@bp.route('/bank-accounts/import', methods=['GET', 'POST'])
-@access.require('finance_change')
-@nav.navigate("Bankkontobewegungen importieren", icon='fa-file-import')
-def bank_accounts_import() -> ResponseReturnValue:
+
+@bp.route("/bank-accounts/<int:bank_account_id>/import", methods=["GET", "POST"])
+@access.require("finance_change")
+def bank_accounts_import(bank_account_id: int) -> ResponseReturnValue:
     form = BankAccountActivitiesImportForm()
-    form.account.choices = [
-        (acc.id, acc.name) for acc in get_all_bank_accounts(session) if not acc.account.legacy
-    ]
     imported = ImportedTransactions([], [], [])
 
     def display_form_response(
@@ -290,30 +292,20 @@ def bank_accounts_import() -> ResponseReturnValue:
             doubtful_transactions=imported.doubtful,
         )
 
+    bank_account = session.get(BankAccount, bank_account_id)
+
     if not form.is_submitted():
-        del (form.start_date)
-        form.end_date.data = date.today() - timedelta(days=1)
-        form.account.data = config.membership_fee_bank_account_id
-
-        return display_form_response(imported)
-
-    if not form.validate():
-        return display_form_response(imported)
-
-    bank_account = session.get(BankAccount, form.account.data)
-
-    # set start_date, end_date
-    if form.start_date.data is None:
-        # NB: start date default depends on `bank_account`
         form.start_date.data = (
             datetime.date(i)
             if (i := bank_account.last_imported_at) is not None
             else date(2018, 1, 1)
         )
-    if form.end_date.data is None:
-        form.end_date.data = date.today()
-    start_date = form.start_date.data
-    end_date = form.end_date.data
+        form.end_date.data = date.today() - timedelta(days=1)
+
+        return display_form_response(imported)
+
+    if not form.validate():
+        return display_form_response(imported)
 
     try:
         with flash_fints_errors():
@@ -322,13 +314,13 @@ def bank_accounts_import() -> ResponseReturnValue:
                 user_id=form.user.data,
                 secret_pin=form.secret_pin.data,
                 bank_account=bank_account,
-                start_date=start_date,
-                end_date=end_date,
+                start_date=form.start_date.data,
+                end_date=form.end_date.data,
             )
     except PycroftException:
         return display_form_response(imported)
 
-    flash(f"Transaktionen vom {start_date} bis {end_date}.")
+    flash(f"Transaktionen vom {form.start_date.data} bis {form.end_date.data}.")
     if errors:
         flash(
             f"{len(errors)} Statements enthielten fehlerhafte Daten und müssen "
