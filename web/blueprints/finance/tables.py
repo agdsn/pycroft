@@ -194,7 +194,7 @@ class BankAccountTable(BootstrapTable):
     bic = Column("SWIFT-BIC")
     balance = Column("Saldo")
     last_imported_at = Column("Zuletzt importiert")
-    kto = BtnColumn("Konto")
+    actions = MultiBtnColumn("Aktionen")
 
     def __init__(self, *, create_account: bool = False, **kw: t.Any) -> None:
         self.create_account = create_account
@@ -220,9 +220,9 @@ class BankAccountRow(BaseModel):
     bank: str
     iban: str
     bic: str
-    kto: BtnColResponse
     balance: str
     last_imported_at: str  # TODO perhaps date
+    actions: list[BtnColResponse]
 
 
 class BankAccountActivityTable(BootstrapTable):

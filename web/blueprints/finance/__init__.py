@@ -166,6 +166,16 @@ def bank_accounts_list() -> ResponseReturnValue:
 
 @bp.route('/bank-accounts/list/json')
 def bank_accounts_list_json() -> ResponseReturnValue:
+    def actions(bank_account: BankAccount) -> list[BtnColResponse]:
+        return [
+            BtnColResponse(
+                href=url_for('.accounts_show', account_id=bank_account.account_id),
+                title="",
+                btn_class="btn-primary",
+                icon="fa-eye",
+            )
+        ]
+
     return TableResponse[BankAccountRow](
         items=[
             BankAccountRow(
@@ -173,17 +183,13 @@ def bank_accounts_list_json() -> ResponseReturnValue:
                 bank=bank_account.bank,
                 iban=bank_account.iban,
                 bic=bank_account.bic,
-                kto=BtnColResponse(
-                    href=url_for(".accounts_show", account_id=bank_account.account_id),
-                    title="Konto anzeigen",
-                    btn_class="btn-primary",
-                ),
                 balance=money_filter(bank_account.balance),
                 last_imported_at=(
                     str(datetime.date(i))
                     if (i := bank_account.last_imported_at) is not None
                     else "-"
                 ),
+                actions=actions(bank_account),
             )
             for bank_account in get_all_bank_accounts(session)
         ]
