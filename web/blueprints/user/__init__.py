@@ -655,7 +655,7 @@ def create_non_resident() -> ResponseReturnValue:
     if not form.validate_on_submit():
         return default_response()
     with abort_on_error(default_response), session.session.begin_nested():
-        address = lib.user.get_or_create_address(**form.address_kwargs)
+        address = lib.address.get_or_create_address(**form.address_kwargs)
         new_user, plain_password = lib.user.create_user(
             name=form.name.data,
             login=form.login.data,

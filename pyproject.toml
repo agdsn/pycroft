@@ -169,7 +169,11 @@ disallow_untyped_globals = true
 
 [[tool.mypy.overrides]]
 module = [
+    "pycroft.model.task_serialization",
     "pycroft.lib.finance",
+    "pycroft.lib.mail",
+    "pycroft.lib.user",
+    "pycroft.lib.user.*",
 ]
 strict_optional = true
 

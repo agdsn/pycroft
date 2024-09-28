@@ -6,6 +6,7 @@ from sqlalchemy import func
 from sqlalchemy.future import select
 
 from pycroft.model import _all as m
+from pycroft.lib.mail import MailConfig, _config_var
 from tests import factories
 
 
@@ -22,3 +23,19 @@ def processor(module_session) -> m.User:
 @pytest.fixture(scope="module")
 def config(module_session) -> m.Config:
     return factories.ConfigFactory.create()
+
+
+@pytest.fixture(scope="module", autouse=True)
+def with_mail_config():
+    token = _config_var.set(
+        MailConfig(
+            mail_envelope_from="noreply@agdsn.de",
+            mail_from="noreply@agdsn.de",
+            mail_reply_to="support@agdsn.de",
+            smtp_host="agdsn.de",
+            smtp_user="pycroft",
+            smtp_password="password",
+        )
+    )
+    yield
+    _config_var.reset(token)

@@ -15,7 +15,6 @@ from pycroft.helpers.i18n import deferred_gettext
 from pycroft.helpers.net import port_name_sort_key
 from pycroft.lib.logging import log_user_event
 from pycroft.lib.net import get_subnets_for_room, get_free_ip, delete_ip
-from pycroft.lib.user import migrate_user_host
 from pycroft.model.facilities import Room
 from pycroft.model.host import Interface, IP, Host, SwitchPort
 from pycroft.model.port import PatchPort
@@ -95,7 +94,46 @@ def host_edit(host: Host, owner: User, room: Room, name: str, processor: User) -
         host.owner = owner
 
     if host.room != room:
-        migrate_user_host(host, room, processor)
+        migrate_host(session, host, room, processor)
+
+
+def migrate_host(session: Session, host: Host, new_room: Room, processor: User) -> None:
+    """
+    Migrate a Host to a new room and if necessary to a new subnet.
+    If the host changes subnet, it will get a new IP address.
+
+    :param host: Host to be migrated
+    :param new_room: new room of the host
+    :param processor: User processing the migration
+    :return:
+    """
+    old_room = host.room
+    host.room = new_room
+
+    subnets_old = get_subnets_for_room(old_room)
+    subnets = get_subnets_for_room(new_room)
+
+    if subnets_old != subnets:
+        for interface in host.interfaces:
+            old_ips = tuple(ip for ip in interface.ips)
+            for old_ip in old_ips:
+                ip_address, subnet = get_free_ip(subnets)
+                new_ip = IP(interface=interface, address=ip_address, subnet=subnet)
+                session.add(new_ip)
+
+                old_address = old_ip.address
+                session.delete(old_ip)
+
+                message = deferred_gettext("Changed IP of {mac} from {old_ip} to {new_ip}.").format(
+                    old_ip=str(old_address), new_ip=str(new_ip.address), mac=interface.mac
+                )
+                log_user_event(author=processor, user=host.owner, message=message.to_json())
+
+    message = deferred_gettext("Moved host '{name}' from {room_old} to {room_new}.").format(
+        name=host.name, room_old=old_room.short_name, room_new=new_room.short_name
+    )
+
+    log_user_event(author=processor, user=host.owner, message=message.to_json())
 
 
 @with_transaction
@@ -234,3 +272,13 @@ def get_conflicting_interface(
     if new_mac == current_mac:
         return None
     return session.scalar(select(Interface).filter_by(mac=new_mac))
+
+
+def setup_ipv4_networking(session: Session, host: Host) -> None:
+    """Add suitable ips for every interface of a host"""
+    subnets = get_subnets_for_room(host.room)
+
+    for interface in host.interfaces:
+        ip_address, subnet = get_free_ip(subnets)
+        new_ip = IP(interface=interface, address=ip_address, subnet=subnet)
+        session.add(new_ip)

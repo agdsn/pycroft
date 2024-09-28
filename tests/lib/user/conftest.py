@@ -13,5 +13,5 @@ def mail_capture(monkeypatch) -> list[Mail]:
             assert all(isinstance(m, Mail) for m in mails), "didn't get an instance of Mail()"
             mails_captured.extend(mails)
 
-    monkeypatch.setattr("pycroft.lib.user.send_mails_async", TaskStub)
+    monkeypatch.setattr("pycroft.lib.user.mail.send_mails_async", TaskStub)
     yield mails_captured

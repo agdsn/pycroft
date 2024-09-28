@@ -2,44 +2,34 @@
 pycroft.lib.mail
 ~~~~~~~~~~~~~~~~
 """
+
+from __future__ import annotations
 import logging
 import os
 import smtplib
 import ssl
 import traceback
 import typing as t
-from dataclasses import dataclass
+from contextvars import ContextVar
+from dataclasses import dataclass, field, InitVar
 from email.header import Header
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import make_msgid, formatdate
+from functools import lru_cache
 
 import jinja2
+from werkzeug.local import LocalProxy
 
 from pycroft.lib.exc import PycroftLibException
 
-mail_envelope_from = os.environ.get('PYCROFT_MAIL_ENVELOPE_FROM')
-mail_from = os.environ.get('PYCROFT_MAIL_FROM')
-mail_reply_to = os.environ.get('PYCROFT_MAIL_REPLY_TO')
-smtp_host = os.environ.get('PYCROFT_SMTP_HOST')
-smtp_port = int(os.environ.get('PYCROFT_SMTP_PORT', 465))
-smtp_user = os.environ.get('PYCROFT_SMTP_USER')
-smtp_password = os.environ.get('PYCROFT_SMTP_PASSWORD')
-smtp_ssl = os.environ.get('PYCROFT_SMTP_SSL', 'ssl')
-template_path_type = os.environ.get('PYCROFT_TEMPLATE_PATH_TYPE', 'filesystem')
-template_path = os.environ.get('PYCROFT_TEMPLATE_PATH', 'pycroft/templates')
+
+# TODO proxy and DI; set at app init
+_config_var: ContextVar[MailConfig] = ContextVar("config")
+config: MailConfig = LocalProxy(_config_var)  # type: ignore[assignment]
 
 logger = logging.getLogger('mail')
 logger.setLevel(logging.INFO)
-
-template_loader: jinja2.BaseLoader
-if template_path_type == 'filesystem':
-    template_loader = jinja2.FileSystemLoader(searchpath=f'{template_path}/mail')
-else:
-    template_loader = jinja2.PackageLoader(package_name='pycroft',
-                                           package_path=f'{template_path}/mail')
-
-template_env = jinja2.Environment(loader=template_loader)
 
 
 @dataclass
@@ -51,6 +41,16 @@ class Mail:
     body_html: str | None = None
     reply_to: str | None = None
 
+    @property
+    def body_plain_mime(self) -> MIMEText:
+        return MIMEText(self.body_plain, "plain", _charset="utf-8")
+
+    @property
+    def body_html_mime(self) -> MIMEText | None:
+        if not self.body_html:
+            return None
+        return MIMEText(self.body_html, "html", _charset="utf-8")
+
 
 class MailTemplate:
     template: str
@@ -61,27 +61,35 @@ class MailTemplate:
         self.args = kwargs
 
     def render(self, **kwargs: t.Any) -> tuple[str, str]:
-        plain = template_env.get_template(self.template).render(mode='plain', **self.args, **kwargs)
-        html = template_env.get_template(self.template).render(mode='html', **self.args, **kwargs)
+        plain = self.jinja_template.render(mode="plain", **self.args, **kwargs)
+        html = self.jinja_template.render(mode="html", **self.args, **kwargs)
 
         return plain, html
 
+    @property
+    def jinja_template(self) -> jinja2.Template:
+        return _get_template(self.template)
 
-def compose_mail(mail: Mail) -> MIMEMultipart:
-    msg = MIMEMultipart('alternative', _charset='utf-8')
-    msg['Message-Id'] = make_msgid()
-    msg['From'] = mail_from
-    msg['To'] = Header(mail.to_address)
-    msg['Subject'] = mail.subject
-    msg['Date'] = formatdate(localtime=True)
 
-    msg.attach(MIMEText(mail.body_plain, 'plain', _charset='utf-8'))
+@lru_cache(maxsize=None)
+def _get_template(template_location: str) -> jinja2.Template:
+    if config is None:
+        raise RuntimeError("`mail.config` not set up!")
+    return config.template_env.get_template(template_location)
 
-    if mail.body_html is not None:
-        msg.attach(MIMEText(mail.body_html, 'html', _charset='utf-8'))
 
-    if mail.reply_to is not None or mail.reply_to is not None:
-        msg['Reply-To'] = mail_reply_to if mail.reply_to is None else mail.reply_to
+def compose_mail(mail: Mail, from_: str, default_reply_to: str | None) -> MIMEMultipart:
+    msg = MIMEMultipart("alternative", _charset="utf-8")
+    msg["Message-Id"] = make_msgid()
+    msg["From"] = from_
+    msg["To"] = str(Header(mail.to_address))
+    msg["Subject"] = mail.subject
+    msg["Date"] = formatdate(localtime=True)
+    msg.attach(mail.body_plain_mime)
+    if (html := mail.body_html_mime) is not None:
+        msg.attach(html)
+    if reply_to := mail.reply_to or default_reply_to:
+        msg["Reply-To"] = reply_to
 
     print(msg)
 
@@ -100,12 +108,19 @@ def send_mails(mails: list[Mail]) -> tuple[bool, int]:
     :param mails: A list of mails
 
     :returns: Whether the transmission succeeded
+    :context: config
     """
+    if config is None:
+        raise RuntimeError("`mail.config` not set up!")
 
-    if not smtp_host:
-        logger.critical("No mailserver config available")
-
-        raise RuntimeError
+    mail_envelope_from = config.mail_envelope_from
+    mail_from = config.mail_from
+    mail_reply_to = config.mail_reply_to
+    smtp_host = config.smtp_host
+    smtp_port = config.smtp_port
+    smtp_user = config.smtp_user
+    smtp_password = config.smtp_password
+    smtp_ssl = config.smtp_ssl
 
     use_ssl = smtp_ssl == 'ssl'
     use_starttls = smtp_ssl == 'starttls'
@@ -159,7 +174,7 @@ def send_mails(mails: list[Mail]) -> tuple[bool, int]:
 
         for mail in mails:
             try:
-                mime_mail = compose_mail(mail)
+                mime_mail = compose_mail(mail, from_=mail_from, default_reply_to=mail_reply_to)
                 assert mail_envelope_from is not None
                 smtp.sendmail(from_addr=mail_envelope_from, to_addrs=mail.to_address,
                               msg=mime_mail.as_string())
@@ -248,3 +263,55 @@ def send_template_mails(
     from pycroft.task import send_mails_async
 
     send_mails_async.delay(mails)
+
+
+@dataclass
+class MailConfig:
+    mail_envelope_from: str
+    mail_from: str
+    mail_reply_to: str | None
+    smtp_host: str
+    smtp_user: str
+    smtp_password: str
+    smtp_port: int = field(default=465)
+    smtp_ssl: str = field(default="ssl")
+
+    template_path_type: InitVar[str | None] = None
+    template_path: InitVar[str | None] = None
+    template_env: jinja2.Environment = field(init=False)
+
+    @classmethod
+    def from_env(cls) -> t.Self:
+        env = os.environ
+        config = cls(
+            mail_envelope_from=env["PYCROFT_MAIL_ENVELOPE_FROM"],
+            mail_from=env["PYCROFT_MAIL_FROM"],
+            mail_reply_to=env.get("PYCROFT_MAIL_REPLY_TO"),
+            smtp_host=env["PYCROFT_SMTP_HOST"],
+            smtp_user=env["PYCROFT_SMTP_USER"],
+            smtp_password=env["PYCROFT_SMTP_PASSWORD"],
+            template_path_type=env.get("PYCROFT_TEMPLATE_PATH_TYPE"),
+            template_path=env.get("PYCROFT_TEMPLATE_PATH"),
+        )
+        if (smtp_port := env.get("PYCROFT_SMTP_PORT")) is not None:
+            config.smtp_port = int(smtp_port)
+        if (smtp_ssl := env.get("PYCROFT_SMTP_SSL")) is not None:
+            config.smtp_ssl = smtp_ssl
+
+        return config
+
+    def __post_init__(self, template_path_type: str | None, template_path: str | None) -> None:
+        template_loader: jinja2.BaseLoader
+        if template_path_type is None:
+            template_path_type = "filesystem"
+        if template_path is None:
+            template_path = "pycroft/templates"
+
+        if template_path_type == "filesystem":
+            template_loader = jinja2.FileSystemLoader(searchpath=f"{template_path}/mail")
+        else:
+            template_loader = jinja2.PackageLoader(
+                package_name="pycroft", package_path=f"{template_path}/mail"
+            )
+
+        self.template_env = jinja2.Environment(loader=template_loader)

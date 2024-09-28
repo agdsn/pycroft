@@ -5,7 +5,6 @@ import typing as t
 
 from flask import Flask
 
-from pycroft.lib.user import has_positive_balance
 from pycroft.model.user import User
 
 _check_registry: dict[str, t.Callable] = {}
@@ -19,13 +18,6 @@ def template_check(name: str) -> t.Callable[[_T], _T]:
         _check_registry[name] = fn
         return fn
     return decorator
-
-
-@template_check("user_with_positive_balance")
-def positive_balance_check(user: User) -> bool:
-    """Tests if user has a positive balance
-    """
-    return has_positive_balance(user)
 
 
 @template_check("user_with_no_network_access")
