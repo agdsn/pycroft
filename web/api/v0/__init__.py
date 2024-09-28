@@ -366,7 +366,7 @@ class MPSKSClientAddResource(Resource):
             if not user.wifi_password:
                 abort(400, message="Legacy wifi password change of password is required.")
 
-            mpsk_client_create(session.session, user, mac, name, user)
+            mpsk_client_create(session.session, owner=user, mac=mac, name=name, processor=user)
             session.session.commit()
         except InvalidMACAddressException as e:
             abort(400, message=f"Invalid MAC address: {e}")
@@ -394,7 +394,7 @@ class MPSKSClientDeleteResource(Resource):
         if not user == mpsk.owner:
             abort(401, message="You are not the owner of the mpsk.")
 
-        mpsk_delete(session.session, mpsk, user)
+        mpsk_delete(session.session, mpsk_client=mpsk, processor=user)
         session.session.commit()
 
         return "mpsk client was deleted"
@@ -424,7 +424,7 @@ class MPSKSClientChangeResource(Resource):
             )
 
         try:
-            mpsk_edit(session.session, mpsk, user, name, mac, user)
+            mpsk_edit(session.session, client=mpsk, owner=user, name=name, mac=mac, processor=user)
             session.session.commit()
         except InvalidMACAddressException:
             abort(400, message="Invalid MAC address.")
