@@ -78,7 +78,7 @@ from pycroft.lib.finance import (
     get_last_import_date,
     get_last_membership_fee,
 )
-from pycroft.lib.finance.fints import get_fints_transactions
+from pycroft.lib.finance.fints import get_fints_transactions, get_fints_client
 from pycroft.lib.finance.matching import UserMatching, AccountMatching
 from pycroft.lib.mail import MemberNegativeBalance
 from pycroft.lib.user import encode_type2_user_id, user_send_mails
@@ -307,15 +307,20 @@ def bank_accounts_import(bank_account_id: int) -> ResponseReturnValue:
     if not form.validate():
         return display_form_response(imported)
 
+    fints_client = get_fints_client(
+        product_id=config.fints_product_id,
+        user_id=form.user.data,
+        secret_pin=form.secret_pin.data,
+        bank_account=bank_account,
+    )
+
     try:
         with flash_fints_errors():
             statement, errors = get_fints_transactions(
-                product_id=config.fints_product_id,
-                user_id=form.user.data,
-                secret_pin=form.secret_pin.data,
-                bank_account=bank_account,
                 start_date=form.start_date.data,
                 end_date=form.end_date.data,
+                bank_account=bank_account,
+                fints_client=fints_client,
             )
     except PycroftException:
         return display_form_response(imported)
