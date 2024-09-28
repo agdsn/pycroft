@@ -1,2 +1,2 @@
-requirements.*.txt linguist-generated=true
+requirements*.txt linguist-generated=true
 *.lockb binary diff=lockb
