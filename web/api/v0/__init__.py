@@ -115,7 +115,7 @@ def get_user_or_404(user_id: int, options: t.Sequence[ORMOption] | None = None) 
 def get_authenticated_user(user_id: int, password: str) -> User:
     user = get_user_or_404(user_id)
     if user is None or not user.check_password(password):
-        abort(401, message="Authentication failed")
+        abort(401, message=f"Authentication of user {user_id} failed")
     return user
 
 
@@ -368,10 +368,10 @@ class MPSKSClientAddResource(Resource):
 
             mpsk_client_create(session.session, user, mac, name, user)
             session.session.commit()
-        except InvalidMACAddressException:
-            abort(400, message="Invalid MAC address.")
-        except IntegrityError:
-            abort(400, message="Mac address is already in use.")
+        except InvalidMACAddressException as e:
+            abort(400, message=f"Invalid MAC address: {e}")
+        except IntegrityError as e:
+            abort(400, message=f"Mac address is already in use: {e}")
         except InvalidName:
             abort(400, message="No proper name was provided.")
         return "mpsk has been added."
