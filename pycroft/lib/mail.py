@@ -68,7 +68,7 @@ def _get_template(template_location: str) -> jinja2.Template:
     return config.template_env.get_template(template_location)
 
 
-def compose_mail(mail: Mail, from_: str, default_reply_to: str) -> MIMEMultipart:
+def compose_mail(mail: Mail, from_: str, default_reply_to: str | None) -> MIMEMultipart:
     msg = MIMEMultipart("alternative", _charset="utf-8")
     msg["Message-Id"] = make_msgid()
     msg["From"] = from_
@@ -81,8 +81,8 @@ def compose_mail(mail: Mail, from_: str, default_reply_to: str) -> MIMEMultipart
     if mail.body_html is not None:
         msg.attach(MIMEText(mail.body_html, 'html', _charset='utf-8'))
 
-    if mail.reply_to is not None or mail.reply_to is not None:
-        msg["Reply-To"] = default_reply_to if mail.reply_to is None else mail.reply_to
+    if reply_to := mail.reply_to or default_reply_to:
+        msg["Reply-To"] = reply_to
 
     print(msg)
 
@@ -262,7 +262,7 @@ def send_template_mails(
 class MailConfig:
     mail_envelope_from: str
     mail_from: str
-    mail_reply_to: str
+    mail_reply_to: str | None
     smtp_host: str
     smtp_user: str
     smtp_password: str
@@ -279,7 +279,7 @@ class MailConfig:
         config = cls(
             mail_envelope_from=env["PYCROFT_MAIL_ENVELOPE_FROM"],
             mail_from=env["PYCROFT_MAIL_FROM"],
-            mail_reply_to=env["PYCROFT_MAIL_REPLY_TO"],
+            mail_reply_to=env.get("PYCROFT_MAIL_REPLY_TO"),
             smtp_host=env["PYCROFT_SMTP_HOST"],
             smtp_user=env["PYCROFT_SMTP_USER"],
             smtp_password=env["PYCROFT_SMTP_PASSWORD"],
