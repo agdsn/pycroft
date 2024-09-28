@@ -41,6 +41,16 @@ class Mail:
     body_html: str | None = None
     reply_to: str | None = None
 
+    @property
+    def body_plain_mime(self) -> MIMEText:
+        return MIMEText(self.body_plain, "plain", _charset="utf-8")
+
+    @property
+    def body_html_mime(self) -> MIMEText | None:
+        if not self.body_html:
+            return None
+        return MIMEText(self.body_html, "html", _charset="utf-8")
+
 
 class MailTemplate:
     template: str
@@ -75,12 +85,9 @@ def compose_mail(mail: Mail, from_: str, default_reply_to: str | None) -> MIMEMu
     msg["To"] = str(Header(mail.to_address))
     msg["Subject"] = mail.subject
     msg["Date"] = formatdate(localtime=True)
-
-    msg.attach(MIMEText(mail.body_plain, 'plain', _charset='utf-8'))
-
-    if mail.body_html is not None:
-        msg.attach(MIMEText(mail.body_html, 'html', _charset='utf-8'))
-
+    msg.attach(mail.body_plain_mime)
+    if (html := mail.body_html_mime) is not None:
+        msg.attach(html)
     if reply_to := mail.reply_to or default_reply_to:
         msg["Reply-To"] = reply_to
 
