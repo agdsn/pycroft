@@ -254,7 +254,7 @@ class User(BaseUser, UserMixin):
         back_populates="owner", cascade="all, delete-orphan"
     )
 
-    mpsks: Mapped[list[MPSKClient]] = relationship(
+    mpsk_clients: Mapped[list[MPSKClient]] = relationship(
         back_populates="owner", cascade="all, delete-orphan"
     )
 

@@ -24,7 +24,7 @@ class MPSKClient(IntegerIdModel):
     owner_id: Mapped[int | None] = mapped_column(
         ForeignKey(User.id, ondelete="CASCADE"), index=True, nullable=False
     )
-    owner: Mapped[User] = relationship(User, back_populates="mpsks")
+    owner: Mapped[User] = relationship(User, back_populates="mpsk_clients")
     mac: Mapped[mac_address] = mapped_column(unique=True)
 
     @validates("mac")

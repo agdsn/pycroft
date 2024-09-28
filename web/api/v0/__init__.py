@@ -357,7 +357,7 @@ class MPSKSClientAddResource(Resource):
 
         try:
             # checks rather the user has all settable mpsks clients created
-            if len(user.mpsks) > current_app.config.get("MAX_MPSKS", 30):
+            if len(user.mpsk_clients) > current_app.config.get("MAX_MPSKS", 30):
                 abort(400, message="User has the maximum count of mpsk clients.")
 
             if not user.wifi_password:

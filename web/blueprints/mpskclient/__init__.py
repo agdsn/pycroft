@@ -141,7 +141,7 @@ def user_clients_json(user_id: int) -> ResponseReturnValue:
     # TODO: Importend when the for the returning of actual mpsk mac addresses for MPSK devices
     # return ""
     return TableResponse[MPSKRow](
-        items=[_mpsk_row(mpsk, user_id) for mpsk in user.mpsks]
+        items=[_mpsk_row(mpsk, user_id) for mpsk in user.mpsk_clients]
     ).model_dump()
 
 
