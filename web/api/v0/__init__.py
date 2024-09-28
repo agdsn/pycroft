@@ -158,10 +158,7 @@ def generate_user_data(user: User) -> Response:
     last_import_ts = get_last_import_date(session.session)
     last_finance_update = last_import_ts and last_import_ts.date() or None
 
-    try:
-        wifi_password = user.wifi_password
-    except ValueError:
-        wifi_password = None
+    wifi_password = user.wifi_password
 
     med = scheduled_membership_end(user)
     mbd = scheduled_membership_start(user)
@@ -364,7 +361,7 @@ class MPSKSClientAddResource(Resource):
                 abort(400, message="User has the maximum count of mpsk clients.")
 
             if not user.wifi_password:
-                abort(400, message="Legacy wifi password change of password is required.")
+                abort(400, message="Please generate a wifi password first")
 
             mpsk_client_create(session.session, owner=user, mac=mac, name=name, processor=user)
             session.session.commit()

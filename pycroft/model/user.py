@@ -374,15 +374,15 @@ class User(BaseUser, UserMixin):
         return max(le, key=operator.attrgetter("created_at"))
 
     @property
-    def wifi_password(self):
-        """Store a hash of a given plaintext passwd for the user.
+    def wifi_password(self) -> str | None:
+        """return the cleartext wifi password (without crypt prefix) if available.
 
+        :returns: `None` if the `wifi_passwd_hash` is not set or is not cleartext.
         """
-
         if self.wifi_passwd_hash is not None and self.wifi_passwd_hash.startswith(clear_password_prefix):
             return self.wifi_passwd_hash.replace(clear_password_prefix, '', 1)
 
-        raise ValueError("Cleartext password not available.")
+        return None
 
     @wifi_password.setter
     def wifi_password(self, value):
