@@ -216,20 +216,6 @@ class InvalidMACAddressException(PycroftModelException, ValueError):
     pass
 
 
-class AmountExceededError(PycroftModelException):
-
-    def __init__(self, message="Amount exceeded the allowed limit", limit=None, actual=None):
-        self.message = message
-        self.limit = limit
-        self.actual = actual
-        super().__init__(self.message)
-
-    def __str__(self):
-        if self.limit and self.actual:
-            return f"{self.message}. Limit: {self.limit}, Actual: {self.actual}"
-        return self.message
-
-
 class DateTimeTz(DateTime):
     """A sqlalchemy type decorator corresponding to `datetime` types with time zone.
 
