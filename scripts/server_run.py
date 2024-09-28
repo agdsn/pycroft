@@ -19,6 +19,7 @@ from werkzeug.middleware.profiler import ProfilerMiddleware
 import pycroft
 import web
 from pycroft.helpers.i18n import set_translation_lookup, get_locale
+from pycroft.lib.mail import _config_var, MailConfig
 from pycroft.model.session import set_scoped_session
 from scripts.connection import get_connection_string
 from pycroft.model.alembic import determine_schema_state
@@ -54,6 +55,8 @@ def prepare_server(echo=False, ensure_schema=False) -> PycroftFlask:
         )
     )
     _setup_translations()
+    _config_var.set(MailConfig.from_env())
+
     if app.config.get("PROFILE", False):
         app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions=[30])
     return app
