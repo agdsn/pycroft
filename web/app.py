@@ -141,12 +141,6 @@ def make_app(hades_logs: bool = True) -> PycroftFlask:
 
         :param e: The error from the errorhandler
         """
-        # We need this path hard-coding because the global app errorhandlers have higher
-        # precedence than anything registered to a blueprint.
-        # A clean solution would be flask supporting nested blueprints (see flask #539)
-        if request.path.startswith('/api/'):
-            return api.errorpage(e)
-
         code = getattr(e, "code", 500)
 
         if code == 500:
