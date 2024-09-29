@@ -354,24 +354,31 @@ class MPSKSClientAddResource(Resource):
     )
     def post(self, user_id: int, password: str, mac: str, name: str) -> ResponseReturnValue:
         user = get_authenticated_user(user_id, password)
+        # checks rather the user has all settable mpsks clients created
+        if len(user.mpsk_clients) >= current_app.config.get("MAX_MPSKS", 30):
+            abort(400, message="User has the maximum count of mpsk clients.")
+
+        if not user.wifi_password:
+            abort(412, message="Please generate a wifi password first")
 
         try:
-            # checks rather the user has all settable mpsks clients created
-            if len(user.mpsk_clients) > current_app.config.get("MAX_MPSKS", 30):
-                abort(400, message="User has the maximum count of mpsk clients.")
-
-            if not user.wifi_password:
-                abort(400, message="Please generate a wifi password first")
-
-            mpsk_client_create(session.session, owner=user, mac=mac, name=name, processor=user)
+            mpsk_client = mpsk_client_create(
+                session.session, owner=user, mac=mac, name=name, processor=user
+            )
             session.session.commit()
         except InvalidMACAddressException as e:
-            abort(400, message=f"Invalid MAC address: {e}")
+            abort(422, message=f"Invalid MAC address: {e}")
         except IntegrityError as e:
-            abort(400, message=f"Mac address is already in use: {e}")
+            abort(409, message=f"Mac address is already in use: {e}")
         except InvalidName:
             abort(400, message="No proper name was provided.")
-        return "mpsk has been added."
+        return jsonify(
+            {
+                "name": mpsk_client.name,
+                "id": mpsk_client.id,
+                "mac": mpsk_client.mac,
+            }
+        )
 
 
 api.add_resource(MPSKSClientAddResource, "/user/<int:user_id>/add-mpsk")
