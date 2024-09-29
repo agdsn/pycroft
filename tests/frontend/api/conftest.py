@@ -15,6 +15,13 @@ def api_key(app) -> str:
     return api_key
 
 
+@pytest.fixture(scope="module", autouse=True)
+def max_clients(app) -> int:
+    max_clients = 5
+    app.config["MAX_MPSKS"] = max_clients
+    return max_clients
+
+
 # TODO put this into the client
 @pytest.fixture(scope="module")
 def auth_header(api_key) -> dict[str, str]:
