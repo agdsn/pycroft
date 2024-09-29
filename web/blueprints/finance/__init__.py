@@ -9,7 +9,9 @@
 
     :copyright: (c) 2012 by AG DSN.
 """
+import logging
 import typing as t
+from base64 import b64encode, b64decode
 from decimal import Decimal
 from collections.abc import Iterable, Sequence
 from datetime import date
@@ -25,6 +27,7 @@ from fints.exceptions import (
     FinTSError,
     FinTSClientTemporaryAuthError,
 )
+from fints.client import FinTS3PinTanClient, NeedTANResponse, NeedRetryResponse
 from fints.utils import mt940_to_array
 from flask import (
     Blueprint,
@@ -36,10 +39,12 @@ from flask import (
     url_for,
     make_response,
     send_file,
+    current_app,
 )
 from flask.typing import ResponseReturnValue
 from flask_login import current_user
 from flask_wtf import FlaskForm
+from itsdangerous import Signer
 from mt940.models import Transaction as MT940Transaction
 from sqlalchemy import (
     or_,
@@ -102,6 +107,8 @@ from web.blueprints.finance.forms import (
     BankAccountActivityReadForm,
     BankAccountActivitiesImportManualForm,
     ConfirmPaymentReminderMail,
+    FinTSClientForm,
+    FinTSTANForm,
 )
 from web.blueprints.finance.tables import (
     FinanceTable,
@@ -141,6 +148,7 @@ from . import forms
 bp = Blueprint('finance', __name__)
 access = BlueprintAccess(bp, required_properties=['finance_show'])
 nav = BlueprintNavigation(bp, "Finanzen", icon='fa-euro-sign', blueprint_access=access)
+logger = logging.getLogger(__name__)
 
 
 @bp.route('/')
@@ -175,7 +183,9 @@ def bank_accounts_list_json() -> ResponseReturnValue:
                 icon="fa-eye",
             ),
             BtnColResponse(
-                href=url_for(".bank_accounts_import", bank_account_id=bank_account.id),
+                href=url_for(
+                    ".bank_accounts_login", bank_account_id=bank_account.id, action="import"
+                ),
                 title="",
                 btn_class="btn-primary btn-sm",
                 icon="fa-file-import",
@@ -233,6 +243,67 @@ def bank_accounts_activities_json() -> ResponseReturnValue:
     ).model_dump()
 
 
+# Move to lib?
+def b64_sign(data: bytes) -> str:
+    s = Signer(current_app.secret_key)
+    return s.sign(b64encode(data)).decode("utf-8")
+
+
+@bp.route("/bank-accounts/<int:bank_account_id>/login/<action>", methods=["GET", "POST"])
+def bank_accounts_login(bank_account_id: int, action: str) -> ResponseReturnValue:
+    form = FinTSTANForm()
+
+    if not form.is_submitted():
+        del form.tan
+        return render_template("finance/fints_login.html", form=form)
+
+    bank_account = session.get(BankAccount, bank_account_id)
+
+    client = FinTS3PinTanClient(
+        bank_account.routing_number,
+        form.user.data,
+        form.secret_pin.data,
+        bank_account.fints_endpoint,
+        product_id=config.fints_product_id,
+    )
+    with client:
+        mechanisms = client.get_tan_mechanisms()
+
+    if "913" in mechanisms:
+        client.set_tan_mechanism("913")  # chipTAN-QR
+    else:
+        logger.error("FinTS: No suitable TAN mechanism available.", exc_info=True)
+        flash(
+            f"TAN-Verfahren „chipTAN-QR“ wird benötigt, jedoch sind am FinTS-Endpunkt nur folgende Verfahren verfügbar: {', '.join(m.name for m in mechanisms.values())}.",
+            "error",
+        )
+        return redirect(
+            url_for(".bank_accounts_login", bank_account_id=bank_account_id, action=action)
+        )
+
+    with client:
+        if client.init_tan_response:
+            challenge: NeedTANResponse = client.init_tan_response
+            qrcode = "data:image/png;base64," + b64encode(challenge.challenge_matrix[1]).decode(
+                "ascii"
+            )
+            dialog_data = client.pause_dialog()
+
+    client_data = client.deconstruct(including_private=True)
+
+    form.fints_challenge.data = b64_sign(challenge.get_data())
+    form.fints_dialog.data = b64_sign(dialog_data)
+    form.fints_client.data = b64_sign(client_data)
+
+    return render_template(
+        "finance/fints_tan.html",
+        form=form,
+        action=action,
+        bank_account_id=bank_account.id,
+        qrcode=qrcode,
+    )
+
+
 @bp.route('/bank-accounts/import/errors/json')
 def bank_accounts_errors_json() -> ResponseReturnValue:
     return TableResponse[ImportErrorRow](
@@ -253,6 +324,59 @@ def bank_accounts_errors_json() -> ResponseReturnValue:
             for error in get_all_mt940_errors(session)
         ]
     ).model_dump()
+
+
+def b64_unsign(data: str) -> bytes:
+    s = Signer(current_app.secret_key)
+    return b64decode(s.unsign(data))
+
+
+def get_set_up_fints_client(form: FinTSTANForm, bank_account: BankAccount) -> FinTS3PinTanClient:
+    client_data = b64_unsign(form.fints_client.data)
+    dialog_data = b64_unsign(form.fints_dialog.data)
+    challenge = b64_unsign(form.fints_challenge.data)
+
+    client = get_fints_client(
+        product_id=config.fints_product_id,
+        user_id=form.user.data,
+        secret_pin=form.secret_pin.data,
+        bank_account=bank_account,
+        from_data=client_data,
+    )
+
+    with client.resume_dialog(dialog_data):
+        client.send_tan(NeedRetryResponse.from_data(challenge), form.tan.data)
+
+    return client
+
+
+@bp.route("/bank-accounts/<int:bank_account_id>/import", methods=["POST"])
+@access.require("finance_change")
+def bank_accounts_import(bank_account_id: int) -> ResponseReturnValue:
+    fints_form = FinTSTANForm()
+    bank_account = session.get(BankAccount, bank_account_id)
+
+    # Send TAN
+    client = get_set_up_fints_client(fints_form, bank_account)
+
+    form = BankAccountActivitiesImportForm()
+    form.user.data = fints_form.user.data
+    form.secret_pin.data = fints_form.secret_pin.data
+    form.fints_client.data = b64_sign(client.deconstruct(including_private=True))
+
+    form.start_date.data = (
+        datetime.date(i) if (i := bank_account.last_imported_at) is not None else date(2018, 1, 1)
+    )
+    form.end_date.data = date.today() - timedelta(days=1)
+
+    return render_template(
+        "finance/bank_accounts_import.html",
+        form=form,
+        transactions=[],
+        old_transactions=[],
+        doubtful_transactions=[],
+        bank_account_id=bank_account.id,
+    )
 
 
 from contextlib import contextmanager
@@ -276,11 +400,12 @@ def flash_fints_errors() -> t.Iterator[None]:
         raise PycroftException from e
 
 
-@bp.route("/bank-accounts/<int:bank_account_id>/import", methods=["GET", "POST"])
+@bp.route("/bank-accounts/<int:bank_account_id>/import/run", methods=["POST"])
 @access.require("finance_change")
-def bank_accounts_import(bank_account_id: int) -> ResponseReturnValue:
+def bank_accounts_import_run(bank_account_id: int) -> ResponseReturnValue:
     form = BankAccountActivitiesImportForm()
     imported = ImportedTransactions([], [], [])
+    bank_account = session.get(BankAccount, bank_account_id)
 
     def display_form_response(
         imported: ImportedTransactions,
@@ -290,9 +415,9 @@ def bank_accounts_import(bank_account_id: int) -> ResponseReturnValue:
             transactions=imported.new,
             old_transactions=imported.old,
             doubtful_transactions=imported.doubtful,
+            bank_account_id=bank_account.id,
         )
 
-    bank_account = session.get(BankAccount, bank_account_id)
 
     if not form.is_submitted():
         form.start_date.data = (
@@ -307,11 +432,14 @@ def bank_accounts_import(bank_account_id: int) -> ResponseReturnValue:
     if not form.validate():
         return display_form_response(imported)
 
+    fints_client_data = b64_unsign(form.fints_client.data)
+
     fints_client = get_fints_client(
         product_id=config.fints_product_id,
         user_id=form.user.data,
         secret_pin=form.secret_pin.data,
         bank_account=bank_account,
+        from_data=fints_client_data,
     )
 
     try:
@@ -340,6 +468,8 @@ def bank_accounts_import(bank_account_id: int) -> ResponseReturnValue:
         f"/ {len(imported.doubtful)} zu neu (Buchung >= {date.today()}T00:00Z)."
     )
     if not form.do_import.data:
+        form.fints_client.data = b64_sign(fints_client.deconstruct(including_private=True))
+
         return display_form_response(imported)
 
     # persist transactions and errors

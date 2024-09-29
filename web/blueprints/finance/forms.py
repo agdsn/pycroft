@@ -110,9 +110,19 @@ class BankAccountActivityEditForm(BankAccountActivityReadForm):
     description = StringField("Beschreibung")
 
 
-class BankAccountActivitiesImportForm(Form):
+class FinTSClientForm(Form):
     user = StringField("Loginname", validators=[DataRequired()])
     secret_pin = PasswordField("PIN", validators=[DataRequired()])
+    fints_client = HiddenField("FinTS client data", validators=[DataRequired()])
+
+
+class FinTSTANForm(FinTSClientForm):
+    tan = StringField("TAN", validators=[DataRequired()])
+    fints_challenge = HiddenField("FinTS Challenge", validators=[DataRequired()])
+    fints_dialog = HiddenField("FinTS dialog data", validators=[DataRequired()])
+
+
+class BankAccountActivitiesImportForm(FinTSClientForm):
     start_date = DateField("Startdatum")
     end_date = DateField("Enddatum")
     do_import = BooleanField("Import durchführen", default=False)
