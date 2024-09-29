@@ -343,6 +343,24 @@ class UserByIPResource(Resource):
 
 api.add_resource(UserByIPResource, '/user/from-ip')
 
+class MPSKSClientsResource(Resource):
+    def get(self, user_id: int) -> ResponseReturnValue:
+        user = get_user_or_404(user_id)
+
+        return jsonify(
+            [
+                {
+                    "name": mpsk_client.name,
+                    "id": mpsk_client.id,
+                    "mac": mpsk_client.mac,
+                }
+                for mpsk_client in user.mpsk_clients
+            ]
+        )
+
+
+api.add_resource(MPSKSClientsResource, "/user/<int:user_id>/get-mpsks")
+
 class MPSKSClientAddResource(Resource):
     @use_kwargs(
         {
