@@ -138,6 +138,17 @@ class TestDeleteMpsk:
     def url(self, user) -> str:
         return f"api/v0/user/{user.id}/delete-mpsk/"
 
+
+class TestGetMPSKS:
+    @pytest.fixture(scope="module")
+    def url(self, user) -> str:
+        return f"api/v0/user/{user.id}/get-mpsks"
+
+    def test_get(self, client, auth_header, user, url, session):
+        resp = client.assert_url_ok(url, headers=auth_header, method="GET")
+        assert isinstance(j := resp.json, list)
+        assert len(j) == len(user.mpsk_clients)
+
 @pytest.fixture(scope="module")
 def user(module_session) -> User:
     return f.UserFactory()
