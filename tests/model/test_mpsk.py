@@ -75,7 +75,9 @@ class TestMPSKValidators:
         for j in range(0, 4):
             for i in range(15):
                 mac_client = mac + hex(j)[2:] + hex(i)[2:]
-                c = mpsk_client_create(session, user, "Hallo", mac_client, user)
+                c = mpsk_client_create(
+                    session, owner=user, name="Hallo", mac=mac_client, processor=user
+                )
                 user.mpsk_clients.append(c)
                 session.flush()
 
