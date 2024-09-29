@@ -14,7 +14,7 @@ from pycroft.model.finance import BankAccount
 def get_fints_client(
     *,
     product_id: str,
-    user_id: int,
+    user_id: str,
     secret_pin: str,
     bank_account: BankAccount,
     **kwargs: t.Any,
