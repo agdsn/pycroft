@@ -435,23 +435,21 @@ class MPSKSClientChangeResource(Resource):
         location="form",
     )
     def post(
-        self, user_id: int, mpsks_id: int, password: str, mac: str, name: str
+        self, user_id: int, mpsk_id: int, password: str, mac: str, name: str
     ) -> ResponseReturnValue:
         user = get_authenticated_user(user_id, password)
-        mpsk = get_mpsk_client_or_404(mpsks_id)
+        mpsk = get_mpsk_client_or_404(mpsk_id)
 
         if user != mpsk.owner:
-            abort(
-                404, message=f"User {user_id} does not own the mpsk client with the id {mpsks_id}"
-            )
+            abort(404, message=f"User {user_id} does not own the mpsk client with the id {mpsk_id}")
 
         try:
             mpsk_edit(session.session, client=mpsk, owner=user, name=name, mac=mac, processor=user)
             session.session.commit()
         except InvalidMACAddressException:
-            abort(400, message="Invalid MAC address.")
+            abort(422, message="Invalid MAC address.")
         except IntegrityError:
-            abort(400, message="Mac address is already in use.")
+            abort(409, message="Mac address is already in use.")
         except InvalidName:
             abort(400, message="No proper name was provided.")
         return "mpsk has been changed."
