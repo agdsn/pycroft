@@ -343,6 +343,7 @@ class UserByIPResource(Resource):
 
 api.add_resource(UserByIPResource, '/user/from-ip')
 
+
 class MPSKSClientsResource(Resource):
     def get(self, user_id: int) -> ResponseReturnValue:
         user = get_user_or_404(user_id)
@@ -360,6 +361,7 @@ class MPSKSClientsResource(Resource):
 
 
 api.add_resource(MPSKSClientsResource, "/user/<int:user_id>/get-mpsks")
+
 
 class MPSKSClientAddResource(Resource):
     @use_kwargs(

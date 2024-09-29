@@ -85,7 +85,9 @@ class TestAddMpsk:
         ),
     )
     def test_max_mpsk_clients(self, client, auth_header, user, session, max_clients, url, data):
-
+        user.mpsk_clients.clear()
+        session.add(user)
+        session.flush()
         for i in range(max_clients):
             default = data["mac"]
             data["mac"] = f"{data['mac']}{i}"
