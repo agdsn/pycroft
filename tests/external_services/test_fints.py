@@ -18,6 +18,61 @@ from pycroft.lib.finance.fints import get_fints_transactions
 from tests.factories.finance import BankAccountFactory as BankAccountFactory_
 
 
+def test_fints_connection(default_fints_client_args, default_transaction_args):
+    bank_account = BankAccountFactory.build(iban="DE61850503003120219540")
+    fints_client = StubFintsClient(
+        **default_fints_client_args,
+        bank_identifier=bank_account.routing_number,
+        server=bank_account.fints_endpoint,
+    )
+
+    transactions, errors = get_fints_transactions(
+        **default_transaction_args,
+        bank_account=bank_account,
+        fints_client=fints_client,
+    )
+    assert transactions == []
+    assert errors == []
+
+
+def test_transactions_unknown_iban(default_fints_client_args, default_transaction_args):
+    bank_account = BankAccountFactory.build()
+    fints_client = StubFintsClient(
+        **default_fints_client_args,
+        bank_identifier=bank_account.routing_number,
+        server=bank_account.fints_endpoint,
+    )
+
+    with pytest.raises(KeyError, match="BankAccount with IBAN.*not found"):
+        get_fints_transactions(
+            **default_transaction_args,
+            bank_account=bank_account,
+            fints_client=fints_client,
+        )
+
+
+@pytest.fixture(scope="session")
+def default_transaction_args() -> dict:
+    return {
+        "start_date": today() - timedelta(days=30),
+        "end_date": today(),
+    }
+
+
+@pytest.fixture(scope="session")
+def default_fints_client_args() -> dict:
+    return {
+        "product_id": "1",
+        "user_id": 1,
+        "pin": "123456",
+    }
+
+
+class BankAccountFactory(BankAccountFactory_):
+    fints_endpoint = "https://banking-sn5.s-fints-pt-sn.de/fints30"
+    routing_number = "85050300"
+
+
 class StubHTTPSConnection(FinTSHTTPSConnection):
     def send(self, msg: FinTSMessage):
         # response = base64.b64decode(r.content.decode('iso-8859-1'))
@@ -60,37 +115,3 @@ class StubFintsClient(FinTS3Client):
 
     def _find_highest_supported_command(self, *segment_classes, **kwargs):
         return segment_classes[-1]
-
-
-class BankAccountFactory(BankAccountFactory_):
-    fints_endpoint = "https://banking-sn5.s-fints-pt-sn.de/fints30"
-    routing_number = "85050300"
-
-
-@pytest.fixture(scope="session")
-def default_transaction_args() -> dict:
-    return {
-        "product_id": "1",
-        "user_id": 1,
-        "secret_pin": "123456",
-        "start_date": today() - timedelta(days=30),
-        "end_date": today(),
-        "FinTSClient": StubFintsClient,
-    }
-
-
-def test_fints_connection(default_transaction_args):
-    transactions, errors = get_fints_transactions(
-        **default_transaction_args,
-        bank_account=BankAccountFactory.build(iban="DE61850503003120219540"),
-    )
-    assert transactions == []
-    assert errors == []
-
-
-def test_transactions_unknown_iban(default_transaction_args):
-    with pytest.raises(KeyError, match="BankAccount with IBAN.*not found"):
-        get_fints_transactions(
-            **default_transaction_args,
-            bank_account=BankAccountFactory.build(),
-        )

@@ -3,7 +3,7 @@
 # https://github.com/casey/just#packages
 
 # execute `just --evaluate <var>` to check the values of the variables set below
-drc := if `docker compose 2>&1 >/dev/null; echo $?` == "0" { "docker compose" } else { "docker-compose" }
+drc := "docker compose"
 export COMPOSE_FILE := "docker-compose.dev.yml:docker-compose.test.yml"
 export PGPASSFILE := ".pycroft.pgpass"
 psql_pycroft_uri := "postgresql:///pycroft?options=-csearch_path%3Dpycroft,public"

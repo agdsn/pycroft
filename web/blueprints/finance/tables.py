@@ -60,7 +60,7 @@ class FinanceTable(BootstrapTable):
 
         self.saldo = saldo
 
-        if inverted:
+        if inverted and saldo is not None:
             self._enforced_url_params = frozenset(
                 {('style', 'inverted')}
                 .union(self._enforced_url_params)
@@ -191,10 +191,9 @@ class BankAccountTable(BootstrapTable):
     name = Column("Name")
     bank = Column("Bank")
     iban = IbanColumn("IBAN")
-    bic = Column("SWIFT-BIC")
     balance = Column("Saldo")
     last_imported_at = Column("Zuletzt importiert")
-    kto = BtnColumn("Konto")
+    actions = MultiBtnColumn("Aktionen")
 
     def __init__(self, *, create_account: bool = False, **kw: t.Any) -> None:
         self.create_account = create_account
@@ -219,10 +218,9 @@ class BankAccountRow(BaseModel):
     name: str
     bank: str
     iban: str
-    bic: str
-    kto: BtnColResponse
     balance: str
     last_imported_at: str  # TODO perhaps date
+    actions: list[BtnColResponse]
 
 
 class BankAccountActivityTable(BootstrapTable):
@@ -250,10 +248,10 @@ class BankAccountActivityTable(BootstrapTable):
 
     @property
     @lazy_join
-    def toolbar(self) -> t.Iterator[str] | None:
+    def toolbar(self) -> t.Iterator[str]:
         """Do operations on BankAccountActivities"""
         if not self.finance_change:
-            return None
+            return
         yield from button_toolbar(
             "Kontobewegungen zuordnen",
             url_for(".bank_account_activities_match"),
@@ -325,7 +323,7 @@ class UnconfirmedTransactionsRow(BaseModel):
     room: str | None = None
     date: DateColResponse
     amount: str
-    author: LinkColResponse
+    author: LinkColResponse | None = None
     actions: list[BtnColResponse]
 
 
