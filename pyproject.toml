@@ -176,6 +176,7 @@ module = [
     "pycroft.lib.user.*",
     "web.blueprints.finance",
     "web.blueprints.finance.*",
+    "pycroft.lib.mpsk_client",
 ]
 strict_optional = true
 
