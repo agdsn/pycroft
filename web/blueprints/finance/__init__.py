@@ -1015,9 +1015,7 @@ def accounts_show(account_id: int) -> ResponseReturnValue:
     )
 
 
-def _format_row(
-    split: Split, style: str, prefix: str | None = None
-) -> dict[str, t.Any]:
+def _format_row(split: Split, style: str | None, prefix: str | None = None) -> dict[str, t.Any]:
     inverted = style == "inverted"
     row = FinanceRow(
         posted_at=datetime_filter(split.transaction.posted_at),
@@ -1059,8 +1057,6 @@ def _prefixed_merge(
 @bp.route('/accounts/<int:account_id>/json')
 def accounts_show_json(account_id: int) -> ResponseReturnValue:
     style = request.args.get('style')
-    if style is None:
-        abort(400, "query parameter `style` missing")
     limit = request.args.get('limit', type=int)
     offset = request.args.get('offset', type=int)
     sort_by = request.args.get('sort', default="valid_on")
