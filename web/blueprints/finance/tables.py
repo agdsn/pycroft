@@ -60,7 +60,7 @@ class FinanceTable(BootstrapTable):
 
         self.saldo = saldo
 
-        if inverted:
+        if inverted and saldo is not None:
             self._enforced_url_params = frozenset(
                 {('style', 'inverted')}
                 .union(self._enforced_url_params)
@@ -248,10 +248,10 @@ class BankAccountActivityTable(BootstrapTable):
 
     @property
     @lazy_join
-    def toolbar(self) -> t.Iterator[str] | None:
+    def toolbar(self) -> t.Iterator[str]:
         """Do operations on BankAccountActivities"""
         if not self.finance_change:
-            return None
+            return
         yield from button_toolbar(
             "Kontobewegungen zuordnen",
             url_for(".bank_account_activities_match"),
@@ -323,7 +323,7 @@ class UnconfirmedTransactionsRow(BaseModel):
     room: str | None = None
     date: DateColResponse
     amount: str
-    author: LinkColResponse
+    author: LinkColResponse | None = None
     actions: list[BtnColResponse]
 
 

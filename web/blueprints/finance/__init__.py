@@ -56,6 +56,7 @@ from sqlalchemy import (
     Over,
     ColumnElement,
 )
+from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from sqlalchemy.sql.expression import literal_column, func, select, Join
 from wtforms import BooleanField, FormField, Field
@@ -87,6 +88,7 @@ from pycroft.lib.finance.fints import get_fints_transactions, get_fints_client
 from pycroft.lib.finance.matching import UserMatching, AccountMatching
 from pycroft.lib.mail import MemberNegativeBalance
 from pycroft.lib.user import encode_type2_user_id, user_send_mails
+from pycroft.model.base import ModelBase
 from pycroft.model.finance import Account, Transaction
 from pycroft.model.finance import (
     BankAccount, BankAccountActivity, Split, MembershipFee, MT940Error)
@@ -243,12 +245,6 @@ def bank_accounts_activities_json() -> ResponseReturnValue:
     ).model_dump()
 
 
-# Move to lib?
-def b64_sign(data: bytes) -> str:
-    s = Signer(current_app.secret_key)
-    return s.sign(b64encode(data)).decode("utf-8")
-
-
 @bp.route("/bank-accounts/<int:bank_account_id>/login/<action>", methods=["GET", "POST"])
 def bank_accounts_login(bank_account_id: int, action: str) -> ResponseReturnValue:
     form = FinTSTANForm()
@@ -257,7 +253,7 @@ def bank_accounts_login(bank_account_id: int, action: str) -> ResponseReturnValu
         del form.tan
         return render_template("finance/fints_login.html", form=form)
 
-    bank_account = session.get(BankAccount, bank_account_id)
+    bank_account = _get_or_404(session, BankAccount, bank_account_id)
 
     client = FinTS3PinTanClient(
         bank_account.routing_number,
@@ -291,9 +287,10 @@ def bank_accounts_login(bank_account_id: int, action: str) -> ResponseReturnValu
 
     client_data = client.deconstruct(including_private=True)
 
-    form.fints_challenge.data = b64_sign(challenge.get_data())
-    form.fints_dialog.data = b64_sign(dialog_data)
-    form.fints_client.data = b64_sign(client_data)
+    signer = get_signer()
+    form.fints_challenge.data = b64_sign(challenge.get_data(), s=signer)
+    form.fints_dialog.data = b64_sign(dialog_data, s=signer)
+    form.fints_client.data = b64_sign(client_data, s=signer)
 
     return render_template(
         "finance/fints_tan.html",
@@ -302,6 +299,16 @@ def bank_accounts_login(bank_account_id: int, action: str) -> ResponseReturnValu
         bank_account_id=bank_account.id,
         qrcode=qrcode,
     )
+
+
+def b64_sign(data: bytes, s: Signer) -> str:
+    return s.sign(b64encode(data)).decode()
+
+
+def get_signer() -> Signer:
+    if (sk := current_app.secret_key) is None:
+        raise RuntimeError("secret key not set")
+    return Signer(sk)
 
 
 @bp.route('/bank-accounts/import/errors/json')
@@ -326,16 +333,14 @@ def bank_accounts_errors_json() -> ResponseReturnValue:
     ).model_dump()
 
 
-def b64_unsign(data: str) -> bytes:
-    s = Signer(current_app.secret_key)
-    return b64decode(s.unsign(data))
+def get_set_up_fints_client(
+    form: FinTSTANForm, bank_account: BankAccount, signer: Signer
+) -> FinTS3PinTanClient:
+    client_data = b64_unsign(form.fints_client.data, s=signer)
+    dialog_data = b64_unsign(form.fints_dialog.data, s=signer)
+    challenge = b64_unsign(form.fints_challenge.data, s=signer)
 
-
-def get_set_up_fints_client(form: FinTSTANForm, bank_account: BankAccount) -> FinTS3PinTanClient:
-    client_data = b64_unsign(form.fints_client.data)
-    dialog_data = b64_unsign(form.fints_dialog.data)
-    challenge = b64_unsign(form.fints_challenge.data)
-
+    assert config.fints_product_id is not None, "config not persisted"
     client = get_fints_client(
         product_id=config.fints_product_id,
         user_id=form.user.data,
@@ -350,19 +355,25 @@ def get_set_up_fints_client(form: FinTSTANForm, bank_account: BankAccount) -> Fi
     return client
 
 
+def b64_unsign(data: str, s: Signer) -> bytes:
+    return b64decode(s.unsign(data))
+
+
 @bp.route("/bank-accounts/<int:bank_account_id>/import", methods=["POST"])
 @access.require("finance_change")
 def bank_accounts_import(bank_account_id: int) -> ResponseReturnValue:
     fints_form = FinTSTANForm()
-    bank_account = session.get(BankAccount, bank_account_id)
+    bank_account = _get_or_404(session, BankAccount, bank_account_id)
 
     # Send TAN
-    client = get_set_up_fints_client(fints_form, bank_account)
+    signer = get_signer()
+    client = get_set_up_fints_client(fints_form, bank_account, signer)
 
     form = BankAccountActivitiesImportForm()
     form.user.data = fints_form.user.data
     form.secret_pin.data = fints_form.secret_pin.data
-    form.fints_client.data = b64_sign(client.deconstruct(including_private=True))
+    s = get_signer()
+    form.fints_client.data = b64_sign(client.deconstruct(including_private=True), s=s)
 
     form.start_date.data = (
         datetime.date(i) if (i := bank_account.last_imported_at) is not None else date(2018, 1, 1)
@@ -405,7 +416,7 @@ def flash_fints_errors() -> t.Iterator[None]:
 def bank_accounts_import_run(bank_account_id: int) -> ResponseReturnValue:
     form = BankAccountActivitiesImportForm()
     imported = ImportedTransactions([], [], [])
-    bank_account = session.get(BankAccount, bank_account_id)
+    bank_account = _get_or_404(session, BankAccount, bank_account_id)
 
     def display_form_response(
         imported: ImportedTransactions,
@@ -432,8 +443,10 @@ def bank_accounts_import_run(bank_account_id: int) -> ResponseReturnValue:
     if not form.validate():
         return display_form_response(imported)
 
-    fints_client_data = b64_unsign(form.fints_client.data)
+    s = get_signer()
+    fints_client_data = b64_unsign(form.fints_client.data, s=s)
 
+    assert config.fints_product_id is not None
     fints_client = get_fints_client(
         product_id=config.fints_product_id,
         user_id=form.user.data,
@@ -468,7 +481,10 @@ def bank_accounts_import_run(bank_account_id: int) -> ResponseReturnValue:
         f"/ {len(imported.doubtful)} zu neu (Buchung >= {date.today()}T00:00Z)."
     )
     if not form.do_import.data:
-        form.fints_client.data = b64_sign(fints_client.deconstruct(including_private=True))
+        signer = get_signer()
+        form.fints_client.data = b64_sign(
+            fints_client.deconstruct(including_private=True), s=signer
+        )
 
         return display_form_response(imported)
 
@@ -530,7 +546,7 @@ def bank_accounts_import_errors() -> ResponseReturnValue:
 @bp.route('/bank-accounts/importerrors/<error_id>', methods=['GET', 'POST'])
 @access.require('finance_change')
 def fix_import_error(error_id: int) -> ResponseReturnValue:
-    error = session.get(MT940Error, error_id)
+    error = _get_or_404(session, MT940Error, error_id)
     form = FixMT940Form()
     imported = ImportedTransactions([], [], [])
     new_exception = None
@@ -952,7 +968,8 @@ def balance_json(account_id: int) -> ResponseReturnValue:
              Split.transaction_id == Transaction.id))
                     .where(Split.account_id == account_id))
 
-    res = session.execute(json_agg_core(balance_json)).first()[0]
+    res = session.scalar(json_agg_core(balance_json))
+    assert res is not None
     return {"items": res}
 
 
@@ -1042,6 +1059,8 @@ def _prefixed_merge(
 @bp.route('/accounts/<int:account_id>/json')
 def accounts_show_json(account_id: int) -> ResponseReturnValue:
     style = request.args.get('style')
+    if style is None:
+        abort(400, "query parameter `style` missing")
     limit = request.args.get('limit', type=int)
     offset = request.args.get('offset', type=int)
     sort_by = request.args.get('sort', default="valid_on")
@@ -1104,7 +1123,7 @@ def transactions_show(transaction_id: int) -> ResponseReturnValue:
 
 @bp.route('/transactions/<int:transaction_id>/json')
 def transactions_show_json(transaction_id: int) -> ResponseReturnValue:
-    transaction = session.get(Transaction, transaction_id)
+    transaction = _get_or_404(session, Transaction, transaction_id)
     return TransactionSplitResponse(
         description=transaction.description,
         items=[
@@ -1162,8 +1181,8 @@ def _iter_transaction_buttons(
 
 def _format_transaction_row(
     transaction: Transaction,
-    user_account: Account,
-    bank_acc_act: BankAccountActivity,
+    user_account: Account | None,
+    bank_acc_act: BankAccountActivity | None,
 ) -> UnconfirmedTransactionsRow:
     return UnconfirmedTransactionsRow(
         id=transaction.id,
@@ -1173,23 +1192,31 @@ def _format_transaction_row(
             new_tab=True,
             glyphicon="fa-external-link-alt",
         ),
-        user=LinkColResponse(
-            href=url_for("user.user_show", user_id=user_account.user.id),
-            title="{} ({})".format(
-                user_account.user.name,
-                encode_type2_user_id(user_account.user.id),
-            ),
-            new_tab=True,
-        )
-        if user_account
-        else None,
-        room=user_account.user.room.short_name
-        if user_account and user_account.user.room
-        else None,
-        author=LinkColResponse(
-            href=url_for("user.user_show", user_id=transaction.author.id),
-            title=transaction.author.name,
-            new_tab=True,
+        user=(
+            LinkColResponse(
+                href=url_for("user.user_show", user_id=user_account.user.id),
+                title="{} ({})".format(
+                    user_account.user.name,
+                    encode_type2_user_id(user_account.user.id),
+                ),
+                new_tab=True,
+            )
+            if user_account and user_account.user
+            else None
+        ),
+        room=(
+            user_account.user.room.short_name
+            if user_account and user_account.user and user_account.user.room
+            else None
+        ),
+        author=(
+            LinkColResponse(
+                href=url_for("user.user_show", user_id=transaction.author.id),
+                title=transaction.author.name,
+                new_tab=True,
+            )
+            if transaction.author
+            else None
         ),
         date=date_format(transaction.posted_at, formatter=date_filter),
         amount=money_filter(transaction.amount),
@@ -1256,6 +1283,7 @@ def transactions_confirm_selected() -> ResponseReturnValue:
     if not request.is_json:
         return redirect(url_for(".transactions_unconfirmed"))
 
+    assert request.json is not None
     ids = request.json.get("ids", [])
     if not isinstance(ids, Iterable):
         ids = []
@@ -1391,8 +1419,8 @@ def transactions_all_json() -> ResponseReturnValue:
     else:
         q = q.where(Transaction.valid_on <= upper)
 
-    res = session.execute(json_agg_core(q)).fetchone()[0] or []
-    return {"items": res}
+    res = session.scalar(json_agg_core(q))
+    return {"items": res or []}
 
 
 @bp.route('/transactions/create', methods=['GET', 'POST'])
@@ -1400,9 +1428,18 @@ def transactions_all_json() -> ResponseReturnValue:
 @access.require('finance_change')
 def transactions_create() -> ResponseReturnValue:
     form = TransactionCreateForm()
+
+    def _ensure_decimal(v: t.Any) -> Decimal:
+        if isinstance(v, Decimal):
+            return v
+        abort(400, f"{v!r} is not a decimal value.")
+
     if form.validate_on_submit():
         splits = [
-            (session.get(Account, split_form.account_id.data), split_form.amount.data)
+            (
+                _get_or_404(session, Account, split_form.account_id.data),
+                _ensure_decimal(split_form.amount.data),
+            )
             for split_form in form.splits
         ]
         transaction = finance.complex_transaction(
@@ -1735,7 +1772,11 @@ def payment_reminder_mail() -> ResponseReturnValue:
     form = ConfirmPaymentReminderMail()
 
     if form.validate_on_submit() and form.confirm.data:
-        last_import_date = get_last_import_date(session).date()
+        if (lid := get_last_import_date(session)) is None:
+            flash("Konnte kein letztes import date finden", "error")
+            return redirect(url_for(".membership_fees"))
+
+        last_import_date = lid.date()
         if last_import_date >= utcnow().date() - timedelta(days=3):
             negative_users = get_negative_members()
             user_send_mails(negative_users, MemberNegativeBalance())
@@ -1759,3 +1800,13 @@ def payment_reminder_mail() -> ResponseReturnValue:
                            page_title="Zahlungserinnerungen per E-Mail versenden",
                            form_args=form_args,
                            form=form)
+
+
+TModel = t.TypeVar("TModel", bound=ModelBase)
+
+
+def _get_or_404(session: Session, Model: type[TModel], pkey: t.Any) -> TModel:
+    obj = session.get(Model, pkey)
+    if obj is None:
+        abort(404, f"Could not find {Model} with primary key {pkey}")
+    return obj
