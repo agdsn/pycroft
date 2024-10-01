@@ -24,9 +24,16 @@ from sqlalchemy.orm.exc import ObjectDeletedError
 
 from pycroft.lib.finance import get_negative_members, import_newer_than_days
 from pycroft.lib.logging import log_task_event
-from pycroft.lib.mail import send_mails, Mail, RetryableException, \
-    TaskFailedTemplate, \
-    MemberNegativeBalance, send_template_mails
+from pycroft.lib.mail import (
+    send_mails,
+    Mail,
+    RetryableException,
+    TaskFailedTemplate,
+    MemberNegativeBalance,
+    send_template_mails,
+    _config_var,
+    MailConfig,
+)
 from pycroft.lib.task import get_task_implementation, get_scheduled_tasks
 from pycroft.lib.traffic import delete_old_traffic_data
 from pycroft.model import session
@@ -110,6 +117,7 @@ class DBTask(CeleryTask):
         set_scoped_session(
             t.cast(Session, scoped_session(sessionmaker(bind=self.engine)))
         )
+        _config_var.set(MailConfig.from_env())
 
     def __del__(self) -> None:
         if self.connection is not None:
