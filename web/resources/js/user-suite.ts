@@ -6,7 +6,7 @@
 
 function handleKeyPress(event: KeyboardEvent) {
     // Dismiss event in case it was triggered in a text area or the shift key was (already) pressed
-    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement || event.shiftKey) return;
+    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement || event.altKey || event.shiftKey) return;
 
     if (!(event.key === "ArrowRight" || event.key === "ArrowLeft")) return;
 
