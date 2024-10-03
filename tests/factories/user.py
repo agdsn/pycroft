@@ -28,6 +28,7 @@ class UserFactory(BaseFactory):
     registered_at = Faker('date_time')
     password = None
     passwd_hash = PASSWORD
+    wifi_passwd_hash = "{clear}password"
     email = Faker('email')
     account = factory.SubFactory(AccountFactory, type="USER_ASSET")
     room = factory.SubFactory(RoomFactory)

@@ -31,7 +31,15 @@ from web import api
 from web.blueprints import task
 from . import template_filters, template_tests
 from .blueprints import (
-    facilities, finance, infrastructure, login, properties, user, host, health
+    facilities,
+    finance,
+    infrastructure,
+    login,
+    properties,
+    user,
+    host,
+    health,
+    mpskclient,
 )
 
 from .blueprints.login import login_manager
@@ -99,6 +107,7 @@ def make_app(hades_logs: bool = True) -> PycroftFlask:
     app.register_blueprint(login.bp)
     app.register_blueprint(api.bp, url_prefix="/api/v0")
     app.register_blueprint(health.bp, url_prefix="/health")
+    app.register_blueprint(mpskclient.bp, url_prefix="/wifi-mpsk")
 
     template_filters.register_filters(app)
     template_tests.register_checks(app)
@@ -132,12 +141,6 @@ def make_app(hades_logs: bool = True) -> PycroftFlask:
 
         :param e: The error from the errorhandler
         """
-        # We need this path hard-coding because the global app errorhandlers have higher
-        # precedence than anything registered to a blueprint.
-        # A clean solution would be flask supporting nested blueprints (see flask #539)
-        if request.path.startswith('/api/'):
-            return api.errorpage(e)
-
         code = getattr(e, "code", 500)
 
         if code == 500:

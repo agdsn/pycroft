@@ -41,8 +41,13 @@ class TestClient(flask.testing.FlaskClient):
         """
         __tracebackhide__ = True
         resp = self.open(url, method=method, **kw)
-        assert resp.status_code == code, \
-            f"Expected url {url} to return {code}, got {resp.status_code}"
+        assert resp.status_code == code, "\n".join(
+            (
+                f"Expected url {url} to return {code}, got {resp.status}.",
+                "Additional data:",
+                resp.text,
+            )
+        )
         if autoclose:
             resp.close()
         return resp

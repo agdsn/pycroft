@@ -75,6 +75,7 @@ if t.TYPE_CHECKING:
     # Backrefs
     from .logging import LogEntry, UserLogEntry, TaskLogEntry
     from .host import Host
+    from .mpsk_client import MPSKClient
     from .swdd import Tenancy
     from .task import UserTask
     from .traffic import TrafficVolume
@@ -252,6 +253,11 @@ class User(BaseUser, UserMixin):
     hosts: Mapped[list[Host]] = relationship(
         back_populates="owner", cascade="all, delete-orphan"
     )
+
+    mpsk_clients: Mapped[list[MPSKClient]] = relationship(
+        back_populates="owner", cascade="all, delete-orphan"
+    )
+
     authored_log_entries: Mapped[list[LogEntry]] = relationship(
         back_populates="author", viewonly=True
     )
@@ -368,15 +374,15 @@ class User(BaseUser, UserMixin):
         return max(le, key=operator.attrgetter("created_at"))
 
     @property
-    def wifi_password(self):
-        """Store a hash of a given plaintext passwd for the user.
+    def wifi_password(self) -> str | None:
+        """return the cleartext wifi password (without crypt prefix) if available.
 
+        :returns: `None` if the `wifi_passwd_hash` is not set or is not cleartext.
         """
-
         if self.wifi_passwd_hash is not None and self.wifi_passwd_hash.startswith(clear_password_prefix):
             return self.wifi_passwd_hash.replace(clear_password_prefix, '', 1)
 
-        raise ValueError("Cleartext password not available.")
+        return None
 
     @wifi_password.setter
     def wifi_password(self, value):

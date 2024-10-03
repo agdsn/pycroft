@@ -7,6 +7,7 @@ from ipaddress import IPv4Address, IPv6Address
 from flask import jsonify, current_app, Response
 from flask.typing import ResponseReturnValue
 from flask_restful import Api, Resource as FlaskRestfulResource, abort
+from packaging.utils import InvalidName
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload, selectinload, undefer, with_polymorphic
@@ -17,6 +18,7 @@ from webargs.flaskparser import use_kwargs
 from pycroft.helpers import utc
 from pycroft.helpers.i18n import Message
 from pycroft.lib.finance import estimate_balance, get_last_import_date
+from pycroft.lib.mpsk_client import mpsk_edit, mpsk_client_create, mpsk_delete
 from pycroft.lib.host import change_mac, host_create, interface_create, host_edit
 from pycroft.lib.net import SubnetFullException
 from pycroft.lib.swdd import get_swdd_person_id, get_relevant_tenancies, \
@@ -57,6 +59,7 @@ from pycroft.model.session import current_timestamp
 from pycroft.model.task import Task
 from pycroft.model.types import IPAddress, InvalidMACAddressException
 from pycroft.model.user import User, IllegalEmailError, IllegalLoginError
+from web.blueprints.mpskclient import get_mpsk_client_or_404
 
 api = Api()
 
@@ -112,7 +115,7 @@ def get_user_or_404(user_id: int, options: t.Sequence[ORMOption] | None = None) 
 def get_authenticated_user(user_id: int, password: str) -> User:
     user = get_user_or_404(user_id)
     if user is None or not user.check_password(password):
-        abort(401, message="Authentication failed")
+        abort(401, message=f"Authentication of user {user_id} failed")
     return user
 
 
@@ -155,10 +158,7 @@ def generate_user_data(user: User) -> Response:
     last_import_ts = get_last_import_date(session.session)
     last_finance_update = last_import_ts and last_import_ts.date() or None
 
-    try:
-        wifi_password = user.wifi_password
-    except ValueError:
-        wifi_password = None
+    wifi_password = user.wifi_password
 
     med = scheduled_membership_end(user)
     mbd = scheduled_membership_start(user)
@@ -342,6 +342,122 @@ class UserByIPResource(Resource):
 
 
 api.add_resource(UserByIPResource, '/user/from-ip')
+
+
+class MPSKSClientsResource(Resource):
+    def get(self, user_id: int) -> ResponseReturnValue:
+        user = get_user_or_404(user_id)
+
+        return jsonify(
+            [
+                {
+                    "name": mpsk_client.name,
+                    "id": mpsk_client.id,
+                    "mac": mpsk_client.mac,
+                }
+                for mpsk_client in user.mpsk_clients
+            ]
+        )
+
+
+api.add_resource(MPSKSClientsResource, "/user/<int:user_id>/get-mpsks")
+
+
+class MPSKSClientAddResource(Resource):
+    @use_kwargs(
+        {
+            "password": fields.Str(required=True),
+            "mac": fields.Str(required=True),
+            "name": fields.Str(required=True),
+        },
+        location="form",
+    )
+    def post(self, user_id: int, password: str, mac: str, name: str) -> ResponseReturnValue:
+        user = get_authenticated_user(user_id, password)
+        # checks rather the user has all settable mpsks clients created
+        if len(user.mpsk_clients) >= current_app.config.get("MAX_MPSKS", 30):
+            abort(400, message="User has the maximum count of mpsk clients.")
+
+        if not user.wifi_password:
+            abort(412, message="Please generate a wifi password first")
+
+        try:
+            mpsk_client = mpsk_client_create(
+                session.session, owner=user, mac=mac, name=name, processor=user
+            )
+            session.session.commit()
+        except InvalidMACAddressException as e:
+            abort(422, message=f"Invalid MAC address: {e}")
+        except IntegrityError as e:
+            abort(409, message=f"Mac address is already in use: {e}")
+        except InvalidName:
+            abort(400, message="No proper name was provided.")
+        return jsonify(
+            {
+                "name": mpsk_client.name,
+                "id": mpsk_client.id,
+                "mac": mpsk_client.mac,
+            }
+        )
+
+
+api.add_resource(MPSKSClientAddResource, "/user/<int:user_id>/add-mpsk")
+
+
+class MPSKSClientDeleteResource(Resource):
+    @use_kwargs(
+        {
+            "password": fields.Str(required=True),
+        },
+        location="form",
+    )
+    def post(self, user_id: int, mpsk_id: int, password: str) -> ResponseReturnValue:
+        user = get_authenticated_user(user_id, password)
+        mpsk = get_mpsk_client_or_404(mpsk_id)
+
+        if not user == mpsk.owner:
+            abort(401, message="You are not the owner of the mpsk.")
+
+        mpsk_delete(session.session, mpsk_client=mpsk, processor=user)
+        session.session.commit()
+
+        return "mpsk client was deleted"
+
+
+api.add_resource(MPSKSClientDeleteResource, "/user/<int:user_id>/delete-mpsk/<int:mpsk_id>")
+
+
+class MPSKSClientChangeResource(Resource):
+    @use_kwargs(
+        {
+            "password": fields.Str(required=True),
+            "mac": fields.Str(required=True),
+            "name": fields.Str(required=True),
+        },
+        location="form",
+    )
+    def post(
+        self, user_id: int, mpsk_id: int, password: str, mac: str, name: str
+    ) -> ResponseReturnValue:
+        user = get_authenticated_user(user_id, password)
+        mpsk = get_mpsk_client_or_404(mpsk_id)
+
+        if user != mpsk.owner:
+            abort(404, message=f"User {user_id} does not own the mpsk client with the id {mpsk_id}")
+
+        try:
+            mpsk_edit(session.session, client=mpsk, owner=user, name=name, mac=mac, processor=user)
+            session.session.commit()
+        except InvalidMACAddressException:
+            abort(422, message="Invalid MAC address.")
+        except IntegrityError:
+            abort(409, message="Mac address is already in use.")
+        except InvalidName:
+            abort(400, message="No proper name was provided.")
+        return "mpsk has been changed."
+
+
+api.add_resource(MPSKSClientChangeResource, "/user/<int:user_id>/change-mpsk/<int:mpsk_id>")
 
 
 class UserInterfaceResource(Resource):
