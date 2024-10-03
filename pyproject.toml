@@ -24,7 +24,7 @@ classifiers = [
     "Topic :: Internet",
 ]
 urls = {Homepage = "http://github.com/agdsn/pycroft/"}
-requires-python = ">= 3.11"
+requires-python = ">= 3.12"
 dependencies = [
     "aiohttp >= 3.9.4",  # security pin; transitive from mac-vendor-lookup
     "alembic ~= 1.9.2",
@@ -118,7 +118,7 @@ line-length = 100
 [tool.mypy]
 exclude = "deps/.*/build"
 plugins = "sqlalchemy.ext.mypy.plugin"
-python_version = "3.11"
+python_version = "3.12"
 follow_imports = "silent"
 ignore_missing_imports = true
 # this list shall slowly grow until it covers the whole codebase.
