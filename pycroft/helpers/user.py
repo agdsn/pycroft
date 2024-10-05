@@ -43,7 +43,7 @@ def hash_password(plaintext_passwd: str) -> str:
     The passlib CryptContext is configured to generate the very secure
     ldap_sha512_crypt hashes (a crypt extension available since glibc 2.7).
     """
-    return crypt_context.hash(plaintext_passwd)
+    return t.cast(str, crypt_context.hash(plaintext_passwd))
 
 
 def cleartext_password(plaintext_passwd: str) -> str:
@@ -61,7 +61,7 @@ def verify_password(plaintext_password: str, hash: str) -> bool:
     It uses a crypt_context to verify :rfc:`2307` hashes.
     """
     try:
-        return crypt_context.verify(plaintext_password, hash)
+        return t.cast(bool, crypt_context.verify(plaintext_password, hash))
     # TypeError is required for user entries not having a hash
     except (ValueError, TypeError):
         return False
