@@ -220,6 +220,7 @@ def register_pyinstrument(app: Flask) -> None:
         output_html = g.profiler.output_html()
         return make_response(output_html)
 
+
 IGNORED_EXCEPTION_TYPES = (HTTPException,)
 
 

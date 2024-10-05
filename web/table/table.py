@@ -193,7 +193,6 @@ class MultiLinkColumn(Column):
         super().__init__(*a, **kw)
 
 
-
 @custom_formatter_column('table.dateFormatter')
 class DateColumn(Column):
     pass

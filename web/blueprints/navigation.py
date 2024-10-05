@@ -70,7 +70,6 @@ class BlueprintNavigation:
         self._access = blueprint_access
         self.push_right = push_right
 
-
     @property
     def is_allowed(self) -> bool:
         """Checks if the user has general access to the blueprint.

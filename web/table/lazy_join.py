@@ -71,6 +71,7 @@ DecoratedInType = Callable[
 ]
 DecoratedOutType = Callable[_P, LazilyJoined]
 
+
 @overload
 def lazy_join(func_or_glue: DecoratedInType) -> DecoratedOutType:
     ...
@@ -84,7 +85,7 @@ def lazy_join(func_or_glue: str) -> Callable[[DecoratedInType], DecoratedOutType
 def lazy_join(
     func_or_glue: str | DecoratedInType,
 ) -> DecoratedOutType | Callable[[DecoratedInType], DecoratedOutType]:
-    if type(func_or_glue) == FunctionType:
+    if isinstance(func_or_glue, FunctionType):
         # Return the wrapped function
         return LazyJoinDecorator()(func=t.cast(DecoratedInType, func_or_glue))
     # Return the decorator

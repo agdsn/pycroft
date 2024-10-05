@@ -93,6 +93,7 @@ ip_regex = re.compile(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$")
 number_re = re.compile(r"[0-9]+")
 letter_re = re.compile(r"[a-z]")
 
+
 def port_name_sort_key(port_name: str) -> int:
     number = number_re.search(port_name)
     letter = letter_re.search(port_name.lower())
