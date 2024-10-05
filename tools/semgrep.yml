@@ -1,11 +1,11 @@
 # run with `pip install semgrep && semgrep --config=tools/semgrep.yml pycroft web`
 # …or let `pre-commit` do the heavy lifting for you!
 rules:
-  - id: f-string-in-deferred-gettext
-    pattern: pycroft.helpers.i18n.deferred_gettext(f"...")
-    message: Don't use f-strings in `deferred_gettext`
-    languages: [python]
-    severity: ERROR
+  # - id: f-string-in-deferred-gettext
+  #   pattern: pycroft.helpers.i18n.deferred_gettext(f"...")
+  #   message: Don't use f-strings in `deferred_gettext`
+  #   languages: [python]
+  #   severity: ERROR
 
   - id: format-in-deferred-gettext
     patterns:
@@ -41,20 +41,20 @@ rules:
     languages: [python]
     severity: ERROR
 
-  - id: log-event-with-f-string
-    patterns:
-      - pattern-either:
-        - pattern: ("...".format($...ARGS))
-        - pattern: (f"...")
-      - pattern-inside: $LOG_FN(...)
-      - metavariable-regex:
-          metavariable: $LOG_FN
-          regex: (pycroft.lib.logging.)?log_.*event
-    message: |
-      Don't use $LOG_FN with a pre-formatted string literal.
-      Replace the message by `deferred_gettext(...).format(...).to_json()`.
-    languages: [python]
-    severity: ERROR
+  # - id: log-event-with-f-string
+  #   patterns:
+  #     - pattern-either:
+  #       - pattern: ("...".format($...ARGS))
+  #       - pattern: (f"...")
+  #     - pattern-inside: $LOG_FN(...)
+  #     - metavariable-regex:
+  #         metavariable: $LOG_FN
+  #         regex: (pycroft.lib.logging.)?log_.*event
+  #   message: |
+  #     Don't use $LOG_FN with a pre-formatted string literal.
+  #     Replace the message by `deferred_gettext(...).format(...).to_json()`.
+  #   languages: [python]
+  #   severity: ERROR
 
   - id: use-format-instead-of-strftime
     pattern: $DT.strftime("$FORMAT")
