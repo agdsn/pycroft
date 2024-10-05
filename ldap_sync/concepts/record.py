@@ -20,9 +20,6 @@ from .types import (
     AttributeValues,
 )
 
-T = typing.TypeVar("T")
-
-
 def _canonicalize_to_list(
     value: AttributeValues,
 ) -> list[str] | list[bytes] | list[int]:
@@ -43,7 +40,7 @@ def _canonicalize_to_list(
 # bytes | str -> str
 # T -> T
 # …but mypy rejects this because we have an argument overlap with incompatible return types.
-def _maybe_escape_filter_chars(value: T) -> T | str:
+def _maybe_escape_filter_chars[T](value: T) -> T | str:
     """Escape and return according to :rfc:`04515` if type is string-like.
 
     Else, return the unchanged object.

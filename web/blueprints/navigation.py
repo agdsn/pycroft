@@ -4,14 +4,10 @@
 from __future__ import annotations
 import typing as t
 from dataclasses import dataclass, field
-from typing import Generic
 
 from flask import request, url_for, Blueprint, Flask
 from web.blueprints.access import BlueprintAccess
 from web.blueprints import bake_endpoint
-
-
-TFun = t.TypeVar("TFun", bound=t.Callable)
 
 
 class BlueprintNavigation:
@@ -87,7 +83,9 @@ class BlueprintNavigation:
         """
         return self._access.is_accessible
 
-    def navigate(
+    def navigate[
+        TFun: t.Callable
+    ](
         self,
         text: str,
         weight: int = 0,
@@ -216,10 +214,8 @@ class BlueprintNavigation:
         return
 
 
-TElem = t.TypeVar("TElem")
-
 @dataclass
-class SegmentedList(Generic[TElem]):
+class SegmentedList[TElem]:
     left: list[TElem] = field(default_factory=lambda: [])
     right: list[TElem] = field(default_factory=lambda: [])
 

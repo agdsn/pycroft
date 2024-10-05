@@ -68,9 +68,7 @@ class User(t.Protocol):
     hosts: t.Iterable[Host]
 
 
-_TRet = t.TypeVar("_TRet")
-_P = t.ParamSpec("_P")
-def suppress_resource_warning(f: t.Callable[_P, _TRet]) -> t.Callable[_P, _TRet]:
+def suppress_resource_warning[_TRet, **_P](f: t.Callable[_P, _TRet]) -> t.Callable[_P, _TRet]:
     """Suppress warnings related to incomplete :class:`reportlab.platypus.flowables.Image <Image>`
     cleanup
 

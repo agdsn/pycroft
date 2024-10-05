@@ -14,7 +14,7 @@ import typing as t
 from datetime import timedelta
 from decimal import Decimal
 from functools import partial
-from typing import TypeVar, cast
+from typing import cast
 from collections.abc import Callable
 
 from flask import (
@@ -220,13 +220,11 @@ def json_users_highest_traffic() -> ResponseReturnValue:
     ).model_dump()
 
 
-T = TypeVar('T')
-def coalesce_none(value: T | None, *none_values: T) -> T | None:
+def coalesce_none[T](value: T | None, *none_values: T) -> T | None:
     return None if any(value == n for n in none_values) else value
 
 
-U = TypeVar('U')
-def and_then(val: T | None, map: Callable[[T], U]) -> U | None:
+def and_then[T, U](val: T | None, map: Callable[[T], U]) -> U | None:
     return map(val) if val is not None else None
 
 

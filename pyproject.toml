@@ -131,6 +131,7 @@ files = [
 ]
 mypy_path = "stubs"
 namespace_packages = true
+enable_incomplete_feature = ["NewGenericSyntax"]
 
 # global rules
 check_untyped_defs = true

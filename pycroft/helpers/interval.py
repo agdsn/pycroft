@@ -12,18 +12,11 @@ import operator
 import typing as t
 from functools import reduce
 from itertools import tee, chain, filterfalse
-from typing import Generic
 
 # from typing_extensions import Self
 
 if t.TYPE_CHECKING:
-    from _typeshed import SupportsAllComparisons
-    # TODO figure out how we can demand that T shall be a totally ordered metric space
-    T = t.TypeVar("T", bound=SupportsAllComparisons)
-    U = t.TypeVar("U", bound=SupportsAllComparisons)
-else:
-    T = t.TypeVar("T")
-    U = t.TypeVar("U")
+    from _typeshed import SupportsAllComparisons as Ord
 
 
 def _infinity(name):
@@ -57,10 +50,10 @@ class NegativeInfinityType:
     pass
 
 
-TWithInfinity: t.TypeAlias = T | PositiveInfinityType | NegativeInfinityType
+type TWithInfinity[T] = T | PositiveInfinityType | NegativeInfinityType
 
 
-class Bound(tuple, Generic[T]):
+class Bound[T: Ord](tuple):
     """Represents a bound of an interval, i.e. value + closedness.
 
     The value is either:
@@ -155,7 +148,7 @@ class Bound(tuple, Generic[T]):
         return self.value is NegativeInfinity or self.value is PositiveInfinity
 
 
-class Interval(tuple, Generic[T]):
+class Interval[T: Ord](tuple):
     """
     Represents an bounded or unbounded interval.
 
@@ -466,7 +459,7 @@ class Interval(tuple, Generic[T]):
         assert len(diff_set) == 1
         return diff_set[0]
 
-    def map(self, f: t.Callable[[T], U]) -> Interval[U]:
+    def map[U: Ord](self, f: t.Callable[[T], U]) -> Interval[U]:
         r"""Apply a monotonic function to the interval's bounds.
 
         For instance, the following would turn a :class:`datetime` interval into a
@@ -502,15 +495,16 @@ class Interval(tuple, Generic[T]):
             else Bound[U](f(t.cast(T, u.value)), u.closed),
         )
 
-def _convert_begin(begin: T | None) -> TWithInfinity:
+
+def _convert_begin[T: Ord](begin: T | None) -> TWithInfinity[T]:
     return t.cast(TWithInfinity, NegativeInfinity) if begin is None else begin
 
 
-def _convert_end(end: T | None) -> TWithInfinity:
+def _convert_end[T: Ord](end: T | None) -> TWithInfinity[T]:
     return t.cast(TWithInfinity, PositiveInfinity) if end is None else end
 
 
-def closed(begin: T | None, end: T | None) -> Interval[T]:
+def closed[T: Ord](begin: T | None, end: T | None) -> Interval[T]:
     """
     Create a closed interval.
 
@@ -521,7 +515,7 @@ def closed(begin: T | None, end: T | None) -> Interval[T]:
     return Interval(Bound(begin_, True), Bound(end_, True))
 
 
-def closedopen(begin: T | None, end: T | None) -> Interval[T]:
+def closedopen[T: Ord](begin: T | None, end: T | None) -> Interval[T]:
     """
     Create a left-closed/right-open interval.
 
@@ -532,7 +526,7 @@ def closedopen(begin: T | None, end: T | None) -> Interval[T]:
     return Interval(Bound(begin_, True), Bound(end_, False))
 
 
-def starting_from(when: T) -> Interval[T]:
+def starting_from[T: Ord](when: T) -> Interval[T]:
     """Alias for :func:`closedopen(when, None) <closedopen>`
 
     :return: ``[when, ∞)``
@@ -540,7 +534,7 @@ def starting_from(when: T) -> Interval[T]:
     return closedopen(when, None)
 
 
-def openclosed(begin: T | None, end: T | None) -> Interval[T]:
+def openclosed[T: Ord](begin: T | None, end: T | None) -> Interval[T]:
     """
     Create a left-open/right-closed interval.
 
@@ -551,7 +545,7 @@ def openclosed(begin: T | None, end: T | None) -> Interval[T]:
     return Interval(Bound(begin_, False), Bound(end_, True))
 
 
-def open(begin: T | None, end: T | None) -> Interval[T]:
+def open[T: Ord](begin: T | None, end: T | None) -> Interval[T]:
     """
     Create an open interval.
 
@@ -562,7 +556,7 @@ def open(begin: T | None, end: T | None) -> Interval[T]:
     return Interval(Bound(begin_, False), Bound(end_, False))
 
 
-def single(point: T) -> Interval[T]:
+def single[T: Ord](point: T) -> Interval[T]:
     """
     Create an interval containing only a single point.
     """
@@ -570,7 +564,7 @@ def single(point: T) -> Interval[T]:
     return Interval(bound, bound)
 
 
-def empty(point: T) -> Interval[T]:
+def empty[T: Ord](point: T) -> Interval[T]:
     """
     Create an empty interval positioned at the given point.
 
@@ -586,7 +580,7 @@ def empty(point: T) -> Interval[T]:
 UnboundedInterval = open(None, None)
 
 
-class IntervalSet(collections.abc.Sequence[Interval[T]], Generic[T]):
+class IntervalSet[T: Ord](collections.abc.Sequence[Interval[T]]):
     _intervals: tuple[Interval[T], ...]
 
     def __init__(
@@ -670,10 +664,10 @@ class IntervalSet(collections.abc.Sequence[Interval[T]], Generic[T]):
 
 
 #:
-IntervalSetSource = Interval[T] | IntervalSet[T] | t.Iterable[Interval[T]] | None
+type IntervalSetSource[T: Ord] = Interval[T] | IntervalSet[T] | t.Iterable[Interval[T]] | None
 
 
-def _mangle_argument(arg: IntervalSetSource) -> tuple[Interval[T], ...]:
+def _mangle_argument[T: Ord](arg: IntervalSetSource) -> tuple[Interval[T], ...]:
     if arg is None:
         return ()
     if isinstance(arg, IntervalSet):
@@ -687,16 +681,16 @@ def _mangle_argument(arg: IntervalSetSource) -> tuple[Interval[T], ...]:
                     "Was {}.".format(type(arg).__name__))
 
 
-def _create(intervals: t.Iterable[Interval[T]]) -> IntervalSet[T]:
+def _create[T: Ord](intervals: t.Iterable[Interval[T]]) -> IntervalSet[T]:
     """Create an IntervalSet directly from a sorted Interval iterable."""
     interval_set = IntervalSet[T](())
     interval_set._intervals = tuple(intervals)
     return interval_set
 
 
-def _chain_ordered(
-    left: t.Iterable[Interval[T]], right: t.Iterable[Interval[T]]
-) -> t.Iterator[Interval[T]]:
+def _chain_ordered[
+    T: Ord
+](left: t.Iterable[Interval[T]], right: t.Iterable[Interval[T]]) -> t.Iterator[Interval[T]]:
     left = iter(left)
     right = iter(right)
     a = next(left, None)
@@ -718,7 +712,7 @@ def _chain_ordered(
             yield b
 
 
-def _complement(intervals: t.Iterable[Interval[T]]) -> t.Iterator[Interval[T]]:
+def _complement[T: Ord](intervals: t.Iterable[Interval[T]]) -> t.Iterator[Interval[T]]:
     intervals = iter(intervals)
     try:
         first = next(intervals)
@@ -736,7 +730,7 @@ def _complement(intervals: t.Iterable[Interval[T]]) -> t.Iterator[Interval[T]]:
         yield Interval(~last.upper_bound, Bound(PositiveInfinity, False))
 
 
-def _join(intervals: t.Iterable[Interval[T]]) -> t.Iterator[Interval[T]]:
+def _join[T: Ord](intervals: t.Iterable[Interval[T]]) -> t.Iterator[Interval[T]]:
     """
     Join a possibly overlapping, ordered iterable of intervals, removing any
     empty intervals.
@@ -762,9 +756,9 @@ def _join(intervals: t.Iterable[Interval[T]]) -> t.Iterator[Interval[T]]:
     yield top
 
 
-def _intersect(
-    left: t.Iterable[Interval[T]], right: t.Iterable[Interval[T]]
-) -> t.Iterator[Interval[T]]:
+def _intersect[
+    T: Ord
+](left: t.Iterable[Interval[T]], right: t.Iterable[Interval[T]]) -> t.Iterator[Interval[T]]:
     left = iter(left)
     right = iter(right)
     try:

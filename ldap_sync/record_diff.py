@@ -9,8 +9,6 @@ import typing
 
 from .concepts import record, action, types
 
-T = typing.TypeVar("T", bound="record.Record")
-
 
 def diff_attributes(
     current_attrs: types.NormalizedAttributes,
@@ -50,7 +48,7 @@ def diff_user_attributes(
     return modifications
 
 
-def diff_records(current: T | None, desired: T | None) -> action.Action:
+def diff_records[T: record.Record](current: T | None, desired: T | None) -> action.Action:
     """Determines an action to take, given a desired and a current record.
 
     :param current: the present state
@@ -81,12 +79,9 @@ def diff_records(current: T | None, desired: T | None) -> action.Action:
     raise AssertionError  # pragma: no cover
 
 
-TKey = typing.TypeVar("TKey")
-TVal1 = typing.TypeVar("TVal1")
-TVal2 = typing.TypeVar("TVal2")
-
-
-def iter_zip_dicts(
+def iter_zip_dicts[
+    TKey, TVal1, TVal2
+](
     d1: dict[TKey, TVal1],
     d2: dict[TKey, TVal2],
 ) -> typing.Iterator[tuple[TKey, tuple[TVal1 | None, TVal2 | None]]]:

@@ -4,8 +4,6 @@ pycroft.model.task_serialization
 """
 from dataclasses import dataclass
 from datetime import date
-from typing import TypeVar
-from collections.abc import Callable
 
 import wrapt
 from marshmallow import Schema, fields, post_load, ValidationError
@@ -16,11 +14,8 @@ class TaskParams:
     pass
 
 
-T = TypeVar('T')
-handle_validation_error: Callable[[T], T]
-
 @wrapt.decorator
-def handle_validation_error(wrapped, instance, args, kwargs):
+def handle_validation_error[T](wrapped: T, instance, args, kwargs) -> T:
     try:
         return wrapped(*args, **kwargs)
     except TypeError as e:

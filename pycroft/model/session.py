@@ -10,7 +10,7 @@
     :copyright: (c) 2011 by AG DSN.
 """
 import typing as t
-from typing import overload, TypeVar, Any, TYPE_CHECKING
+from typing import overload, Any, TYPE_CHECKING
 from collections.abc import Callable
 
 from sqlalchemy.orm import scoped_session
@@ -57,13 +57,10 @@ def set_scoped_session(scoped_session: scoped_session[orm.Session]) -> None:
     object.__setattr__(Session, "_get_current_object", lambda: scoped_session)
 
 
-F = TypeVar('F', bound=Callable[..., Any])
-
-
 # noinspection PyOverloads
 @overload
-def with_transaction(wrapped: F) -> F:
-    ...
+def with_transaction[F: Callable[..., Any]](wrapped: F) -> F: ...
+
 
 @wrapt.decorator
 def with_transaction(wrapped, instance, args, kwargs):

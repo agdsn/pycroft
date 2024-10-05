@@ -11,9 +11,6 @@ from werkzeug import Response
 from web.blueprints import bake_endpoint
 
 
-TFun = t.TypeVar("TFun", bound=t.Callable)
-
-
 def _check_properties(properties: t.Iterable[str]) -> bool:
     missing_props = set(properties) - current_user.current_properties_set
     return not missing_props
@@ -66,7 +63,7 @@ class BlueprintAccess:
         self.endpoint_properties_map: dict[str, tuple[str, ...]] = {}
         blueprint.before_request(self._check_access)
 
-    def require(self, *required_properties: str) -> t.Callable[[TFun], TFun]:
+    def require[TFun: t.Callable](self, *required_properties: str) -> t.Callable[[TFun], TFun]:
         """Set per-view function restrictions.
 
         Decorate flask view functions with this decorator to specify properties

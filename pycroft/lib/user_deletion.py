@@ -26,12 +26,8 @@ class ArchivableMemberInfo(Protocol):
     mem_end: datetime
 
 
-TP = t.TypeVar("TP")
-TO = t.TypeVar("TO")
-
-
 # mrh, not available in py3.10…
-class _WindowArgs(t.TypedDict, t.Generic[TP, TO]):
+class _WindowArgs[TP, TO](t.TypedDict):
     partition_by: TP
     order_by: TO
 

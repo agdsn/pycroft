@@ -5,10 +5,7 @@ from typing import overload
 from collections.abc import Generator, Callable
 
 
-_T = t.TypeVar("_T")
-
-
-def filled_iter(iter: t.Iterable[_T], filler: _T) -> t.Iterator[_T]:
+def filled_iter[_T](iter: t.Iterable[_T], filler: _T) -> t.Iterator[_T]:
     """Inbetween every iteration, yield a constant filler."""
     first = True
     for elem in iter:

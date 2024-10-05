@@ -32,10 +32,7 @@ access = BlueprintAccess(bp, required_properties=['user_show'])
 nav = BlueprintNavigation(bp, "Tasks", icon='fa-tasks', blueprint_access=access)
 
 
-T = t.TypeVar("T", bound=t.MutableMapping[str, t.Any])
-
-
-def format_parameters(parameters: T) -> T:
+def format_parameters[T: t.MutableMapping[str, t.Any]](parameters: T) -> T:
     """Make task parameters human readable by looking up objects behind ids"""
 
     # Replace building_id by the buildings short name
