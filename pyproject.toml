@@ -77,7 +77,7 @@ dev = [
     "factory-boy ~= 3.2.0",
     "Flask-Testing ~= 0.8.1",
     "guzzle-sphinx-theme @ git+https://github.com/agdsn/guzzle_sphinx_theme.git@977d49fcbdf2b3df9660d813d4b33369391923e1",
-    "mypy ~= 1.8.0",
+    "mypy ~= 1.11.2",
     "pydot ~= 1.4.1",
     "pyinstrument ~= 4.2.0",
     "pytest ~= 7.0.0",
