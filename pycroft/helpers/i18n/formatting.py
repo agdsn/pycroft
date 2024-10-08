@@ -19,8 +19,6 @@ from .options import Options, TypeSpecificOptions, OptionPolicy
 from .types import Money, Interval
 from .utils import qualified_typename
 
-P = typing.ParamSpec("P")
-
 
 class Formattable(typing.Protocol):
     def __format__(self, format_spec: str) -> str:
@@ -28,30 +26,26 @@ class Formattable(typing.Protocol):
 
 
 if typing.TYPE_CHECKING:
-    from _typeshed import SupportsAllComparisons
-
-    T = typing.TypeVar("T", bound=SupportsAllComparisons)
-else:
-    T = typing.TypeVar("T")
+    from _typeshed import SupportsAllComparisons as Ord
 
 
-class Formatter(typing.Protocol[T, P]):
+class Formatter[T: Ord, **P](typing.Protocol):
     __option_policy__: OptionPolicy
     # first parameter is `Self`
     __call__: t.Callable[t.Concatenate[Formatter, T, P], Formattable]
     __name__: str
 
 
-def type_specific_options(
-    formatter: typing.Callable[typing.Concatenate[T, P], Formattable]
-) -> Formatter[T, P]:
+def type_specific_options[
+    T: Ord, **P
+](formatter: typing.Callable[typing.Concatenate[T, P], Formattable]) -> Formatter[T, P]:
     formatter.__option_policy__ = "type-specific"  # type: ignore
     return typing.cast(Formatter[T, P], formatter)
 
 
-def ignore_options(
-    formatter: typing.Callable[typing.Concatenate[T, P], Formattable]
-) -> Formatter[T, P]:
+def ignore_options[
+    T: Ord, **P
+](formatter: typing.Callable[typing.Concatenate[T, P], Formattable]) -> Formatter[T, P]:
     formatter.__option_policy__ = "ignore"  # type: ignore
     return typing.cast(Formatter[T, P], formatter)
 
@@ -117,7 +111,7 @@ def format_none(n):
 def format_interval(interval: Interval, **options: TypeSpecificOptions):
     lower_bound = interval.lower_bound
     upper_bound = interval.upper_bound
-    assert type(lower_bound) == type(upper_bound)
+    assert type(lower_bound) == type(upper_bound)  # noqa: E721
     generic_options: Options = {type(lower_bound): options}
     return "{}{}, {}{}".format(
         "[" if lower_bound.closed else "(",

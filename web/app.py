@@ -220,13 +220,12 @@ def register_pyinstrument(app: Flask) -> None:
         output_html = g.profiler.output_html()
         return make_response(output_html)
 
+
 IGNORED_EXCEPTION_TYPES = (HTTPException,)
 
 
 if dsn := os.getenv('PYCROFT_SENTRY_DSN'):
-    _TE = t.TypeVar("_TE")
-
-    def before_send(event: _TE, hint: dict[str, t.Any]) -> _TE | None:
+    def before_send[_TE](event: _TE, hint: dict[str, t.Any]) -> _TE | None:
         if 'exc_info' in hint:
             exc_type, exc_value, _tb = hint['exc_info']
             if isinstance(exc_value, IGNORED_EXCEPTION_TYPES):

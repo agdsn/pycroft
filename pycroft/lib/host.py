@@ -256,10 +256,10 @@ def interface_delete(interface: Interface, processor: User) -> None:
     session.delete(interface)
 
 
-TPort = t.TypeVar("TPort", bound=SwitchPort | PatchPort)
+type Port = SwitchPort | PatchPort
 
 
-def sort_ports(ports: t.Iterable[TPort]) -> list[TPort]:
+def sort_ports[TPort: Port](ports: t.Iterable[TPort]) -> list[TPort]:
     def make_sort_key(port: TPort) -> int:
         return port_name_sort_key(port.name)
 

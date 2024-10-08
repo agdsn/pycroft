@@ -1039,13 +1039,9 @@ def _format_row(split: Split, style: str | None, prefix: str | None = None) -> d
     return {f'{prefix}_{key}': val for key, val in row.items()}
 
 
-T = t.TypeVar("T")
-U = t.TypeVar("U")
-
-
-def _prefixed_merge(
-    a: t.Mapping[str, T], prefix_a: str, b: t.Mapping[str, U], prefix_b: str
-) -> dict[str, T | U]:
+def _prefixed_merge[
+    T, U
+](a: t.Mapping[str, T], prefix_a: str, b: t.Mapping[str, U], prefix_b: str) -> dict[str, T | U]:
     result: dict[str, T | U] = {}
     result.update(**{f'{prefix_a}_{k}': v
                      for k, v in a.items()})
@@ -1798,10 +1794,7 @@ def payment_reminder_mail() -> ResponseReturnValue:
                            form=form)
 
 
-TModel = t.TypeVar("TModel", bound=ModelBase)
-
-
-def _get_or_404(session: Session, Model: type[TModel], pkey: t.Any) -> TModel:
+def _get_or_404[TModel: ModelBase](session: Session, Model: type[TModel], pkey: t.Any) -> TModel:
     obj = session.get(Model, pkey)
     if obj is None:
         abort(404, f"Could not find {Model} with primary key {pkey}")

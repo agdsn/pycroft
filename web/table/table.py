@@ -116,17 +116,12 @@ class Column:
     __html__ = render
 
 
-
-
-_T = t.TypeVar("_T", bound=Column)
-_TT: t.TypeAlias = type[_T]
-
 # noinspection PyPep8Naming
 class custom_formatter_column:
     def __init__(self, formatter_name: str) -> None:
         self.formatter_name = formatter_name
 
-    def __call__(self, cls: type[_T]) -> type[_T]:
+    def __call__(self, cls: type[Column]) -> type[Column]:
         """Decorate the classes `__init__` function to inject the formatter"""
         old_init = cls.__init__
 
@@ -139,8 +134,8 @@ class custom_formatter_column:
         return cls
 
 
-BtnClass = t.Annotated[str, Predicate(methodcaller("startswith", "btn-"))]
-IconClass = t.Annotated[str, Predicate(methodcaller("startswith", "fa-"))]
+BtnClass: t.TypeAlias = t.Annotated[str, Predicate(methodcaller("startswith", "btn-"))]
+IconClass: t.TypeAlias = t.Annotated[str, Predicate(methodcaller("startswith", "fa-"))]
 
 
 class BtnColResponse(BaseModel):
@@ -196,7 +191,6 @@ class MultiLinkColumn(Column):
     def __init__(self, *a: t.Any, **kw: t.Any) -> None:
         kw.setdefault("sortable", False)
         super().__init__(*a, **kw)
-
 
 
 @custom_formatter_column('table.dateFormatter')
@@ -272,7 +266,9 @@ def _infer_enforced_url_params(
     return frozenset(params.items())
 
 
-AttributeMap: t.TypeAlias = OrderedDict[str, str]
+type AttributeMap = OrderedDict[str, str]
+
+
 class BootstrapTableMeta(type):
     """Provides a list of all attribute names bound to columns.
 
@@ -584,8 +580,5 @@ def html_params(**kwargs: HtmlParamValue) -> str:
     return ' '.join(params)
 
 
-TRow = t.TypeVar("TRow", bound=BaseModel)
-
-
-class TableResponse(BaseModel, t.Generic[TRow]):
+class TableResponse[TRow: BaseModel](BaseModel):
     items: list[TRow]

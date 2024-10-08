@@ -13,7 +13,6 @@ from marshmallow import Schema
 from sqlalchemy import ForeignKey
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship, Mapped, mapped_column
-from typing import TypeVar, Generic
 
 from pycroft.model.base import IntegerIdModel
 from .task_serialization import UserMoveOutSchema, UserMoveSchema, UserMoveInSchema, TaskParams
@@ -38,11 +37,7 @@ class TaskStatus(enum.Enum):
     CANCELLED = enum.auto()
 
 
-TSchema = TypeVar('TSchema')
-TParams = TypeVar("TParams", bound=TaskParams)
-
-
-class Task(IntegerIdModel, Generic[TSchema, TParams]):
+class Task[TSchema, TParams: TaskParams](IntegerIdModel):
     """The task model
 
     The task model needs to hold three types of data:

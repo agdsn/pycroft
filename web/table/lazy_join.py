@@ -5,10 +5,7 @@ from typing import overload
 from collections.abc import Generator, Callable
 
 
-_T = t.TypeVar("_T")
-
-
-def filled_iter(iter: t.Iterable[_T], filler: _T) -> t.Iterator[_T]:
+def filled_iter[_T](iter: t.Iterable[_T], filler: _T) -> t.Iterator[_T]:
     """Inbetween every iteration, yield a constant filler."""
     first = True
     for elem in iter:
@@ -74,6 +71,7 @@ DecoratedInType = Callable[
 ]
 DecoratedOutType = Callable[_P, LazilyJoined]
 
+
 @overload
 def lazy_join(func_or_glue: DecoratedInType) -> DecoratedOutType:
     ...
@@ -87,7 +85,7 @@ def lazy_join(func_or_glue: str) -> Callable[[DecoratedInType], DecoratedOutType
 def lazy_join(
     func_or_glue: str | DecoratedInType,
 ) -> DecoratedOutType | Callable[[DecoratedInType], DecoratedOutType]:
-    if type(func_or_glue) == FunctionType:
+    if isinstance(func_or_glue, FunctionType):
         # Return the wrapped function
         return LazyJoinDecorator()(func=t.cast(DecoratedInType, func_or_glue))
     # Return the decorator

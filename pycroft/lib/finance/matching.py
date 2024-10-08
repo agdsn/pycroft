@@ -3,8 +3,6 @@
 #  the Apache License, Version 2.0. See the LICENSE file for details
 import logging
 import re
-import typing as t
-from typing import TypeVar
 from collections.abc import Callable
 
 from sqlalchemy import select
@@ -17,10 +15,8 @@ from pycroft.model.user import User
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar("T")
-
-UserMatching: t.TypeAlias = dict[BankAccountActivity, User]
-AccountMatching: t.TypeAlias = dict[BankAccountActivity, Account]
+type UserMatching = dict[BankAccountActivity, User]
+type AccountMatching = dict[BankAccountActivity, Account]
 
 
 def match_activities() -> tuple[UserMatching, AccountMatching]:
@@ -49,19 +45,13 @@ def match_activities() -> tuple[UserMatching, AccountMatching]:
     return matching, team_matching
 
 
-U = TypeVar("U")
-
-
-def _and_then(thing: T | None, f: Callable[[T], U | None]) -> U | None:
+def _and_then[T, U](thing: T | None, f: Callable[[T], U | None]) -> U | None:
     return None if thing is None else f(thing)
 
 
-TUser = TypeVar("TUser")
-
-
-def _match_reference(
-    reference: str, fetch_normal: Callable[[int], TUser | None]
-) -> TUser | None:
+def _match_reference[
+    TUser
+](reference: str, fetch_normal: Callable[[int], TUser | None]) -> TUser | None:
     """Try to return a user fitting a given bank reference string.
 
     :param reference: the bank reference

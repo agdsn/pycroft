@@ -7,7 +7,6 @@ import typing
 import typing as t
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import TypeVar, Generic
 from collections.abc import Mapping
 
 from marshmallow import ValidationError
@@ -24,8 +23,6 @@ from pycroft.model.task_serialization import UserMoveOutParams, UserMoveParams, 
     TaskParams
 from pycroft.model.user import User
 
-TParams = TypeVar('TParams', bound=TaskParams)
-TTask = TypeVar('TTask', bound=Task)
 
 logger = logging.getLogger('pycroft.task')
 
@@ -34,7 +31,7 @@ logger = logging.getLogger('pycroft.task')
 # to determine the type parameter at construction we would need
 # dependent types, so we're always just instantiating
 # `TaskImpl = TaskImpl[Any, Any]`, anyway.
-class TaskImpl(ABC, Generic[TTask, TParams]):
+class TaskImpl[TTask: Task, TParams: TaskParams](ABC):
     name: str
 
     def __init_subclass__(cls, **kwargs: t.Any) -> None:
@@ -71,7 +68,7 @@ class TaskImpl(ABC, Generic[TTask, TParams]):
         ...
 
 
-class UserTaskImpl(TaskImpl[UserTask, TParams], ABC, Generic[TParams]):
+class UserTaskImpl[TParams: TaskParams](TaskImpl[UserTask, TParams], ABC):
     def schedule(
         self, due: DateTimeTz, user: User, parameters: TParams, processor: User
     ) -> UserTask:

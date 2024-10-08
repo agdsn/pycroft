@@ -16,8 +16,9 @@ from pycroft.model.task import Task
 from pycroft.model.user import User
 
 
-TLogEntry = t.TypeVar("TLogEntry", bound=LogEntry)
-def _create_log_entry(
+def _create_log_entry[
+    TLogEntry: LogEntry
+](
     class_: t.Type[TLogEntry],
     message: str,
     author: User,

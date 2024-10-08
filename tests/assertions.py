@@ -18,11 +18,7 @@ def assert_unchanged(
     assert {k: g() for k, g in named_value_getter.items()} == named_old
 
 
-# TODO use PEP 695 (Type Parameter Syntax) once on py3.12
-T = t.TypeVar("T")
-
-
-def assert_one(seq: abc.Sequence[T]) -> T:
+def assert_one[T](seq: abc.Sequence[T]) -> T:
     """assert whether a sequence contains only one element and return it"""
     __tracebackhide__ = True
     assert (l := len(seq)) == 1, f"Expected one element in sequence, found {l} (sequence: {seq!r})"

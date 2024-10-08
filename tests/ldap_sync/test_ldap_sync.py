@@ -464,7 +464,7 @@ class TestLdapSyncerOnceSynced(LdapSyncerTestBase):
         )
         # we get 3 actions
         relevant_action = assert_one([a for a in actions if not isinstance(a, IdleAction)])
-        assert type(relevant_action) == ModifyAction
+        assert type(relevant_action) == ModifyAction  # noqa: E721
         for a in actions:
             execute_real(a, conn)
 
@@ -526,7 +526,7 @@ class TestLdapSyncerOnceSynced(LdapSyncerTestBase):
 
         assert len(actions_dict) == len(new_ldap_user_records)
         for action in actions_dict.values():
-            assert type(action) == DeleteAction
+            assert type(action) == DeleteAction  # noqa: E721
 
         for action in actions_dict.values():
             execute_real(action, conn)
