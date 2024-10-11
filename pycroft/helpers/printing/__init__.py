@@ -39,6 +39,7 @@ class Building(t.Protocol):
 
 
 class Address(t.Protocol):
+    @t.override
     def __format__(self, format_spec: str) -> str:
         ...
 

@@ -1,3 +1,4 @@
+import typing as t
 from _typeshed import Incomplete
 
 class UserMixin:
@@ -9,7 +10,9 @@ class UserMixin:
     @property
     def is_anonymous(self): ...
     def get_id(self): ...
+    @t.override
     def __eq__(self, other): ...
+    @t.override
     def __ne__(self, other): ...
 
 class AnonymousUserMixin:

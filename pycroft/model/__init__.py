@@ -9,6 +9,7 @@
 
     :copyright: (c) 2011 by AG DSN.
 """
+import typing as t
 from datetime import timezone, tzinfo
 
 import psycopg2.extensions
@@ -48,6 +49,7 @@ class UTCTZInfoCursorFactory(psycopg2.extensions.cursor):
     than use a class attribute.
     """
 
+    @t.override
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.tzinfo_factory = UTCTZInfoFactory

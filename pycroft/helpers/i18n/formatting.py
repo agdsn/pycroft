@@ -21,6 +21,7 @@ from .utils import qualified_typename
 
 
 class Formattable(typing.Protocol):
+    @t.override
     def __format__(self, format_spec: str) -> str:
         ...
 

@@ -29,6 +29,7 @@ class TaskTable(BootstrapTable):
     exception_message = Column(title=None, hide_if=lambda: True)
     type = Column("Typ", hide_if=lambda: True)
 
+    @t.override
     def __init__(
         self,
         *,

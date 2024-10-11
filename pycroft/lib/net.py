@@ -19,11 +19,13 @@ from pycroft.model.net import Subnet
 from pycroft.model.types import IPAddress
 
 class SubnetFullException(PycroftLibException):
+    @t.override
     def __init__(self) -> None:
         super().__init__("Subnet full")
 
 
 class MacExistsException(PycroftLibException):
+    @t.override
     def __init__(self) -> None:
         super().__init__("MAC address already exists")
 

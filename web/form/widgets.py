@@ -11,6 +11,7 @@ from pycroft.model.user import User
 class UserIDField(wtforms_widgets.fields.core.StringField):
     """A User-ID Field """
 
+    @t.override
     def __init__(self, *args: t.Any, **kwargs: t.Any) -> None:
         super().__init__(*args, **kwargs)
 

@@ -44,6 +44,7 @@ class DropConstraint(schema.DropConstraint):
     Extends SQLALchemy's DropConstraint with support for IF EXISTS
     """
 
+    @t.override
     def __init__(
         self,
         element: Constraint,
@@ -307,6 +308,7 @@ class ConstraintTrigger(Trigger):
             raise ValueError("Constraint declared INITIALLY DEFERRED must be "
                              "DEFERRABLE.")
 
+    @t.override
     def __hash__(self):
         return super().__hash__()
 

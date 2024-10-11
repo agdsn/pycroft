@@ -27,11 +27,13 @@ class MPSKTable(BootstrapTable):
 
     id = Column("", hide_if=lambda: True)
 
+    @t.override
     def __init__(self, *, user_id: int | None = None, **kw: t.Any) -> None:
         super().__init__(**kw)
         self.user_id = user_id
 
     @property
+    @t.override
     def toolbar(self) -> HasDunderStr | None:
         if self.user_id is None:
             return None

@@ -27,6 +27,7 @@ class HostTable(BootstrapTable):
     interface_create_link = Column("", hide_if=lambda: True)
     id = Column("", hide_if=lambda: True)
 
+    @t.override
     def __init__(self, *, user_id: int | None = None, **kw: t.Any) -> None:
         table_args = kw.pop('table_args', {})
         table_args.setdefault('data-load-subtables', "true")
@@ -39,6 +40,7 @@ class HostTable(BootstrapTable):
         self.user_id = user_id
 
     @property
+    @t.override
     def toolbar(self) -> HasDunderStr | None:
         if self.user_id is None:
             return None
@@ -67,6 +69,7 @@ class InterfaceTable(BootstrapTable):
     ips = Column("IPs")
     actions = MultiBtnColumn("Aktionen", hide_if=no_hosts_change)
 
+    @t.override
     def __init__(self, *, host_id: int | None = None, **kw: t.Any) -> None:
         table_args = kw.pop("table_args", {})
         table_args.setdefault("data-hide-pagination-info", "true")

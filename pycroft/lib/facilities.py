@@ -185,6 +185,7 @@ class RoomAddressSuggestion:
     state: str
     country: str
 
+    @t.override
     def __str__(self) -> str:
         return f"{self.street} {self.number}, {self.zip_code} {self.city}," \
                + (f" {self.state}," if self.state else "") \

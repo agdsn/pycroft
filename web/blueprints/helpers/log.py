@@ -43,9 +43,11 @@ format_room_log_entry = partial(format_log_entry, log_type='room')
 
 
 class SupportsFormat(t.Protocol):
+    @t.override
     def __str__(self) -> str:
         ...
 
+    @t.override
     def __format__(self, format_spec: t.Any) -> str:
         ...
 

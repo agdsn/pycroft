@@ -41,6 +41,7 @@ class BuildingLevelRoomTable(BootstrapTable):
     inhabitants = MultiBtnColumn('Bewohner')
 
     @property
+    @t.override
     def toolbar(self) -> LazilyJoined:
         return toggle_button_toolbar(
             "Display all users",
@@ -86,12 +87,14 @@ class PatchPortTable(BootstrapTable):
     edit_link = BtnColumn('Editieren', hide_if=no_inf_change)
     delete_link = BtnColumn('Löschen', hide_if=no_inf_change)
 
+    @t.override
     def __init__(self, *, room_id: int | None = None, **kw: t.Any) -> None:
         super().__init__(**kw)
 
         self.room_id = room_id
 
     @property
+    @t.override
     def toolbar(self) -> LazilyJoined | None:
         if no_inf_change():
             return None

@@ -151,6 +151,7 @@ class BaseUser(IntegerIdModel):
 
     login_character_limit = 22
 
+    @t.override
     def __init__(self, *args, **kwargs):
         password = kwargs.pop("password", None)
         super().__init__(**kwargs)
@@ -287,6 +288,7 @@ class User(BaseUser, UserMixin):
     )
     # /backrefs
 
+    @t.override
     def __init__(self, **kwargs: typing.Any) -> None:
         # TODO this should never have worked because it popped `password` twice
         wifi_password = kwargs.pop("password", None)
@@ -314,6 +316,7 @@ class User(BaseUser, UserMixin):
         )
 
     @validates('login')
+    @t.override
     def validate_login(self, _, value):
         assert not has_identity(
             self), "user already in the database - cannot change login anymore!"
@@ -707,6 +710,7 @@ class PreMember(BaseUser):
     )
     # /backrefs
 
+    @t.override
     def __init__(self, **kwargs: typing.Any) -> None:
         password = kwargs.pop('password', None)
         super().__init__(**kwargs)

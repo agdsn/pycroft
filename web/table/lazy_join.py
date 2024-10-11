@@ -17,6 +17,7 @@ def filled_iter[_T](iter: t.Iterable[_T], filler: _T) -> t.Iterator[_T]:
 
 
 class HasDunderStr(t.Protocol):
+    @t.override
     def __str__(self) -> str:
         ...
 
@@ -44,6 +45,7 @@ class LazilyJoined:
     def _stringified_components(self) -> t.Iterator[str]:
         return ((str(c) if c is not None else "") for c in self._components)
 
+    @t.override
     def __str__(self) -> str:
         self._mark_exhausted()
         return self.glue.join(self._stringified_components)

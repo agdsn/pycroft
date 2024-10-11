@@ -52,6 +52,7 @@ class DigitSumModNCode(ErrorCode):
     def __init__(self, mod: int):
         self.mod = mod
 
+    @t.override
     def calculate(self, number: int) -> int:
         return sum(digits(number)) % self.mod
 
@@ -66,9 +67,11 @@ class Mod97Code(ErrorCode):
     scheme.
     """
 
+    @t.override
     def calculate(self, number: int) -> int:
         return 98 - (number * 100) % 97
 
+    @t.override
     def is_valid(self, number: int, code: int) -> bool:
         return (number * 100 + code) % 97 == 1
 

@@ -51,6 +51,7 @@ class SwitchTable(BootstrapTable):
     delete_link = BtnColumn('Löschen', width=1, hide_if=no_inf_change)
 
     @property
+    @t.override
     def toolbar(self) -> HasDunderStr | None:
         if not current_user.has_property('infrastructure_change'):
             return None
@@ -85,6 +86,7 @@ class PortTable(BootstrapTable):
             'data-sort-name': 'switchport_name',
         }
 
+    @t.override
     def __init__(self, *, switch_id: int, switch_room_id: int, **kw: t.Any) -> None:
         super().__init__(**kw)
         self.switch_id = switch_id
@@ -98,6 +100,7 @@ class PortTable(BootstrapTable):
 
     @property
     @lazy_join
+    @t.override
     def toolbar(self) -> t.Iterator[HasDunderStr | None]:
         if no_inf_change():
             return None

@@ -24,6 +24,7 @@ class RefreshableTableMixin(BootstrapTable):
     ``{'data-show-refresh': "true"}`` is established.
     """
 
+    @t.override
     def __init__(self, *, table_args: TableArgs | None = None, **kw: t.Any) -> None:
         if table_args is None:
             table_args = {}

@@ -34,6 +34,7 @@ logger = logging.getLogger('pycroft.task')
 class TaskImpl[TTask: Task, TParams: TaskParams](ABC):
     name: str
 
+    @t.override
     def __init_subclass__(cls, **kwargs: t.Any) -> None:
         _abc_in_bases = any(base == ABC for base in cls.__bases__)
         if not _abc_in_bases and not hasattr(cls, "name"):
@@ -90,6 +91,7 @@ class UserMoveOutTaskImpl(UserTaskImpl[UserMoveOutParams]):
     name = "Auszug"
     type = TaskType.USER_MOVE_OUT
 
+    @t.override
     def _execute(self, task: UserTask, parameters: UserMoveOutParams) -> None:
         from pycroft.lib import user as lib_user
         if task.user.room is None:
@@ -109,6 +111,7 @@ class UserMoveTaskImpl(UserTaskImpl[UserMoveParams]):
     name = "Umzug"
     type = TaskType.USER_MOVE
 
+    @t.override
     def _execute(self, task: UserTask, parameters: UserMoveParams) -> None:
         from pycroft.lib import user as lib_user
         from pycroft.lib.facilities import get_room
@@ -143,6 +146,7 @@ class UserMoveInTaskImpl(UserTaskImpl):
     name = "Einzug"
     type = TaskType.USER_MOVE_IN
 
+    @t.override
     def _execute(self, task: UserTask, parameters: UserMoveInParams) -> None:
         from pycroft.lib import user as lib_user
         from pycroft.lib.facilities import get_room

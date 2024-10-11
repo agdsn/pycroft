@@ -84,11 +84,13 @@ class Bound[T: Ord](tuple):
             return ''
         return str(self.value)
 
+    @t.override
     def __new__(cls, value: TWithInfinity, is_closed: bool) -> Bound[T]:
         if value is NegativeInfinity or value is PositiveInfinity:
             is_closed = False
         return tuple.__new__(cls, (value, is_closed))
 
+    @t.override
     def __hash__(self) -> int:
         return hash((self[0], self[1]))
 
@@ -122,6 +124,7 @@ class Bound[T: Ord](tuple):
     def __ge__(self, other: Bound[T]) -> bool:  # type: ignore
         return other <= self
 
+    @t.override
     def __eq__(self, other: object) -> bool:
         return (isinstance(other, Bound) and
                 self.value == other.value and
@@ -130,10 +133,12 @@ class Bound[T: Ord](tuple):
     def __sub__(self, other):
         return self.value - other.value
 
+    @t.override
     def __repr__(self):
         return "{}.{}({!r}, {!r})".format(
             self.__module__, self.__class__.__name__, self.value, self.closed)
 
+    @t.override
     def __str__(self):
         return str(self.value)
 
@@ -201,6 +206,7 @@ class Interval[T: Ord](tuple):
         return cls(Bound(_convert_begin(lower), lower_closed),
                    Bound(_convert_end(upper), upper_closed))
 
+    @t.override
     def __hash__(self):
         return hash((self[0], self[1]))
 
@@ -248,6 +254,7 @@ class Interval[T: Ord](tuple):
         """
         return None if self.unbounded else self.upper_bound - self.lower_bound
 
+    @t.override
     def __eq__(self, other: object) -> bool:
         return (isinstance(other, Interval) and
                 self.lower_bound == other.lower_bound and
@@ -267,6 +274,7 @@ class Interval[T: Ord](tuple):
         bound = Bound[T](point, True)
         return self.lower_bound <= bound <= self.upper_bound
 
+    @t.override
     def __str__(self):
         return "{}{},{}{}".format(
             '[' if self.lower_bound.closed else '(',
@@ -274,6 +282,7 @@ class Interval[T: Ord](tuple):
             ']' if self.upper_bound.closed else ')',
         )
 
+    @t.override
     def __repr__(self):
         if self.lower_bound.closed:
             if self.upper_bound.closed:
@@ -589,12 +598,14 @@ class IntervalSet[T: Ord](collections.abc.Sequence[Interval[T]]):
     ):
         self._intervals = _mangle_argument(intervals)
 
+    @t.override
     def __hash__(self):
         return hash(self._intervals)
 
     def __bool__(self):
         return True if self._intervals else False
 
+    @t.override
     def __len__(self):
         return len(self._intervals)
 
@@ -614,22 +625,27 @@ class IntervalSet[T: Ord](collections.abc.Sequence[Interval[T]]):
             (i.length for i in self._intervals)
         )
 
+    @t.override
     def __iter__(self) -> t.Iterator[Interval[T]]:
         return iter(self._intervals)
 
+    @t.override
     def __getitem__(self, item):
         return self._intervals[item]
 
+    @t.override
     def __eq__(self, other):
         return (isinstance(other, IntervalSet) and
                 self._intervals == other._intervals)
 
+    @t.override
     def __repr__(self):
         return "{}.{}({!r})".format(
             self.__module__,
             self.__class__.__name__,
             self._intervals)
 
+    @t.override
     def __str__(self):
         return "{{{0}}}".format(", ".join(str(i) for i in self._intervals))
 

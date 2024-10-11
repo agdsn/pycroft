@@ -1,4 +1,5 @@
 import enum
+import typing as t
 from . import models as models
 from _typeshed import Incomplete
 
@@ -14,10 +15,12 @@ class Tag:
     def parse(self, transactions, value): ...
     def __call__(self, transactions, value): ...
     def __new__(cls, *args, **kwargs): ...
+    @t.override
     def __hash__(self): ...
 
 class DateTimeIndication(Tag):
     pattern: str
+    @t.override
     def __call__(self, transactions, value): ...
 
 class TransactionReferenceNumber(Tag):
@@ -34,6 +37,7 @@ class StatementNumber(Tag):
 
 class FloorLimitIndicator(Tag):
     pattern: str
+    @t.override
     def __call__(self, transactions, value): ...
 
 class NonSwift(Tag):
@@ -41,10 +45,12 @@ class NonSwift(Tag):
     pattern: str
     sub_pattern: str
     sub_pattern_m: Incomplete
+    @t.override
     def __call__(self, transactions, value): ...
 
 class BalanceBase(Tag):
     pattern: str
+    @t.override
     def __call__(self, transactions, value): ...
 
 class OpeningBalance(BalanceBase): ...
@@ -56,6 +62,7 @@ class IntermediateOpeningBalance(BalanceBase): ...
 class Statement(Tag):
     scope: Incomplete
     pattern: str
+    @t.override
     def __call__(self, transactions, value): ...
 
 class ClosingBalance(BalanceBase): ...
@@ -74,6 +81,7 @@ class TransactionDetails(Tag):
 
 class SumEntries(Tag):
     pattern: str
+    @t.override
     def __call__(self, transactions, value): ...
 
 class SumDebitEntries(SumEntries):

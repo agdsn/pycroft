@@ -1,3 +1,5 @@
+import typing as t
+
 from celery import Celery
 
 
@@ -22,6 +24,7 @@ class HadesCelery(Celery):
         set, behavior of :meth:`signature` is unchanged.
     """
 
+    @t.override
     def __init__(self, *a, task_default_exchange, result_exchange, routing_key, **kw):
         super().__init__(*a, **kw)
         self.routing_key = routing_key

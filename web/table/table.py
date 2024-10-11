@@ -74,6 +74,7 @@ class Column:
         self.sortable = sortable
         self.hide_if = hide_if
 
+    @t.override
     def __repr__(self) -> str:
         return "<{cls} {name!r} title={title!r}>".format(
             cls=type(self).__name__,
@@ -149,6 +150,7 @@ class BtnColResponse(BaseModel):
 
 @custom_formatter_column('table.btnFormatter')
 class BtnColumn(Column):
+    @t.override
     def __init__(self, *a: t.Any, **kw: t.Any) -> None:
         if kw.pop("sortable", False):
             raise ValueError("BtnColumn does not support sorting")
@@ -158,6 +160,7 @@ class BtnColumn(Column):
 
 @custom_formatter_column('table.multiBtnFormatter')
 class MultiBtnColumn(Column):
+    @t.override
     def __init__(self, *a: t.Any, **kw: t.Any) -> None:
         kw.setdefault("sortable", False)
         super().__init__(*a, **kw)
@@ -188,6 +191,7 @@ class LinkColumn(Column):
 
 @custom_formatter_column("table.multiLinkFormatter")
 class MultiLinkColumn(Column):
+    @t.override
     def __init__(self, *a: t.Any, **kw: t.Any) -> None:
         kw.setdefault("sortable", False)
         super().__init__(*a, **kw)
@@ -281,6 +285,7 @@ class BootstrapTableMeta(type):
     _enforced_url_params: frozenset[tuple[str, str]]
     column_attrname_map: OrderedDict  # TODO specify key/val types
 
+    @t.override
     def __new__(
         mcls: type[BootstrapTableMeta],
         name: str,
@@ -358,6 +363,7 @@ class BootstrapTable(metaclass=BootstrapTableMeta):
         """Wrapper for subclasses to override."""
         return self._columns
 
+    @t.override
     def __repr__(self) -> str:
         return "<{cls} cols={numcols} data_url={data_url!r}>".format(
             cls=type(self).__name__,
@@ -446,6 +452,7 @@ class SplittedTable(BootstrapTable):
             yield TableSplit(*t)
 
     @property
+    @t.override
     def columns(self) -> list[Column]:
         cols: list[Column] = []
         unaltered_columns = self._columns
@@ -458,6 +465,7 @@ class SplittedTable(BootstrapTable):
 
     @property  # type: ignore[arg-type]
     @lazy_join
+    @t.override
     def table_header(self) -> t.Iterable[HasDunderStr]:
         yield "<thead>"
         yield "<tr>"

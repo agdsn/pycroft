@@ -55,6 +55,7 @@ class ConfirmCheckboxField(BooleanField):
     See `confirmable-error.ts`
     """
 
+    @t.override
     def __init__(
         self,
         label: str | None = None,

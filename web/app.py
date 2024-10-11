@@ -63,6 +63,7 @@ class PycroftFlask(Flask):
 
     login_manager: LoginManager
 
+    @t.override
     def __init__(self, *a: t.Any, **kw: t.Any) -> None:
         super().__init__(*a, **kw)
         # config keys to support:

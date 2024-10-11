@@ -8,6 +8,7 @@ Actions (Add/Delete/Modify/Nothing)
 """
 import dataclasses
 import logging
+import typing as t
 
 from . import types
 from .record import Record  # shadowing…
@@ -29,6 +30,7 @@ class Action:
         default_factory=lambda: logging.getLogger("ldap_sync.action")
     )
 
+    @t.override
     def __repr__(self) -> str:
         return f"<{type(self).__name__} {self.record_dn}>"
 
@@ -38,6 +40,7 @@ class AddAction(Action):
 
     nonempty_attrs: types.NormalizedAttributes
 
+    @t.override
     def __init__(self, record: Record) -> None:
         # We don't want to add e.g. an empty `mail` field
         super().__init__(record_dn=record.dn)
@@ -53,6 +56,7 @@ class ModifyAction(Action):
     #: where the value is a list if the corresponding attribute is not single-valued.
     modifications: types.NormalizedAttributes
 
+    @t.override
     def __repr__(self) -> str:
         attr_string = ", ".join(self.modifications.keys())
         return f"<{type(self).__name__} {self.record_dn} [{attr_string}]>"

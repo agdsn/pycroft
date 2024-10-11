@@ -114,13 +114,16 @@ class Message(abc.ABC):
 
 
 class ErroneousMessage(Message):
+    @t.override
     def __init__(self, text):
         super().__init__(None)
         self.text = text
 
+    @t.override
     def _base_dict(self):
         raise AssertionError("ErroneousMessage should never be serialized")
 
+    @t.override
     def _gettext(self):
         return self.text
 
@@ -132,9 +135,11 @@ class SimpleMessage(Message):
         super().__init__(domain)
         self.message = message
 
+    @t.override
     def _base_dict(self):
         return {"message": self.message}
 
+    @t.override
     def _gettext(self):
         if self.domain:
             return dgettext(self.domain, self.message)
@@ -145,15 +150,18 @@ class SimpleMessage(Message):
 class NumericalMessage(Message):
     __slots__ = ("singular", "plural", "n")
 
+    @t.override
     def __init__(self, singular, plural, n, domain=None):
         super().__init__(domain)
         self.singular = singular
         self.plural = plural
         self.n = n
 
+    @t.override
     def _base_dict(self):
         return {"singular": self.singular, "plural": self.plural, "n": self.n}
 
+    @t.override
     def _gettext(self):
         if self.domain:
             return dngettext(self.domain, self.singular, self.plural, self.n)

@@ -42,6 +42,7 @@ class FinanceTable(BootstrapTable):
             'data-page-list': '[5, 10, 25, 50, 100]'
         }
 
+    @t.override
     def __init__(
         self,
         *,
@@ -79,6 +80,7 @@ class FinanceTable(BootstrapTable):
     amount = ColoredColumn("Wert", cell_style='table.tdRelativeCellStyle')
 
     @property
+    @t.override
     def toolbar(self) -> HasDunderStr | None:
         """Generate a toolbar with a details button
 
@@ -92,6 +94,7 @@ class FinanceTable(BootstrapTable):
 
     @property
     @lazy_join
+    @t.override
     def table_footer(self) -> t.Iterator[str]:
         yield "<tfoot>"
         yield "<tr>"
@@ -127,6 +130,7 @@ class FinanceTableSplitted(FinanceTable, SplittedTable):
 
     splits = (('soll', "Soll"), ('haben', "Haben"))
 
+    @t.override
     def __init__(self, **kw: t.Any) -> None:
         super().__init__(**kw)
         self.table_footer_offset = 7
@@ -147,6 +151,7 @@ class MembershipFeeTable(BootstrapTable):
     actions = MultiBtnColumn("Aktionen")
 
     @property
+    @t.override
     def toolbar(self) -> LazilyJoined:
         """An “add fee” button"""
         href = url_for(".membership_fee_create")
@@ -195,11 +200,13 @@ class BankAccountTable(BootstrapTable):
     last_imported_at = Column("Zuletzt importiert")
     actions = MultiBtnColumn("Aktionen")
 
+    @t.override
     def __init__(self, *, create_account: bool = False, **kw: t.Any) -> None:
         self.create_account = create_account
         super().__init__(**kw)
 
     @property
+    @t.override
     def toolbar(self) -> HasDunderStr | None:
         """A “create bank account” button"""
         if not self.create_account:
@@ -235,6 +242,7 @@ class BankAccountActivityTable(BootstrapTable):
     amount = Column("Betrag", width=1, formatter="table.euroFormatter")
     actions = MultiBtnColumn("Aktionen", width=1)
 
+    @t.override
     def __init__(self, *, finance_change: bool = False, **kw: t.Any) -> None:
         self.finance_change = finance_change
 
@@ -248,6 +256,7 @@ class BankAccountActivityTable(BootstrapTable):
 
     @property
     @lazy_join
+    @t.override
     def toolbar(self) -> t.Iterator[str]:
         """Do operations on BankAccountActivities"""
         if not self.finance_change:

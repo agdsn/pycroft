@@ -172,6 +172,8 @@ def take_actions_for_payment_in_default_users(
 def get_pid_csv() -> str:
     """Generate a CSV file containing all members with negative balance
     (“payment in default”)."""
+
+
     from pycroft.lib.user import encode_type2_user_id
 
     users = get_negative_members()

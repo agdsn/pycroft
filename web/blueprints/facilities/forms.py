@@ -25,6 +25,7 @@ class LazyString:
     def __init__(self, value_factory: Callable[[], str]) -> None:
         self.value_factory = value_factory
 
+    @t.override
     def __str__(self) -> str:
         return self.value_factory()
 

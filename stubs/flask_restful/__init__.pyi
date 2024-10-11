@@ -1,3 +1,4 @@
+import typing as t
 from _typeshed import Incomplete
 
 from flask import Response
@@ -38,6 +39,7 @@ class Api:
 class Resource(MethodView):
     representations: Incomplete
     method_decorators: Incomplete
+    @t.override
     def dispatch_request(self, *args, **kwargs): ...
 
 def marshal(data, fields, envelope: Incomplete | None = ...): ...

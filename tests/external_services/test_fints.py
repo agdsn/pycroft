@@ -1,6 +1,7 @@
 #  Copyright (c) 2023. The Pycroft Authors. See the AUTHORS file.
 #  This file is part of the Pycroft project and licensed under the terms of
 #  the Apache License, Version 2.0. See the LICENSE file for details
+import typing as t
 from contextlib import contextmanager
 from datetime import timedelta
 from unittest.mock import MagicMock
@@ -80,6 +81,7 @@ class StubHTTPSConnection(FinTSHTTPSConnection):
 
 
 class StubFintsClient(FinTS3Client):
+    @t.override
     def __init__(self, bank_identifier, user_id, pin, server, *args, **kwargs):
         self.pin = Password(pin) if pin is not None else pin
         self._pending_tan = None

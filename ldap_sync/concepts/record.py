@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import dataclasses
 import typing
+import typing as t
 
 from ldap3.utils.conv import escape_filter_chars
 
@@ -92,18 +93,21 @@ class Record:
     def __getitem__(self, item: str) -> typing.Any:
         return self.attrs.__getitem__(item)
 
+    @t.override
     def __init_subclass__(cls, **kwargs: dict[str, typing.Any]) -> None:
         if "SYNCED_ATTRIBUTES" not in cls.__dict__:
             raise TypeError("Subclasses of Record must implement the SYNCED_ATTRIBUTES field")
         super().__init_subclass__(**kwargs)
 
     # `__eq__` must be total, hence no type restrictions/hints
+    @t.override
     def __eq__(self, other: object) -> bool:
         try:
             return self.dn == other.dn and self.attrs == other.attrs  # type: ignore
         except AttributeError:
             return False
 
+    @t.override
     def __repr__(self) -> str:
         return f"<{type(self).__name__} dn={self.dn}>"
 
