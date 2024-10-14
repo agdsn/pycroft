@@ -72,6 +72,11 @@ class Config(IntegerIdModel):
         foreign_keys=[membership_fee_bank_account_id]
     )
 
+    non_attributable_transactions_account_id: Mapped[int] = col(ForeignKey(Account.id))
+    non_attributable_transactions_account: Mapped[Account] = relationship(
+        foreign_keys=[non_attributable_transactions_account_id]
+    )
+
     fints_product_id: Mapped[str | None]
 
     __table_args__ = (CheckConstraint("id = 1"),)

@@ -42,8 +42,9 @@ from .payment_in_default import (
     get_pid_csv,
 )
 from .retransfer import (
-    get_activities_to_return,
+    attribute_activities_as_returned,
     generate_activities_return_sepaxml,
+    get_activities_to_return,
 )
 from .transaction_crud import (
     simple_transaction,
