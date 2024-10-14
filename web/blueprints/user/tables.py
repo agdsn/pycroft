@@ -62,6 +62,7 @@ class MembershipRow(BaseModel):
     ends_at: DateColResponse
     url_edit: str
     url_end: str | None = None
+    url_delete: str | None = None
     actions: list[BtnColResponse]
     # used by membershipRowAttributes
     grants: list[str | None]
