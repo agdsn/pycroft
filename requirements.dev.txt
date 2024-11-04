@@ -384,6 +384,10 @@ email-validator==1.1.3 \
     --hash=sha256:5675c8ceb7106a37e40e2698a57c056756bf3f272cfa8682a4f87ebd95d8440b \
     --hash=sha256:aa237a65f6f4da067119b7df3f13e89c25c051327b2b5b66dc075f33d62480d7
     # via pycroft (pyproject.toml)
+enum-tools==0.12.0 \
+    --hash=sha256:13ceb9376a4c5f574a1e7c5f9c8eb7f3d3fbfbb361cc18a738df1a58dfefd460 \
+    --hash=sha256:d69b019f193c7b850b17d9ce18440db7ed62381571409af80ccc08c5218b340a
+    # via fints
 factory-boy==3.2.1 \
     --hash=sha256:a98d277b0c047c75eb6e4ab8508a7f81fb03d2cb21986f627913546ef7a2a55e \
     --hash=sha256:eb02a7dd1b577ef606b75a253b9818e6f9eaf996d94449c9d5ebb124f90dc795
@@ -398,9 +402,9 @@ filelock==3.15.4 \
     # via
     #   cachecontrol
     #   sphinx-toolbox
-fints==3.1.0 \
-    --hash=sha256:426f6af1a79dce75ef9d475da926c8fc407c1bb3da13acf9fb52f5f0449b58d8 \
-    --hash=sha256:f4fb814f26d447257249c3af24f8abbb2bf2726dbbb0ee0e1ad832a9a010b487
+fints==4.2.1 \
+    --hash=sha256:37524584d16e5c87d292ed380bef7ac266419c08789c09a0d6e7e025e25c20cd \
+    --hash=sha256:86008c2c817c498b5da82019b0653d03fdd5ee936926436e41529af8576c4463
     # via pycroft (pyproject.toml)
 flask==3.0.3 \
     --hash=sha256:34e815dfaa43340d1d15a5c3a02b8476004037eb4840b34910c6e21679d288f3 \
@@ -1211,6 +1215,7 @@ pygments==2.17.2 \
     --hash=sha256:b27c2826c47d0f3219f29554824c30c5e8945175d888647acd804ddd04af846c \
     --hash=sha256:da46cec9fd2de5be3a8a784f434e4c4ab670b4ff54d605c4c2717e9d49c4c367
     # via
+    #   enum-tools
     #   rich
     #   sphinx
     #   sphinx-prompt
@@ -1635,6 +1640,7 @@ typing-extensions==4.11.0 \
     --hash=sha256:c1f94d72897edaf4ce775bb7558d5b79d8126906a14ea5ed1635921406c0387a
     # via
     #   domdf-python-tools
+    #   enum-tools
     #   mypy
     #   pydantic
     #   pydantic-core
