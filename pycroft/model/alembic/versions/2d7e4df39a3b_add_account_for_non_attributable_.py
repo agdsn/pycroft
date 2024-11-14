@@ -11,7 +11,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "b64618e97415"
-down_revision = "5234d7ac2b4a"
+down_revision = "dda39ad43536"
 branch_labels = None
 depends_on = None
 
@@ -23,13 +23,19 @@ def upgrade():
         sa.Column(
             "non_attributable_transactions_account_id",
             sa.Integer(),
-            nullable=False,
-            server_default="33200",
+            nullable=True,
         ),
     )
     op.create_foreign_key(
         None, "config", "account", ["non_attributable_transactions_account_id"], ["id"]
     )
+    op.execute(
+        "insert into account (name, type, legacy) (select name, type, legacy from (select 'Beiträge, Mitglied nicht zuordenbar' as name, account_type('REVENUE') as type, false as legacy) as a where not exists (select * from account where name = 'Beiträge, Mitglied nicht zuordenbar' and type = 'REVENUE'))"
+    )
+    op.execute(
+        "update config set non_attributable_transactions_account_id=(select id from account where name = 'Beiträge, Mitglied nicht zuordenbar' and type = 'REVENUE')"
+    )
+    op.alter_column("config", "non_attributable_transactions_account_id", nullable=False)
 
 
 def downgrade():
