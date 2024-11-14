@@ -77,6 +77,7 @@ from pycroft.lib.finance import (
     match_activities,
     get_activities_to_return,
     generate_activities_return_sepaxml,
+    attribute_activities_as_returned,
     get_all_bank_accounts,
     get_unassigned_bank_account_activities,
     get_all_mt940_errors,
@@ -751,12 +752,21 @@ def bank_account_activities_return_do() -> ResponseReturnValue:
 
     form: t.Any = _create_form(field_list)()
 
-    if form.validate_on_submit():
-        selected_activities: list[BankAccountActivity] = [
-            activity for activity in activities_to_return if form[str(activity.id)].data
-        ]
+    if not form.validate_on_submit():
+        return render_template(
+            "finance/bank_account_activities_return.html",
+            form=form(),
+            activities=activities_to_return,
+        )
 
-        sepa_xml: bytes = generate_activities_return_sepaxml(selected_activities)
+    selected_activities: list[BankAccountActivity] = [
+        activity for activity in activities_to_return if form[str(activity.id)].data
+    ]
+
+    sepa_xml: bytes = generate_activities_return_sepaxml(selected_activities)
+
+    attribute_activities_as_returned(session, selected_activities, current_user)
+    session.commit()
 
     return send_file(
         BytesIO(sepa_xml),

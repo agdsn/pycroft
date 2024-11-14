@@ -54,6 +54,7 @@ dependencies = [
     "python-dotenv ~= 0.21.0",
     "reportlab ~= 4.2.5",  # usersheet generation
     "rich ~= 13.8.0",
+    "schwifty ~= 2024.9.0",
     "sentry-sdk[Flask] ~= 1.29.2",
     "simplejson ~= 3.11.1",  # decimal serialization
     "SQLAlchemy >= 2.0.1",

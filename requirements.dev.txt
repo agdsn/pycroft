@@ -1112,6 +1112,10 @@ pyasn1==0.6.0 \
     --hash=sha256:3a35ab2c4b5ef98e17dfdec8ab074046fbda76e281c5a706ccd82328cfc8f64c \
     --hash=sha256:cca4bb0f2df5504f02f6f8a775b6e416ff9b0b3b16f7ee80b5a3153d9b804473
     # via ldap3
+pycountry==24.6.1 \
+    --hash=sha256:b61b3faccea67f87d10c1f2b0fc0be714409e8fcdcc1315613174f6466c10221 \
+    --hash=sha256:f1a4fb391cd7214f8eefd39556d740adcc233c778a27f8942c8dca351d6ce06f
+    # via schwifty
 pydantic==2.9.2 \
     --hash=sha256:d155cef71265d1e9807ed1c32b4c8deec042a44a50a4188b25ac67ecd81a9c0f \
     --hash=sha256:f048cec7b26778210e28a0459867920654d48e5e62db0958433636cde4254f12
@@ -1347,6 +1351,10 @@ rich==13.8.0 \
     --hash=sha256:2e85306a063b9492dffc86278197a60cbece75bcb766022f3436f567cae11bdc \
     --hash=sha256:a5ac1f1cd448ade0d59cc3356f7db7a7ccda2c8cbae9c7a90c28ff463d3e91f4
     # via pycroft (pyproject.toml)
+rstr==3.2.2 \
+    --hash=sha256:c4a564d4dfb4472d931d145c43d1cf1ad78c24592142e7755b8866179eeac012 \
+    --hash=sha256:f39195d38da1748331eeec52f1276e71eb6295e7949beea91a5e9af2340d7b3b
+    # via schwifty
 ruamel-yaml==0.18.6 \
     --hash=sha256:57b53ba33def16c4f3d807c0ccbc00f8a6081827e81ba2491691b76882d0c636 \
     --hash=sha256:8b27e6a217e786c6fbe5634d8f3f11bc63e0f80f6a5890f28863d9c45aac311b
@@ -1421,6 +1429,10 @@ ruff==0.3.5 \
     --hash=sha256:dc56bb16a63c1303bd47563c60482a1512721053d93231cf7e9e1c6954395a0e \
     --hash=sha256:dfd3504e881082959b4160ab02f7a205f0fadc0a9619cc481982b6837b2fd4c0 \
     --hash=sha256:faeeae9905446b975dcf6d4499dc93439b131f1443ee264055c5716dd947af55
+    # via pycroft (pyproject.toml)
+schwifty==2024.9.0 \
+    --hash=sha256:88f5a73549c5e4acb627ca669d52f49368b00ed3c3dae3778068471d0f6f4f62 \
+    --hash=sha256:acee9f5021587c254fc5f77ebefcd62feb0c0c3a80fea4523d451307dd04f330
     # via pycroft (pyproject.toml)
 sentry-sdk==1.29.2 \
     --hash=sha256:3e17215d8006612e2df02b0e73115eb8376c37e3f586d8436fa41644e605074d \
