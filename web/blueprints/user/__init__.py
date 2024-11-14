@@ -32,6 +32,7 @@ from flask import (
 )
 from flask.typing import ResponseReturnValue
 from flask_login import current_user
+from flask_wtf import FlaskForm
 from markupsafe import Markup
 
 import pycroft.lib.search
@@ -44,7 +45,12 @@ from pycroft.helpers.interval import closed, closedopen, starting_from
 from pycroft.helpers.net import ip_regex, mac_regex
 from pycroft.lib.facilities import get_room
 from pycroft.lib.logging import log_user_event
-from pycroft.lib.membership import make_member_of, remove_member_of, change_membership_active_during
+from pycroft.lib.membership import (
+    make_member_of,
+    remove_member_of,
+    change_membership_active_during,
+    delete_membership,
+)
 from pycroft.lib.traffic import get_users_with_highest_traffic
 from pycroft.lib.user import encode_type1_user_id, encode_type2_user_id, \
     traffic_history, generate_user_sheet, get_blocked_groups, \
@@ -458,6 +464,13 @@ def user_show_groups_json(
                         membership_id=membership.id,
                     )
                 ),
+                url_delete=(
+                    url_delete := url_for(
+                        ".membership_delete",
+                        user_id=user_id,
+                        membership_id=membership.id,
+                    )
+                ),
                 url_end=(
                     url_end := (
                         url_for(
@@ -487,6 +500,18 @@ def user_show_groups_json(
                         )
                     ]
                     if active
+                    else []
+                )
+                + (
+                    [
+                        BtnColResponse(
+                            href=url_delete,
+                            title="Löschen",
+                            icon="fa-trash",
+                            btn_class="btn-link",
+                        )
+                    ]
+                    if session.utcnow() <= membership.active_during.begin
                     else []
                 ),
             )
@@ -750,6 +775,58 @@ def move(user_id: int) -> ResponseReturnValue:
     sess.commit()
     flask_session["user_sheet"] = sheet.id
     return redirect(url_for(".user_show", user_id=user.id))
+
+
+@bp.route("/<int:user_id>/delete_membership/<int:membership_id>/", methods=["GET", "POST"])
+@access.require("groups_change_membership")
+def membership_delete(user_id: int, membership_id: int) -> ResponseReturnValue:
+    membership = get_membership_or_404(membership_id)
+    assert isinstance(membership.group, PropertyGroup)
+    if membership.group.permission_level > current_user.permission_level:
+        flash(
+            "Eine Bearbeitung von Gruppenmitgliedschaften für Gruppen mit "
+            "höherem Berechtigungslevel ist nicht möglich.",
+            "error",
+        )
+        abort(403)
+    if session.utcnow() >= membership.active_during.begin:
+        flash("Nur Mitgliedschaften, die in der Zukunft liegen, können gelöscht werden.", "error")
+        abort(403)
+    form = FlaskForm()
+
+    def default_response() -> ResponseReturnValue:
+        form_args = {
+            "form": form,
+            "cancel_to": url_for("user.user_show", user_id=membership.user_id, _anchor="groups"),
+            "submit_text": "Löschen",
+            "actions_offset": 0,
+        }
+
+        return render_template(
+            "generic_form.html",
+            page_title=(
+                "Mitgliedschaft {} für "
+                "{} löschen".format(membership.group.name, membership.user.name)
+            ),
+            membership_id=membership_id,
+            user=membership.user,
+            form=form,
+            form_args=form_args,
+        )
+
+    if not form.is_submitted():
+        return default_response()
+
+    with abort_on_error(default_response), session.session.begin_nested():
+        delete_membership(
+            session=session.session,
+            membership_id=membership_id,
+            processor=current_user,
+        )
+    session.session.commit()
+
+    flash("Mitgliedschaft erfolgreich gelöscht.", "success")
+    return redirect(url_for("user.user_show", user_id=membership.user_id, _anchor="groups"))
 
 
 @bp.route('/<int:user_id>/edit_membership/<int:membership_id>', methods=['GET', 'POST'])
