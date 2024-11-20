@@ -139,6 +139,8 @@ jobs:
         run: docker push registry.agdsn.de/agdsn/coreos/pycroft/pycroft:${GITHUB_REF##*/}
   test:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -194,3 +196,10 @@ jobs:
         with:
           name: coverage
           path: htmlcov
+      - name: Upload results to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          disable_search: true
+          files: ./coverage.xml
+          use_oidc: true
+          verbose: true
