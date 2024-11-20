@@ -176,6 +176,7 @@ jobs:
         if: always() # always run even if the previous step fails
         with:
           report_paths: 'junit/test-*.xml'
+          annotate_only: true
       - name: Publish coverage XML report as markdown comment
         uses: irongut/CodeCoverageSummary@v1.3.0
         with:
