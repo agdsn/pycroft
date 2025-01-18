@@ -163,12 +163,14 @@ def generate_user_data(user: User) -> Response:
     med = scheduled_membership_end(user)
     mbd = scheduled_membership_start(user)
 
-    interface_info = [{
-        'id': i.id,
-        'mac': str(i.mac),
-        'ips': [str(ip.address) for ip in i.ips]
-    } for h in user.hosts for i in h.interfaces]
-
+    interface_info = [
+        {"id": i.id, "mac": str(i.mac), "ips": [str(ip.address) for ip in i.ips]}
+        for h in user.hosts
+        for i in h.interfaces
+    ]
+    mpsk_clients = [
+        {"id": mpsk.id, "mac": str(mpsk.mac), "name": mpsk.name} for mpsk in user.mpsk_clients
+    ]
     return jsonify(
         id=user.id,
         user_id=encode_type2_user_id(user.id),
@@ -198,6 +200,7 @@ def generate_user_data(user: User) -> Response:
         membership_begin_date=mbd.isoformat() if mbd else None,
         wifi_password=wifi_password,
         birthdate=user.birthdate.isoformat() if user.birthdate else None,
+        mpsk_clients=mpsk_clients,
     )
 
 
@@ -211,6 +214,7 @@ class UserResource(Resource):
                 .joinedload(Host.interfaces)
                 .joinedload(Interface.ips),
                 undefer(User.wifi_passwd_hash),
+                selectinload(User.mpsk_clients),
                 joinedload(User.account)
                 .selectinload(Account.splits)
                 .joinedload(Split.transaction),
