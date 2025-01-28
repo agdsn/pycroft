@@ -299,6 +299,7 @@ def bank_accounts_login(bank_account_id: int, action: str) -> ResponseReturnValu
         action=action,
         bank_account_id=bank_account.id,
         qrcode=qrcode,
+        challenge_text=challenge.challenge,
     )
 
 
