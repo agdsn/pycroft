@@ -385,6 +385,9 @@ class MPSKSClientAddResource(Resource):
         if not user.wifi_password:
             abort(412, message="Please generate a wifi password first")
 
+        if not user.has_property("member"):
+            abort(412, message="User has to be a member")
+
         try:
             mpsk_client = mpsk_client_create(
                 session.session, owner=user, mac=mac, name=name, processor=user
