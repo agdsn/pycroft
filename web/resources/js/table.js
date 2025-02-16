@@ -223,7 +223,7 @@ export function relativeDateFormatter(value, row, index) {
         </span>
     `;
 }
-dateFormatter.attributes = { sortName: 'timestamp' };
+relativeDateFormatter.attributes = { sortName: 'timestamp' };
 
 export function euroFormatter(value, row, index){
     const eur = parseFloat(value).toFixed(2).replace('.', ',');
