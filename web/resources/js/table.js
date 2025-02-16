@@ -241,11 +241,12 @@ export function textWithBooleanFormatter(value, row, index) {
     let icon_false = value['icon_false'] ||'fa fa-times-circle'
 
     if (value['bool']){
-        return `<i class="${icon_true} text-success"></i> ${value['text']}`;
+        return `${value['text']} <i class="${icon_true} text-success"></i>`;
     }else{
-        return `<i class="${icon_false} text-danger"></i> ${value['text']}`;
+        return `${value['text']} <i class="${icon_false} text-danger"></i>`;
     }
 }
+textWithBooleanFormatter.attributes = {sortName : 'text'}
 
 export function financeRowFormatter(row, index) {
     return row && row['row_positive']
