@@ -7,13 +7,12 @@ LOCKDIR=/opt/pycroft/venv
 
 function execute_hook() {
   set -x
-  PIP="/opt/pycroft/venv/bin/uv pip"
-  UV="/opt/pycroft/venv/bin/uv"
   PY="/opt/pycroft/venv/bin/python"
+  PIP="uv pip"
 
   if [[ ! -f /opt/pycroft/venv/bin/activate ]]; then
     echo "Creating virtual environment"
-    python3 -m venv /opt/pycroft/venv
+    uv venv /opt/pycroft/venv
   fi
 
   if $PY -c 'import importlib.util as u; exit(0 if u.find_spec("pycroft") is not None else 1)'; then
@@ -21,14 +20,9 @@ function execute_hook() {
     return
   fi
 
-  $PY -m ensurepip
-  $PY -m pip install uv
-  $PIP install wheel
-
   echo "No pip packages found, installing requirements"
   cd /opt/pycroft/app
-  $PIP install --upgrade uv
-  ls `$UV cache dir`
+  ls $(uv cache dir)
   $PIP sync requirements.dev.txt
   $PIP install -e '.[dev]' 'wtforms-widgets @ ./deps/wtforms-widgets'
 }

@@ -27,7 +27,7 @@ FROM pycroft-base
 
 # Install wheels from builder
 RUN --mount=type=bind,from=builder,source=/opt/pycroft/wheel,target=/opt/pycroft/wheel \
-  /opt/pycroft/venv/bin/pip install /opt/pycroft/wheel/*.whl
+  uv pip install /opt/pycroft/wheel/*.whl
 
 EXPOSE 5000
 

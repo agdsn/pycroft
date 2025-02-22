@@ -9,6 +9,7 @@ ARG GID=1000
 ENV LANG=C.UTF-8 DEBIAN_FRONTEND=noninteractive
 
 COPY etc/apt /etc/apt
+COPY --from=ghcr.io/astral-sh/uv:0.6.2 /uv /uvx /usr/local/bin/
 
 # Install Debian packages
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
@@ -29,9 +30,8 @@ WORKDIR /opt/pycroft
 # - Create app directory
 ENV VIRTUAL_ENV=/opt/pycroft/venv
 RUN --mount=type=cache,target=/opt/pycroft/.cache,uid=$UID,gid=$GID\
-    python3 -m venv /opt/pycroft/venv \
-    && /opt/pycroft/venv/bin/pip install -U uv \
-    && /opt/pycroft/venv/bin/uv pip install -U setuptools wheel \
+    uv venv /opt/pycroft/venv \
+    && uv pip install pip \
     && mkdir /opt/pycroft/app /opt/pycroft/wheel
 
 COPY --link . /
