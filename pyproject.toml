@@ -64,7 +64,7 @@ dependencies = [
     "wtforms-widgets",  # note: use `pip install -e deps/wtforms-widgets` for development
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
 prod = [
     "uwsgi ~= 2.0.21",
     "uwsgitop ~= 0.11",
