@@ -45,24 +45,14 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           version: "0.6.2"
-      - name: restore uv cache
-        uses: actions/cache/restore@v4
-        id: cache-uv-restore
-        with:
-          path: ~/.cache/uv
-          key: uv
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
       - name: install pip dependencies with uv
         run: >
           uv sync --locked --dev
           # && uv pip install . deps/wtforms-widgets
           && uv pip list
         id: pip-install
-      - name: save uv cache
-        uses: actions/cache/save@v4
-        id: cache-uv-save
-        with:
-          path: ~/.cache/uv
-          key: uv
       # now come the tests
       - name: Execute ruff
         run: uv run ruff check --output-format=github .
