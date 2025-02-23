@@ -42,6 +42,6 @@ you only need to do the following:
    .. code:: shell
 
        uv venv
-       uv pip sync requirements.dev.txt && uv pip install -e deps/wtforms-widgets -e '.[dev]'
+       uv sync --locked && uv pip install -e deps/wtforms-widgets
 
 #. Run tests / Build docs / …
