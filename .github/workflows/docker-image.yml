@@ -50,7 +50,7 @@ jobs:
       - name: install pip dependencies with uv
         run: >
           uv sync --locked --dev
-          # && uv pip install . deps/wtforms-widgets
+          && uv pip install deps/wtforms-widgets
           && uv pip list
         id: pip-install
       # now come the tests
