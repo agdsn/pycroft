@@ -562,8 +562,9 @@ def get_membership_or_404(id: int) -> Membership:
         abort(404)
     return membership
 
-@bp.route('/<int:user_id>/end_membership/<int:membership_id>')
-@access.require('groups_change_membership')
+
+@bp.route("/<int:user_id>/end_membership/<int:membership_id>", methods=["GET", "POST"])
+@access.require("groups_change_membership")
 def end_membership(user_id: int, membership_id: int) -> ResponseReturnValue:
     user = get_user_or_404(user_id)
     membership = get_membership_or_404(membership_id)
@@ -572,6 +573,32 @@ def end_membership(user_id: int, membership_id: int) -> ResponseReturnValue:
     if membership.user.id != user_id:
         flash(f"Gruppenmitgliedschaft {membership.id} gehört nicht zu Nutzer {user_id}!", 'error')
         return abort(404)
+
+    form = FlaskForm()
+
+    def default_response() -> ResponseReturnValue:
+        form_args = {
+            "form": form,
+            "cancel_to": url_for("user.user_show", user_id=membership.user_id, _anchor="groups"),
+            "submit_text": "Beenden",
+            "actions_offset": 0,
+        }
+
+        return render_template(
+            "generic_form.html",
+            page_title=(
+                "Mitgliedschaft {} für {} beenden?".format(
+                    membership.group.name, membership.user.name
+                )
+            ),
+            membership_id=membership_id,
+            user=membership.user,
+            form=form,
+            form_args=form_args,
+        )
+
+    if not form.is_submitted():
+        return default_response()
 
     try:
         remove_member_of(user, membership.group, current_user, starting_from(session.utcnow()))
