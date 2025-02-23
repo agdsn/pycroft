@@ -2,29 +2,26 @@
 
 set -euo pipefail
 LOCKDIR=/opt/pycroft/venv
+INFILE=uv.lock
+STAMPFILE=.uv.stamp
 
 . /container/common/locking.sh
 
 function execute_hook() {
   set -x
-  PY="/opt/pycroft/venv/bin/python"
   PIP="uv pip"
 
-  if [[ ! -f /opt/pycroft/venv/bin/activate ]]; then
-    echo "Creating virtual environment"
-    uv venv /opt/pycroft/venv
-  fi
-
-  if $PY -c 'import importlib.util as u; exit(0 if u.find_spec("pycroft") is not None else 1)'; then
-    echo "Pip packages present, nothing to do"
+  if [[ ! $INFILE -nt $STAMPFILE ]]; then
+    echo "Lockfile did not change since last run. Nothing to do."
     return
   fi
 
   echo "No pip packages found, installing requirements"
   cd /opt/pycroft/app
   ls $(uv cache dir)
-  $PIP sync requirements.dev.txt
-  $PIP install -e '.[dev]' 'wtforms-widgets @ ./deps/wtforms-widgets'
+  uv sync --locked
+  $PIP install -e '.[dev]' -e './deps/wtforms-widgets'
+  touch $STAMPFILE
 }
 
 [[ -d $LOCKDIR ]] || mkdir $LOCKDIR

@@ -227,3 +227,6 @@ venv.bak/
 
 manuf
 celerybeat-schedule
+# timestamp-based dependency tracking.
+# used by some docker entrypoint hooks
+.*.stamp
