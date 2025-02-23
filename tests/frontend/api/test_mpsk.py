@@ -37,6 +37,11 @@ class TestAddMpsk:
         session.refresh(user)
         assert len(user.mpsk_clients) == 0
 
+    def test_not_a_member(self, client, auth_header, url_non_member, session, user_non_member):
+        client.assert_url_response_code(
+            url_non_member, code=412, headers=auth_header, method="POST", data=self.VALID_DATA
+        )
+
     @pytest.mark.parametrize("name", ("", "     ", " ", "   ", "  "))
     def test_invalid_name(self, client, auth_header, url, session, user, name):
         self.INVALID_name["name"] = name
@@ -62,6 +67,10 @@ class TestAddMpsk:
     @pytest.fixture(scope="module")
     def url(self, user) -> str:
         return f"api/v0/user/{user.id}/add-mpsk"
+
+    @pytest.fixture(scope="module")
+    def url_non_member(self, user_non_member) -> str:
+        return f"api/v0/user/{user_non_member.id}/add-mpsk"
 
     def test_add_mpsk_needs_wifi_hash(self, client, auth_header, user_without_wifi_pw):
         client.assert_url_response_code(
@@ -168,6 +177,10 @@ class TestEditMPSK:
     def url(self, user) -> str:
         return f"api/v0/user/{user.id}/change-mpsk/"
 
+    @pytest.fixture(scope="module")
+    def url_non_member(self, user_non_member2) -> str:
+        return f"api/v0/user/{user_non_member2.id}/change-mpsk/"
+
     @pytest.mark.parametrize(
         "data",
         (
@@ -181,6 +194,17 @@ class TestEditMPSK:
     def test_unfound_change(self, client, auth_header, url, data, session):
         client.assert_url_response_code(
             url + "0", code=404, headers=auth_header, method="POST", data=self.VALID_DATA
+        )
+
+    def test_edit_as_non_user(self, client, auth_header, session, user_non_member2, url_non_member):
+        mpsk = self.get_mpsk(user_non_member2, session, mac="00:de:ad:be:ef:02")
+
+        client.assert_url_response_code(
+            url_non_member + str(mpsk.id),
+            code=412,
+            headers=auth_header,
+            method="POST",
+            data=self.VALID_DATA,
         )
 
     def get_mpsk(self, user, session, mac="00:de:ad:be:ef:00") -> MPSKClient:
@@ -242,15 +266,40 @@ class TestEditMPSK:
 
 
 @pytest.fixture(scope="module")
-def user(module_session) -> User:
+def user(module_session, config) -> User:
+    return f.UserFactory(
+        with_membership=True, membership__group=config.member_group, membership__includes_today=True
+    )
+
+
+@pytest.fixture(scope="module")
+def user_non_member(module_session) -> User:
     return f.UserFactory()
 
 
+@pytest.fixture(scope="module")
+def user_non_member2(module_session) -> User:
+    return f.UserFactory()
+
 @pytest.fixture
-def user_without_wifi_pw(module_session) -> User:
-    return f.UserFactory(wifi_passwd_hash=None)
+def user_without_wifi_pw(module_session, config) -> User:
+    user = f.UserFactory(
+        wifi_passwd_hash=None,
+        with_membership=True,
+        membership__group=config.member_group,
+        membership__includes_today=True,
+    )
+    module_session.flush()
+    return user
 
 
 @pytest.fixture
-def user_with_encrypted_wifi(module_session) -> User:
-    return f.UserFactory(wifi_passwd_hash="{somecryptprefix}garbledpasswordhash")
+def user_with_encrypted_wifi(module_session, config) -> User:
+    user = f.UserFactory(
+        wifi_passwd_hash="{somecryptprefix}garbledpasswordhash",
+        with_membership=True,
+        membership__group=config.member_group,
+        membership__includes_today=True,
+    )
+    module_session.flush()
+    return user

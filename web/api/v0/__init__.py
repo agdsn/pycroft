@@ -385,6 +385,9 @@ class MPSKSClientAddResource(Resource):
         if not user.wifi_password:
             abort(412, message="Please generate a wifi password first")
 
+        if not user.has_property("network_access"):
+            abort(412, message="User has to have network access.")
+
         try:
             mpsk_client = mpsk_client_create(
                 session.session, owner=user, mac=mac, name=name, processor=user
@@ -444,6 +447,10 @@ class MPSKSClientChangeResource(Resource):
         self, user_id: int, mpsk_id: int, password: str, mac: str, name: str
     ) -> ResponseReturnValue:
         user = get_authenticated_user(user_id, password)
+
+        if not user.has_property("network_access"):
+            abort(412, message="User has to have network access.")
+
         mpsk = get_mpsk_client_or_404(mpsk_id)
 
         if user != mpsk.owner:
