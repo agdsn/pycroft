@@ -11,16 +11,17 @@ function execute_hook() {
   set -x
   PIP="uv pip"
 
+  cd /opt/pycroft/app
   if [[ ! $INFILE -nt $STAMPFILE ]]; then
     echo "Lockfile did not change since last run. Nothing to do."
     return
   fi
 
   echo "No pip packages found, installing requirements"
-  cd /opt/pycroft/app
-  ls $(uv cache dir)
-  uv sync --locked
-  $PIP install -e '.[dev]' -e './deps/wtforms-widgets'
+  ls "$(uv cache dir)" || true
+  uv venv "$VIRTUAL_ENV"
+  uv sync --active --locked
+  $PIP install -e . -e './deps/wtforms-widgets'
   touch $STAMPFILE
 }
 
