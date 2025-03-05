@@ -60,7 +60,7 @@ def create_engine(connection_string, **kwargs) -> Engine:
         options=r"-c TimeZone=UTC -c search_path=pycroft,\ public",
         cursor_factory=UTCTZInfoCursorFactory,
     )
-    return sqa_create_engine(connection_string, **kwargs)
+    return sqa_create_engine(connection_string, isolation_level="SERIALIZABLE", **kwargs)
 
 
 def create_db_model(bind: Connection) -> None:
