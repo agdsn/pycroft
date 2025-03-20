@@ -16,20 +16,9 @@ repos:
   hooks:
     - id: ruff
 - repo: https://github.com/astral-sh/uv-pre-commit
-  rev: 0.4.7
+  rev: 0.6.2
   hooks:
-    - id: pip-compile
-      name: "pip-compile: requirements.txt"
-      args: [pyproject.toml, --generate-hashes, --quiet, -o, requirements.txt]
-      files: ^(pyproject.toml|requirements.txt)$
-    - id: pip-compile
-      name: "pip-compile: requirements.dev.txt"
-      args: [pyproject.toml, --generate-hashes, --extra, dev, --quiet, -o, requirements.dev.txt]
-      files: ^(pyproject.toml|requirements.dev.txt)$
-    - id: pip-compile
-      name: "pip-compile: requirements.prod.txt"
-      args: [pyproject.toml, --generate-hashes, --extra, prod, --quiet, -o, requirements.prod.txt]
-      files: ^(pyproject.toml|requirements.prod.txt)$
+    - id: uv-lock
 - repo: https://github.com/semgrep/pre-commit
   rev: 'v1.70.0'
   hooks:

@@ -24,7 +24,8 @@ Reinstall the pip requirements
 
 .. code:: sh
 
-   drc run --rm dev-app pip sync requirements.txt
+   drc run --rm dev-app uv sync --locked
+   drc run --rm dev-app uv pip install -e . deps/wtforms-widgets
 
 I need to downgrade the schema
 ------------------------------

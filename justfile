@@ -29,6 +29,10 @@ setup: _setup && build _schema-import schema-upgrade
     @echo -e "{{ _a_by }}About to build all docker images. This may take a while.{{ _a_rst }}"
     @echo "If you wish to skip this, run \`setup-no-build\` instead."
 
+local-setup:
+    uv sync --locked
+    uv pip install -e . -e deps/wtforms-widgets
+
 _setup:
     git submodule init
     git submodule update
@@ -133,11 +137,9 @@ schema-diff: (_up "dev-db") (alembic "diff")
 # upgrade the (imported or created) schema to the current revision
 schema-upgrade: (_up "dev-db") (alembic "upgrade" "head")
 
-# extract `requirements` lockfiles from `pyproject.toml` dependency spec
+# regenerate `uv.lock`
 deps-compile:
-    uv pip compile pyproject.toml --generate-hashes -o requirements.txt
-    uv pip compile pyproject.toml --generate-hashes --extra dev -o requirements.dev.txt
-    uv pip compile pyproject.toml --generate-hashes --extra prod -o requirements.prod.txt
+    uv lock
 
 _stop_all:
     {{ drc }} --progress=quiet stop

@@ -42,38 +42,30 @@ jobs:
           python-version: '3.12'
           # cache: 'pip'
       - name: set up `uv`
-        run: pip install uv && uv pip list
-      - name: restore uv cache
-        uses: actions/cache/restore@v4
-        id: cache-uv-restore
+        uses: astral-sh/setup-uv@v5
         with:
-          path: ~/.cache/uv
-          key: uv
+          version: "0.6.2"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
       - name: install pip dependencies with uv
         run: >
-          uv pip sync --system requirements.dev.txt
-          && uv pip install --system . deps/wtforms-widgets
-          && uv pip list --system
+          uv sync --locked --dev
+          && uv pip install deps/wtforms-widgets
+          && uv pip list
         id: pip-install
-      - name: save uv cache
-        uses: actions/cache/save@v4
-        id: cache-uv-save
-        with:
-          path: ~/.cache/uv
-          key: uv
       # now come the tests
       - name: Execute ruff
-        run: ruff check --output-format=github .
+        run: uv run ruff check --output-format=github .
         if: success() || steps.pip-install.conclusion == 'success'
       - name: Execute mypy
-        run: ./scripts/run_mypy.sh
+        run: uv run ./scripts/run_mypy.sh
         if: success() || steps.pip-install.conclusion == 'success'
       # docs stuff
       - name: Build sphinx docs
-        run: make SPHINXOPTS="-EN -w sphinx.log" -C doc html
+        run: uv run make SPHINXOPTS="-EN -w sphinx.log" -C doc html
         if: success() || steps.pip-install.conclusion == 'success'
       - name: Render sphinx warnings as annotations
-        run: python ./scripts/render_sphinx_log.py doc/sphinx.log
+        run: uv run python ./scripts/render_sphinx_log.py doc/sphinx.log
         if: success() || steps.pip-install.conclusion == 'success'
       - name: Publish sphinx docs as pages artifact
         uses: actions/upload-pages-artifact@v3
