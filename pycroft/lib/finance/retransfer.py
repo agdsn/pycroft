@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 from datetime import datetime, timedelta
 
-from schwifty import IBAN
+from schwifty import IBAN, BIC
 from sepaxml import SepaTransfer
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
@@ -19,6 +19,7 @@ def get_activities_to_return(session: Session) -> Sequence[BankAccountActivity]:
         select(BankAccountActivity)
         .options(joinedload(BankAccountActivity.bank_account))
         .filter(BankAccountActivity.transaction_id.is_(None))
+        .filter(BankAccountActivity.other_account_number != "")
         .filter(BankAccountActivity.amount > 0)
         .filter(BankAccountActivity.imported_at < ensure_tz(datetime.utcnow() - timedelta(days=14)))
     )
@@ -37,11 +38,13 @@ def generate_activities_return_sepaxml(activities: list[BankAccountActivity]) ->
     sepa = SepaTransfer(transfer_config, clean=False)
 
     for activity in activities:
-        bic = activity.other_routing_number or IBAN(activity.other_account_number).bic.compact
+        iban = IBAN(activity.other_account_number)
+        bic = iban.bic or BIC(activity.other_routing_number)
+
         payment = {
             "name": activity.other_name,
-            "IBAN": activity.other_account_number,
-            "BIC": bic,
+            "IBAN": iban.compact,
+            "BIC": bic.compact,
             "amount": int(activity.amount * 100),
             "execution_date": datetime.now().date(),
             "description": f"Rücküberweisung nicht zuordenbarer Überweisung vom {activity.posted_on} mit Referenz {activity.reference}"[
