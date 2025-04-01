@@ -1233,7 +1233,6 @@ def transactions_unconfirmed_json() -> ResponseReturnValue:
     transactions = (
         Transaction.q.filter_by(confirmed=False)
         .order_by(Transaction.posted_at)
-        .limit(100)
         .all()
     )
     return TableResponse[UnconfirmedTransactionsRow](
