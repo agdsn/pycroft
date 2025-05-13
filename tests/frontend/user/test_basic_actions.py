@@ -159,6 +159,70 @@ class TestUserMovedOut:
         assert response.headers.get('Content-Disposition') == "inline; filename=user_sheet.pdf"
         assert response.data.startswith(b"%PDF")
 
+@pytest.mark.usefixtures("session")
+class TestUserEndMembership:
+    @pytest.fixture(scope="class")
+    def user(self, class_session: Session, config: Config) -> User:
+        user = UserFactory.create(
+            room=None,
+            address=AddressFactory(),
+            with_membership=True,
+            membership__includes_today=True,
+            membership__group=config.member_group,
+        )
+        class_session.flush()
+        return user
+
+    def test_user_not_found(self, client: TestClient):
+        # with client.flashes_message(
+        #    f"Nutzer {user.id} ist aktuell nirgends eingezogen!", category="error"
+        # ):
+        client.assert_url_response_code(
+            url_for("user.end_membership", user_id=-1, membership_id=-1),
+            code=404,
+            method="get",
+        )
+
+        client.assert_url_response_code(
+            url_for("user.end_membership", user_id=-1, membership_id=-1),
+            code=404,
+            method="post",
+        )
+
+    def test_merbership_not_found(self, client: TestClient, user: User, config: Config):
+
+        assert user.member_of(config.member_group)
+        client.assert_url_response_code(
+            url_for("user.end_membership", user_id=user.id, membership_id=-1),
+            code=404,
+        )
+
+        assert user.member_of(config.member_group)
+
+        client.assert_url_response_code(
+            url_for("user.end_membership", user_id=user.id, membership_id=-1),
+            code=404,
+            method="post",
+        )
+        assert user.member_of(config.member_group)
+
+    def test_merbership_found(self, client: TestClient, user: User, config: Config):
+
+        client.assert_url_response_code(
+            url_for("user.end_membership", user_id=user.id, membership_id=user.memberships[0].id),
+            code=302,
+            method="post",
+        )
+        assert not user.member_of(config.member_group)
+
+    def test_membership_but_not_post(self, client: TestClient, user: User, config: Config):
+        client.assert_url_response_code(
+            url_for("user.end_membership", user_id=user.id, membership_id=user.memberships[0].id),
+            code=200,
+        )
+
+        assert user.member_of(config.member_group)
+
 
 @pytest.mark.usefixtures("session")
 class TestNewUserDatasheet:
