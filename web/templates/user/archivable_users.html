@@ -5,5 +5,12 @@
 #}
 {% extends "layout.html" %}
 {% block content %}
-  {{ table.render('archivable-users-table') }}
+  <h2> Archivable mail addresses: {{ archivable_mail_count }}</h2>
+  Here are the first 10:
+  <ul>
+  {% for user in archivable_mail_users %}
+    <li><a href="{{ url_for("user.user_show", user_id=user.id) }}">{{ user.email }}</a></li>
+  {% endfor %}
+  </ul>
+  <!-- {{ table.render('archivable-users-table') }} -->
 {% endblock %}

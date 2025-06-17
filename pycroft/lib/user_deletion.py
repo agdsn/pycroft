@@ -10,7 +10,7 @@ from collections.abc import Sequence
 from datetime import datetime
 from typing import Protocol, cast
 
-from sqlalchemy import func, and_, not_
+from sqlalchemy import CTE, ScalarResult, func, and_, not_
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload, Session
 from sqlalchemy.sql import Select
@@ -34,7 +34,12 @@ class _WindowArgs[TP, TO](t.TypedDict):
 
 def select_archivable_members(
     current_year: int,
-) -> Select[tuple[User, int, datetime]]:
+) -> tuple[Select[tuple[User, int, datetime]], CTE]:
+    """Get all members whose year(end of last membership)+2 <= current year.
+
+    :returns: a tuple of statement and the `last_mem` CTE which can be
+        reused for late injection of an `order_by`.
+    """
     # last_mem: (user_id, mem_id, mem_end)
     last_mem = select_user_and_last_mem().cte("last_mem")
     return (
@@ -50,13 +55,12 @@ def select_archivable_members(
         .filter(CurrentProperty.property_name.is_(None))
         .join(User, User.id == last_mem.c.user_id)
         .filter(func.extract("year", last_mem.c.mem_end) + 2 <= current_year)
-        .order_by(last_mem.c.mem_end)
         .with_only_columns(
             User,
             last_mem.c.mem_id,
             last_mem.c.mem_end,
         )
-    )
+    ), last_mem
 
 
 def get_archivable_members(
@@ -79,22 +83,25 @@ def get_archivable_members(
     :param current_year: dependency injection of the current year.
         defaults to the current year.
     """
+    stmt, last_mem = select_archivable_members(
+        # I know we're sloppy with time zones,
+        # but ±2h around new year's eve don't matter.
+        current_year=current_year
+        or datetime.now().year
+    )
     return cast(
         list[ArchivableMemberInfo],
         session.execute(
-            select_archivable_members(
-                # I know we're sloppy with time zones,
-                # but ±2h around new year's eve don't matter.
-                current_year=current_year
-                or datetime.now().year
-            ).options(
+            stmt.options(
                 joinedload(User.hosts),
                 # joinedload(User.current_memberships),
                 joinedload(User.account, innerjoin=True),
                 joinedload(User.room),
                 joinedload(User.current_properties_maybe_denied),
-            )
-        ).unique().all(),
+            ).order_by(last_mem.c.mem_end.asc())
+        )
+        .unique()
+        .all(),
     )
 
 
@@ -105,3 +112,26 @@ def archive_users(session: Session, user_ids: Sequence[int]) -> None:
     # todo insert these users into an archival log
     # todo add membership in archival group
     pass
+
+
+def scrubbable_mails_stmt(year: int) -> Select[tuple[User]]:
+    """Privacy policy §2.6
+
+    :returns: a tuple of statement and the `last_mem` CTE which can be
+        reused for late injection of an `order_by`.
+    """
+    stmt, _ = select_archivable_members(current_year=year)
+
+    return stmt.filter(User.email.is_not(None)).with_only_columns(User).distinct()
+
+
+def scrubbable_mails(session: Session) -> ScalarResult[User]:
+    """All the users whose mail addresses we can scrub"""
+    year = datetime.now().year
+    stmt = scrubbable_mails_stmt(year)
+    return session.execute(stmt).unique().scalars()
+
+
+def scrubbable_mails_count(session: Session, year: int) -> int | None:
+    stmt = scrubbable_mails_stmt(year)
+    return session.scalar(stmt.with_only_columns(func.count()))
