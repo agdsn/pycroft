@@ -16,6 +16,7 @@ from sqlalchemy import and_, func, distinct, Result, nulls_last
 from sqlalchemy.future import select
 from sqlalchemy.orm import aliased, Session
 from sqlalchemy.sql import Select, ClauseElement
+from sqlalchemy.sql._typing import _TypedColumnClauseArgument
 
 from pycroft import Config
 from pycroft.helpers import utc
@@ -244,7 +245,7 @@ def change_membership_active_during(
     log_user_event(message, processor, membership.user)
 
 
-def select_user_and_last_mem() -> Select:  # Select[Tuple[int, int, str]]
+def select_user_and_last_mem() -> Select[tuple[int, int, str]]:
     """Select users with their last membership of a user in the ``member`` group.
 
     :returns: a select statement with columns ``user_id``, ``mem_id``, ``mem_end``.
@@ -263,13 +264,19 @@ def select_user_and_last_mem() -> Select:  # Select[Tuple[int, int, str]]
         .distinct()
         .join(Membership)
         .join(Config, Config.member_group_id == Membership.group_id)
-        .add_columns(
+        .with_only_columns(
             User.id.label("user_id"),
-            func.last_value(Membership.id)
-            .over(**window_args, rows=(None, None))
-            .label("mem_id"),
-            func.last_value(mem_ends_at)
-            .over(**window_args, rows=(None, None))
-            .label("mem_end"),
+            t.cast(
+                _TypedColumnClauseArgument[int],
+                func.last_value(Membership.id)
+                .over(**window_args, rows=(None, None))
+                .label("mem_id"),
+            ),
+            t.cast(
+                _TypedColumnClauseArgument[str],
+                func.last_value(mem_ends_at)
+                .over(**window_args, rows=(None, None))
+                .label("mem_end"),
+            ),
         )
     )

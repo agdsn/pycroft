@@ -31,9 +31,10 @@ class _WindowArgs[TP, TO](t.TypedDict):
     partition_by: TP
     order_by: TO
 
+
 def select_archivable_members(
     current_year: int,
-) -> Select:  # Select[Tuple[User, int, datetime]]
+) -> Select[tuple[User, int, datetime]]:
     # last_mem: (user_id, mem_id, mem_end)
     last_mem = select_user_and_last_mem().cte("last_mem")
     return (
@@ -50,7 +51,7 @@ def select_archivable_members(
         .join(User, User.id == last_mem.c.user_id)
         .filter(func.extract("year", last_mem.c.mem_end) + 2 <= current_year)
         .order_by(last_mem.c.mem_end)
-        .add_columns(
+        .with_only_columns(
             User,
             last_mem.c.mem_id,
             last_mem.c.mem_end,
