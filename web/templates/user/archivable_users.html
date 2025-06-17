@@ -5,7 +5,12 @@
 #}
 {% extends "layout.html" %}
 {% block content %}
-  <h2> Archivable mail addresses: {{ archivable_mail_count }}</h2>
+  <h2>
+  §6.2: Mail addresses
+    <a class="btn btn-primary" href="{{url_for("user.scrub_mails")}}">
+      {{ archivable_mail_count }} <i class="fa fa-broom"></i>
+    </a>
+  </h2>
   Here are the first 10:
   <ul>
   {% for user in archivable_mail_users %}

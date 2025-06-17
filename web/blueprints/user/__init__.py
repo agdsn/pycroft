@@ -62,6 +62,7 @@ from pycroft.lib.user import encode_type1_user_id, encode_type2_user_id, \
     send_member_request_merged_email, can_target, edit_address
 from pycroft.lib.user_deletion import (
     get_archivable_members,
+    scrub_mail,
     scrubbable_mails,
     scrubbable_mails_count,
 )
@@ -1506,8 +1507,24 @@ def archivable_users() -> ResponseReturnValue:
         "user/archivable_users.html",
         table=table,
         archivable_mail_count=scrubbable_mails_count(sess, datetime.now().year),
-        archivable_mail_users=next(scrubbable_mails(sess).partitions(10)),
+        archivable_mail_users=next(scrubbable_mails(sess).partitions(10), []),
     )
+
+
+@bp.route("/scrub/mails", methods=["GET", "POST"])
+def scrub_mails() -> ResponseReturnValue:
+    """Scrub The mail addresses in batches of 100"""
+    sess = t.cast(Session, session.session)
+    for partition in scrubbable_mails(sess).partitions(100):
+        with sess.begin_nested():
+            scrubbed: list[int] = []
+            for user in partition:
+                scrub_mail(sess, user, author=current_user)
+                scrubbed.append(user.id)
+            flash(f"Scrubbed mails of {', '.join(map(str, scrubbed))}", "success")
+        sess.commit()
+
+    return redirect(url_for("user.archivable_users"))
 
 
 @bp.route('/archivable_users_table')

@@ -15,6 +15,8 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload, Session
 from sqlalchemy.sql import Select
 
+from pycroft.helpers.i18n.deferred import deferred_gettext
+from pycroft.lib.logging import log_user_event
 from pycroft.model.property import CurrentProperty
 from pycroft.model.user import User
 from pycroft.lib.membership import select_user_and_last_mem
@@ -126,3 +128,12 @@ def scrubbable_mails(session: Session) -> ScalarResult[User]:
 def scrubbable_mails_count(session: Session, year: int) -> int | None:
     stmt = scrubbable_mails_stmt(year)
     return session.scalar(stmt.with_only_columns(func.count()))
+
+
+def scrub_mail(session: Session, user: User, author: User):
+    user.email = None
+    session.add(user)
+    le = log_user_event(
+        deferred_gettext("Scrubbed mail address").to_json(), author=author, user=user
+    )
+    session.add(le)
