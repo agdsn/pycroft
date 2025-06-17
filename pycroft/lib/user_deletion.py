@@ -105,15 +105,6 @@ def get_archivable_members(
     )
 
 
-def archive_users(session: Session, user_ids: Sequence[int]) -> None:
-    # todo remove hosts
-    # todo remove tasks
-    # todo remove log entries
-    # todo insert these users into an archival log
-    # todo add membership in archival group
-    pass
-
-
 def scrubbable_mails_stmt(year: int) -> Select[tuple[User]]:
     """Privacy policy §2.6
 
