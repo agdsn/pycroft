@@ -17,8 +17,9 @@ from sqlalchemy.sql import Select
 
 from pycroft.helpers.i18n.deferred import deferred_gettext
 from pycroft.lib.logging import log_user_event
+from pycroft.model.host import Host
 from pycroft.model.property import CurrentProperty
-from pycroft.model.user import User
+from pycroft.model.user import RoomHistoryEntry, User
 from pycroft.lib.membership import select_user_and_last_mem
 
 
@@ -153,3 +154,63 @@ def scrub_mail(session: Session, user: User, author: User):
         deferred_gettext("Scrubbed mail address").to_json(), author=author, user=user
     )
     session.add(le)
+
+
+def scrubbable_hosts_stmt(year: int) -> Select[tuple[Host]]:
+    """All the hosts we can delete.
+
+    Deleting them will delete interfaces and assigned IPs by cascade.
+
+    Definition:
+
+    .. epigraph::
+
+       Your MAC and IP addresses, which are required to access the student network.
+
+       -- Privacy policy §2.8
+    """
+    stmt, _ = select_archivable_members(current_year=year)
+    return stmt.join(Host).with_only_columns(Host).distinct()
+
+
+def scrubbable_dates_of_birth_stmt(year: int) -> Select[tuple[User]]:
+    """All the users whose date of birth we can delete.
+
+    Definition:
+
+    .. epigraph::
+
+       Your date of birth, which is required based on TKG §172.
+
+       -- Privacy policy §2.9
+
+    """
+    stmt, _ = select_archivable_members(current_year=year)
+    return stmt.filter(User.birthdate.is_not(None)).with_only_columns(User).distinct()
+
+
+def scrubbable_swdd_person_ids(year: int) -> Select[tuple[User]]:
+    """All the usser whose ``swdd_person_id`` (“Debitorennummer”) we can delete
+
+    .. epigraph::
+
+       If available, your “Debitorennummer” of the Studentenwerk
+       Dresden to get information about the rental object (room)
+       and the rental period
+
+       -- Privacy policy §2.10
+
+    """
+    ...
+
+
+def scrubbable_room_history_entries(year: int) -> Select[tuple[RoomHistoryEntry]]:
+    """All the room history entries we can delete
+
+    .. epigraph::
+
+        Past residences in dormitories we are operating in to correctly book membership fees.
+
+        -- Privacy policy §2.11
+    """
+    ...
