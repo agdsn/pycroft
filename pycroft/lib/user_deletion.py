@@ -39,6 +39,15 @@ def select_archivable_members(
 ) -> tuple[Select[tuple[User, int, datetime]], CTE]:
     """Get all members whose year(end of last membership)+2 <= current year.
 
+    legal grounds:
+
+    .. epigraph::
+
+       The following data can be collected and processed until the end of
+       the next calendar year after membership ends: […]
+
+       -- Privacy policy §2
+
     :returns: a tuple of statement and the `last_mem` CTE which can be
         reused for late injection of an `order_by`.
     """
@@ -108,7 +117,15 @@ def get_archivable_members(
 
 
 def scrubbable_mails_stmt(year: int) -> Select[tuple[User]]:
-    """Privacy policy §2.6
+    """Users whose mails can be scrubbed
+
+    Definition:
+
+    .. epigraph::
+
+       Other e-mail addresses you provide, which are used for contacting you.
+
+       -- Privacy policy §2.6
 
     :returns: a tuple of statement and the `last_mem` CTE which can be
         reused for late injection of an `order_by`.
@@ -119,7 +136,6 @@ def scrubbable_mails_stmt(year: int) -> Select[tuple[User]]:
 
 
 def scrubbable_mails(session: Session) -> ScalarResult[User]:
-    """All the users whose mail addresses we can scrub"""
     year = datetime.now().year
     stmt = scrubbable_mails_stmt(year)
     return session.execute(stmt).unique().scalars()
