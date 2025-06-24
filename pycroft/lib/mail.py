@@ -74,9 +74,10 @@ class MailTemplate:
 
 @lru_cache(maxsize=None)
 def _get_template(template_location: str) -> jinja2.Template:
-    if config is None:
-        raise RuntimeError("`mail.config` not set up!")
-    return config.template_env.get_template(template_location)
+    try:
+        return config.template_env.get_template(template_location)
+    except RuntimeError as e:
+        raise RuntimeError("`mail.config` not set up!") from e
 
 
 def compose_mail(mail: Mail, from_: str, default_reply_to: str | None) -> MIMEMultipart:
