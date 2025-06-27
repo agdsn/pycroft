@@ -190,7 +190,7 @@ def scrubbable_dates_of_birth_stmt(year: int) -> Select[tuple[User]]:
 
 
 def scrubbable_swdd_person_ids(year: int) -> Select[tuple[User]]:
-    """All the usser whose ``swdd_person_id`` (“Debitorennummer”) we can delete
+    """All the user whose ``swdd_person_id`` (“Debitorennummer”) we can delete
 
     .. epigraph::
 
