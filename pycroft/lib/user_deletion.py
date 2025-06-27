@@ -37,8 +37,9 @@ class _WindowArgs[TP, TO](t.TypedDict):
 
 def select_archivable_members(
     current_year: int,
+    years_following_eom: int,
 ) -> tuple[Select[tuple[User, int, datetime]], CTE]:
-    """Get all members whose year(end of last membership)+2 <= current year.
+    """Get all members whose year(end of last membership) + 1 + years_following_eom <= current year.
 
     legal grounds:
 
@@ -66,7 +67,7 @@ def select_archivable_members(
         # …and use that to filter out the `do-not-archive` occurrences.
         .filter(CurrentProperty.property_name.is_(None))
         .join(User, User.id == last_mem.c.user_id)
-        .filter(func.extract("year", last_mem.c.mem_end) + 2 <= current_year)
+        .filter(func.extract("year", last_mem.c.mem_end) + 1 + years_following_eom <= current_year)
         .with_only_columns(
             User,
             last_mem.c.mem_id,
@@ -78,6 +79,7 @@ def select_archivable_members(
 def get_archivable_members(
     session: Session,
     current_year: int | None = None,
+    years_following_eom: int | None = None,
 ) -> Sequence[ArchivableMemberInfo]:
     """Return all the users that qualify for being archived right now.
 
@@ -93,13 +95,14 @@ def get_archivable_members(
 
     :param session:
     :param current_year: dependency injection of the current year.
+    :param years_following_eom: dependency injection of the current year.
         defaults to the current year.
     """
     stmt, last_mem = select_archivable_members(
         # I know we're sloppy with time zones,
         # but ±2h around new year's eve don't matter.
-        current_year=current_year
-        or datetime.now().year
+        current_year=current_year or datetime.now().year,
+        years_following_eom=years_following_eom or 1,
     )
     return cast(
         list[ArchivableMemberInfo],
@@ -131,7 +134,7 @@ def scrubbable_mails_stmt(year: int) -> Select[tuple[User]]:
     :returns: a tuple of statement and the `last_mem` CTE which can be
         reused for late injection of an `order_by`.
     """
-    stmt, _ = select_archivable_members(current_year=year)
+    stmt, _ = select_archivable_members(current_year=year, years_following_eom=1)
 
     return stmt.filter(User.email.is_not(None)).with_only_columns(User).distinct()
 
@@ -169,7 +172,7 @@ def scrubbable_hosts_stmt(year: int) -> Select[tuple[Host]]:
 
        -- Privacy policy §2.8
     """
-    stmt, _ = select_archivable_members(current_year=year)
+    stmt, _ = select_archivable_members(current_year=year, years_following_eom=1)
     return stmt.join(Host).with_only_columns(Host).distinct()
 
 
@@ -185,7 +188,7 @@ def scrubbable_dates_of_birth_stmt(year: int) -> Select[tuple[User]]:
        -- Privacy policy §2.9
 
     """
-    stmt, _ = select_archivable_members(current_year=year)
+    stmt, _ = select_archivable_members(current_year=year, years_following_eom=1)
     return stmt.filter(User.birthdate.is_not(None)).with_only_columns(User).distinct()
 
 
