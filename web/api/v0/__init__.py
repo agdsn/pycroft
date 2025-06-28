@@ -60,6 +60,7 @@ from pycroft.model.task import Task
 from pycroft.model.types import IPAddress, InvalidMACAddressException
 from pycroft.model.user import User, IllegalEmailError, IllegalLoginError
 from web.blueprints.mpskclient import get_mpsk_client_or_404
+from web.template_filters import require
 
 api = Api()
 
@@ -940,3 +941,50 @@ class ResetPasswordResource(Resource):
 
 
 api.add_resource(ResetPasswordResource, '/user/reset-password')
+
+
+class UserActiveResource(Resource):
+    @use_kwargs(
+        {
+            "name": fields.Str(required=True),
+            "fname": fields.Str(required=False, missing=None),
+            "byear": fields.Int(required=False, missing=None),
+            "uid": fields.Int(required=True),
+        },
+        location="form",
+    )
+    def post(self, name: str, fname: str, byear: int, uid: int) -> ResponseReturnValue:
+        """
+        Validates whether the given combination of username, user ID, and optional birth year belongs to a user who is part of the `active_member` group.
+
+        Parameters:
+            name (str): The username to validate.
+            byear (int, optional): The user's birth year. Can be omitted.
+            uid (int): User ID.
+
+        Returns:
+            ResponseReturnValue: A JSON-encoded string with {"response": True} if the user belongs to the
+                     `active_member` group, otherwise {"response": False}.
+        """
+        user = session.session.get(User, uid)
+
+        if user is None:
+            return jsonify({"response": False})
+        user_status = status(user)
+        has_birthday = not bool(byear)
+        if user.birthdate and byear:
+            if user.birthdate.year == byear:
+                has_birthday = True
+
+        part_name = user.name.split()
+        if (
+            user_status.is_active
+            and {*name.split(), *fname.split()}.issubset(part_name)
+            and has_birthday
+        ):
+            return jsonify({"response": True})
+
+        return jsonify({"response": False})
+
+
+api.add_resource(UserActiveResource, "/user/active")
