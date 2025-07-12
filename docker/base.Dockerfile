@@ -9,7 +9,7 @@ ARG GID=1000
 ENV LANG=C.UTF-8 DEBIAN_FRONTEND=noninteractive
 
 COPY etc/apt /etc/apt
-COPY --from=ghcr.io/astral-sh/uv:0.6.2 /uv /uvx /usr/local/bin/
+COPY --from=ghcr.io/astral-sh/uv:0.7.11 /uv /uvx /usr/local/bin/
 
 # Install Debian packages
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
