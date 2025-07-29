@@ -19,6 +19,7 @@ from pycroft.helpers.i18n.deferred import deferred_gettext
 from pycroft.lib.logging import log_user_event
 from pycroft.model.host import Host
 from pycroft.model.property import CurrentProperty
+from pycroft.model.scrubbing import ScrubLog
 from pycroft.model.user import RoomHistoryEntry, User
 from pycroft.lib.membership import select_user_and_last_mem
 
@@ -150,13 +151,17 @@ def scrubbable_mails_count(session: Session, year: int) -> int | None:
     return session.scalar(stmt.with_only_columns(func.count()))
 
 
+# TODO turn into bulk method
 def scrub_mail(session: Session, user: User, author: User):
     user.email = None
     session.add(user)
+    # two log entries: a user log entry for the support crew,
+    # and a system log entry to ensure traceability of all scrubings
     le = log_user_event(
         deferred_gettext("Scrubbed mail address").to_json(), author=author, user=user
     )
     session.add(le)
+    session.add(ScrubLog(scrubber="mail", info={"user_id": user.id}))
 
 
 def scrubbable_hosts_stmt(year: int) -> Select[tuple[Host]]:
