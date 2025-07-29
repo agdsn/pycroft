@@ -4,7 +4,6 @@ repos:
     rev: 1.7.0
     hooks:
     -   id: darker
-        args: ["--diff", "--check"]
 -   repo: https://github.com/asottile/pyupgrade
     rev: v3.17.0
     hooks:
