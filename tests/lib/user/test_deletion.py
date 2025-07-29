@@ -20,7 +20,8 @@ from tests.factories import UserFactory, ConfigFactory, MembershipFactory, \
 
 def get_archivable_members(session, current_year=2022):
     """Like `get_archivable_members`, just without all the joinedloads."""
-    return session.execute(select_archivable_members(current_year)).all()
+    stmt, last_mem = select_archivable_members(current_year, years_following_eom=1)
+    return session.execute(stmt).all()
 
 
 @pytest.fixture(scope='module')
