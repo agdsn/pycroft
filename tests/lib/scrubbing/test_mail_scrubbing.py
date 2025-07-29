@@ -1,3 +1,4 @@
+from itertools import chain
 import pytest
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -35,6 +36,17 @@ def test_scrubbing_scrubs_mail(user_archivable: User, processor: User, session: 
 
 
 def test_bulk_scrubbing_scrubs_mail(
-    users_archivable: list[User], users_notarchivable: list[User], processor: User, session: Session
+    users_archivable: list[User],
+    users_do_not_archive: list[User],
+    processor: User,
+    session: Session,
 ):
     scrub_all_mails(session, author=processor)
+    for u in chain(users_archivable, users_do_not_archive):
+        session.refresh(u)
+    assert all(
+        u.email is None for u in users_archivable
+    ), "mails should have been None for prepared users"
+    assert all(
+        u.email is not None for u in users_do_not_archive
+    ), "mails should not have been scrubbed for do-not-archive users"

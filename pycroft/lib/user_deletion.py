@@ -13,13 +13,14 @@ from typing import Protocol, cast
 from sqlalchemy import CTE, ScalarResult, func, and_, not_
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload, Session
-from sqlalchemy.sql import Select
+from sqlalchemy.sql import Select, insert, literal_column, update
 
 from pycroft.helpers.i18n.deferred import deferred_gettext
 from pycroft.lib.logging import log_user_event
 from pycroft.model.host import Host
 from pycroft.model.property import CurrentProperty
 from pycroft.model.scrubbing import ScrubLog
+from pycroft.model.session import current_timestamp, utcnow
 from pycroft.model.user import RoomHistoryEntry, User
 from pycroft.lib.membership import select_user_and_last_mem
 
@@ -165,8 +166,22 @@ def scrub_mail(session: Session, user: User, author: User):
 
 
 def scrub_all_mails(session: Session, author: User):
-    stmt, _ = scrubbable_mails(session)
-    # TODO implement
+    year = utcnow().year
+    users_with_mail = scrubbable_mails_stmt(year)
+    ids_subq = users_with_mail.with_only_columns(User.id).scalar_subquery()
+    # TODO report affected cols in return value
+    _ = session.execute(update(User).where(User.id.in_(ids_subq)).values(email=None))
+    # TODO insert user_log_entry
+    _ = session.execute(
+        insert(ScrubLog).from_select(
+            ("executed_at", "scrubber", "info"),
+            users_with_mail.with_only_columns(
+                current_timestamp().label("executed_at"),
+                literal_column("'mail'").label("scrubber"),
+                func.jsonb_build_object("user_id", User.id).label("info"),
+            ),
+        )
+    )
 
 
 def scrubbable_hosts_stmt(year: int) -> Select[tuple[Host]]:
