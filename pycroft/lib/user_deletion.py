@@ -209,7 +209,8 @@ def scrubbable_swdd_person_ids(year: int) -> Select[tuple[User]]:
        -- Privacy policy §2.10
 
     """
-    ...
+    stmt, _ = select_archivable_members(current_year=year, years_following_eom=1)
+    return stmt.filter(User.swdd_person_id.is_not(None)).with_only_columns(User).distinct()
 
 
 def scrubbable_room_history_entries(year: int) -> Select[tuple[RoomHistoryEntry]]:
@@ -222,3 +223,5 @@ def scrubbable_room_history_entries(year: int) -> Select[tuple[RoomHistoryEntry]
         -- Privacy policy §2.11
     """
     ...
+    stmt, _ = select_archivable_members(current_year=year, years_following_eom=1)
+    return stmt.join(User.room_history_entries).with_only_columns(RoomHistoryEntry).distinct()
