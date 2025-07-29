@@ -164,6 +164,11 @@ def scrub_mail(session: Session, user: User, author: User):
     session.add(ScrubLog(scrubber="mail", info={"user_id": user.id}))
 
 
+def scrub_all_mails(session: Session, author: User):
+    stmt, _ = scrubbable_mails(session)
+    # TODO implement
+
+
 def scrubbable_hosts_stmt(year: int) -> Select[tuple[Host]]:
     """All the hosts we can delete.
 
