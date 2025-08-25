@@ -150,3 +150,6 @@ _up +containers:
 show_emails:
     {{ drc }} --progress=none up -d dev-celery-worker dev-mail
     {{ drc }} logs --no-log-prefix -f dev-mail
+
+stop: 
+    {{ drc }} stop
