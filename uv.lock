@@ -488,14 +488,14 @@ wheels = [
 
 [[package]]
 name = "factory-boy"
-version = "3.2.1"
+version = "3.3.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "faker" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/50/20/18b99c494ba37054bee29a72c4cfc7aa938ed465411f0d66a4ddfb09f7fc/factory_boy-3.2.1.tar.gz", hash = "sha256:a98d277b0c047c75eb6e4ab8508a7f81fb03d2cb21986f627913546ef7a2a55e", size = 153483 }
+sdist = { url = "https://files.pythonhosted.org/packages/ba/98/75cacae9945f67cfe323829fc2ac451f64517a8a330b572a06a323997065/factory_boy-3.3.3.tar.gz", hash = "sha256:866862d226128dfac7f2b4160287e899daf54f2612778327dd03d0e2cb1e3d03", size = 164146 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/8a/31/df38bc685d1c06501afd7ca97fac2ab13af6bae6871519682a04a2e14044/factory_boy-3.2.1-py2.py3-none-any.whl", hash = "sha256:eb02a7dd1b577ef606b75a253b9818e6f9eaf996d94449c9d5ebb124f90dc795", size = 35337 },
+    { url = "https://files.pythonhosted.org/packages/27/8d/2bc5f5546ff2ccb3f7de06742853483ab75bf74f36a92254702f8baecc79/factory_boy-3.3.3-py2.py3-none-any.whl", hash = "sha256:1c39e3289f7e667c4285433f305f8d506efc2fe9c73aaea4151ebd5cdea394fc", size = 37036 },
 ]
 
 [[package]]
@@ -1188,6 +1188,7 @@ dependencies = [
     { name = "rich" },
     { name = "schwifty" },
     { name = "sentry-sdk", extra = ["flask"] },
+    { name = "sepaxml" },
     { name = "simplejson" },
     { name = "sqlalchemy" },
     { name = "webargs" },
@@ -1210,6 +1211,7 @@ dev = [
     { name = "pytest-cov" },
     { name = "pytest-timeout" },
     { name = "ruff" },
+    { name = "sepaxml" },
     { name = "sphinx" },
     { name = "sphinx-autobuild" },
     { name = "sphinx-paramlinks" },
@@ -1262,6 +1264,7 @@ requires-dist = [
     { name = "rich", specifier = "~=13.8.0" },
     { name = "schwifty", specifier = "~=2024.9.0" },
     { name = "sentry-sdk", extras = ["flask"], specifier = "~=1.29.2" },
+    { name = "sepaxml", specifier = "~=2.6.2" },
     { name = "simplejson", specifier = "~=3.11.1" },
     { name = "sqlalchemy", specifier = ">=2.0.1" },
     { name = "webargs", specifier = "~=8.3.0" },
@@ -1274,7 +1277,7 @@ requires-dist = [
 dev = [
     { name = "celery-types", specifier = "~=0.9.3" },
     { name = "coverage", specifier = "~=6.5.0" },
-    { name = "factory-boy", specifier = "~=3.2.0" },
+    { name = "factory-boy", specifier = "~=3.3.3" },
     { name = "flask-testing", specifier = "~=0.8.1" },
     { name = "guzzle-sphinx-theme", git = "https://github.com/agdsn/guzzle_sphinx_theme.git?rev=977d49fcbdf2b3df9660d813d4b33369391923e1" },
     { name = "mypy", specifier = "~=1.11.2" },
@@ -1284,6 +1287,7 @@ dev = [
     { name = "pytest-cov", specifier = "~=4.0.0" },
     { name = "pytest-timeout", specifier = "~=2.1.0" },
     { name = "ruff", specifier = "~=0.3.2" },
+    { name = "sepaxml", specifier = "~=2.6.2" },
     { name = "sphinx", specifier = "~=7.3.7" },
     { name = "sphinx-autobuild", specifier = "~=2021.3.14" },
     { name = "sphinx-paramlinks", specifier = "~=0.6.0" },
@@ -1623,15 +1627,15 @@ flask = [
 
 [[package]]
 name = "sepaxml"
-version = "2.6.1"
+version = "2.6.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "text-unidecode" },
     { name = "xmlschema" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/22/38/dd0d802f03025acd15b20ab8180ef4d3a90c6478b5d43a4c11606c5b723e/sepaxml-2.6.1.tar.gz", hash = "sha256:939c12236779e6a3d7221d3557921abd6e30b0bfd369e67815ea55bccaacd688", size = 34820 }
+sdist = { url = "https://files.pythonhosted.org/packages/ad/89/6ebe206cc660d840183183a940c7d39c134c28841de4f2126584f6aa54a9/sepaxml-2.6.2.tar.gz", hash = "sha256:1f6f747bb4e15a12af1034964424c9cc17481127229e8d95693a5a96a3267561", size = 23946 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/61/b8/76d321077eca630b270b1ae03883936547a701a3ac8c91ad19216cf021cf/sepaxml-2.6.1-py3-none-any.whl", hash = "sha256:f110e4a11322c1ea46f86550d703468b109343b4cece1d5b792d394f03d86110", size = 41714 },
+    { url = "https://files.pythonhosted.org/packages/b1/e2/976ab01d28a0e4e25dc35e166b88eceb1bbcf2bd3b6ca85a7ebe3ad2faa3/sepaxml-2.6.2-py3-none-any.whl", hash = "sha256:2713adcc4e4d7893166382837351e7bd34cefebd9dab702389a1c051e2ee7066", size = 26976 },
 ]
 
 [[package]]
