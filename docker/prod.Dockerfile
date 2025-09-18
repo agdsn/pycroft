@@ -10,9 +10,14 @@ WORKDIR /opt/pycroft/app
 # Download or build wheels of requirements
 COPY --chown=pycroft:pycroft uv.lock pyproject.toml ./
 COPY --chown=pycroft:pycroft ./deps ./deps
-RUN uv export --locked --no-emit-project --no-dev --group prod > requirements.prod.txt \
+RUN uv export \
+      --locked \
+      --no-emit-project \
+      --no-emit-package wtforms-widgets \
+      --no-dev \
+      --group prod \
+    > requirements.prod.txt \
   && /opt/pycroft/venv/bin/pip wheel --wheel-dir /opt/pycroft/wheel -r requirements.prod.txt \
-  && rm /opt/pycroft/wheel/wtforms_widgets*.whl \
   && /opt/pycroft/venv/bin/pip wheel --wheel-dir /opt/pycroft/wheel --no-deps ./deps/wtforms-widgets
 
 # Download JS/CSS dependencies
