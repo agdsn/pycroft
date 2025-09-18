@@ -57,7 +57,7 @@ dependencies = [
     "schwifty ~= 2024.9.0",
     "sentry-sdk[Flask] ~= 1.29.2",
     "simplejson ~= 3.11.1",  # decimal serialization
-    "SQLAlchemy >= 2.0.1",
+    "SQLAlchemy >= 2.0.1, <= 2.0.37",
     "webargs ~= 8.3.0",
     "wrapt ~= 1.16.0",
     "WTForms ~= 2.3.3",

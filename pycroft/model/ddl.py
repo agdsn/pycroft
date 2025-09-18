@@ -52,7 +52,7 @@ class DropConstraint(schema.DropConstraint):
         cascade: bool = False,
         **kw: t.Any,
     ):
-        super().__init__(element, cascade, **kw)
+        super().__init__(element, cascade=cascade, **kw)
         self.element = element
         self.if_exists = if_exists
         self.cascade = cascade
