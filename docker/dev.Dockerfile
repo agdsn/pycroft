@@ -19,8 +19,6 @@ FROM pycroft-base
 USER root
 WORKDIR /
 
-COPY etc/apt /etc/apt
-
 # Install Debian packages
 # Build-essential is needed For compiling things in pip
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \

@@ -1,8 +1,6 @@
 deb http://ftp.agdsn.de/debian bookworm main
 deb-src http://ftp.agdsn.de/debian bookworm main
 
-deb http://ftp.agdsn.network/agdsn-apt/ bookworm main
-
 deb http://ftp.agdsn.de/debian bookworm-updates main
 deb-src http://ftp.agdsn.de/debian bookworm-updates main
 
