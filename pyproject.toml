@@ -61,7 +61,7 @@ dependencies = [
     "webargs ~= 8.3.0",
     "wrapt ~= 1.16.0",
     "WTForms ~= 2.3.3",
-    "wtforms-widgets",  # note: use `pip install -e deps/wtforms-widgets` for development
+    "wtforms-widgets",
     "sepaxml ~= 2.6.2",
 ]
 
@@ -107,6 +107,9 @@ pycroft_ldap_sync = "ldap_sync.__main__:main"
 
 [project.entry-points."flask.commands"]
 alembic = "scripts.alembic_wrapper:cli"
+
+[tool.uv.sources]
+wtforms-widgets = { path = "deps/wtforms-widgets", editable = true }
 
 [tool.setuptools]
 include-package-data = true
