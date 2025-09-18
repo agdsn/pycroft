@@ -16,6 +16,7 @@ jobs:
         # as it stands this is wasteful.
         # assuming no PR has more than 50 commits.
         fetch-depth: 50
+        submodules: recursive
     - uses: actions/setup-python@v5
       with:
         python-version: '3.12'
@@ -44,13 +45,12 @@ jobs:
       - name: set up `uv`
         uses: astral-sh/setup-uv@v5
         with:
-          version: "0.6.2"
+          version: "0.8.18"
           enable-cache: true
           cache-dependency-glob: "uv.lock"
       - name: install pip dependencies with uv
         run: >
-          uv sync --locked --dev
-          && uv pip install deps/wtforms-widgets
+          uv sync --locked
           && uv pip list
         id: pip-install
       # now come the tests
@@ -95,6 +95,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: recursive
     - uses: oven-sh/setup-bun@v1
       with:
         bun-version: 1.1.26
