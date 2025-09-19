@@ -170,9 +170,8 @@ def scrub_all_mails(session: Session, author: User):
     # TODO insert user_log_entry
     _ = session.execute(
         insert(ScrubLog).from_select(
-            ("executed_at", "scrubber", "info"),
+            ("scrubber", "info"),
             users_with_mail.with_only_columns(
-                current_timestamp().label("executed_at"),
                 literal_column("'mail'").label("scrubber"),
                 func.jsonb_build_object("user_id", User.id).label("info"),
             ),
