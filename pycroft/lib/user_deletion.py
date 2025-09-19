@@ -15,9 +15,11 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload, Session
 from sqlalchemy.sql import Select, insert, literal_column, update
 
+from pycroft.helpers.functional import identity
 from pycroft.helpers.i18n.deferred import deferred_gettext
 from pycroft.lib.logging import log_user_event
 from pycroft.model.host import Host
+from pycroft.model.logging import LogEntry, UserLogEntry
 from pycroft.model.property import CurrentProperty
 from pycroft.model.scrubbing import ScrubLog
 from pycroft.model.session import utcnow
@@ -166,27 +168,71 @@ def scrub_all_mails(
     author: User,
     user_filter: t.Callable[[Select[tuple[User]]], Select[tuple[User]]] | None = None,
 ):
-    year = utcnow().year
-    users_with_mail = (user_filter or identity)(scrubbable_mails_stmt(year))
+    return session.execute(scrub_all_mails_stmt(utcnow().year, author.id, user_filter))
 
+
+def scrub_all_mails_stmt(
+    year: int,
+    author_id: int,
+    user_filter: t.Callable[[Select[tuple[User]]], Select[tuple[User]]] | None = None,
+):
+    users_with_mail = (user_filter or identity)(scrubbable_mails_stmt(year))
     ids_subq = users_with_mail.with_only_columns(User.id).scalar_subquery()
-    # TODO report affected cols in return value
-    _ = session.execute(update(User).where(User.id.in_(ids_subq)).values(email=None))
-    # TODO insert user_log_entry
-    _ = session.execute(
-        insert(ScrubLog).from_select(
-            ("scrubber", "info"),
-            users_with_mail.with_only_columns(
-                literal_column("'mail'").label("scrubber"),
-                func.jsonb_build_object("user_id", User.id).label("info"),
-            ),
-        )
+    removed_mail_user_ids = (
+        update(User)
+        .where(User.id.in_(ids_subq))
+        .values(email=None)
+        .returning(User.id)
+        .cte("removed_mail_user_ids")
     )
 
+    insert_scrub_log = (
+        insert(ScrubLog)
+        .from_select(
+            (ScrubLog.info.key, ScrubLog.scrubber.key),
+            select(
+                func.json_build_object("user_id", removed_mail_user_ids.c.id),
+                literal_column("'mail'"),
+            ).select_from(removed_mail_user_ids),
+        )
+        .cte("scrub_logs")
+    )
 
-def identity[T](x: T) -> T:
-    return x
-
+    msg_user_log_entry = deferred_gettext("Scrubbed mail address").to_json()
+    insert_log = (
+        insert(LogEntry)
+        .from_select(
+            (
+                LogEntry.discriminator.name,
+                LogEntry.message.name,
+                LogEntry.created_at.name,
+                LogEntry.author_id.name,
+            ),
+            select(
+                literal_column("'user_log_entry'"),
+                literal_column(f"'{msg_user_log_entry}'"),
+                current_timestamp(),
+                literal_column(f"{author_id}"),
+            ).select_from(removed_mail_user_ids),
+        )
+        .returning(LogEntry.id.label("id"), removed_mail_user_ids.c.id.label("user_id"))
+        .cte("log_entries")
+    )
+    insert_user_log = (
+        insert(UserLogEntry)
+        .from_select(
+            (
+                UserLogEntry.id.name,
+                UserLogEntry.user_id.name,
+            ),
+            select(
+                insert_log.c.id,
+                insert_log.c.user_id,
+            ),
+        )
+        .cte("user_log_entries")
+    )
+    return select(removed_mail_user_ids.c.id).add_cte(insert_scrub_log, insert_user_log)
 
 def scrubbable_hosts_stmt(year: int) -> Select[tuple[Host]]:
     """All the hosts we can delete.
