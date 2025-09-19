@@ -14,9 +14,9 @@ import typing as t
 
 from sqlalchemy import and_, func, distinct, Result, nulls_last
 from sqlalchemy.future import select
-from sqlalchemy.orm import aliased, Session
+from sqlalchemy.orm import InstrumentedAttribute, aliased, Session
 from sqlalchemy.sql import Select, ClauseElement
-from sqlalchemy.sql._typing import _TypedColumnClauseArgument
+from sqlalchemy.sql._typing import _TypedColumnClauseArgument, _ByArgument
 
 from pycroft import Config
 from pycroft.helpers import utc
@@ -254,7 +254,7 @@ def select_user_and_last_mem() -> Select[tuple[int, int, str]]:
     # see FunctionElement.over for documentation on `partition_by`, `order_by`
     # ideally, sqlalchemy would support named windows;
     # instead, we have to re-use the arguments.
-    window_args: dict[str, ClauseElement | t.Sequence[ClauseElement | str] | None] = {
+    window_args: _WindowArgs = {
         "partition_by": User.id,
         "order_by": nulls_last(mem_ends_at),
     }
@@ -280,3 +280,9 @@ def select_user_and_last_mem() -> Select[tuple[int, int, str]]:
             ),
         )
     )
+
+
+class _WindowArgs(t.TypedDict):
+    partition_by: _ByArgument
+    order_by: _ByArgument
+
