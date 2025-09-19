@@ -28,17 +28,17 @@ def upgrade():
             autoincrement=False,
             nullable=True,
         ),
-        sa.Column("scrubber_name", sa.TEXT(), autoincrement=False, nullable=True),
+        sa.Column("scrubber", sa.TEXT(), autoincrement=False, nullable=True),
         sa.Column(
-            "scrub_info",
+            "info",
             postgresql.JSONB(astext_type=sa.Text()),
             autoincrement=False,
             nullable=True,
         ),
     )
-    _ = op.create_index("ix_scrub_info", "scrub_log", ["scrub_info"], unique=False)
+    _ = op.create_index("ix_info", "scrub_log", ["info"], unique=False)
 
 
 def downgrade():
-    _ = op.drop_index("ix_scrub_info", table_name="scrub_log")
+    _ = op.drop_index("ix_info", table_name="scrub_log")
     op.drop_table("scrub_log")
