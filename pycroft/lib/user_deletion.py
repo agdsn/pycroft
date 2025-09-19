@@ -161,9 +161,14 @@ def scrub_mail(session: Session, user: User, author: User):
     session.add(ScrubLog(scrubber="mail", info={"user_id": user.id}))
 
 
-def scrub_all_mails(session: Session, author: User):
+def scrub_all_mails(
+    session: Session,
+    author: User,
+    user_filter: t.Callable[[Select[tuple[User]]], Select[tuple[User]]] | None = None,
+):
     year = utcnow().year
-    users_with_mail = scrubbable_mails_stmt(year)
+    users_with_mail = (user_filter or identity)(scrubbable_mails_stmt(year))
+
     ids_subq = users_with_mail.with_only_columns(User.id).scalar_subquery()
     # TODO report affected cols in return value
     _ = session.execute(update(User).where(User.id.in_(ids_subq)).values(email=None))
@@ -177,6 +182,10 @@ def scrub_all_mails(session: Session, author: User):
             ),
         )
     )
+
+
+def identity[T](x: T) -> T:
+    return x
 
 
 def scrubbable_hosts_stmt(year: int) -> Select[tuple[Host]]:
