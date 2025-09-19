@@ -32,10 +32,6 @@ class ArchivableMemberInfo(Protocol):
 
 
 # mrh, not available in py3.10…
-class _WindowArgs[TP, TO](t.TypedDict):
-    partition_by: TP
-    order_by: TO
-
 
 def select_archivable_members(
     current_year: int,
