@@ -1691,9 +1691,20 @@ def handle_payments_in_default() -> ResponseReturnValue:
 
     if not form.is_submitted():
         form.new_pid_memberships.process_data(
-            set(filter(lambda user: not user.has_property("active_member"), users_pid_membership_all)))
+            set(
+                filter(
+                    lambda user: not user.has_property("active_member"), users_pid_membership_all
+                )
+            )
+        )
         form.terminated_member_memberships.process_data(
-            set(filter(lambda user: not user.has_property("active_member"), users_membership_terminated_all)))
+            set(
+                filter(
+                    lambda user: not user.has_property("active_member"),
+                    users_membership_terminated_all,
+                )
+            )
+        )
 
     if form.validate_on_submit():
         users_pid_membership = form.new_pid_memberships.data
