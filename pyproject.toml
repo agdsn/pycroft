@@ -27,7 +27,7 @@ urls = {Homepage = "http://github.com/agdsn/pycroft/"}
 requires-python = ">= 3.12"
 dependencies = [
     "aiohttp >= 3.9.4", # security pin; transitive from mac-vendor-lookup
-    "alembic~=1.9.2",
+    "alembic~=1.17.1",
     "babel >= 2.12.1",
     "blinker ~= 1.4",
     "celery ~= 5.4.0",
