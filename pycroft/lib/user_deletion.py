@@ -54,7 +54,7 @@ def select_archivable_members(
         reused for late injection of an `order_by`.
     """
     # last_mem: (user_id, mem_id, mem_end)
-    last_mem = select_user_and_last_mem().cte("last_mem")
+    last_mem = select_user_and_last_mem().cte("last_mem").prefix_with("materialized")
     return (
         select()
         .select_from(last_mem)
@@ -168,7 +168,7 @@ def scrub_all_mails(
     author: User,
     user_filter: t.Callable[[Select[tuple[User]]], Select[tuple[User]]] | None = None,
 ):
-    return session.execute(scrub_all_mails_stmt(utcnow().year, author.id, user_filter))
+    return session.scalars(scrub_all_mails_stmt(utcnow().year, author.id, user_filter))
 
 
 def scrub_all_mails_stmt(
@@ -184,6 +184,7 @@ def scrub_all_mails_stmt(
         .values(email=None)
         .returning(User.id)
         .cte("removed_mail_user_ids")
+        .prefix_with("materialized")
     )
 
     insert_scrub_log = (
@@ -213,10 +214,31 @@ def scrub_all_mails_stmt(
                 literal_column(f"'{msg_user_log_entry}'"),
                 current_timestamp(),
                 literal_column(f"{author_id}"),
-            ).select_from(removed_mail_user_ids),
+            ),
         )
-        .returning(LogEntry.id.label("id"), removed_mail_user_ids.c.id.label("user_id"))
+        .returning(LogEntry.id.label("id"))
         .cte("log_entries")
+    )
+    log_numbered = (
+        select(insert_log.c.id, func.row_number().over(order_by=insert_log.c.id).label("row_number"))
+        .select_from(insert_log)
+        .cte()
+    )
+    user_ids_numbered = (
+        select(removed_mail_user_ids.c.id,
+            func.row_number().over(order_by=removed_mail_user_ids.c.id).label("row_number"),
+        )
+        .select_from(removed_mail_user_ids)
+        .cte()
+    )
+    logs_and_user_id = (
+        select(log_numbered.c.id, user_ids_numbered.c.id.label("user_id"))
+        .select_from(log_numbered)
+        .join(
+            user_ids_numbered,
+            log_numbered.c.row_number == user_ids_numbered.c.row_number,
+        )
+        .cte()
     )
     insert_user_log = (
         insert(UserLogEntry)
@@ -226,8 +248,8 @@ def scrub_all_mails_stmt(
                 UserLogEntry.user_id.name,
             ),
             select(
-                insert_log.c.id,
-                insert_log.c.user_id,
+                logs_and_user_id.c.id,
+                logs_and_user_id.c.user_id,
             ),
         )
         .cte("user_log_entries")
