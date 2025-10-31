@@ -20,7 +20,7 @@ from pycroft.lib.logging import log_user_event
 from pycroft.model.host import Host
 from pycroft.model.property import CurrentProperty
 from pycroft.model.scrubbing import ScrubLog
-from pycroft.model.session import current_timestamp, utcnow
+from pycroft.model.session import utcnow
 from pycroft.model.user import RoomHistoryEntry, User
 from pycroft.lib.membership import select_user_and_last_mem
 
@@ -222,7 +222,7 @@ def scrubbable_dates_of_birth_stmt(year: int) -> Select[tuple[User]]:
 
 
 def scrubbable_swdd_person_ids(year: int) -> Select[tuple[User]]:
-    """All the user whose ``swdd_person_id`` (“Debitorennummer”) we can delete
+    """All the users whose ``swdd_person_id`` (“Debitorennummer”) we can delete
 
     .. epigraph::
 
@@ -242,10 +242,35 @@ def scrubbable_room_history_entries(year: int) -> Select[tuple[RoomHistoryEntry]
 
     .. epigraph::
 
-        Past residences in dormitories we are operating in to correctly book membership fees.
+       Past residences in dormitories we are operating in to correctly book membership fees.
 
         -- Privacy policy §2.11
     """
-    ...
     stmt, _ = select_archivable_members(current_year=year, years_following_eom=1)
     return stmt.join(User.room_history_entries).with_only_columns(RoomHistoryEntry).distinct()
+
+
+def scrubbable_name(year: int) -> Select[tuple[User]]:
+    """All the users whose ``name`` can be deleted
+
+    .. epigraph::
+
+       The name of the user.
+
+       -- Privacy policy §2.1
+    """
+    stmt, _ = select_archivable_members(current_year=year, years_following_eom=10)
+    return stmt.filter(User.name.is_not(None)).with_only_columns(User).distinct()
+
+
+def scrubbable_address(year: int) -> Select[tuple[User]]:
+    """All the users whose ``address_id`` can be deleted
+
+    .. epigraph::
+
+       The former address of the user.
+
+       -- Privacy policy §2.1
+    """
+    stmt, _ = select_archivable_members(current_year=year, years_following_eom=10)
+    return stmt.filter(User.address_id.is_not(None)).with_only_columns(User).distinct()
