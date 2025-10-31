@@ -26,8 +26,8 @@ classifiers = [
 urls = {Homepage = "http://github.com/agdsn/pycroft/"}
 requires-python = ">= 3.12"
 dependencies = [
-    "aiohttp >= 3.9.4",  # security pin; transitive from mac-vendor-lookup
-    "alembic ~= 1.9.2",
+    "aiohttp >= 3.9.4", # security pin; transitive from mac-vendor-lookup
+    "alembic~=1.9.2",
     "babel >= 2.12.1",
     "blinker ~= 1.4",
     "celery ~= 5.4.0",
@@ -43,7 +43,7 @@ dependencies = [
     "netaddr ~= 1.3.0",
     "Jinja2 ~= 3.1.4",
     "jsonschema ~= 3.2.0",
-    "ldap3 ~= 2.5.1",  # only needed for ldap caching
+    "ldap3 ~= 2.5.1", # only needed for ldap caching
     "mac-vendor-lookup ~= 0.1.11",
     "MarkupSafe ~= 2.0",
     "marshmallow ~= 3.20.1",
@@ -52,11 +52,11 @@ dependencies = [
     "psycopg2-binary ~= 2.9.10",
     "pydantic ~= 2.9.2",
     "python-dotenv ~= 0.21.0",
-    "reportlab ~= 4.2.5",  # usersheet generation
+    "reportlab ~= 4.2.5", # usersheet generation
     "rich ~= 13.8.0",
     "schwifty ~= 2024.9.0",
     "sentry-sdk[Flask] ~= 1.29.2",
-    "simplejson ~= 3.11.1",  # decimal serialization
+    "simplejson ~= 3.11.1", # decimal serialization
     "SQLAlchemy >= 2.0.1, <= 2.0.37",
     "webargs ~= 8.3.0",
     "wrapt ~= 1.16.0",
@@ -99,7 +99,7 @@ dev = [
     "types-netaddr ~= 1.3.0",
     "types-passlib ~= 1.7.7",
     "watchdog ~= 2.3.1",
-    "sepaxml ~= 2.6.2"
+    "sepaxml ~= 2.6.2",
 ]
 
 [project.scripts]
