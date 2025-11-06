@@ -212,7 +212,7 @@ def scrub_all_mails_stmt(
             select(
                 literal_column("'user_log_entry'"),
                 literal_column(f"'{msg_user_log_entry}'"),
-                current_timestamp(),
+                func.current_timestamp(),
                 literal_column(f"{author_id}"),
             ),
         )
