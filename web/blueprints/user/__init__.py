@@ -1519,11 +1519,10 @@ def scrub_mails() -> ResponseReturnValue:
 
     with sess.begin_nested():
         ids = scrub_all_mails(sess, author=current_user)
-        flash(f"deleted ids: {','.join(ids)}", 'success')
-        sess.rollback()
 
-    sess.rollback()
+    sess.commit()
 
+    flash(f"{len(ids.all())} E-Mail-Adressen gelöscht.", "success")
     return redirect(url_for("user.archivable_users"))
 
 
