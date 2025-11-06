@@ -12,12 +12,10 @@ import typing
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 
+from pycroft.helpers.functional import identity
+
 from .types import Interval, NegativeInfinity, PositiveInfinity, Bound, Money
 from .utils import qualified_typename
-
-
-def identity(x):
-    return x
 
 
 def deserialize_money(v):

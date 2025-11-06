@@ -19,3 +19,7 @@ def map_collecting_errors[
         except error_type as e:
             errors.append(e)
     return results, errors
+
+
+def identity[T](x: T) -> T:
+    return x
