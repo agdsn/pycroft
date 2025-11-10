@@ -21,6 +21,7 @@ from pycroft.model.user import (
     PropertyGroup,
     Membership,
 )
+from pycroft.model.facilities import Building, Room
 from pycroft.task import send_mails_async
 
 from .user_id import (
@@ -125,14 +126,24 @@ def user_send_mail(
     user_send_mails([user], template, soft_fail, use_internal, **kwargs)
 
 
-def get_active_users(session: Session, group: PropertyGroup) -> ScalarResult[User]:
-    return session.scalars(
+def get_active_users(
+    session: Session, group: PropertyGroup, building: Building | None = None
+) -> ScalarResult[User]:
+    statement = (
         select(User).join(User.current_memberships).where(Membership.group == group).distinct()
     )
 
+    # if building is not None, we add the filter to the query
+    if building is not None:
+        statement = statement.join(User.room).join(Room.building).where(Building.id == building.id)
 
-def group_send_mail(group: PropertyGroup, subject: str, body_plain: str) -> None:
-    users = get_active_users(session=session.session, group=group)
+    return session.scalars(statement)
+
+
+def group_send_mail(
+    group: PropertyGroup, subject: str, body_plain: str, building: Building | None = None
+) -> None:
+    users = get_active_users(session=session.session, group=group, building=building)
     user_send_mails(users, soft_fail=True, body_plain=body_plain, subject=subject)
 
 

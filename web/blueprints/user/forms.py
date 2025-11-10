@@ -335,6 +335,13 @@ class UserMoveOutForm(Form):
 
 class GroupMailForm(Form):
     group = QuerySelectField("Gruppe", [DataRequired()], get_label='name', query_factory=group_query)
+    building = QuerySelectField(
+        "Wohnheim",
+        get_label="short_name",
+        query_factory=building_query,
+        allow_blank=True,
+        blank_text="<Wohnheim>",
+    )
     subject = TextField("Betreff", [DataRequired()])
     body_plain = TextAreaField("E-Mail (plaintext)", [DataRequired()],
                                description="Verfügbar: {name}, {login}, {id}, {email}, "
