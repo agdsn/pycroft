@@ -333,14 +333,26 @@ class UserMoveOutForm(Form):
     end_membership = BooleanField("Mitgliedschaft/Extern beenden", [Optional()])
 
 
+def at_least_one_required(form: Form, field: Field) -> None:
+    if not field.data:
+        raise ValidationError("Mindestens eine Gruppe muss ausgewählt werden!")
+
+
 class GroupMailForm(Form):
-    group = QuerySelectField("Gruppe", [DataRequired()], get_label='name', query_factory=group_query)
-    building = QuerySelectField(
-        "Wohnheim",
+    groups = QuerySelectMultipleField(
+        "Gruppen",
+        get_label="name",
+        query_factory=group_query,
+        validators=[at_least_one_required],
+        default=[],
+    )
+    buildings = QuerySelectMultipleField(
+        "Wohnheime",
         get_label="short_name",
         query_factory=building_query,
         allow_blank=True,
         blank_text="<Wohnheim>",
+        default=[],
     )
     subject = TextField("Betreff", [DataRequired()])
     body_plain = TextAreaField("E-Mail (plaintext)", [DataRequired()],
