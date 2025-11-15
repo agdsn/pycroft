@@ -1,0 +1,40 @@
+{%- extends "base.html.j2" -%}
+{%- block body -%}
+* English version below *
+
+Hallo {{ user_name }},
+
+Unserer Kenntnis nach endet dein Mietvertrag am {{ contract_end }}.
+Deine Mitgliedschaft bei der AG DSN endet *nicht automatisch*.
+Bitte denke also daran, sie zu beenden,
+sofern du nicht über deine Wohndauer hinaus bei uns Mitglied bleiben möchtest.
+
+Dein Mitgliedschaftsende kannst du unter folgendem Link vormerken: [1]
+
+Bei Fragen oder Problemen antworte gerne auf diese Mail.
+
+Viele Grüße
+Deine AG DSN
+
+[1] https://agdsn.de/sipa/usersuite/terminate-membership
+
+
+* English version *
+
+Hello {{ user_name }},
+
+To our knowledge, your rental agreement ends on {{ contract_end }}.
+Your membership with AG DSN does *not* end automatically.
+Please remember to cancel your membership
+if you do not wish to remain a member beyond the duration of your stay.
+
+You can register your termination at the following link: [1]
+
+If you have any questions or problems, please reply to this email.
+
+Best regards,
+Your AG DSN
+
+[1] https://agdsn.de/sipa/usersuite/terminate-membership
+
+{%- endblock -%}
