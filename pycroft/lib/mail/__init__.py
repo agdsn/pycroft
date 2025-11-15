@@ -26,7 +26,8 @@ from pycroft.lib.exc import PycroftLibException
 
 # TODO proxy and DI; set at app init
 _config_var: ContextVar[MailConfig] = ContextVar("config")
-config: MailConfig = LocalProxy(_config_var)  # ty:ignore[invalid-assignment]
+config: MailConfig = LocalProxy(_config_var)  # type: ignore[assignment]
+
 logger = logging.getLogger("mail")
 logger.setLevel(logging.INFO)
 
@@ -54,7 +55,7 @@ class Mail:
 class MailTemplate:
     template: str
     subject: str
-    args: dict[str, t.Any]
+    args: dict
 
     def __init__(self, **kwargs: t.Any) -> None:
         self.args = kwargs
