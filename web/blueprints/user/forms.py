@@ -1,6 +1,10 @@
+from __future__ import annotations
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+
+import typing as t
+from datetime import datetime
 
 from flask import url_for
 from flask_wtf import FlaskForm as Form
@@ -26,6 +30,7 @@ from wtforms_widgets.fields.core import (
 from wtforms_widgets.fields.custom import MacField
 from wtforms_widgets.fields.filters import empty_to_none, to_lowercase
 from wtforms_widgets.fields.validators import OptionalIf, MacAddress
+from wtforms_widgets.widgets import BootstrapFormControlDecorator, BootstrapStandardDecorator
 
 from pycroft.helpers import utc
 from pycroft.lib.user import find_similar_users
@@ -326,9 +331,51 @@ class OptionallyUnlimitedEndDateForm(Form):
     date = DateField("Ende", [OptionalIf("unlimited")])
 
 
+# a Widget is just Field → Args → Markup
+
+
+class TypedField[TData](Field):
+    data: TData
+    widget: t.Callable[..., Markup]
+
+
+@BootstrapFormControlDecorator
+@BootstrapStandardDecorator
+def render_datetime_or_now(field: DateTimeOrNowField[...], **kwargs) -> Markup:
+    content = field.data or ""
+    return Markup(f"""
+                  <div class="input-group">
+                  <button class="btn btn-outline-secondary" data-bs-toggle="button">Sofort</button>
+
+                  <input class="form-control" data-date-format="yyy-mm-dd" data-date-language="de"
+                      data-provide="datepicker"
+
+                  >{content}</input>
+
+                  </div>
+                  """)
+
+
+class DateTimeOrNowField[**P](TypedField[datetime | None]):
+    widget = render_datetime_or_now
+
+    @t.override
+    def process_data(self, value: t.Any):
+        assert isinstance(value, datetime | None)
+        self.data = value
+
+    @t.override
+    def process_formdata(self, valuelist: list[str]):
+        match valuelist:
+            case ["None"]:
+                self.data = None
+            case [timestamp]:
+                self.data = datetime.fromisoformat(timestamp)
+
+
 class UserAddGroupMembership(Form):
     group = QuerySelectField("Gruppe", get_label="name", query_factory=group_query)
-    begins_at = FormField(OptionallyDirectBeginDateForm)
+    begins_at = DateTimeOrNowField()
     ends_at = FormField(OptionallyUnlimitedEndDateForm)
 
 
