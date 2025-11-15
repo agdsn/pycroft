@@ -60,6 +60,7 @@ class MailTemplate:
     def __init__(self, **kwargs: t.Any) -> None:
         self.args = kwargs
 
+    # TODO don't put this as a method on the template… We want a separate render method for each template.
     def render(self, **kwargs: t.Any) -> tuple[str, str]:
         plain = self.jinja_template.render(mode="plain", **self.args, **kwargs)
         html = self.jinja_template.render(mode="html", **self.args, **kwargs)
