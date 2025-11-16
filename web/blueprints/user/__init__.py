@@ -1540,9 +1540,10 @@ def mail_group() -> ResponseReturnValue:
 
     if form.validate_on_submit():
         lib.user.group_send_mail(
-            group=form.group.data,
+            groups=form.groups.data,
             subject=form.subject.data,
             body_plain=form.body_plain.data,
+            buildings=form.buildings.data if getattr(form, "building", None) else [],
         )
 
         flash("Rundmail versendet!", "success")

@@ -34,6 +34,7 @@ class UserFactory(BaseFactory):
     room = factory.SubFactory(RoomFactory)
     address = factory.SelfAttribute('room.address')
     unix_account = None
+    birthdate = None
 
     @classmethod
     def _create(cls, model_class, *args, **kwargs):

@@ -18,9 +18,10 @@ from pycroft.model.user import (
     User,
     PreMember,
     BaseUser,
-    PropertyGroup,
     Membership,
+    PropertyGroup,
 )
+from pycroft.model.facilities import Building, Room
 from pycroft.task import send_mails_async
 
 from .user_id import (
@@ -125,14 +126,35 @@ def user_send_mail(
     user_send_mails([user], template, soft_fail, use_internal, **kwargs)
 
 
-def get_active_users(session: Session, group: PropertyGroup) -> ScalarResult[User]:
-    return session.scalars(
-        select(User).join(User.current_memberships).where(Membership.group == group).distinct()
+def get_active_users_with_building(
+    session: Session, groups: t.List[PropertyGroup], buildings: t.List[Building]
+) -> ScalarResult[User]:
+
+    statement = select(User)
+
+    if len(groups) > 0:
+        group_ids: t.List[int] = [g.id for g in groups]
+        statement = (
+            statement.join(User.current_memberships)
+            .where(Membership.group_id.in_(group_ids))
+            .distinct()
+        )
+    # if building is not None, we add the filter to the query
+    if len(buildings) > 0:
+        building_ids: t.List[int] = [b.id for b in buildings]
+        statement = (
+            statement.join(User.room).join(Room.building).where(Building.id.in_(building_ids))
+        )
+
+    return session.scalars(statement)
+
+
+def group_send_mail(
+    groups: t.List[PropertyGroup], subject: str, body_plain: str, buildings: t.List[Building]
+) -> None:
+    users = get_active_users_with_building(
+        session=session.session, groups=groups, buildings=buildings
     )
-
-
-def group_send_mail(group: PropertyGroup, subject: str, body_plain: str) -> None:
-    users = get_active_users(session=session.session, group=group)
     user_send_mails(users, soft_fail=True, body_plain=body_plain, subject=subject)
 
 
