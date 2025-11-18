@@ -953,12 +953,15 @@ class UserActiveResource(Resource):
         },
         location="form",
     )
-    def post(self, name: str, fname: str, byear: int, uid: int) -> ResponseReturnValue:
+    def post(
+        self, name: str, fname: str | None, byear: int | None, uid: int
+    ) -> ResponseReturnValue:
         """
         Validates whether the given combination of username, user ID, and optional birth year belongs to a user who is part of the `active_member` group.
 
         Parameters:
             name (str): The username to validate.
+            fname (str, optional): The firstname to validate.
             byear (int, optional): The user's birth year. Can be omitted.
             uid (int): User ID.
 

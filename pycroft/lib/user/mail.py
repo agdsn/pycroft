@@ -132,7 +132,7 @@ def get_active_users_with_building(
 
     statement = select(User)
 
-    if len(groups) > 0:
+    if groups:
         group_ids: t.List[int] = [g.id for g in groups]
         statement = (
             statement.join(User.current_memberships)
@@ -140,7 +140,7 @@ def get_active_users_with_building(
             .distinct()
         )
     # if building is not None, we add the filter to the query
-    if len(buildings) > 0:
+    if buildings:
         building_ids: t.List[int] = [b.id for b in buildings]
         statement = (
             statement.join(User.room).join(Room.building).where(Building.id.in_(building_ids))

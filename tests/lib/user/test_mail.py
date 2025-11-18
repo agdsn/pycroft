@@ -33,11 +33,7 @@ def user_no_room(module_session, config) -> User:
 
 @pytest.fixture(scope="module")
 def building_list(module_session) -> list[Building]:
-    out = []
-    for _ in range(20):
-        b = BuildingFactory.create()
-        out.append(b)
-    return out
+    return BuildingFactory.create_batch(20)
 
 
 @pytest.fixture(scope="module")
