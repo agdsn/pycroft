@@ -117,6 +117,9 @@ include-package-data = true
 [tool.setuptools.packages]
 find = {namespaces = false}
 
+[tool.alembic]
+script_location = "pycroft/model/alembic"
+
 # TOOLS
 [tool.black]
 line-length = 100
