@@ -1,9 +1,14 @@
+import typing as t
 from dataclasses import dataclass
 from email.header import Header
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import make_msgid, formatdate
+from functools import lru_cache
 
+import jinja2
+
+from .config import config
 
 @dataclass
 class Mail:
@@ -41,3 +46,30 @@ class Mail:
         print(msg)
 
         return msg
+
+
+class MailTemplate:
+    template: str
+    subject: str
+    args: dict
+
+    def __init__(self, loader: t.Callable[[str], jinja2.Template] | None = None, **kwargs: t.Any) -> None:
+        self.jinja_template: jinja2.Template = (loader or _get_template)(self.template)
+        self.args = kwargs
+
+    # TODO don't put this as a method on the template… We want a separate render method for each template.
+    def render(self, **kwargs: t.Any) -> tuple[str, str]:
+        plain = self.jinja_template.render(mode="plain", **self.args, **kwargs)
+        html = self.jinja_template.render(mode="html", **self.args, **kwargs)
+
+        return plain, html
+
+
+@lru_cache(maxsize=None)
+def _get_template(template_location: str) -> jinja2.Template:
+    try:
+        return config.template_env.get_template(template_location)
+    except RuntimeError as e:
+        raise RuntimeError("`mail.config` not set up!") from e
+
+
