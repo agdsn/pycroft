@@ -5,12 +5,6 @@ pycroft.lib.mail
 
 from __future__ import annotations
 import typing as t
-from contextvars import ContextVar
-from dataclasses import dataclass, field, InitVar
-from functools import lru_cache
-
-import jinja2
-from werkzeug.local import LocalProxy
 
 
 from .concepts import Mail, MailTemplate
