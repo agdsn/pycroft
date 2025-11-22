@@ -51,6 +51,23 @@ class Mail:
             return None
         return MIMEText(self.body_html, "html", _charset="utf-8")
 
+    def compose(self, from_: str, default_reply_to: str | None) -> MIMEMultipart:
+        msg = MIMEMultipart("alternative", _charset="utf-8")
+        msg["Message-Id"] = make_msgid()
+        msg["From"] = from_
+        msg["To"] = str(Header(self.to_address))
+        msg["Subject"] = self.subject
+        msg["Date"] = formatdate(localtime=True)
+        msg.attach(self.body_plain_mime)
+        if (html := self.body_html_mime) is not None:
+            msg.attach(html)
+        if reply_to := self.reply_to or default_reply_to:
+            msg["Reply-To"] = reply_to
+
+        print(msg)
+
+        return msg
+
 
 class MailTemplate:
     template: str
@@ -78,24 +95,6 @@ def _get_template(template_location: str) -> jinja2.Template:
         return config.template_env.get_template(template_location)
     except RuntimeError as e:
         raise RuntimeError("`mail.config` not set up!") from e
-
-
-def compose_mail(mail: Mail, from_: str, default_reply_to: str | None) -> MIMEMultipart:
-    msg = MIMEMultipart("alternative", _charset="utf-8")
-    msg["Message-Id"] = make_msgid()
-    msg["From"] = from_
-    msg["To"] = str(Header(mail.to_address))
-    msg["Subject"] = mail.subject
-    msg["Date"] = formatdate(localtime=True)
-    msg.attach(mail.body_plain_mime)
-    if (html := mail.body_html_mime) is not None:
-        msg.attach(html)
-    if reply_to := mail.reply_to or default_reply_to:
-        msg["Reply-To"] = reply_to
-
-    print(msg)
-
-    return msg
 
 
 class RetryableException(PycroftLibException):
@@ -175,7 +174,7 @@ def send_mails(mails: list[Mail]) -> tuple[bool, int]:
 
         for mail in mails:
             try:
-                mime_mail = compose_mail(mail, from_=mail_from, default_reply_to=mail_reply_to)
+                mime_mail = mail.compose(from_=mail_from, default_reply_to=mail_reply_to)
                 assert mail_envelope_from is not None
                 smtp.sendmail(
                     from_addr=mail_envelope_from,
