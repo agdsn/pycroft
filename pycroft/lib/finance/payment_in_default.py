@@ -128,6 +128,28 @@ def get_users_with_payment_in_default(session: Session) -> tuple[set[User], set[
     return users_pid_membership, users_membership_terminated
 
 
+def filter_active_members_from_users_with_payment_in_default(
+    users_with_pid: tuple[set[User], set[User]],
+) -> tuple[set[User], set[User]]:
+    """Determine which users should be blocked and whose membership should be terminated
+        excluding active members.
+
+    :returns: which users should be added to the ``payment_in_default`` group (``[0]``)
+        and which ones should get their membership terminated (``[1]``).
+    """
+    users_pid_membership_all, users_membership_terminated_all = users_with_pid
+    filtered_users_pid_membership_all = set(
+        filter(lambda user: not user.has_property("active_member"), users_pid_membership_all)
+    )
+    filtered_users_membership_terminated_all = set(
+        filter(
+            lambda user: not user.has_property("active_member"),
+            users_membership_terminated_all,
+        )
+    )
+    return filtered_users_pid_membership_all, filtered_users_membership_terminated_all
+
+
 @with_transaction
 def take_actions_for_payment_in_default_users(
     users_pid_membership: t.Iterable[User],

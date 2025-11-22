@@ -40,6 +40,7 @@ from .payment_in_default import (
     get_users_with_payment_in_default,
     take_actions_for_payment_in_default_users,
     get_pid_csv,
+    filter_active_members_from_users_with_payment_in_default,
 )
 from .retransfer import (
     attribute_activities_as_returned,
