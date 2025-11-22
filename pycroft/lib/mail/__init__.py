@@ -33,7 +33,8 @@ class MailTemplate:
     subject: str
     args: dict
 
-    def __init__(self, **kwargs: t.Any) -> None:
+    def __init__(self, loader: t.Callable[[str], jinja2.Template] | None = None, **kwargs: t.Any) -> None:
+        self.jinja_template: jinja2.Template = (loader or _get_template)(self.template)
         self.args = kwargs
 
     # TODO don't put this as a method on the template… We want a separate render method for each template.
@@ -42,10 +43,6 @@ class MailTemplate:
         html = self.jinja_template.render(mode="html", **self.args, **kwargs)
 
         return plain, html
-
-    @property
-    def jinja_template(self) -> jinja2.Template:
-        return _get_template(self.template)
 
 
 @lru_cache(maxsize=None)
