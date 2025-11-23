@@ -68,6 +68,11 @@ def user_send_mails(
     :return:
     """
 
+    assert (template is not None) ^ (body_plain is not None), \
+        "user_send_mails should be called with either template or plain body"
+    assert (body_plain is not None) == (subject is not None), \
+        "subject must be passed if and only if body is passed"
+
     mails = []
 
     for user in users:
