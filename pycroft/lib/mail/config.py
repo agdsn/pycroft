@@ -6,7 +6,8 @@ from dataclasses import dataclass, field, InitVar
 import jinja2
 from werkzeug.local import LocalProxy
 
-type SmtpSslType = t.Literal['ssl', 'starttls'] | None
+type SmtpSslType = t.Literal["ssl", "starttls"] | None
+
 
 @dataclass
 class MailConfig:
@@ -40,9 +41,7 @@ class MailConfig:
             config.smtp_port = int(smtp_port)
         if (smtp_ssl := env.get("PYCROFT_SMTP_SSL")) is not None:
             if smtp_ssl not in ("ssl", "starttls"):
-                raise ValueError(
-                    "PYCROFT_SMTP_SSL must be either 'ssl' or 'starttls' if set"
-                )
+                raise ValueError("PYCROFT_SMTP_SSL must be either 'ssl' or 'starttls' if set")
             config.smtp_ssl = smtp_ssl
 
         return config
@@ -66,4 +65,3 @@ class MailConfig:
 
 _config_var: ContextVar[MailConfig] = ContextVar("config")
 config: MailConfig = LocalProxy(_config_var)  # type: ignore[assignment]
-

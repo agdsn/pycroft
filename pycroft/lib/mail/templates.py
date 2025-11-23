@@ -53,5 +53,4 @@ class TaskFailedTemplate(MailTemplate):
 @t.final
 class MemberNegativeBalance(MailTemplate):
     template = "member_negative_balance.html"
-    subject =  "Deine ausstehenden Zahlungen // Your due payments"
-
+    subject = "Deine ausstehenden Zahlungen // Your due payments"
