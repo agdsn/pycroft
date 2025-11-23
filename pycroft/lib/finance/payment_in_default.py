@@ -128,7 +128,7 @@ def get_users_with_payment_in_default(session: Session) -> tuple[set[User], set[
     return users_pid_membership, users_membership_terminated
 
 
-def filter_active_members_from_users_with_payment_in_default(
+def filter_active_members_from_users_with_pid(
     users_with_pid: tuple[set[User], set[User]],
 ) -> tuple[set[User], set[User]]:
     """Determine which users should be blocked and whose membership should be terminated

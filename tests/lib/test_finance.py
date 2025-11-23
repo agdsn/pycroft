@@ -139,7 +139,6 @@ class TestMembershipFeePosting:
         reg_date = utcnow - timedelta(weeks=52)
         user = UserFactory(
             registered_at=reg_date,
-            birthdate=datetime.now(),
             with_membership=True,
             membership__active_during=starting_from(reg_date),
             membership__group=SubFactory(ActiveMemberPropertyGroupFactory),
@@ -345,7 +344,7 @@ class TestMembershipFeePosting:
             users_membership_terminated,
         ) = get_users_with_payment_in_default(session)
         (filtered_users_pid_membership, filtered_users_membership_terminated) = (
-            finance.filter_active_members_from_users_with_payment_in_default(
+            finance.filter_active_members_from_users_with_pid(
                 (users_pid_membership, users_membership_terminated)
             )
         )

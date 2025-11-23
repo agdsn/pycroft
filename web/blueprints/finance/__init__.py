@@ -1691,7 +1691,7 @@ def handle_payments_in_default() -> ResponseReturnValue:
 
     if not form.is_submitted():
         filtered_users_pid_membership_all, filtered_users_membership_terminated_all = (
-            finance.filter_active_members_from_users_with_payment_in_default(
+            finance.filter_active_members_from_users_with_pid(
                 (users_pid_membership_all, users_membership_terminated_all)
             )
         )
