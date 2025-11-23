@@ -30,11 +30,10 @@ def send_mails(mails: list[Mail]) -> tuple[bool, int]:
     mail_reply_to = config.mail_reply_to
     smtp_host = config.smtp_host
     smtp_port = config.smtp_port
-    smtp_user = config.smtp_user
-    smtp_password = config.smtp_password
-    smtp_ssl = config.smtp_ssl
 
-    smtp = try_create_smtp(smtp_ssl, smtp_host, smtp_port, smtp_user, smtp_password)
+    smtp = try_create_smtp(
+        config.smtp_ssl, smtp_host, smtp_port, config.smtp_user, config.smtp_password
+    )
 
     failures: int = 0
 
