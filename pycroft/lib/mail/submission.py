@@ -34,34 +34,16 @@ def send_mails(mails: list[Mail]) -> tuple[bool, int]:
     smtp_password = config.smtp_password
     smtp_ssl = config.smtp_ssl
 
-    use_ssl = smtp_ssl == 'ssl'
-    use_starttls = smtp_ssl == 'starttls'
-    ssl_context = None
-
-    if use_ssl or use_starttls:
-        try:
-            ssl_context = ssl.create_default_context()
-            ssl_context.verify_mode = ssl.VerifyMode.CERT_REQUIRED
-            ssl_context.check_hostname = True
-        except ssl.SSLError as e:
-            # smtp.connect failed to connect
-            logger.critical('Unable to create ssl context', extra={
-                'trace': True,
-                'data': {'exception_arguments': e.args}
-            })
-            raise RetryableException from e
-
     try:
         smtp: smtplib.SMTP
-        if use_ssl:
-            assert ssl_context is not None
+        if smtp_ssl == 'ssl':
             smtp = smtplib.SMTP_SSL(host=smtp_host, port=smtp_port,
-                                    context=ssl_context)
+                                    context=try_create_ssl_context())
         else:
             smtp = smtplib.SMTP(host=smtp_host, port=smtp_port)
 
-        if use_starttls:
-            smtp.starttls(context=ssl_context)
+        if smtp_ssl == 'starttls':
+            smtp.starttls(context=try_create_ssl_context())
 
         if smtp_user:
             assert smtp_password is not None
@@ -111,6 +93,23 @@ def send_mails(mails: list[Mail]) -> tuple[bool, int]:
 
         return failures == 0, failures
 
+
+def try_create_ssl_context() -> ssl.SSLContext:
+    """
+        :raises RetryableException:
+    """
+    try:
+        ssl_context = ssl.create_default_context()
+        ssl_context.verify_mode = ssl.VerifyMode.CERT_REQUIRED
+        ssl_context.check_hostname = True
+    except ssl.SSLError as e:
+        # smtp.connect failed to connect
+        logger.critical('Unable to create ssl context', extra={
+            'trace': True,
+            'data': {'exception_arguments': e.args}
+        })
+        raise RetryableException from e
+    return ssl_context
 
 
 class RetryableException(PycroftLibException):
