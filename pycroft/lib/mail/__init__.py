@@ -31,11 +31,13 @@ def send_template_mails(
     for addr in email_addresses:
         body_plain, body_html = template.render(**kwargs)
 
-        mail = Mail(to_name='',
-                    to_address=addr,
-                    subject=template.subject,
-                    body_plain=body_plain,
-                    body_html=body_html)
+        mail = Mail(
+            to_name="",
+            to_address=addr,
+            subject=template.subject,
+            body_plain=body_plain,
+            body_html=body_html,
+        )
         mails.append(mail)
 
     from pycroft.task import send_mails_async
