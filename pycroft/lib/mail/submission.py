@@ -5,7 +5,7 @@ import traceback
 
 from pycroft.lib.exc import PycroftLibException
 from .concepts import Mail
-from .config import config
+from .config import config, SmtpSslType
 
 
 logger = logging.getLogger(__name__)
@@ -34,35 +34,7 @@ def send_mails(mails: list[Mail]) -> tuple[bool, int]:
     smtp_password = config.smtp_password
     smtp_ssl = config.smtp_ssl
 
-    try:
-        smtp: smtplib.SMTP
-        if smtp_ssl == 'ssl':
-            smtp = smtplib.SMTP_SSL(host=smtp_host, port=smtp_port,
-                                    context=try_create_ssl_context())
-        else:
-            smtp = smtplib.SMTP(host=smtp_host, port=smtp_port)
-
-        if smtp_ssl == 'starttls':
-            smtp.starttls(context=try_create_ssl_context())
-
-        if smtp_user:
-            assert smtp_password is not None
-            smtp.login(smtp_user, smtp_password)
-    except (OSError, smtplib.SMTPException) as e:
-        traceback.print_exc()
-
-        # smtp.connect failed to connect
-        logger.critical(
-            "Unable to connect to SMTP server: %s",
-            e,
-            extra={
-                "trace": True,
-                "tags": {"mailserver": f"{smtp_host}:{smtp_host}"},
-                "data": {"exception_arguments": e.args},
-            },
-        )
-
-        raise RetryableException from e
+    smtp = try_create_smtp(smtp_ssl, smtp_host, smtp_port, smtp_user, smtp_password)
 
     failures: int = 0
 
@@ -92,6 +64,45 @@ def send_mails(mails: list[Mail]) -> tuple[bool, int]:
     })
 
     return failures == 0, failures
+
+
+def try_create_smtp(
+    smtp_ssl: SmtpSslType, smtp_host: str, smtp_port: int, smtp_user: str, smtp_password: str
+) -> smtplib.SMTP:
+    """
+        :raises RetryableException:
+    """
+    try:
+        smtp: smtplib.SMTP
+        if smtp_ssl == "ssl":
+            smtp = smtplib.SMTP_SSL(
+                host=smtp_host, port=smtp_port, context=try_create_ssl_context()
+            )
+        else:
+            smtp = smtplib.SMTP(host=smtp_host, port=smtp_port)
+
+        if smtp_ssl == "starttls":
+            smtp.starttls(context=try_create_ssl_context())
+
+        if smtp_user:
+            assert smtp_password is not None
+            smtp.login(smtp_user, smtp_password)
+        return smtp
+    except (OSError, smtplib.SMTPException) as e:
+        traceback.print_exc()
+
+        # smtp.connect failed to connect
+        logger.critical(
+            "Unable to connect to SMTP server: %s",
+            e,
+            extra={
+                "trace": True,
+                "tags": {"mailserver": f"{smtp_host}:{smtp_host}"},
+                "data": {"exception_arguments": e.args},
+            },
+        )
+
+        raise RetryableException from e
 
 
 def try_create_ssl_context() -> ssl.SSLContext:
