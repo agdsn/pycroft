@@ -40,9 +40,11 @@ class MailConfig:
         if (smtp_port := env.get("PYCROFT_SMTP_PORT")) is not None:
             config.smtp_port = int(smtp_port)
         if (smtp_ssl := env.get("PYCROFT_SMTP_SSL")) is not None:
-            if smtp_ssl not in ("ssl", "starttls"):
-                raise ValueError("PYCROFT_SMTP_SSL must be either 'ssl' or 'starttls' if set")
-            config.smtp_ssl = smtp_ssl
+            match smtp_ssl:
+                case "ssl" | "starttls":
+                    config.smtp_ssl = smtp_ssl
+                case _:
+                    raise ValueError("PYCROFT_SMTP_SSL must be either 'ssl' or 'starttls' if set")
 
         return config
 
