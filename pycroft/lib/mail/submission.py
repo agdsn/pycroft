@@ -32,38 +32,40 @@ def send_mails(mails: list[Mail]) -> tuple[bool, int]:
     smtp_host = config.smtp_host
     smtp_port = config.smtp_port
 
-    smtp = try_create_smtp(
-        config.smtp_ssl, smtp_host, smtp_port, config.smtp_user, config.smtp_password
-    )
 
     failures: int = 0
 
-    for mail in mails:
-        try:
+    with (
+        smtp := try_create_smtp(
+            config.smtp_ssl, smtp_host, smtp_port, config.smtp_user, config.smtp_password
+        )
+    ):
+        for mail in mails:
             mime_mail = mail.compose(from_=mail_from, default_reply_to=mail_reply_to)
-            smtp.sendmail(
-                from_addr=mail_envelope_from, to_addrs=mail.to_address, msg=mime_mail.as_string()
-            )
-        except smtplib.SMTPException as e:
-            traceback.print_exc()
-            logger.critical(
-                'Unable to send mail: "%s" to "%s": %s',
-                mail.subject,
-                mail.to_address,
-                e,
-                extra={
-                    "trace": True,
-                    "tags": {"mailserver": f"{smtp_host}:{smtp_port}"},
-                    "data": {
-                        "exception_arguments": e.args,
-                        "to": mail.to_address,
-                        "subject": mail.subject,
+            try:
+                smtp.sendmail(
+                    from_addr=mail_envelope_from,
+                    to_addrs=mail.to_address,
+                    msg=mime_mail.as_string(),
+                )
+            except smtplib.SMTPException as e:
+                traceback.print_exc()
+                logger.critical(
+                    'Unable to send mail: "%s" to "%s": %s',
+                    mail.subject,
+                    mail.to_address,
+                    e,
+                    extra={
+                        "trace": True,
+                        "tags": {"mailserver": f"{smtp_host}:{smtp_port}"},
+                        "data": {
+                            "exception_arguments": e.args,
+                            "to": mail.to_address,
+                            "subject": mail.subject,
+                        },
                     },
-                },
-            )
-            failures += 1
-
-    smtp.close()
+                )
+                failures += 1
 
     logger.info(
         "Tried to send mails (%i/%i succeeded)",
