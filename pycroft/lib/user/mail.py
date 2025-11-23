@@ -58,6 +58,7 @@ def user_send_mails(
 
     :param users: Users who should receive the mail
     :param template: The template that should be used. Can be None if body_plain is supplied.
+        if supplied, must take a `user` parameter.
     :param soft_fail: Do not raise an exception if a user does not have an email and use_internal
         is set to True
     :param use_internal: If internal mail addresses can be used (@agdsn.me)
