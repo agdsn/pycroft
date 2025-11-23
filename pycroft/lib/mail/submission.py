@@ -49,7 +49,7 @@ def send_mails(mails: list[Mail]) -> tuple[bool, int]:
                 'Unable to send mail: "%s" to "%s": %s', mail.subject, mail.to_address, e,
                 extra={
                     'trace': True,
-                    'tags': {'mailserver': f"{smtp_host}:{smtp_host}"},
+                    'tags': {'mailserver': f"{smtp_host}:{smtp_port}"},
                     'data': {'exception_arguments': e.args, 'to': mail.to_address,
                              'subject': mail.subject}
                 }
@@ -59,7 +59,7 @@ def send_mails(mails: list[Mail]) -> tuple[bool, int]:
     smtp.close()
 
     logger.info('Tried to send mails (%i/%i succeeded)', len(mails) - failures, len(mails), extra={
-        'tags': {'mailserver': f"{smtp_host}:{smtp_host}"}
+        'tags': {'mailserver': f"{smtp_host}:{smtp_port}"}
     })
 
     return failures == 0, failures
@@ -96,7 +96,7 @@ def try_create_smtp(
             e,
             extra={
                 "trace": True,
-                "tags": {"mailserver": f"{smtp_host}:{smtp_host}"},
+                "tags": {"mailserver": f"{smtp_host}:{smtp_port}"},
                 "data": {"exception_arguments": e.args},
             },
         )
