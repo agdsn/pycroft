@@ -26,6 +26,7 @@ def send_mails(mails: list[Mail]) -> tuple[bool, int]:
         raise RuntimeError("`mail.config` not set up!")
 
     mail_envelope_from = config.mail_envelope_from
+    assert mail_envelope_from is not None
     mail_from = config.mail_from
     mail_reply_to = config.mail_reply_to
     smtp_host = config.smtp_host
@@ -40,7 +41,6 @@ def send_mails(mails: list[Mail]) -> tuple[bool, int]:
     for mail in mails:
         try:
             mime_mail = mail.compose(from_=mail_from, default_reply_to=mail_reply_to)
-            assert mail_envelope_from is not None
             smtp.sendmail(from_addr=mail_envelope_from, to_addrs=mail.to_address,
                           msg=mime_mail.as_string())
         except smtplib.SMTPException as e:
