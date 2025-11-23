@@ -11,7 +11,7 @@ import logging
 import os
 import sys
 import typing as t
-from datetime import timedelta
+from datetime import timedelta, date
 
 import sentry_sdk
 from celery import Celery, Task as CeleryTask
@@ -34,6 +34,7 @@ from pycroft.lib.mail import (
     _config_var,
     MailConfig,
 )
+from pycroft.lib.mail.templates import MoveOutReminder
 from pycroft.lib.task import get_task_implementation, get_scheduled_tasks
 from pycroft.lib.traffic import delete_old_traffic_data
 from pycroft.model import session
@@ -41,6 +42,7 @@ from pycroft.model.session import with_transaction, set_scoped_session
 from pycroft.model.swdd import swdd_vo, swdd_import, swdd_vv
 from pycroft.model.task import TaskStatus
 from scripts.connection import try_create_connection
+
 
 if dsn := os.getenv('PYCROFT_SENTRY_DSN'):
     logging_integration = LoggingIntegration(
@@ -202,6 +204,28 @@ def mail_negative_members():
                     "Automatische Zahlungsrückstands-Mail fehlgeschlagen",
                     body_plain="Der Import ist nicht aktuell genug.")
         send_mails_async.delay([mail])
+
+
+@app.task(base=DBTask)
+def mail_soon_to_move_out_members():
+    from pycroft.lib.user import user_send_mails
+    contract_end = contract_end_reminder_date()
+    user_send_mails(
+        get_members_with_contract_end_at(contract_end),
+        template=MoveOutReminder(),
+        contract_end=contract_end
+    )
+
+
+# TODO move to pycroft.lib.user or somwhere else suitable
+def get_members_with_contract_end_at(date: date):
+    # TODO implement
+    pass
+
+
+# TODO move to pycroft.lib.user or somwhere else suitable
+def contract_end_reminder_date():
+    return date.today() + timedelta(days=7)
 
 
 @app.task(ignore_result=True, rate_limit=1, bind=True)
