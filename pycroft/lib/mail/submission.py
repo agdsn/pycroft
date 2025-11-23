@@ -53,7 +53,7 @@ def send_mails(mails: list[Mail]) -> tuple[bool, int]:
                 e,
                 extra={
                     "trace": True,
-                    "tags": {"mailserver": f"{smtp_host}:{smtp_host}"},
+                    "tags": {"mailserver": f"{smtp_host}:{smtp_port}"},
                     "data": {
                         "exception_arguments": e.args,
                         "to": mail.to_address,
@@ -69,7 +69,7 @@ def send_mails(mails: list[Mail]) -> tuple[bool, int]:
         "Tried to send mails (%i/%i succeeded)",
         len(mails) - failures,
         len(mails),
-        extra={"tags": {"mailserver": f"{smtp_host}:{smtp_host}"}},
+        extra={"tags": {"mailserver": f"{smtp_host}:{smtp_port}"}},
     )
 
     return failures == 0, failures
@@ -106,7 +106,7 @@ def try_create_smtp(
             e,
             extra={
                 "trace": True,
-                "tags": {"mailserver": f"{smtp_host}:{smtp_host}"},
+                "tags": {"mailserver": f"{smtp_host}:{smtp_port}"},
                 "data": {"exception_arguments": e.args},
             },
         )
