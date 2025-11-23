@@ -54,3 +54,9 @@ class TaskFailedTemplate(MailTemplate):
 class MemberNegativeBalance(MailTemplate):
     template = "member_negative_balance.html"
     subject = "Deine ausstehenden Zahlungen // Your due payments"
+
+
+@t.final
+class MoveOutReminder(MailTemplate):
+    template = "move_out_reminder.html"
+    subject = "Deine ausstehenden Zahlungen // Your due payments"
