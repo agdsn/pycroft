@@ -6,7 +6,7 @@ from datetime import date, timedelta, datetime, timezone
 from decimal import Decimal
 
 import pytest
-from factory import Iterator
+from factory import Iterator, SubFactory
 from sqlalchemy.orm import Session
 
 from pycroft import Config
@@ -29,7 +29,7 @@ from pycroft.model.finance import (
     MembershipFee,
 )
 from pycroft.model.user import Membership, User
-from tests.factories import MembershipFactory, ConfigFactory
+from tests.factories import MembershipFactory, ConfigFactory, ActiveMemberPropertyGroupFactory
 from tests.factories.finance import (
     MembershipFeeFactory,
     TransactionFactory,
@@ -133,6 +133,18 @@ class TestMembershipFeePosting:
             membership__group=config.member_group,
             without_room=True,
         )
+
+    @pytest.fixture
+    def user_from1y_active_member(self, session, utcnow):
+        reg_date = utcnow - timedelta(weeks=52)
+        user = UserFactory(
+            registered_at=reg_date,
+            with_membership=True,
+            membership__active_during=starting_from(reg_date),
+            membership__group=SubFactory(ActiveMemberPropertyGroupFactory),
+        )
+        session.flush()
+        return user
 
     @pytest.fixture
     def user_move_in_grace(
@@ -331,8 +343,13 @@ class TestMembershipFeePosting:
             users_pid_membership,
             users_membership_terminated,
         ) = get_users_with_payment_in_default(session)
+        (filtered_users_pid_membership, filtered_users_membership_terminated) = (
+            finance.filter_active_members_from_users_with_pid(
+                (users_pid_membership, users_membership_terminated)
+            )
+        )
         take_actions_for_payment_in_default_users(
-            users_pid_membership, users_membership_terminated, processor
+            filtered_users_pid_membership, filtered_users_membership_terminated, processor
         )
 
         return users_pid_membership, users_membership_terminated
@@ -441,6 +458,29 @@ class TestMembershipFeePosting:
         session.refresh(user)
         assert user.has_property("member"), "User is not a member"
         assert not user.has_property("payment_in_default"), "User has payment_in_default property"
+
+    def test_payment_in_default_active_member(
+        self, user_from1y_active_member, session, processor, fees
+    ):
+        user = user_from1y_active_member
+
+        assert user.account.balance == 0.00, "Initial user account balance not zero"
+        assert user.account.in_default_days == 0
+        assert user.has_property("member"), "User is not a member"
+
+        # Test fee with payment_in_default group action
+        post_transactions_for_membership_fee(fees.pid_state, processor)
+        session.refresh(user.account)
+
+        assert user.account.balance == fees.pid_state.regular_fee, "User balance incorrect"
+
+        self.handle_payment_in_default_users(session, processor)
+
+        session.refresh(user)
+        assert user.has_property("member"), "User is not a member"
+        assert not user.has_property(
+            "payment_in_default"
+        ), "Active member has payment_in_default property"
 
 
 class TestSplitTypes:
