@@ -209,23 +209,15 @@ def mail_negative_members():
 @app.task(base=DBTask)
 def mail_soon_to_move_out_members():
     from pycroft.lib.user import user_send_mails
-    contract_end = contract_end_reminder_date()
+    from pycroft.lib.user.mail import contract_end_reminder_date, get_members_with_contract_end_at
+    sess = t.cast(Session, session.session)
+    contract_end = contract_end_reminder_date(sess)
+
     user_send_mails(
-        get_members_with_contract_end_at(contract_end),
+        get_members_with_contract_end_at(sess, contract_end),
         template=MoveOutReminder(),
         contract_end=contract_end
     )
-
-
-# TODO move to pycroft.lib.user or somwhere else suitable
-def get_members_with_contract_end_at(date: date):
-    # TODO implement
-    pass
-
-
-# TODO move to pycroft.lib.user or somwhere else suitable
-def contract_end_reminder_date():
-    return date.today() + timedelta(days=7)
 
 
 @app.task(ignore_result=True, rate_limit=1, bind=True)

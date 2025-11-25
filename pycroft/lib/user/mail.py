@@ -1,5 +1,6 @@
 import os
 import typing as t
+from datetime import date, timedelta
 
 from sqlalchemy import select, ScalarResult
 from sqlalchemy.orm import Session
@@ -212,3 +213,15 @@ def send_password_reset_mail(user: User) -> bool:
         return False
 
     return True
+
+
+# TODO move to pycroft.lib.user or somwhere else suitable
+def get_members_with_contract_end_at(session: Session, date: date):
+    # TODO implement
+    pass
+
+
+# TODO move to pycroft.lib.user or somwhere else suitable
+def contract_end_reminder_date(session: Session):
+    return date.today() + timedelta(days=7)
+
