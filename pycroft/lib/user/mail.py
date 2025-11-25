@@ -9,9 +9,12 @@ from pycroft.helpers.user import generate_random_str
 from pycroft.lib.mail import (
     MailTemplate,
     Mail,
+)
+from pycroft.lib.mail.templates import (
+    MemberRequestMergedTemplate,
+    MoveOutReminder,
     UserConfirmEmailTemplate,
     UserResetPasswordTemplate,
-    MemberRequestMergedTemplate,
 )
 from pycroft.model import session
 from pycroft.model.session import with_transaction
@@ -52,6 +55,7 @@ def user_send_mails(
     use_internal: bool = True,
     body_plain: str | None = None,
     subject: str | None = None,
+    send_mails: t.Callable[[list[Mail]], None] | None = None,
     **kwargs: t.Any,
 ) -> None:
     """
@@ -120,7 +124,7 @@ def user_send_mails(
         )
         mails.append(mail)
 
-    send_mails_async.delay(mails)
+    (send_mails or send_mails_async.delay)(mails)
 
 
 def user_send_mail(
@@ -213,6 +217,17 @@ def send_password_reset_mail(user: User) -> bool:
         return False
 
     return True
+
+
+def mail_soon_to_move_out_members(session: Session, send_mails: t.Callable[[list[Mail]], None]):
+    """Dependency-free implementation of the celery task of the same name."""
+    contract_end = contract_end_reminder_date(session)
+    user_send_mails(
+        get_members_with_contract_end_at(session, contract_end),
+        template=MoveOutReminder(),
+        contract_end=contract_end,
+        send_mails=send_mails,
+    )
 
 
 # TODO move to pycroft.lib.user or somwhere else suitable
