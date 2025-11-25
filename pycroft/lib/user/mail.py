@@ -26,6 +26,7 @@ from pycroft.model.user import (
     PropertyGroup,
 )
 from pycroft.model.facilities import Building, Room
+from pycroft.model.swdd import Tenancy
 from pycroft.task import send_mails_async
 
 from .user_id import (
@@ -230,13 +231,11 @@ def mail_soon_to_move_out_members(session: Session, send_mails: t.Callable[[list
     )
 
 
-# TODO move to pycroft.lib.user or somwhere else suitable
-def get_members_with_contract_end_at(session: Session, date: date):
-    # TODO implement
-    pass
+def get_members_with_contract_end_at(session: Session, date: date) -> ScalarResult[User]:
+    stmt = select(User).outerjoin(User.tenancies).where(Tenancy.mietende == date)
+    return session.scalars(stmt)
 
 
-# TODO move to pycroft.lib.user or somwhere else suitable
 def contract_end_reminder_date(session: Session):
     return date.today() + timedelta(days=7)
 
