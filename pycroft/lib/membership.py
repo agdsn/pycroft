@@ -245,7 +245,7 @@ def change_membership_active_during(
     log_user_event(message, processor, membership.user)
 
 
-def select_user_and_last_mem() -> Select[tuple[int, int, str]]:
+def select_user_and_last_mem() -> Select[tuple[int, int, DateTimeTz]]:
     """Select users with their last membership of a user in the ``member`` group.
 
     :returns: a select statement with columns ``user_id``, ``mem_id``, ``mem_end``.
