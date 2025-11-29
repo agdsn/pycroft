@@ -147,8 +147,7 @@ def scrubbable_mails_count(session: Session, year: int) -> int | None:
     return session.scalar(stmt.with_only_columns(func.count()))
 
 
-# TODO turn into bulk method
-def scrub_mail(session: Session, user: User, author: User):
+def scrub_mail(session: Session, user: User, author: User) -> None:
     user.email = None
     session.add(user)
     # two log entries: a user log entry for the support crew,
