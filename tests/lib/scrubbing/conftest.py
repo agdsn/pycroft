@@ -22,7 +22,6 @@ def freeze(freezer) -> None:
 
 @pytest.fixture(scope="module")
 def user_archivable(module_session: Session, config: Config) -> User:
-    # TODO: user wtih membership
     return f.UserFactory.create(
         registered_at=datetime(2020, 7, 1),
         with_membership=True,
@@ -34,7 +33,6 @@ def user_archivable(module_session: Session, config: Config) -> User:
 
 @pytest.fixture(scope="module")
 def users_archivable(module_session: Session, config: Config) -> list[User]:
-    # TODO: user wtih membership
     return f.UserFactory.create_batch(
         10,
         registered_at=datetime(2020, 7, 1),
