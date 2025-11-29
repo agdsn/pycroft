@@ -16,6 +16,7 @@ from pycroft.lib.mail.templates import (
     UserConfirmEmailTemplate,
     UserResetPasswordTemplate,
 )
+from pycroft.lib.membership import select_user_and_last_mem
 from pycroft.model import session
 from pycroft.model.session import with_transaction
 from pycroft.model.user import (
@@ -232,7 +233,18 @@ def mail_soon_to_move_out_members(session: Session, send_mails: t.Callable[[list
 
 
 def get_members_with_contract_end_at(session: Session, date: date) -> ScalarResult[User]:
-    stmt = select(User).outerjoin(User.tenancies).where(Tenancy.mietende == date)
+    """Select members whose contract ends at a given date.
+
+    We only show users with an unbounded membership in the member_group.
+    """
+    last_mem = select_user_and_last_mem().cte("last_mem")
+    stmt = (
+        select(last_mem)
+        .join(User, last_mem.c.user_id == User.id)
+        .outerjoin(User.tenancies)
+        .where(Tenancy.mietende == date, last_mem.c.mem_end.is_(None))
+        .with_only_columns(User)
+    )
     return session.scalars(stmt)
 
 
