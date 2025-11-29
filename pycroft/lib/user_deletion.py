@@ -81,22 +81,19 @@ def get_archivable_members(
     current_year: int | None = None,
     years_following_eom: int | None = None,
 ) -> Sequence[ArchivableMemberInfo]:
-    """Return all the users that qualify for being archived right now.
+    """Get all members whose year(end of last membership) + 1 + years_following_eom <= current year.
 
-    Selected are those users
-    - whose last membership in the member_group ended two weeks in the past,
-    - excluding users who currently have the `do-not-archive` property.
+    legal grounds:
 
-    We joined load the following information:
-    - hosts
-    - account
-    - room
-    - current_properties_maybe_denied
+    .. epigraph::
 
-    :param session:
-    :param current_year: dependency injection of the current year.
-    :param years_following_eom: dependency injection of the current year.
-        defaults to the current year.
+       The following data can be collected and processed until the end of
+       the next calendar year after membership ends: […]
+
+       -- Privacy policy §2
+
+    :returns: a tuple of statement and the `last_mem` CTE which can be
+        reused for late injection of an `order_by`.
     """
     stmt, last_mem = select_archivable_members(
         # I know we're sloppy with time zones,
