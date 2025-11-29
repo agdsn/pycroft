@@ -1,5 +1,6 @@
 import os
 import typing as t
+from datetime import date, timedelta
 
 from sqlalchemy import select, ScalarResult
 from sqlalchemy.orm import Session
@@ -8,10 +9,14 @@ from pycroft.helpers.user import generate_random_str
 from pycroft.lib.mail import (
     MailTemplate,
     Mail,
+)
+from pycroft.lib.mail.templates import (
+    MemberRequestMergedTemplate,
+    MoveOutReminder,
     UserConfirmEmailTemplate,
     UserResetPasswordTemplate,
-    MemberRequestMergedTemplate,
 )
+from pycroft.lib.membership import select_user_and_last_mem
 from pycroft.model import session
 from pycroft.model.session import with_transaction
 from pycroft.model.user import (
@@ -22,6 +27,7 @@ from pycroft.model.user import (
     PropertyGroup,
 )
 from pycroft.model.facilities import Building, Room
+from pycroft.model.swdd import Tenancy
 from pycroft.task import send_mails_async
 
 from .user_id import (
@@ -51,6 +57,7 @@ def user_send_mails(
     use_internal: bool = True,
     body_plain: str | None = None,
     subject: str | None = None,
+    send_mails: t.Callable[[list[Mail]], None] | None = None,
     **kwargs: t.Any,
 ) -> None:
     """
@@ -58,6 +65,7 @@ def user_send_mails(
 
     :param users: Users who should receive the mail
     :param template: The template that should be used. Can be None if body_plain is supplied.
+        if supplied, must take a `user` parameter.
     :param soft_fail: Do not raise an exception if a user does not have an email and use_internal
         is set to True
     :param use_internal: If internal mail addresses can be used (@agdsn.me)
@@ -67,6 +75,11 @@ def user_send_mails(
     :param kwargs: kwargs that will be used during rendering the template
     :return:
     """
+
+    assert (template is not None) ^ (body_plain is not None), \
+        "user_send_mails should be called with either template or plain body"
+    assert (body_plain is not None) == (subject is not None), \
+        "subject must be passed if and only if body is passed"
 
     mails = []
 
@@ -113,7 +126,7 @@ def user_send_mails(
         )
         mails.append(mail)
 
-    send_mails_async.delay(mails)
+    (send_mails or send_mails_async.delay)(mails)
 
 
 def user_send_mail(
@@ -206,3 +219,35 @@ def send_password_reset_mail(user: User) -> bool:
         return False
 
     return True
+
+
+def mail_soon_to_move_out_members(session: Session, send_mails: t.Callable[[list[Mail]], None]):
+    """Dependency-free implementation of the celery task of the same name."""
+    contract_end = contract_end_reminder_date(session)
+    user_send_mails(
+        get_members_with_contract_end_at(session, contract_end),
+        template=MoveOutReminder(),
+        contract_end=contract_end,
+        send_mails=send_mails,
+    )
+
+
+def get_members_with_contract_end_at(session: Session, date: date) -> ScalarResult[User]:
+    """Select members whose contract ends at a given date.
+
+    We only show users with an unbounded membership in the member_group.
+    """
+    last_mem = select_user_and_last_mem().cte("last_mem")
+    stmt = (
+        select(last_mem)
+        .join(User, last_mem.c.user_id == User.id)
+        .outerjoin(User.tenancies)
+        .where(Tenancy.mietende == date, last_mem.c.mem_end.is_(None))
+        .with_only_columns(User)
+    )
+    return session.scalars(stmt)
+
+
+def contract_end_reminder_date(session: Session):
+    return date.today() + timedelta(days=7)
+
