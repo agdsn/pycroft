@@ -214,7 +214,7 @@ def scrub_all_mails_stmt(
                 literal_column(f"'{msg_user_log_entry}'"),
                 func.current_timestamp(),
                 literal_column(f"{author_id}"),
-            ),
+            ).select_from(removed_mail_user_ids),
         )
         .returning(LogEntry.id.label("id"))
         .cte("log_entries")
