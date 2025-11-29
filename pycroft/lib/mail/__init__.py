@@ -8,7 +8,7 @@ import typing as t
 
 
 from .concepts import Mail, MailTemplate
-from .config import MailConfig, config
+from .config import MailConfig, config, _config_var
 from .submission import send_mails, RetryableException
 from .templates import (
     UserConfirmEmailTemplate,
