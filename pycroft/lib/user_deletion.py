@@ -164,7 +164,7 @@ def scrub_all_mails(
     session: Session,
     author: User,
     user_filter: t.Callable[[Select[tuple[User]]], Select[tuple[User]]] | None = None,
-):
+) -> ScalarResult[int]:
     return session.scalars(scrub_all_mails_stmt(utcnow().year, author.id, user_filter))
 
 
@@ -172,7 +172,7 @@ def scrub_all_mails_stmt(
     year: int,
     author_id: int,
     user_filter: t.Callable[[Select[tuple[User]]], Select[tuple[User]]] | None = None,
-):
+) -> Select[tuple[int]]:
     users_with_mail = (user_filter or identity)(scrubbable_mails_stmt(year))
     ids_subq = users_with_mail.with_only_columns(User.id).scalar_subquery()
     removed_mail_user_ids = (
