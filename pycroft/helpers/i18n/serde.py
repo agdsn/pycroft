@@ -12,8 +12,7 @@ import typing
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 
-from pycroft.helpers.functional import identity
-
+from ..functional import identity
 from .types import Interval, NegativeInfinity, PositiveInfinity, Bound, Money
 from .utils import qualified_typename
 
