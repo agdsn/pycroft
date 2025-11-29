@@ -1508,7 +1508,7 @@ def archivable_users() -> ResponseReturnValue:
         "user/archivable_users.html",
         table=table,
         archivable_mail_count=scrubbable_mails_count(sess, datetime.now().year),
-        archivable_mail_users=next(scrubbable_mails(sess).partitions(10), []),
+        archivable_mail_users=scrubbable_mails(sess).fetchmany(10),
     )
 
 
