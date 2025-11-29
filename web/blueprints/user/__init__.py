@@ -9,7 +9,6 @@
 
     :copyright: (c) 2012 by AG DSN.
 """
-from dataclasses import dataclass
 import re
 import typing as t
 from datetime import datetime, timedelta
