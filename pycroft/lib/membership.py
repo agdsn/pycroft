@@ -14,8 +14,8 @@ import typing as t
 
 from sqlalchemy import and_, func, distinct, Result, nulls_last
 from sqlalchemy.future import select
-from sqlalchemy.orm import InstrumentedAttribute, aliased, Session
-from sqlalchemy.sql import Select, ClauseElement
+from sqlalchemy.orm import aliased, Session
+from sqlalchemy.sql import Select
 from sqlalchemy.sql._typing import _TypedColumnClauseArgument, _ByArgument
 
 from pycroft import Config

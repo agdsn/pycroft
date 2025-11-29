@@ -2,7 +2,6 @@ from itertools import chain
 import pytest
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from sqlalchemy.sql.functions import func
 
 from pycroft.lib.user_deletion import scrub_all_mails, scrub_mail, scrubbable_mails
 from pycroft.model.scrubbing import ScrubLog
