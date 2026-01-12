@@ -21,7 +21,7 @@ from itertools import zip_longest, chain
 from io import BytesIO
 
 import wtforms
-from fints.dialog import FinTSDialogError
+from fints.dialog import FinTSDialog, FinTSDialogError
 from fints.exceptions import (
     FinTSClientPINError,
     FinTSError,
@@ -110,7 +110,6 @@ from web.blueprints.finance.forms import (
     BankAccountActivityReadForm,
     BankAccountActivitiesImportManualForm,
     ConfirmPaymentReminderMail,
-    FinTSClientForm,
     FinTSTANForm,
 )
 from web.blueprints.finance.tables import (
@@ -251,7 +250,7 @@ def bank_accounts_login(bank_account_id: int, action: str) -> ResponseReturnValu
     form = FinTSTANForm()
 
     if not form.is_submitted():
-        del form.tan
+        del form.fints_dialog, form.tan
         return render_template("finance/fints_login.html", form=form)
 
     bank_account = _get_or_404(session, BankAccount, bank_account_id)
@@ -273,7 +272,7 @@ def bank_accounts_login(bank_account_id: int, action: str) -> ResponseReturnValu
     else:
         logger.error("FinTS: No suitable TAN mechanism available.", exc_info=True)
         flash(
-            f"TAN-Verfahren „chipTAN-QR“ wird benötigt, jedoch sind am FinTS-Endpunkt nur folgende Verfahren verfügbar: {', '.join(m.name for m in mechanisms.values())}.",
+            f"TAN-Verfahren „chipTAN-QR“ oder „photoTAN“ wird benötigt, jedoch sind am FinTS-Endpunkt nur folgende Verfahren verfügbar: {', '.join(f'{m.name} ({m.security_function})' for m in mechanisms.values())}.",
             "error",
         )
         return redirect(
@@ -286,14 +285,14 @@ def bank_accounts_login(bank_account_id: int, action: str) -> ResponseReturnValu
             qrcode = "data:image/png;base64," + b64encode(challenge.challenge_matrix[1]).decode(
                 "ascii"
             )
-            dialog_data = client.pause_dialog()
+        dialog_data = client.pause_dialog()
 
     client_data = client.deconstruct(including_private=True)
 
     signer = get_signer()
-    form.fints_challenge.data = b64_sign(challenge.get_data(), s=signer)
-    form.fints_dialog.data = b64_sign(dialog_data, s=signer)
-    form.fints_client.data = b64_sign(client_data, s=signer)
+    form.fints_challenge.data = b64_sign(challenge.get_data(), signer)
+    form.fints_dialog.data = b64_sign(dialog_data, signer)
+    form.fints_client.data = b64_sign(client_data, signer)
 
     return render_template(
         "finance/fints_tan.html",
@@ -305,8 +304,8 @@ def bank_accounts_login(bank_account_id: int, action: str) -> ResponseReturnValu
     )
 
 
-def b64_sign(data: bytes, s: Signer) -> str:
-    return s.sign(b64encode(data)).decode()
+def b64_sign(data: bytes, signer: Signer) -> str:
+    return signer.sign(b64encode(data)).decode()
 
 
 def get_signer() -> Signer:
@@ -337,12 +336,12 @@ def bank_accounts_errors_json() -> ResponseReturnValue:
     ).model_dump()
 
 
-def get_set_up_fints_client(
+def complete_fints_challenge(
     form: FinTSTANForm, bank_account: BankAccount, signer: Signer
-) -> FinTS3PinTanClient:
-    client_data = b64_unsign(form.fints_client.data, s=signer)
-    dialog_data = b64_unsign(form.fints_dialog.data, s=signer)
-    challenge = b64_unsign(form.fints_challenge.data, s=signer)
+) -> tuple[FinTS3PinTanClient, FinTSDialog]:
+    client_data = b64_unsign(form.fints_client.data, signer)
+    dialog_data = b64_unsign(form.fints_dialog.data, signer)
+    challenge = b64_unsign(form.fints_challenge.data, signer)
 
     assert config.fints_product_id is not None, "config not persisted"
     client = get_fints_client(
@@ -355,12 +354,13 @@ def get_set_up_fints_client(
 
     with client.resume_dialog(dialog_data):
         client.send_tan(NeedRetryResponse.from_data(challenge), form.tan.data)
+        dialog = client.pause_dialog()
 
-    return client
+    return client, dialog
 
 
-def b64_unsign(data: str, s: Signer) -> bytes:
-    return b64decode(s.unsign(data))
+def b64_unsign(data: str, signer: Signer) -> bytes:
+    return b64decode(signer.unsign(data))
 
 
 @bp.route("/bank-accounts/<int:bank_account_id>/import", methods=["POST"])
@@ -371,13 +371,13 @@ def bank_accounts_import(bank_account_id: int) -> ResponseReturnValue:
 
     # Send TAN
     signer = get_signer()
-    client = get_set_up_fints_client(fints_form, bank_account, signer)
+    client, dialog_data = complete_fints_challenge(fints_form, bank_account, signer)
 
     form = BankAccountActivitiesImportForm()
     form.user.data = fints_form.user.data
     form.secret_pin.data = fints_form.secret_pin.data
-    s = get_signer()
-    form.fints_client.data = b64_sign(client.deconstruct(including_private=True), s=s)
+    form.fints_dialog.data = b64_sign(dialog_data, signer)
+    form.fints_client.data = b64_sign(client.deconstruct(including_private=True), signer)
 
     form.start_date.data = (
         datetime.date(i) if (i := bank_account.last_imported_at) is not None else date(2018, 1, 1)
@@ -447,8 +447,9 @@ def bank_accounts_import_run(bank_account_id: int) -> ResponseReturnValue:
     if not form.validate():
         return display_form_response(imported)
 
-    s = get_signer()
-    fints_client_data = b64_unsign(form.fints_client.data, s=s)
+    signer = get_signer()
+    fints_client_data = b64_unsign(form.fints_client.data, signer)
+    fints_dialog_data = b64_unsign(form.fints_dialog.data, signer)
 
     assert config.fints_product_id is not None
     fints_client = get_fints_client(
@@ -460,13 +461,14 @@ def bank_accounts_import_run(bank_account_id: int) -> ResponseReturnValue:
     )
 
     try:
-        with flash_fints_errors():
+        with fints_client.resume_dialog(fints_dialog_data), flash_fints_errors():
             statement, errors = get_fints_transactions(
                 start_date=form.start_date.data,
                 end_date=form.end_date.data,
                 bank_account=bank_account,
                 fints_client=fints_client,
             )
+            dialog = fints_client.pause_dialog()
     except PycroftException:
         return display_form_response(imported)
 
@@ -485,12 +487,12 @@ def bank_accounts_import_run(bank_account_id: int) -> ResponseReturnValue:
         f"/ {len(imported.doubtful)} zu neu (Buchung >= {date.today()}T00:00Z)."
     )
     if not form.do_import.data:
-        signer = get_signer()
-        form.fints_client.data = b64_sign(
-            fints_client.deconstruct(including_private=True), s=signer
-        )
+        form.fints_dialog.data = b64_sign(dialog, signer)
+        form.fints_client.data = b64_sign(fints_client.deconstruct(including_private=True), signer)
 
         return display_form_response(imported)
+
+    fints_client.resume_dialog(dialog)
 
     # persist transactions and errors
     session.add_all(
