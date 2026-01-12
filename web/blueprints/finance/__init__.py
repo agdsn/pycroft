@@ -267,7 +267,9 @@ def bank_accounts_login(bank_account_id: int, action: str) -> ResponseReturnValu
         mechanisms = client.get_tan_mechanisms()
 
     if "913" in mechanisms:
-        client.set_tan_mechanism("913")  # chipTAN-QR
+        client.set_tan_mechanism("913")  # chipTAN-QR, Ostsächsische Sparkasse Dresden
+    elif "900" in mechanisms:
+        client.set_tan_mechanism("900")  # photoTAN, Commerzbank AG
     else:
         logger.error("FinTS: No suitable TAN mechanism available.", exc_info=True)
         flash(
