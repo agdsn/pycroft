@@ -66,7 +66,7 @@ class Message(abc.ABC):
         return m
 
     def __init__(self, domain: str | None = None):
-        self.domain = domain
+        self.domain: str | None = domain
         self.args: typing.Iterable[Serializable] = ()
         self.kwargs: dict[str, Serializable] = {}
 
@@ -131,9 +131,9 @@ class ErroneousMessage(Message):
 class SimpleMessage(Message):
     __slots__ = ("message",)
 
-    def __init__(self, message, domain=None):
+    def __init__(self, message: str, domain: str | None = None):
         super().__init__(domain)
-        self.message = message
+        self.message: str = message
 
     @t.override
     def _base_dict(self):

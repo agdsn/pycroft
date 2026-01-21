@@ -13,6 +13,8 @@ class UserLogEntryFactory(BaseFactory):
     message = factory.Faker('paragraph')
     author = factory.SubFactory(UserFactory)
     user = factory.SubFactory(UserFactory)
+    created_at = None
+
 
 class RoomLogEntryFactory(BaseFactory):
     class Meta:

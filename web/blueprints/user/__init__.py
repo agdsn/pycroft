@@ -9,9 +9,10 @@
 
     :copyright: (c) 2012 by AG DSN.
 """
+from dataclasses import dataclass
 import re
 import typing as t
-from datetime import timedelta
+from datetime import datetime, timedelta
 from decimal import Decimal
 from functools import partial
 from typing import cast
@@ -34,6 +35,7 @@ from flask.typing import ResponseReturnValue
 from flask_login import current_user
 from flask_wtf import FlaskForm
 from markupsafe import Markup
+from sqlalchemy.orm import Session
 
 import pycroft.lib.search
 import pycroft.lib.stats
@@ -58,7 +60,13 @@ from pycroft.lib.user import encode_type1_user_id, encode_type2_user_id, \
     delete_member_request, get_member_requests, \
     get_possible_existing_users_for_pre_member, \
     send_member_request_merged_email, can_target, edit_address
-from pycroft.lib.user_deletion import get_archivable_members
+from pycroft.lib.user_deletion import (
+    get_archivable_members,
+    scrub_all_mails,
+    scrub_mail,
+    scrubbable_mails,
+    scrubbable_mails_count,
+)
 from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.swdd import Tenancy
@@ -1492,8 +1500,30 @@ def resend_confirmation_mail() -> ResponseReturnValue:
 @nav.navigate('Archivierbar', weight=6, icon='fa-archive')
 @bp.route('/archivable_users')
 def archivable_users() -> ResponseReturnValue:
-    table = ArchivableMembersTable(data_url=url_for('.archivable_users_json'))
-    return render_template('user/archivable_users.html', table=table)
+    table = ArchivableMembersTable(data_url=url_for(".archivable_users_json"))
+
+    sess = t.cast(Session, session.session)
+
+    return render_template(
+        "user/archivable_users.html",
+        table=table,
+        archivable_mail_count=scrubbable_mails_count(sess, datetime.now().year),
+        archivable_mail_users=next(scrubbable_mails(sess).partitions(10), []),
+    )
+
+
+@bp.route("/scrub/mails", methods=["GET", "POST"])
+def scrub_mails() -> ResponseReturnValue:
+    """Scrub The mail addresses in batches of 100"""
+    sess = t.cast(Session, session.session)
+
+    with sess.begin_nested():
+        ids = scrub_all_mails(sess, author=current_user)
+
+    sess.commit()
+
+    flash(f"{len(ids.all())} E-Mail-Adressen gelöscht.", "success")
+    return redirect(url_for("user.archivable_users"))
 
 
 @bp.route('/archivable_users_table')

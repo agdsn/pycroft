@@ -19,7 +19,7 @@ from pycroft.model.user import User
 def _create_log_entry[
     TLogEntry: LogEntry
 ](
-    class_: t.Type[TLogEntry],
+    class_: type[TLogEntry],
     message: str,
     author: User,
     created_at: datetime | None = None,
