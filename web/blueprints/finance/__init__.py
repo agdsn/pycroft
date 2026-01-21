@@ -1192,13 +1192,13 @@ def _format_transaction_row(
     bank_acc_act: BankAccountActivity | None,
 ) -> UnconfirmedTransactionsRow:
     return UnconfirmedTransactionsRow(
-        id=transaction.id,
         description=LinkColResponse(
             href=url_for(".transactions_show", transaction_id=transaction.id),
             title=transaction.description,
             new_tab=True,
             glyphicon="fa-external-link-alt",
         ),
+        other_name=bank_acc_act.other_name if bank_acc_act else None,
         user=(
             LinkColResponse(
                 href=url_for("user.user_show", user_id=user_account.user.id),
@@ -1216,17 +1216,6 @@ def _format_transaction_row(
             if user_account and user_account.user and user_account.user.room
             else None
         ),
-        author=(
-            LinkColResponse(
-                href=url_for("user.user_show", user_id=transaction.author.id),
-                title=transaction.author.name,
-                new_tab=True,
-            )
-            if transaction.author
-            else None
-        ),
-        date=date_format(transaction.posted_at, formatter=date_filter),
-        amount=money_filter(transaction.amount),
         actions=list(_iter_transaction_buttons(bank_acc_act, transaction)),
     )
 

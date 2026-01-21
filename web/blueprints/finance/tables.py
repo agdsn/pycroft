@@ -315,24 +315,18 @@ class TransactionSplitResponse(TableResponse[TransactionSplitRow]):
 class UnconfirmedTransactionsTable(BootstrapTable):
     """A table for displaying unconfirmed transactions """
     selection = Column("Checkbox", col_args={"data-checkbox": "true"})
-    id = Column("id")
     description = LinkColumn("Beschreibung")
+    other_name = Column("Bankkontoinhaber")
     user = LinkColumn("Nutzer")
     room = Column("Wohnort")
-    date = DateColumn("Datum")
-    amount = Column("Wert")
-    author = LinkColumn("Ersteller")
     actions = MultiBtnColumn("Aktionen")
 
 
 class UnconfirmedTransactionsRow(BaseModel):
-    id: str | int
     description: LinkColResponse
+    other_name: str | None = None
     user: LinkColResponse | None = None
     room: str | None = None
-    date: DateColResponse
-    amount: str
-    author: LinkColResponse | None = None
     actions: list[BtnColResponse]
 
 
