@@ -3,6 +3,7 @@ requires = [
     "setuptools>=42",
     "wheel"
 ]
+
 build-backend = "setuptools.build_meta"
 
 # PROJECT METADATA
@@ -106,7 +107,7 @@ pycroft = "flask.cli:main"
 pycroft_ldap_sync = "ldap_sync.__main__:main"
 
 [project.entry-points."flask.commands"]
-alembic = "scripts.alembic_wrapper:cli"
+alembic = "scripts.alembic_wrapper:main"
 
 [tool.uv.sources]
 wtforms-widgets = { path = "deps/wtforms-widgets", editable = true }
@@ -116,6 +117,17 @@ include-package-data = true
 
 [tool.setuptools.packages]
 find = {namespaces = false}
+
+[tool.alembic]
+script_location = "pycroft/model/alembic"
+timezone = "UTC"
+file_template = '%%(year)d_%%(month).2d_%%(day).2d_%%(hour).2d%%(minute).2d-%%(rev)s_%%(slug)s'
+
+[[tool.alembic.post_write_hooks]]
+name = "ruff format"
+type = "exec"
+executable = "ruff"
+options = "format REVISION_SCRIPT_FILENAME"
 
 # TOOLS
 [tool.black]
