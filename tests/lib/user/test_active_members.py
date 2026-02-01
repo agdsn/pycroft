@@ -2,7 +2,7 @@ import pytest
 from datetime import datetime, timedelta
 
 from pycroft.helpers.interval import closedopen
-from pycroft.lib.user import get_active_users
+from pycroft.lib.user import get_active_users_with_building
 from pycroft.model.user import PropertyGroup, User
 from tests import factories as f
 
@@ -49,4 +49,4 @@ def users_without_mem(module_session, yesterday, g) -> tuple[User, User]:
 
 
 def test_get_active_members(session, g, users_with_mem):
-    assert set(get_active_users(session, g)) == set(users_with_mem)
+    assert set(get_active_users_with_building(session, [g], [])) == set(users_with_mem)

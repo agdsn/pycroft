@@ -89,3 +89,20 @@ class MemberPropertyGroupFactory(PropertyGroupFactory):
         'ldap', 'ldap_login_enabled', 'mail', 'member', 'membership_fee',
         'network_access', 'userdb', 'userwww'
     ))
+
+
+class ActiveMemberPropertyGroupFactory(PropertyGroupFactory):
+    name = factory.Sequence(partial(_maybe_append_seq, prefix="Aktiven-Mitglied-Gruppe"))
+    granted = frozenset(
+        (
+            "ldap",
+            "ldap_login_enabled",
+            "mail",
+            "member",
+            "membership_fee",
+            "network_access",
+            "userdb",
+            "userwww",
+            "active_member",
+        )
+    )

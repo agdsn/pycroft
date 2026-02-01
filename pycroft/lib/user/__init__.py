@@ -63,7 +63,7 @@ from .mail import (
     format_user_mail,
     user_send_mails,
     user_send_mail,
-    get_active_users,
+    get_active_users_with_building,
     group_send_mail,
     send_member_request_merged_email,
     send_confirmation_email,

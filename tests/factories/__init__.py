@@ -26,6 +26,7 @@ from .property import (
     MembershipFactory,
     AdminPropertyGroupFactory,
     MemberPropertyGroupFactory,
+    ActiveMemberPropertyGroupFactory,
 )
 from .user import UserFactory, UnixAccountFactory
 from .traffic import TrafficDataFactory, TrafficVolumeFactory, TrafficVolumeLastWeekFactory

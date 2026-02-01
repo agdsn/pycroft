@@ -19,6 +19,7 @@ class UserStatus(t.NamedTuple):
     member: bool
     traffic_exceeded: bool
     network_access: bool
+    is_active: bool
     wifi_access: bool
     account_balanced: bool
     violation: bool
@@ -29,10 +30,12 @@ class UserStatus(t.NamedTuple):
 def status(user: User) -> UserStatus:
     has_interface = any(h.interfaces for h in user.hosts)
     has_access = user.has_property("network_access")
+    is_active = user.has_property("active_member")
     return UserStatus(
         member=user.has_property("member"),
         traffic_exceeded=user.has_property("traffic_limit_exceeded"),
         network_access=has_access and has_interface,
+        is_active=is_active,
         wifi_access=user.has_wifi_access and has_access,
         account_balanced=user_has_paid(user),
         violation=user.has_property("violation"),

@@ -1,112 +1,48 @@
 #!/usr/bin/env python3
+from importlib.resources import files
 import logging
-import sys
 import typing as t
-from dataclasses import dataclass
 
 import click
-from alembic import command
 from alembic import autogenerate as autogen
 from alembic.migration import MigrationContext
-from alembic.config import Config
-from rich import print
+from alembic.config import Config, CommandLine
 from rich.console import RenderableType
 from rich.table import Table
 from rich.text import Text
-from sqlalchemy import Connection
 
-from pycroft.model.alembic import get_alembic_config
 from pycroft.model.base import ModelBase
 
 from .connection import get_connection_string, try_create_connection
 
+logger = logging.getLogger(__name__)
 
-@dataclass
-class ContextObject:
-    alembic_cfg: Config
-    conn: Connection
-    logger: logging.Logger
-
-
-@click.group()
+@click.command(
+    name="alembic",
+    context_settings={"ignore_unknown_options": True, "allow_extra_args": True},
+    add_help_option=False,
+)
 @click.pass_context
-@click.option('--verbose', '-v', is_flag=True,
-              help="Verbose, i.e. create the connection with `echo=True`")
-def cli(ctx, verbose: bool):
-    logger = logging.getLogger('alembic_wrapper')
-    logger.setLevel(logging.INFO)
-    logger.addHandler(logging.StreamHandler(sys.stdout))
+def main(ctx: click.Context):
+    cli = CommandLine()
+    cli.register_command(diff)
+    ini_location = str(files("pycroft.model").joinpath("alembic.ini"))
+    cli.main(["-c", ini_location, *ctx.args])
 
-    conn, engine = try_create_connection(get_connection_string(), logger=logger, wait_for_db=False,
-                                 echo=verbose)
-    ctx.obj = ContextObject(
-        conn=conn,
-        logger=logger,
-        alembic_cfg=get_alembic_config(),
+
+def diff(config: Config, *args: t.Any, **kwargs: t.Any) -> None:
+    """Produce a diff of the code-defined schema and actual schema."""
+    conn, _ = try_create_connection(
+        get_connection_string(), logger=logger, wait_for_db=False, echo=False
     )
-
-
-assert isinstance(cli, click.Group)
-
-
-@cli.command(help=command.current.__doc__)
-@click.pass_obj
-def current(obj: ContextObject):
-    command.current(obj.alembic_cfg)
-
-
-@cli.command(help=command.check.__doc__)
-@click.pass_obj
-def check(obj: ContextObject):
-    command.check(obj.alembic_cfg)
-
-
-@cli.command()
-@click.pass_obj
-def diff(obj: ContextObject):
-    # https://alembic.sqlalchemy.org/en/latest/api/autogenerate.html#getting-diffs
-    migration_context = MigrationContext.configure(obj.conn)
+    migration_context = MigrationContext.configure(conn)
     metadata = ModelBase.metadata
-    print(render_diffset(autogen.compare_metadata(migration_context, metadata)))
+    diff_table = render_diffset(autogen.compare_metadata(migration_context, metadata))
+    from rich import print
+    print(diff_table)
 
 
-@cli.command(help=command.upgrade.__doc__)
-@click.pass_obj
-@click.argument('revision')
-@click.option("--sql", is_flag=True)
-@click.option("--tag")
-def upgrade(
-    obj: ContextObject,
-    revision: str,
-    sql: bool = False,
-    tag: str | None = None,
-):
-    command.upgrade(obj.alembic_cfg, revision)
-
-
-@cli.command(help=command.downgrade.__doc__)
-@click.pass_obj
-@click.argument('revision')
-def downgrade(obj: ContextObject, revision: str):
-    command.downgrade(obj.alembic_cfg, revision)
-
-
-@cli.command(help=command.stamp.__doc__)
-@click.pass_obj
-@click.argument("revision")
-def stamp(obj: ContextObject, revision: str):
-    command.stamp(obj.alembic_cfg, revision)
-
-
-@cli.command(help=command.revision.__doc__)
-@click.pass_obj
-@click.option("-m", "--message", "message")
-@click.option("--autogenerate", is_flag=True, default=False)
-def revision(obj: ContextObject, message: str, autogenerate: bool):
-    command.revision(obj.alembic_cfg, message=message, autogenerate=autogenerate)
-
-
-def render_diffset(diffs) -> t.Iterator[tuple[t.Any, ...]]:
+def render_diffset(diffs) -> Table:
     table = Table(show_header=False, box=None)
     for diff in diffs:
         table.add_row(*render_diff_tuple(diff))
@@ -151,4 +87,4 @@ def try_strip(string: str, prefix: str) -> str | None:
 
 
 if __name__ == '__main__':
-    cli()
+    main()
