@@ -16,19 +16,15 @@ from ...factories import UserFactory
 
 
 def test_move_out_reminder(session, config, gen_user: UserWithTenancyGen):
-    u = gen_user(
+    user = gen_user(
         session,
         date(2019, 10, 1),
         date(2020, 9, 30),
         None,
     )
     session.flush()
-
-    # TODO fixture: member with contract end at 2020-01-08
-    # TODO fixture: member with the former, but also
-
-    m = get_members_with_contract_end_at(session, date(2020, 9, 30))
-    assert m.all() == [u]
+    memberships = get_members_with_contract_end_at(session, date(2020, 9, 30))
+    assert memberships.all() == [user]
 
 
 class UserWithTenancyGen(t.Protocol):
