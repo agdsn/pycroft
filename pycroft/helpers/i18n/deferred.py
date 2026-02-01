@@ -11,7 +11,7 @@ from __future__ import annotations
 from .message import SimpleMessage, NumericalMessage
 
 
-def deferred_gettext(message) -> SimpleMessage:
+def deferred_gettext(message: str) -> SimpleMessage:
     return SimpleMessage(message)
 
 

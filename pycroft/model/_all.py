@@ -27,6 +27,7 @@ from .traffic import *
 from .user import *
 from .unix_account import *
 from .webstorage import *
+from .scrubbing import *
 
 # hades is special: it calls `configure_mappers()` at import time.
 # Therefore, importing it should happen as late as possible.
