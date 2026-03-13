@@ -1,0 +1,28 @@
+# This is the pre-commit ci version this should have a human readable error output
+repos:
+-   repo: https://github.com/akaihola/darker
+    rev: 1.7.0
+    hooks:
+    -   id: darker
+        args: ["--diff", "--check"]
+        verbose: true
+-   repo: https://github.com/asottile/pyupgrade
+    rev: v3.17.0
+    hooks:
+    -   id: pyupgrade
+        args: ["--py312-plus"]
+- repo: https://github.com/charliermarsh/ruff-pre-commit
+  # Ruff version.
+  rev: 'v0.3.2'
+  hooks:
+    - id: ruff
+- repo: https://github.com/astral-sh/uv-pre-commit
+  rev: '0.9.28'
+  hooks:
+    - id: uv-lock
+- repo: https://github.com/semgrep/pre-commit
+  rev: 'v1.70.0'
+  hooks:
+  - id: semgrep
+    # See semgrep.dev/rulesets to select a ruleset and copy its URL
+    args: ['--config', 'tools/semgrep.yml', '--metrics=off', '--error', '--skip-unknown-extensions']
