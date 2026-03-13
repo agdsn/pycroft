@@ -109,11 +109,10 @@ class Test_User_Login:
                            match="user already in the database - cannot change login anymore!"):
             user.login = "abc"
 
-    def test_user_login_case_insensitive(self, session, user):
+    def test_user_login_case_sensitive(self, session, user):
         password = 'password'
         assert User.verify_and_get(user.login, password) == user
-        # Verification of login name should be case insensitive
-        assert User.verify_and_get(user.login.upper(), password) == user
+        assert User.verify_and_get(user.login.upper(), password) is None
 
 
 class TestUnixAccounts:
