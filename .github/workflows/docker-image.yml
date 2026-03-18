@@ -23,11 +23,15 @@ jobs:
         cache: 'pip'
     - name: "Run pre-commit hooks for HEAD"
       uses: pre-commit/action@v3.0.1
+      with:
+        extra_args: >
+          --config .pre-commit-ci.yaml
       if: github.event_name != 'pull_request'
     - name: "Run pre-commit hooks for PR range"
       uses: pre-commit/action@v3.0.1
       with:
         extra_args: >
+          --config .pre-commit-ci.yaml
           --from-ref=${{ github.event.pull_request.base.sha }}
           --to-ref=${{ github.event.pull_request.head.sha }}
       if: github.event_name == 'pull_request'
