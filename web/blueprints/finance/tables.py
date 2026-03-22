@@ -17,8 +17,15 @@ from web.table.table import (
     LinkColResponse,
 )
 
-from web.table.table import BootstrapTable, Column, SplittedTable, \
-    LinkColumn, button_toolbar, DateColumn, MultiBtnColumn
+from web.table.table import (
+    BootstrapTable,
+    Column,
+    SplittedTable,
+    LinkColumn,
+    button_toolbar,
+    DateColumn,
+    MultiBtnColumn,
+)
 from web.template_filters import money_filter
 
 

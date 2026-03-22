@@ -10,9 +10,19 @@ from wtforms.validators import DataRequired, NumberRange, Optional, \
 
 from pycroft.model.user import User
 from wtforms_widgets.fields.core import (
-    TextField, IntegerField, HiddenField, SelectField, FormField,
-    FieldList, StringField, DateField, MoneyField, PasswordField, BooleanField,
-    QuerySelectMultipleField)
+    TextField,
+    IntegerField,
+    HiddenField,
+    SelectField,
+    FormField,
+    FieldList,
+    StringField,
+    DateField,
+    MoneyField,
+    PasswordField,
+    BooleanField,
+    QuerySelectMultipleField,
+)
 from wtforms_widgets.fields.custom import TypeaheadField, static, disabled
 
 from pycroft.helpers.i18n import gettext
