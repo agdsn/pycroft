@@ -20,7 +20,6 @@ from pycroft.model.finance import (
     Split,
     Transaction,
     BankAccount,
-    MT940Error,
     AccountType,
 )
 from pycroft.model.user import User
@@ -148,7 +147,3 @@ def get_unassigned_bank_account_activities(
         .filter(BankAccountActivity.transaction_id.is_(None))
         .all()
     )
-
-
-def get_all_mt940_errors(session: Session) -> list[MT940Error]:
-    return MT940Error.q.all()
