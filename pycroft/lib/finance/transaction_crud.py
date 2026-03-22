@@ -6,6 +6,7 @@ from datetime import timedelta, date
 from decimal import Decimal
 
 from mt940.models import Transaction as MT940Transaction
+from fints.models import Transaction as FinTSTransaction
 from sqlalchemy import select, func, Select, text
 from sqlalchemy.orm import contains_eager
 
@@ -206,7 +207,7 @@ class ImportedTransactions(t.NamedTuple):
 
 def process_transactions(
     bank_account: BankAccount,
-    statement: t.Iterable[MT940Transaction],
+    statement: t.Iterable[MT940Transaction | FinTSTransaction],
 ) -> ImportedTransactions:
     imported = ImportedTransactions([], [], [])
 
