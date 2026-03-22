@@ -26,13 +26,12 @@ def test_fints_connection(default_fints_client_args, default_transaction_args):
         server=bank_account.fints_endpoint,
     )
 
-    transactions, errors = get_fints_transactions(
+    transactions = get_fints_transactions(
         **default_transaction_args,
         bank_account=bank_account,
         fints_client=fints_client,
     )
     assert transactions == []
-    assert errors == []
 
 
 def test_transactions_unknown_iban(default_fints_client_args, default_transaction_args):
