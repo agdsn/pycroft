@@ -42,7 +42,7 @@ from .blueprints import (
     mpskclient,
 )
 
-from .blueprints.login import login_manager
+from .blueprints.login import oidc, login_manager
 from .commands import register_commands
 from .templates import page_resources
 
@@ -67,14 +67,20 @@ class PycroftFlask(Flask):
     def __init__(self, *a: t.Any, **kw: t.Any) -> None:
         super().__init__(*a, **kw)
         # config keys to support:
-        self.maybe_add_config_from_env([
-            'PYCROFT_API_KEY',
-            'HADES_CELERY_APP_NAME',
-            'HADES_BROKER_URI',
-            'HADES_RESULT_BACKEND_URI',
-            'HADES_TIMEOUT',
-            'HADES_ROUTING_KEY',
-        ])
+        self.maybe_add_config_from_env(
+            [
+                "PYCROFT_API_KEY",
+                "HADES_CELERY_APP_NAME",
+                "HADES_BROKER_URI",
+                "HADES_RESULT_BACKEND_URI",
+                "HADES_TIMEOUT",
+                "HADES_ROUTING_KEY",
+                "OIDC_CLIENT_SECRETS",
+                "OIDC_SCOPES",
+                "OIDC_INTROSPECTION_AUTH_METHOD",
+                "OIDC_ENABLED",
+            ]
+        )
 
     def maybe_add_config_from_env(self, keys: t.Iterable[str]) -> None:
         """Write keys from the environment to the app's config
@@ -98,6 +104,7 @@ def make_app(hades_logs: bool = True) -> PycroftFlask:
 
     # initialization code
     login_manager.init_app(app)
+    oidc.init_app(app, prefix="/oidc")
     app.register_blueprint(user.bp, url_prefix="/user")
     app.register_blueprint(facilities.bp, url_prefix="/facilities")
     app.register_blueprint(infrastructure.bp, url_prefix="/infrastructure")
@@ -187,6 +194,7 @@ def make_app(hades_logs: bool = True) -> PycroftFlask:
             "login",
             "api",
             "health",
+            "oidc_auth",
             None,
         ):
             lm = t.cast(LoginManager, current_app.login_manager)  # type: ignore[attr-defined]
