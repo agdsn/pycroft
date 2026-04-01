@@ -13,4 +13,6 @@
 {% endblock %}
 {% block single_row_content %}
     {{ forms.simple_form(form, url_for(".login", next=next), url_for('facilities.overview'), submit_text="Login"  ) }}
+  <hr/>
+  <a href="{{ url_for('oidc_auth.login') }}">OpenID Connect</a>
 {% endblock %}

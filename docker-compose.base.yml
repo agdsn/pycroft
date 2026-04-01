@@ -47,6 +47,11 @@ services:
       # alternative: `scripts.server_run:prepare_server(echo=True)`
       FLASK_APP: scripts.server_run:prepare_server
       FLASK_ENV: development
+      # OIDC Authentication
+      OIDC_CLIENT_SECRETS: 'web/client_secrets.json'
+      OIDC_SCOPES: 'openid email profile'
+      OIDC_INTROSPECTION_AUTH_METHOD: 'client_secret_post'
+      OIDC_ENABLED: true
   dev:
     extends: dev-base
     volumes:
