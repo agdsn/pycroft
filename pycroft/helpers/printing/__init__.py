@@ -282,7 +282,7 @@ def generate_user_sheet(
                        spaceAfter=0.3 * cm))
 
         # Payment details
-        contribution = 500  # monthly membership contribution in EUR
+        contribution = 700  # monthly membership contribution in EUR
         story.append(Paragraph('''<b>Payment details:</b> As a member, you have to transfer a monthly contribution of {:1.2f}€ to our bank account.
             Paying cash is not possible. The contribution is due at the end of each month. You can pay as much in advance as you want, we will simply subtract
             the monthly contribution at the end of each month. We recommend that you pay at the beginning of each semester in advance, meaning you transact
