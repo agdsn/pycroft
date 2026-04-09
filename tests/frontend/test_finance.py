@@ -788,6 +788,7 @@ class TestConfirmSelected:
         resp = client.assert_url_ok(url_for("finance.transactions_unconfirmed_json"))
         assert len(resp.json["items"]) == 0
 
+
 class TestTransferGeneration:
     @pytest.fixture
     def user(self, session):
