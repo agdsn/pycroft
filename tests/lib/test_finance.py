@@ -21,6 +21,7 @@ from pycroft.lib.finance import (
     take_actions_for_payment_in_default_users,
     get_activities_to_return,
     generate_activities_return_sepaxml,
+    generate_transfer_sepaxml,
 )
 from pycroft.model.finance import (
     Transaction,
@@ -35,6 +36,7 @@ from tests.factories.finance import (
     TransactionFactory,
     AccountFactory,
     BankAccountActivityFactory,
+    BankAccountFactory,
 )
 from tests.factories.user import UserFactory
 
@@ -762,3 +764,11 @@ class TestReturnNonAttributable:
         )
 
         generate_activities_return_sepaxml(get_activities_to_return(session))
+
+
+class TestTransfer:
+    def test_generate_transfer_sepa_xml(self, session: Session, utcnow):
+        bank_account = BankAccountFactory.build(iban="DE61850503003120219540")
+        generate_transfer_sepaxml(
+            bank_account, "owner", "DE61850503003120219540", "OSDDDE81XXX", "test", 10
+        )

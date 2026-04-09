@@ -174,6 +174,32 @@ class TransactionCreateForm(Form):
             raise ValidationError("Buchung ist nicht ausgeglichen.")
 
 
+class BankAccountTransferForm(Form):
+    bank_account = QuerySelectField("Bankkonto", get_label="name", validators=[DataRequired()])
+    owner = TextField("Kontoinhaber", validators=[DataRequired()])
+    iban = TextField("IBAN", validators=[DataRequired()])
+    bic = TextField("BIC", validators=[DataRequired()])
+    amount = MoneyField("Wert", validators=[DataRequired(message=gettext("Invalid value."))])
+    reference = TextField("Rechnungsreferenz", validators=[DataRequired()])
+    issue_id = TextField(
+        "Vorgangsnummer", render_kw={"placeholder": "2026-X00"}, validators=[DataRequired()]
+    )
+    issue_name = TextField(
+        "Vorgangsbeschreibung",
+        render_kw={"placeholder": "Überweisung"},
+        validators=[DataRequired()],
+    )
+
+
+class BankAccountUserRetransferForm(Form):
+    bank_account = QuerySelectField("Bankkonto", get_label="name", validators=[DataRequired()])
+    user_name = TextField("Kontoinhaber", validators=[DataRequired()])
+    iban = TextField("IBAN", validators=[DataRequired()])
+    bic = TextField("BIC", validators=[DataRequired()])
+    reason = static(StringField("Verwendungszweck"))
+    amount = MoneyField("Wert", validators=[DataRequired(message=gettext("Invalid value."))])
+
+
 class ActivityMatchForm(Form):
     pass
 

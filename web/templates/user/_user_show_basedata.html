@@ -161,23 +161,16 @@
                   class="fa fa-home"></span></span><br/>Einziehen</a>
           </div>
         {% endif %}
-        {% if is_blocked %}
-          <div class="col-md-6 action-button">
-            <a class="btn btn-warning btn-sq"
-               href="{{ url_for(".unblock", user_id=user.id) }}">
-              <span class="badge rounded-pill bg-light text-dark"><span
-                  class="fa fa-ok"></span><span
-                  class="glyphicon"></span></span><br/>Entsperren</a>
-          </div>
-        {% else %}
-          <div class="col-md-6 action-button">
-            <a class="btn btn-warning btn-sq"
-               href="{{ url_for(".block", user_id=user.id) }}">
-              <span class="badge rounded-pill bg-light text-dark"><span
-                  class="fa fa-times"></span><span
-                  class="glyphicon"></span></span><br/>Sperren</a>
-          </div>
-        {% endif %}
+        <div class="col-md-6 action-button">
+          <a role="button" class="btn btn-secondary btn-sq"
+             href="{{ url_for("finance.bank_account_retransfer", user_id=user.id) }}"
+             hint="Rücküberweisung generieren">
+            <span class="badge rounded-pill bg-light text-dark"><span
+                class="fa fa-wallet"></span><span
+                class="glyphicon"></span></span>
+            <br/>Rücküberweisung
+          </a>
+        </div>
         <div class="col-md-6 action-button">
           <a role="button" class="btn btn-danger btn-sq"
              href="{{ url_for(".reset_password", user_id=user.id) }}"
@@ -188,6 +181,23 @@
             <br/>Passwort Reset
           </a>
         </div>
+        {% if is_blocked %}
+          <div class="col-md-12 action-button">
+            <a class="btn btn-warning btn-sq"
+               href="{{ url_for(".unblock", user_id=user.id) }}">
+              <span class="badge rounded-pill bg-light text-dark"><span
+                  class="fa fa-ok"></span><span
+                  class="glyphicon"></span></span><br/>Entsperren</a>
+          </div>
+        {% else %}
+          <div class="col-md-12 action-button">
+            <a class="btn btn-warning btn-sq"
+               href="{{ url_for(".block", user_id=user.id) }}">
+              <span class="badge rounded-pill bg-light text-dark"><span
+                  class="fa fa-times"></span><span
+                  class="glyphicon"></span></span><br/>Sperren</a>
+          </div>
+        {% endif %}
         <div class="col-md-12 action-button">
           <a role="button" class="btn btn-info btn-sq"
              href="{{ url_for(".reset_wifi_password", user_id=user.id) }}"

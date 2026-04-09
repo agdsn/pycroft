@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from pycroft import config
 from pycroft.helpers.utc import ensure_tz
-from pycroft.model.finance import BankAccountActivity
+from pycroft.model.finance import BankAccountActivity, BankAccount
 from pycroft.model.user import User
 
 from .transaction_crud import simple_transaction
@@ -76,3 +76,31 @@ def attribute_activities_as_returned(
             split for split in transaction.splits if split.account_id == credit_account.id
         )
         session.add(activity)
+
+
+def generate_transfer_sepaxml(
+    bank_account: BankAccount, owner: str, iban: str, bic: str, reason: str, amount: int
+) -> bytes:
+    transfer_config: dict = {
+        "name": bank_account.owner,
+        "IBAN": bank_account.iban,
+        "BIC": bank_account.bic,
+        "batch": False,
+        "currency": "EUR",
+    }
+    sepa = SepaTransfer(transfer_config, clean=False)
+
+    formatted_iban = IBAN(iban)
+    formatted_bic = BIC(bic)
+
+    payment = {
+        "name": owner,
+        "IBAN": formatted_iban.compact,
+        "BIC": formatted_bic.compact,
+        "amount": int(amount * 100),
+        "execution_date": datetime.now().date(),
+        "description": reason[:140],
+    }
+    sepa.add_payment(payment)
+
+    return sepa.export()
