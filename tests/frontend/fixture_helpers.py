@@ -64,8 +64,6 @@ def prepare_app_for_testing(app):
         random.choice(string.ascii_letters) for _ in range(20)
     )
     app.config["SERVER_NAME"] = "localhost.localdomain"
-    app.config["OIDC_ENABLED"] = False
-    app.config["OIDC_TESTING_PROFILE"] = {"email": "email", "preferred_username": "oidc"}
     return app
 
 
