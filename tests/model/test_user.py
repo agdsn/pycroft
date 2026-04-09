@@ -19,6 +19,7 @@ class Test_User_Passwords:
 
     def test_get(self, user):
         assert User.get(user.login) == user
+        assert User.get(user.login + "_wrong") is None
 
     def test_password_hash_validator(self, user, session):
         password = generate_password(4)
