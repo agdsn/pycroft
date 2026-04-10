@@ -775,6 +775,4 @@ class TestTransfer:
         assert sepa_xml is not None
         assert len(sepa_xml) > 0
         with pytest.raises(ValueError):
-            generate_transfer_sepaxml(
-                bank_account, "owner", "2DE61", "OSDDDE81XXX", "test", 10
-            )
+            generate_transfer_sepaxml(bank_account, "owner", "2DE61", "OSDDDE81XXX", "test", 10)
