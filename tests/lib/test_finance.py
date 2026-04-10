@@ -769,6 +769,12 @@ class TestReturnNonAttributable:
 class TestTransfer:
     def test_generate_transfer_sepa_xml(self, session: Session, utcnow):
         bank_account = BankAccountFactory.build(iban="DE61850503003120219540")
-        generate_transfer_sepaxml(
+        sepa_xml: bytes = generate_transfer_sepaxml(
             bank_account, "owner", "DE61850503003120219540", "OSDDDE81XXX", "test", 10
         )
+        assert sepa_xml is not None
+        assert len(sepa_xml) > 0
+        with pytest.raises(ValueError):
+            generate_transfer_sepaxml(
+                bank_account, "owner", "2DE61", "OSDDDE81XXX", "test", 10
+            )
