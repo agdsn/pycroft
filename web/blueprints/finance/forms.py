@@ -4,6 +4,7 @@
 import datetime
 
 from flask_wtf import FlaskForm as Form
+from schwifty import IBAN, BIC
 from wtforms import Form as WTForm, ValidationError, Field
 from wtforms.validators import DataRequired, NumberRange, Optional, \
     InputRequired
@@ -190,6 +191,23 @@ class BankAccountTransferForm(Form):
         validators=[DataRequired()],
     )
 
+    def validate_iban(self, field: Field) -> None:
+        try:
+            IBAN(field.data)
+        except ValueError:
+            raise ValidationError(gettext("Invalid IBAN."))
+
+    def validate_bic(self, field: Field) -> None:
+        try:
+            BIC(field.data)
+        except ValueError:
+            raise ValidationError(gettext("Invalid BIC."))
+
+    def validate_amount(self, field: Field) -> None:
+        cents = field.data.shift(2)
+        if cents == 0 or cents != int(cents):
+            raise ValidationError(gettext("Invalid value."))
+
 
 class BankAccountUserRetransferForm(Form):
     bank_account = QuerySelectField("Bankkonto", get_label="name", validators=[DataRequired()])
@@ -198,6 +216,23 @@ class BankAccountUserRetransferForm(Form):
     bic = TextField("BIC", validators=[DataRequired()])
     reason = static(StringField("Verwendungszweck"))
     amount = MoneyField("Wert", validators=[DataRequired(message=gettext("Invalid value."))])
+
+    def validate_iban(self, field: Field) -> None:
+        try:
+            IBAN(field.data)
+        except ValueError:
+            raise ValidationError(gettext("Invalid IBAN."))
+
+    def validate_bic(self, field: Field) -> None:
+        try:
+            BIC(field.data)
+        except ValueError:
+            raise ValidationError(gettext("Invalid BIC."))
+
+    def validate_amount(self, field: Field) -> None:
+        cents = field.data.shift(2)
+        if cents == 0 or cents != int(cents):
+            raise ValidationError(gettext("Invalid value."))
 
 
 class ActivityMatchForm(Form):

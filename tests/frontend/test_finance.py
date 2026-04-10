@@ -801,7 +801,7 @@ class TestTransferGeneration:
 
         formdata = serialize_formdata(
             {
-                "bank_account": bank_account,
+                "bank_account": bank_account.id,
                 "user_name": user.name,
                 "iban": "DE61850503003120219540",
                 "bic": "OSDDDE81XXX",
@@ -820,7 +820,7 @@ class TestTransferGeneration:
 
         formdata = serialize_formdata(
             {
-                "bank_account": bank_account,
+                "bank_account": bank_account.id,
                 "owner": "Tester",
                 "iban": "DE61850503003120219540",
                 "bic": "OSDDDE81XXX",
