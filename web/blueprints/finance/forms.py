@@ -194,14 +194,14 @@ class BankAccountTransferForm(Form):
     def validate_iban(self, field: Field) -> None:
         try:
             IBAN(field.data)
-        except ValueError:
-            raise ValidationError(gettext("Invalid IBAN."))
+        except ValueError as err:
+            raise ValidationError(gettext("Invalid IBAN.")) from err
 
     def validate_bic(self, field: Field) -> None:
         try:
             BIC(field.data)
-        except ValueError:
-            raise ValidationError(gettext("Invalid BIC."))
+        except ValueError as err:
+            raise ValidationError(gettext("Invalid BIC.")) from err
 
     def validate_amount(self, field: Field) -> None:
         cents = field.data.shift(2)
@@ -220,14 +220,14 @@ class BankAccountUserRetransferForm(Form):
     def validate_iban(self, field: Field) -> None:
         try:
             IBAN(field.data)
-        except ValueError:
-            raise ValidationError(gettext("Invalid IBAN."))
+        except ValueError as err:
+            raise ValidationError(gettext("Invalid IBAN.")) from err
 
     def validate_bic(self, field: Field) -> None:
         try:
             BIC(field.data)
-        except ValueError:
-            raise ValidationError(gettext("Invalid BIC."))
+        except ValueError as err:
+            raise ValidationError(gettext("Invalid BIC.")) from err
 
     def validate_amount(self, field: Field) -> None:
         cents = field.data.shift(2)
