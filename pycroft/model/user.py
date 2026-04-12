@@ -398,12 +398,7 @@ class User(BaseUser, UserMixin):
 
     @staticmethod
     def get(login: str, session: Session) -> User | None:
-        try:
-            user = session.scalar(select(User).where(User.login == login))
-        except NoResultFound:
-            return None
-        else:
-            return user
+        return session.scalar(select(User).where(User.login == login))
 
     @staticmethod
     def verify_and_get(login: str, plaintext_password: str) -> User | None:
