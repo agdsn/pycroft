@@ -70,6 +70,7 @@ def login() -> ResponseValue:
 
 
 @bp.route("/logout")
+@login_required
 def logout() -> ResponseValue:
     if oidc.user_loggedin:
         return redirect(url_for("oidc_auth.logout", next=url_for("login.logout")))
