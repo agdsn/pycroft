@@ -84,6 +84,7 @@ from pycroft.lib.finance import (
     get_accounts_by_type,
     get_last_import_date,
     get_last_membership_fee,
+    generate_transfer_sepaxml,
 )
 from pycroft.lib.finance.fints import get_fints_transactions, get_fints_client
 from pycroft.lib.finance.matching import UserMatching, AccountMatching
@@ -111,6 +112,8 @@ from web.blueprints.finance.forms import (
     BankAccountActivitiesImportManualForm,
     ConfirmPaymentReminderMail,
     FinTSTANForm,
+    BankAccountIssueTransferForm,
+    BankAccountTransferForm,
 )
 from web.blueprints.finance.tables import (
     FinanceTable,
@@ -780,6 +783,56 @@ def bank_account_activities_return_do() -> ResponseReturnValue:
     )
 
 
+@bp.route("/transfer", defaults={"user_id": None}, methods=["GET", "POST"])
+@bp.route("/transfer/<int:user_id>", methods=["GET", "POST"])
+@nav.navigate("Überweisung", icon="fa-wallet")
+def bank_account_transfer(user_id: int) -> ResponseReturnValue:
+    if user_id is None:
+        form = BankAccountIssueTransferForm()
+    else:
+        user = _get_or_404(session, User, user_id)
+        reference: str = f"{user.id} Rückerstattung zu viel gezahlte Beiträge"
+        form = BankAccountTransferForm(
+            owner=user.name, reference=reference, amount=user.account.balance
+        )
+    form.bank_account.query = get_all_bank_accounts(session)
+
+    if form.validate_on_submit():
+        bank_account = form.bank_account.data
+        amount = form.amount.data
+        _ensure_decimal(amount)
+
+        if user_id is None:
+            issue_id: str = form.issue_id.data
+            sepa_reference = f"{form.reference.data} {issue_id} {form.issue_name.data}"
+            download_name = f"{issue_id}.xml"
+        else:
+            sepa_reference = form.reference.data
+            download_name = f"retransfer-{user.id}-{datetime.now().date()}.xml"
+
+        sepa_xml: bytes = generate_transfer_sepaxml(
+            bank_account, form.owner.data, form.iban.data, form.bic.data, sepa_reference, amount
+        )
+
+        return send_file(
+            BytesIO(sepa_xml),
+            as_attachment=True,
+            download_name=download_name,
+        )
+
+    form_args = {
+        "form": form,
+        "cancel_to": url_for(".bank_accounts_list"),
+        "submit_text": "Exportieren",
+    }
+
+    return render_template(
+        "generic_form.html",
+        page_title="Überweisung für Datei-Import",
+        form_args=form_args,
+        form=form,
+    )
+
 
 class UserMatch(t.TypedDict):
     purpose: str
@@ -1438,11 +1491,6 @@ def transactions_all_json() -> ResponseReturnValue:
 def transactions_create() -> ResponseReturnValue:
     form = TransactionCreateForm()
 
-    def _ensure_decimal(v: t.Any) -> Decimal:
-        if isinstance(v, Decimal):
-            return v
-        abort(400, f"{v!r} is not a decimal value.")
-
     if form.validate_on_submit():
         splits = [
             (
@@ -1820,3 +1868,9 @@ def _get_or_404[TModel: ModelBase](session: Session, Model: type[TModel], pkey: 
     if obj is None:
         abort(404, f"Could not find {Model} with primary key {pkey}")
     return obj
+
+
+def _ensure_decimal(v: t.Any) -> Decimal:
+    if isinstance(v, Decimal):
+        return v
+    abort(400, f"{v!r} is not a decimal value.")

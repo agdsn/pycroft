@@ -4,6 +4,7 @@
 import datetime
 
 from flask_wtf import FlaskForm as Form
+from schwifty import IBAN, BIC
 from wtforms import Form as WTForm, ValidationError, Field
 from wtforms.validators import DataRequired, NumberRange, Optional, \
     InputRequired
@@ -172,6 +173,43 @@ class TransactionCreateForm(Form):
                       if split_form['amount'].data is not None)
         if balance != 0:
             raise ValidationError("Buchung ist nicht ausgeglichen.")
+
+
+class BankAccountTransferForm(Form):
+    bank_account = QuerySelectField("Bankkonto", get_label="name", validators=[DataRequired()])
+    owner = TextField("Kontoinhaber", validators=[DataRequired()])
+    iban = TextField("IBAN", validators=[DataRequired()])
+    bic = TextField("BIC", validators=[DataRequired()])
+    amount = MoneyField("Wert", validators=[DataRequired(message=gettext("Invalid value."))])
+    reference = TextField("Verwendungszweck", validators=[DataRequired()])
+
+    def validate_iban(self, field: Field) -> None:
+        try:
+            IBAN(field.data)
+        except ValueError as err:
+            raise ValidationError(gettext("Invalid IBAN.")) from err
+
+    def validate_bic(self, field: Field) -> None:
+        try:
+            BIC(field.data)
+        except ValueError as err:
+            raise ValidationError(gettext("Invalid BIC.")) from err
+
+    def validate_amount(self, field: Field) -> None:
+        cents = field.data.shift(2)
+        if cents < 1 or cents != int(cents):
+            raise ValidationError(gettext("Invalid value."))
+
+
+class BankAccountIssueTransferForm(BankAccountTransferForm):
+    issue_id = TextField(
+        "Vorgangsnummer", render_kw={"placeholder": "2026-X00"}, validators=[DataRequired()]
+    )
+    issue_name = TextField(
+        "Vorgangsbeschreibung",
+        render_kw={"placeholder": "Überweisung"},
+        validators=[DataRequired()],
+    )
 
 
 class ActivityMatchForm(Form):

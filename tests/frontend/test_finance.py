@@ -787,3 +787,67 @@ class TestConfirmSelected:
         )
         resp = client.assert_url_ok(url_for("finance.transactions_unconfirmed_json"))
         assert len(resp.json["items"]) == 0
+
+
+class TestTransferGeneration:
+    @pytest.fixture
+    def user(self, session):
+        u = f.UserFactory()
+        session.flush()
+        return u
+
+    def test_generate_retransfer(self, client: TestClient, user, bank_account):
+        client.assert_url_ok(url_for("finance.bank_account_transfer", user_id=user.id))
+
+        form_data = serialize_formdata(
+            {
+                "bank_account": bank_account.id,
+                "owner": user.name,
+                "iban": "DE61850503003120219540",
+                "bic": "OSDDDE81XXX",
+                "amount": 10,
+                "reference": "test",
+            }
+        )
+        client.assert_url_ok(
+            url_for("finance.bank_account_transfer", user_id=user.id),
+            method="POST",
+            data=form_data,
+        )
+
+        invalid_form_data = serialize_formdata(
+            {
+                "bank_account": bank_account.id,
+                "owner": user.name,
+                "iban": "2D",
+                "bic": "E3",
+                "amount": -10,
+                "reference": "test",
+            }
+        )
+        client.assert_url_ok(
+            url_for("finance.bank_account_transfer", user_id=user.id),
+            method="POST",
+            data=invalid_form_data,
+        )
+
+    def test_generate_transfer(self, client: TestClient, bank_account):
+        client.assert_ok("finance.bank_account_transfer")
+
+        formdata = serialize_formdata(
+            {
+                "bank_account": bank_account.id,
+                "owner": "Tester",
+                "iban": "DE61850503003120219540",
+                "bic": "OSDDDE81XXX",
+                "amount": 10,
+                "reference": "20260409",
+                "issue_id": "2026-V13",
+                "issue_name": "Feuerwehrauto",
+            }
+        )
+        client.assert_ok(
+            "finance.bank_account_transfer",
+            method="POST",
+            data=formdata,
+        )

@@ -46,6 +46,7 @@ from .retransfer import (
     attribute_activities_as_returned,
     generate_activities_return_sepaxml,
     get_activities_to_return,
+    generate_transfer_sepaxml,
 )
 from .transaction_crud import (
     simple_transaction,
