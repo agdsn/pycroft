@@ -61,7 +61,7 @@ def login() -> ResponseValue:
     if oidc.user_loggedin:
         info = flask_session["oidc_auth_profile"]
         username = info.get("preferred_username")
-        user = User.get(username)
+        user = User.get(username, session)
         if info is not None and username is not None and user is not None:
             login_user(user)
             flash("Erfolgreich angemeldet.", "success")

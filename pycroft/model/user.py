@@ -45,6 +45,7 @@ from sqlalchemy.orm import (
     validates,
     Mapped,
     mapped_column,
+    Session,
 )
 from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy.orm.collections import attribute_keyed_dict
@@ -396,9 +397,9 @@ class User(BaseUser, UserMixin):
         return self.wifi_passwd_hash is not None
 
     @staticmethod
-    def get(login: str) -> User | None:
+    def get(login: str, session: Session) -> User | None:
         try:
-            user = User.q.filter(User.login == login).one()
+            user = session.scalar(select(User).where(User.login == login))
         except NoResultFound:
             return None
         else:
