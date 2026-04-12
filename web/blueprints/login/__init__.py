@@ -60,7 +60,7 @@ def login() -> ResponseValue:
         flash("Benutzername und/oder Passwort falsch", "error")
     if oidc.user_loggedin:
         info = flask_session["oidc_auth_profile"]
-        username = info.get("preferred_username")
+        username = info.get("pycroft_login", info.get("preferred_username", None))
         user = User.get(username, session)
         if info is not None and username is not None and user is not None:
             login_user(user)
@@ -70,7 +70,6 @@ def login() -> ResponseValue:
 
 
 @bp.route("/logout")
-@login_required
 def logout() -> ResponseValue:
     if oidc.user_loggedin:
         return redirect(url_for("oidc_auth.logout", next=url_for("login.logout")))
