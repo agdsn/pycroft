@@ -181,7 +181,26 @@ class BankAccountTransferForm(Form):
     iban = TextField("IBAN", validators=[DataRequired()])
     bic = TextField("BIC", validators=[DataRequired()])
     amount = MoneyField("Wert", validators=[DataRequired(message=gettext("Invalid value."))])
-    reference = TextField("Rechnungsreferenz", validators=[DataRequired()])
+    reference = TextField("Verwendungszweck", validators=[DataRequired()])
+    def validate_iban(self, field: Field) -> None:
+        try:
+            IBAN(field.data)
+        except ValueError as err:
+            raise ValidationError(gettext("Invalid IBAN.")) from err
+
+    def validate_bic(self, field: Field) -> None:
+        try:
+            BIC(field.data)
+        except ValueError as err:
+            raise ValidationError(gettext("Invalid BIC.")) from err
+
+    def validate_amount(self, field: Field) -> None:
+        cents = field.data.shift(2)
+        if cents < 1 or cents != int(cents):
+            raise ValidationError(gettext("Invalid value."))
+
+
+class BankAccountIssueTransferForm(BankAccountTransferForm):
     issue_id = TextField(
         "Vorgangsnummer", render_kw={"placeholder": "2026-X00"}, validators=[DataRequired()]
     )
@@ -190,49 +209,6 @@ class BankAccountTransferForm(Form):
         render_kw={"placeholder": "Überweisung"},
         validators=[DataRequired()],
     )
-
-    def validate_iban(self, field: Field) -> None:
-        try:
-            IBAN(field.data)
-        except ValueError as err:
-            raise ValidationError(gettext("Invalid IBAN.")) from err
-
-    def validate_bic(self, field: Field) -> None:
-        try:
-            BIC(field.data)
-        except ValueError as err:
-            raise ValidationError(gettext("Invalid BIC.")) from err
-
-    def validate_amount(self, field: Field) -> None:
-        cents = field.data.shift(2)
-        if cents == 0 or cents != int(cents):
-            raise ValidationError(gettext("Invalid value."))
-
-
-class BankAccountUserRetransferForm(Form):
-    bank_account = QuerySelectField("Bankkonto", get_label="name", validators=[DataRequired()])
-    user_name = TextField("Kontoinhaber", validators=[DataRequired()])
-    iban = TextField("IBAN", validators=[DataRequired()])
-    bic = TextField("BIC", validators=[DataRequired()])
-    reason = static(StringField("Verwendungszweck"))
-    amount = MoneyField("Wert", validators=[DataRequired(message=gettext("Invalid value."))])
-
-    def validate_iban(self, field: Field) -> None:
-        try:
-            IBAN(field.data)
-        except ValueError as err:
-            raise ValidationError(gettext("Invalid IBAN.")) from err
-
-    def validate_bic(self, field: Field) -> None:
-        try:
-            BIC(field.data)
-        except ValueError as err:
-            raise ValidationError(gettext("Invalid BIC.")) from err
-
-    def validate_amount(self, field: Field) -> None:
-        cents = field.data.shift(2)
-        if cents == 0 or cents != int(cents):
-            raise ValidationError(gettext("Invalid value."))
 
 
 class ActivityMatchForm(Form):

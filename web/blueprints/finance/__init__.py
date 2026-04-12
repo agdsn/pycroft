@@ -112,8 +112,8 @@ from web.blueprints.finance.forms import (
     BankAccountActivitiesImportManualForm,
     ConfirmPaymentReminderMail,
     FinTSTANForm,
+    BankAccountIssueTransferForm,
     BankAccountTransferForm,
-    BankAccountUserRetransferForm,
 )
 from web.blueprints.finance.tables import (
     FinanceTable,
@@ -783,27 +783,41 @@ def bank_account_activities_return_do() -> ResponseReturnValue:
     )
 
 
-@bp.route("/transfer", methods=["GET", "POST"])
+@bp.route('/transfer', defaults={'user_id': None}, methods=["GET", "POST"])
+@bp.route("/transfer/<int:user_id>", methods=["GET", "POST"])
 @nav.navigate("Überweisung", icon="fa-wallet")
-def bank_account_transfer() -> ResponseReturnValue:
-    form = BankAccountTransferForm()
+def bank_account_transfer(user_id: int) -> ResponseReturnValue:
+    if user_id is None:
+        form = BankAccountIssueTransferForm()
+    else:
+        user = _get_or_404(session, User, user_id)
+        reference: str = f"{user.id} Rückerstattung zu viel gezahlte Beiträge"
+        form = BankAccountTransferForm(
+            owner=user.name, reference=reference, amount=user.account.balance
+        )
     form.bank_account.query = get_all_bank_accounts(session)
 
     if form.validate_on_submit():
         bank_account = form.bank_account.data
         amount = form.amount.data
         _ensure_decimal(amount)
-        issue_id: str = form.issue_id.data
-        reason: str = f"{form.reference.data} {issue_id} {form.issue_name.data}"
+
+        if user_id is None:
+            issue_id: str = form.issue_id.data
+            reference: str = f"{form.reference.data} {issue_id} {form.issue_name.data}"
+            download_name: str = f"{issue_id}.xml"
+        else:
+            reference: str = form.reference.data
+            download_name: str = f"retransfer-{user.id}-{datetime.now().date()}.xml"
 
         sepa_xml: bytes = generate_transfer_sepaxml(
-            bank_account, form.owner.data, form.iban.data, form.bic.data, reason, amount
+            bank_account, form.owner.data, form.iban.data, form.bic.data, reference, amount
         )
 
         return send_file(
             BytesIO(sepa_xml),
             as_attachment=True,
-            download_name=f"{issue_id}.xml",
+            download_name=download_name,
         )
 
     form_args = {
@@ -815,44 +829,6 @@ def bank_account_transfer() -> ResponseReturnValue:
     return render_template(
         "generic_form.html",
         page_title="Überweisung für Datei-Import",
-        form_args=form_args,
-        form=form,
-    )
-
-
-@bp.route("/transfer/<int:user_id>", methods=["GET", "POST"])
-def bank_account_retransfer(user_id: int) -> ResponseReturnValue:
-    user = _get_or_404(session, User, user_id)
-    reason: str = f"{user.id} Rückerstattung zu viel gezahlte Beiträge"
-    form = BankAccountUserRetransferForm(
-        user_name=user.name, reason=reason, amount=user.account.balance
-    )
-    form.bank_account.query = get_all_bank_accounts(session)
-
-    if form.validate_on_submit():
-        bank_account = form.bank_account.data
-        amount = form.amount.data
-        _ensure_decimal(amount)
-
-        sepa_xml: bytes = generate_transfer_sepaxml(
-            bank_account, form.user_name.data, form.iban.data, form.bic.data, reason, amount
-        )
-
-        return send_file(
-            BytesIO(sepa_xml),
-            as_attachment=True,
-            download_name=f"retransfer-{user.id}-{datetime.now().date()}.xml",
-        )
-
-    form_args = {
-        "form": form,
-        "cancel_to": url_for(".bank_accounts_list"),
-        "submit_text": "Exportieren",
-    }
-
-    return render_template(
-        "generic_form.html",
-        page_title="Rückerstattung für Datei-Import",
         form_args=form_args,
         form=form,
     )

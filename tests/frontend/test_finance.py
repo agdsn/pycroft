@@ -797,22 +797,38 @@ class TestTransferGeneration:
         return u
 
     def test_generate_retransfer(self, client: TestClient, user, bank_account):
-        client.assert_url_ok(url_for("finance.bank_account_retransfer", user_id=user.id))
+        client.assert_url_ok(url_for("finance.bank_account_transfer", user_id=user.id))
 
-        formdata = serialize_formdata(
+        form_data = serialize_formdata(
             {
                 "bank_account": bank_account.id,
-                "user_name": user.name,
+                "owner": user.name,
                 "iban": "DE61850503003120219540",
                 "bic": "OSDDDE81XXX",
-                "reason": "test",
                 "amount": 10,
+                "reference": "test",
             }
         )
         client.assert_url_ok(
-            url_for("finance.bank_account_retransfer", user_id=user.id),
+            url_for("finance.bank_account_transfer", user_id=user.id),
             method="POST",
-            data=formdata,
+            data=form_data,
+        )
+
+        invalid_form_data = serialize_formdata(
+            {
+                "bank_account": bank_account.id,
+                "owner": user.name,
+                "iban": "2D",
+                "bic": "E3",
+                "amount": -10,
+                "reference": "test",
+            }
+        )
+        client.assert_url_ok(
+            url_for("finance.bank_account_transfer", user_id=user.id),
+            method="POST",
+            data=invalid_form_data,
         )
 
     def test_generate_transfer(self, client: TestClient, bank_account):
