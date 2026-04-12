@@ -27,6 +27,7 @@ class TestUserOidcLogin:
 
     def test_oidc_login(self, client: TestClient, app, user):
         app.config["OIDC_ENABLED"] = False
+        client.assert_ok("login.login")
         app.config["OIDC_TESTING_PROFILE"] = {"email": "email", "preferred_username": "oidc"}
         with client.flashes_message("Erfolgreich angemeldet.", category="success"):
             response = client.get(url_for("login.login"))
