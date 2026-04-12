@@ -783,7 +783,7 @@ def bank_account_activities_return_do() -> ResponseReturnValue:
     )
 
 
-@bp.route('/transfer', defaults={'user_id': None}, methods=["GET", "POST"])
+@bp.route("/transfer", defaults={"user_id": None}, methods=["GET", "POST"])
 @bp.route("/transfer/<int:user_id>", methods=["GET", "POST"])
 @nav.navigate("Überweisung", icon="fa-wallet")
 def bank_account_transfer(user_id: int) -> ResponseReturnValue:
@@ -804,14 +804,14 @@ def bank_account_transfer(user_id: int) -> ResponseReturnValue:
 
         if user_id is None:
             issue_id: str = form.issue_id.data
-            reference: str = f"{form.reference.data} {issue_id} {form.issue_name.data}"
-            download_name: str = f"{issue_id}.xml"
+            sepa_reference = f"{form.reference.data} {issue_id} {form.issue_name.data}"
+            download_name = f"{issue_id}.xml"
         else:
-            reference: str = form.reference.data
-            download_name: str = f"retransfer-{user.id}-{datetime.now().date()}.xml"
+            sepa_reference = form.reference.data
+            download_name = f"retransfer-{user.id}-{datetime.now().date()}.xml"
 
         sepa_xml: bytes = generate_transfer_sepaxml(
-            bank_account, form.owner.data, form.iban.data, form.bic.data, reference, amount
+            bank_account, form.owner.data, form.iban.data, form.bic.data, sepa_reference, amount
         )
 
         return send_file(

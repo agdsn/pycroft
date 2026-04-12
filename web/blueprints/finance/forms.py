@@ -182,6 +182,7 @@ class BankAccountTransferForm(Form):
     bic = TextField("BIC", validators=[DataRequired()])
     amount = MoneyField("Wert", validators=[DataRequired(message=gettext("Invalid value."))])
     reference = TextField("Verwendungszweck", validators=[DataRequired()])
+
     def validate_iban(self, field: Field) -> None:
         try:
             IBAN(field.data)
