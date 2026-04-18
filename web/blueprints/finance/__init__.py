@@ -791,9 +791,10 @@ def bank_account_transfer(user_id: int) -> ResponseReturnValue:
         form = BankAccountIssueTransferForm()
     else:
         user = _get_or_404(session, User, user_id)
-        reference: str = f"{user.id} Rückerstattung zu viel gezahlte Beiträge"
+        reference: str = f"{encode_type2_user_id(user.id)} Rückerstattung zu viel gezahlte Beiträge"
+        # flip the user account balance since we decrease our debts to the user
         form = BankAccountTransferForm(
-            owner=user.name, reference=reference, amount=user.account.balance
+            owner=user.name, reference=reference, amount=abs(user.account.balance)
         )
     form.bank_account.query = get_all_bank_accounts(session)
 
