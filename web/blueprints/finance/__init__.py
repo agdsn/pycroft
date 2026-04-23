@@ -28,7 +28,6 @@ from fints.exceptions import (
     FinTSClientTemporaryAuthError,
 )
 from fints.client import FinTS3PinTanClient, NeedTANResponse, NeedRetryResponse
-from fints.utils import mt940_to_array
 from flask import (
     Blueprint,
     abort,
@@ -45,7 +44,6 @@ from flask.typing import ResponseReturnValue
 from flask_login import current_user
 from flask_wtf import FlaskForm
 from itsdangerous import Signer
-from mt940.models import Transaction as MT940Transaction
 from sqlalchemy import (
     or_,
     Text,
@@ -80,20 +78,18 @@ from pycroft.lib.finance import (
     attribute_activities_as_returned,
     get_all_bank_accounts,
     get_unassigned_bank_account_activities,
-    get_all_mt940_errors,
     get_accounts_by_type,
     get_last_import_date,
     get_last_membership_fee,
     generate_transfer_sepaxml,
 )
-from pycroft.lib.finance.fints import get_fints_transactions, get_fints_client
+from pycroft.lib.finance.fints import get_fints_transactions
 from pycroft.lib.finance.matching import UserMatching, AccountMatching
 from pycroft.lib.mail import MemberNegativeBalance
 from pycroft.lib.user import encode_type2_user_id, user_send_mails
 from pycroft.model.base import ModelBase
 from pycroft.model.finance import Account, Transaction
-from pycroft.model.finance import (
-    BankAccount, BankAccountActivity, Split, MembershipFee, MT940Error)
+from pycroft.model.finance import BankAccount, BankAccountActivity, Split, MembershipFee
 from pycroft.model.session import session, utcnow
 from pycroft.model.user import User
 from web.blueprints.access import BlueprintAccess
@@ -107,9 +103,7 @@ from web.blueprints.finance.forms import (
     MembershipFeeEditForm,
     FeeApplyForm,
     HandlePaymentsInDefaultForm,
-    FixMT940Form,
     BankAccountActivityReadForm,
-    BankAccountActivitiesImportManualForm,
     ConfirmPaymentReminderMail,
     FinTSTANForm,
     BankAccountIssueTransferForm,
@@ -123,11 +117,9 @@ from web.blueprints.finance.tables import (
     BankAccountTable,
     BankAccountActivityTable,
     TransactionTable,
-    ImportErrorTable,
     UnconfirmedTransactionsTable,
     BankAccountRow,
     BankAccountActivityRow,
-    ImportErrorRow,
     TransactionSplitResponse,
     TransactionSplitRow,
     UnconfirmedTransactionsRow,
@@ -317,28 +309,6 @@ def get_signer() -> Signer:
     return Signer(sk)
 
 
-@bp.route('/bank-accounts/import/errors/json')
-def bank_accounts_errors_json() -> ResponseReturnValue:
-    return TableResponse[ImportErrorRow](
-        items=[
-            ImportErrorRow(
-                name=error.bank_account.name,
-                fix=BtnColResponse(
-                    href=url_for(".fix_import_error", error_id=error.id),
-                    title="korrigieren",
-                    btn_class="btn-primary",
-                ),
-                imported_at=(
-                    str(datetime.date(i))
-                    if (i := error.imported_at) is not None
-                    else "nie"
-                ),
-            )
-            for error in get_all_mt940_errors(session)
-        ]
-    ).model_dump()
-
-
 def complete_fints_challenge(
     form: FinTSTANForm, bank_account: BankAccount, signer: Signer
 ) -> tuple[FinTS3PinTanClient, FinTSDialog]:
@@ -347,12 +317,13 @@ def complete_fints_challenge(
     challenge = b64_unsign(form.fints_challenge.data, signer)
 
     assert config.fints_product_id is not None, "config not persisted"
-    client = get_fints_client(
-        product_id=config.fints_product_id,
+    client = FinTS3PinTanClient(
+        bank_identifier=bank_account.routing_number,
         user_id=form.user.data,
-        secret_pin=form.secret_pin.data,
-        bank_account=bank_account,
+        pin=form.secret_pin.data,
+        server=bank_account.fints_endpoint,
         from_data=client_data,
+        product_id=config.fints_product_id,
     )
 
     with client.resume_dialog(dialog_data):
@@ -455,17 +426,18 @@ def bank_accounts_import_run(bank_account_id: int) -> ResponseReturnValue:
     fints_dialog_data = b64_unsign(form.fints_dialog.data, signer)
 
     assert config.fints_product_id is not None
-    fints_client = get_fints_client(
-        product_id=config.fints_product_id,
+    fints_client = FinTS3PinTanClient(
+        bank_identifier=bank_account.routing_number,
         user_id=form.user.data,
-        secret_pin=form.secret_pin.data,
-        bank_account=bank_account,
+        pin=form.secret_pin.data,
+        server=bank_account.fints_endpoint,
         from_data=fints_client_data,
+        product_id=config.fints_product_id,
     )
 
     try:
         with fints_client.resume_dialog(fints_dialog_data), flash_fints_errors():
-            statement, errors = get_fints_transactions(
+            transactions = get_fints_transactions(
                 start_date=form.start_date.data,
                 end_date=form.end_date.data,
                 bank_account=bank_account,
@@ -476,14 +448,8 @@ def bank_accounts_import_run(bank_account_id: int) -> ResponseReturnValue:
         return display_form_response(imported)
 
     flash(f"Transaktionen vom {form.start_date.data} bis {form.end_date.data}.")
-    if errors:
-        flash(
-            f"{len(errors)} Statements enthielten fehlerhafte Daten und müssen "
-            "vor dem Import manuell korrigiert werden",
-            "error",
-        )
 
-    imported = finance.process_transactions(bank_account, statement)
+    imported = finance.process_transactions(bank_account, transactions)
     flash(
         f"Klassifizierung: {len(imported.new)} neu "
         f"/ {len(imported.old)} alt "
@@ -497,16 +463,6 @@ def bank_accounts_import_run(bank_account_id: int) -> ResponseReturnValue:
 
     fints_client.resume_dialog(dialog)
 
-    # persist transactions and errors
-    session.add_all(
-        MT940Error(
-            mt940=error.statement,
-            exception=error.error,
-            author=current_user,
-            bank_account=bank_account,
-        )
-        for error in errors
-    )
     session.add_all(imported.new)
     session.commit()
     flash(
@@ -514,94 +470,6 @@ def bank_accounts_import_run(bank_account_id: int) -> ResponseReturnValue:
         "success" if imported.new else "info",
     )
     return redirect(url_for(".accounts_show", account_id=bank_account.account_id))
-
-
-@bp.route('/bank-accounts/importmanual', methods=['GET', 'POST'])
-@access.require('finance_change')
-def bank_accounts_import_manual() -> ResponseReturnValue:
-    form = BankAccountActivitiesImportManualForm()
-    form.account.query = get_all_bank_accounts(session)
-
-    if form.validate_on_submit():
-        bank_account = form.account.data
-
-        if form.file.data:
-            mt940 = form.file.data.read().decode()
-
-            mt940_entry = MT940Error(mt940=mt940, exception="manual import",
-                                     author=current_user,
-                                     bank_account=bank_account)
-            session.add(mt940_entry)
-
-            session.commit()
-            flash('Datensatz wurde importiert. Buchungen können jetzt importiert werden.')
-            return redirect(url_for(".fix_import_error", error_id=mt940_entry.id))
-        else:
-            flash("Kein MT940 hochgeladen.", 'error')
-
-    return render_template('finance/bank_accounts_import_manual.html', form=form)
-
-
-@bp.route('/bank-accounts/importerrors', methods=['GET', 'POST'])
-@access.require('finance_change')
-def bank_accounts_import_errors() -> ResponseReturnValue:
-    error_table = ImportErrorTable(
-        data_url=url_for('.bank_accounts_errors_json'))
-    return render_template('finance/bank_accounts_import_errors.html',
-                           page_title="Fehlerhafter Bankimport",
-                           error_table=error_table)
-
-
-@bp.route('/bank-accounts/importerrors/<error_id>', methods=['GET', 'POST'])
-@access.require('finance_change')
-def fix_import_error(error_id: int) -> ResponseReturnValue:
-    error = _get_or_404(session, MT940Error, error_id)
-    form = FixMT940Form()
-    imported = ImportedTransactions([], [], [])
-    new_exception = None
-
-    def default_response() -> str:
-        return render_template(
-            "finance/bank_accounts_error_fix.html",
-            error_id=error_id,
-            exception=error.exception,
-            new_exception=new_exception,
-            form=form,
-            transactions=imported.new,
-            old_transactions=imported.old,
-            doubtful_transactions=imported.doubtful,
-        )
-
-    if not form.is_submitted():
-        form.mt940.data = error.mt940
-        return default_response()
-
-    if not form.validate():
-        return default_response()
-
-    try:
-        statement: list[MT940Transaction] = mt940_to_array(form.mt940.data)
-    except Exception as e:
-        new_exception = str(e)
-        flash("Es existieren weiterhin Fehler.", "error")
-        return default_response()
-
-    if not statement:
-        flash("MT940 ist valide, enthält aber keine statements", "warning")
-        return default_response()
-
-    flash(f"MT940 ist jetzt valide ({len(statement)} statements)", "success")
-    imported = finance.process_transactions(error.bank_account, statement)
-
-    # save transactions to database
-    if not form.do_import.data:
-        return default_response()
-
-    session.add_all(imported.new)
-    session.delete(error)
-    session.commit()
-    flash("Bankkontobewegungen wurden importiert.")
-    return redirect(url_for(".bank_accounts_import_errors"))
 
 
 @bp.route('/bank-accounts/create', methods=['GET', 'POST'])

@@ -17,8 +17,15 @@ from web.table.table import (
     LinkColResponse,
 )
 
-from web.table.table import BootstrapTable, Column, SplittedTable, \
-    BtnColumn, LinkColumn, button_toolbar, DateColumn, MultiBtnColumn
+from web.table.table import (
+    BootstrapTable,
+    Column,
+    SplittedTable,
+    LinkColumn,
+    button_toolbar,
+    DateColumn,
+    MultiBtnColumn,
+)
 from web.template_filters import money_filter
 
 
@@ -334,16 +341,3 @@ class UnconfirmedTransactionsRow(BaseModel):
     amount: str
     author: LinkColResponse | None = None
     actions: list[BtnColResponse]
-
-
-class ImportErrorTable(BootstrapTable):
-    """A table for displaying buggy mt940 imports"""
-    name = Column("Bankkonto")
-    imported_at = Column("Importiert am")
-    fix = BtnColumn("Importieren")
-
-
-class ImportErrorRow(BaseModel):
-    name: str
-    imported_at: str
-    fix: BtnColResponse

@@ -358,9 +358,6 @@ class BankAccount(IntegerIdModel):
         back_populates="bank_account",
         viewonly=True,
     )
-    mt940_errors: Mapped[list[MT940Error]] = relationship(
-        back_populates="bank_account", viewonly=True
-    )
     # /backrefs
 
     @hybrid_property
@@ -435,16 +432,6 @@ class BankAccountActivity(IntegerIdModel):
                              ondelete='SET NULL'),
         UniqueConstraint(transaction_id, account_id),
     )
-
-
-class MT940Error(IntegerIdModel):
-    mt940: Mapped[str] = mapped_column(Text())
-    exception: Mapped[str] = mapped_column(Text())
-    author_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
-    author: Mapped[User] = relationship()
-    imported_at: Mapped[datetime_tz_onupdate]
-    bank_account: Mapped[BankAccount] = relationship(back_populates="mt940_errors")
-    bank_account_id: Mapped[int] = mapped_column(ForeignKey(BankAccount.id))
 
 
 

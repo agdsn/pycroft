@@ -11,9 +11,19 @@ from wtforms.validators import DataRequired, NumberRange, Optional, \
 
 from pycroft.model.user import User
 from wtforms_widgets.fields.core import (
-    TextField, IntegerField, HiddenField, FileField, SelectField, FormField,
-    FieldList, StringField, DateField, MoneyField, PasswordField, BooleanField,
-    QuerySelectMultipleField, TextAreaField, QuerySelectField)
+    TextField,
+    IntegerField,
+    HiddenField,
+    SelectField,
+    FormField,
+    FieldList,
+    StringField,
+    DateField,
+    MoneyField,
+    PasswordField,
+    BooleanField,
+    QuerySelectMultipleField,
+)
 from wtforms_widgets.fields.custom import TypeaheadField, static, disabled
 
 from pycroft.helpers.i18n import gettext
@@ -129,11 +139,6 @@ class BankAccountActivitiesImportForm(FinTSClientForm):
     do_import = BooleanField("Import durchführen", default=False)
 
 
-class BankAccountActivitiesImportManualForm(Form):
-    account = QuerySelectField('Bankkonto', get_label="name")
-    file = FileField('MT940 Datei')
-
-
 class AccountCreateForm(Form):
     name = TextField("Name", validators=[DataRequired()])
     type = SelectField(
@@ -231,11 +236,6 @@ class HandlePaymentsInDefaultForm(Form):
     terminated_member_memberships = QuerySelectMultipleField("Beendete Mitgliedschaften/Auszüge",
                                                              get_label=get_user_name_with_id_and_balance,
                                                              render_kw={'size': 20})
-
-
-class FixMT940Form(Form):
-    mt940 = TextAreaField('MT940')
-    do_import = BooleanField("Import durchführen", default=False)
 
 
 class ConfirmPaymentReminderMail(Form):
