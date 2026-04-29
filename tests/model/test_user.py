@@ -17,6 +17,10 @@ class Test_User_Passwords:
     def user(self, class_session):
         return factories.UserFactory()
 
+    def test_get(self, user, session):
+        assert User.get(user.login, session) == user
+        assert User.get(user.login + "_wrong", session) is None
+
     def test_password_hash_validator(self, user, session):
         password = generate_password(4)
         pw_hash = hash_password(password)

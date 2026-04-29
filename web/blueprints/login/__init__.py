@@ -13,10 +13,12 @@
 import typing as t
 
 from flask import Blueprint, render_template, flash, redirect, url_for, request
+from flask import session as flask_session
 from flask.typing import ResponseValue
 from flask_login import (
     AnonymousUserMixin, LoginManager, current_user, login_required, login_user,
     logout_user)
+from flask_oidc import OpenIDConnect
 
 from pycroft.model.session import session
 from pycroft.model.user import User
@@ -29,6 +31,8 @@ class AnonymousUser(AnonymousUserMixin):
     #: See `pycroft.model.user.BaseUser.current_properties_set`
     current_properties_set: t.Container[str] = frozenset()
 
+
+oidc = OpenIDConnect()
 
 login_manager = LoginManager()
 login_manager.anonymous_user = AnonymousUser
@@ -54,12 +58,22 @@ def login() -> ResponseValue:
             flash("Erfolgreich angemeldet.", "success")
             return redirect(request.args.get("next") or url_for("user.overview"))
         flash("Benutzername und/oder Passwort falsch", "error")
+    if oidc.user_loggedin:
+        info = flask_session["oidc_auth_profile"]
+        username = info.get("pycroft_login", info.get("preferred_username", None))
+        user = User.get(username, session)
+        if info is not None and username is not None and user is not None:
+            login_user(user)
+            flash("Erfolgreich angemeldet.", "success")
+            return redirect(request.args.get("next") or url_for("user.overview"))
     return render_template("login/login.html", form=form, next=request.args.get("next"))
 
 
 @bp.route("/logout")
 @login_required
 def logout() -> ResponseValue:
+    if oidc.user_loggedin:
+        return redirect(url_for("oidc_auth.logout", next=url_for("login.logout")))
     logout_user()
     flash("Sie sind jetzt abgemeldet!", "info")
     return redirect(url_for(".login"))

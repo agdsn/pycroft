@@ -45,6 +45,7 @@ from sqlalchemy.orm import (
     validates,
     Mapped,
     mapped_column,
+    Session,
 )
 from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy.orm.collections import attribute_keyed_dict
@@ -394,6 +395,10 @@ class User(BaseUser, UserMixin):
     @hybrid_property
     def has_wifi_access(self):
         return self.wifi_passwd_hash is not None
+
+    @staticmethod
+    def get(login: str, session: Session) -> User | None:
+        return session.scalar(select(User).where(User.login == login))
 
     @staticmethod
     def verify_and_get(login: str, plaintext_password: str) -> User | None:
