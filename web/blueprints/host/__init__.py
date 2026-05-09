@@ -251,7 +251,15 @@ def interface_edit(interface_id: int) -> ResponseReturnValue:
 
     form = InterfaceForm(obj=interface)
     form.meta.current_mac = interface.mac
-    form.ips.choices = [(str(ip), str(ip)) for ip in current_ips + unused_ips]
+    form.ip.choices = [("None", "None")] + [(str(ip), str(ip)) for ip in current_ips + unused_ips]
+    if current_ips:
+        form.ip.default = str(current_ips[0])
+
+    if len(current_ips) > 1:
+        flash(
+            "Bearbeite Interface mit mehreren IP-Adressen.  Beim Übernehmen, werden alle IP-Adressen außer der ausgewählten entfernt!",
+            "warning",
+        )
 
     def default_response() -> ResponseReturnValue:
         form_args = {
@@ -264,16 +272,18 @@ def interface_edit(interface_id: int) -> ResponseReturnValue:
                                form_args=form_args)
 
     if not form.is_submitted():
-        form.ips.process_data(ip for ip in current_ips)
+        form.ip.process_data(str(current_ips[0]) if current_ips else "None")
         return default_response()
     if not form.validate():
         return default_response()
 
-    ips = {IPAddress(ip) for ip in form.ips.data}
-
     with abort_on_error(default_response), session.session.begin_nested():
         lib_host.interface_edit(
-            interface, form.name.data, form.mac.data, ips, processor=current_user
+            interface,
+            form.name.data,
+            form.mac.data,
+            [IPAddress(ip)] if (ip := form.ip.data) else [],
+            processor=current_user,
         )
     session.session.commit()
 
