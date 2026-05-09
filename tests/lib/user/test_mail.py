@@ -1,12 +1,12 @@
 #  Copyright (c) 2025. The Pycroft Authors. See the AUTHORS file.
 #  This file is part of the Pycroft project and licensed under the terms of
 #  the Apache License, Version 2.0. See the LICENSE file for details
+from itertools import combinations
+
 import pytest
 
 from pycroft.lib.user import get_active_users_with_building
 from pycroft.model.facilities import Room, Building
-from itertools import combinations
-
 from pycroft.model.user import User
 from ...factories import UserFactory, RoomFactory, BuildingFactory, AddressFactory
 
