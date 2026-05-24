@@ -16,7 +16,7 @@ from sqlalchemy import ForeignKey, event, func, select, Enum, ColumnElement, Sel
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship, object_session, Mapped, mapped_column
 from sqlalchemy.schema import CheckConstraint, ForeignKeyConstraint, UniqueConstraint
-from sqlalchemy.types import String, Text
+from sqlalchemy.types import String, Text, Enum as SQLAlchemyEnum
 
 from pycroft.helpers.i18n import gettext
 from pycroft.helpers.interval import closed
@@ -435,6 +435,40 @@ class BankAccountActivity(IntegerIdModel):
                              ondelete='SET NULL'),
         UniqueConstraint(transaction_id, account_id),
     )
+
+class RetransmissionStateEnum(SQLAlchemyEnum):
+    pending = 'pending'
+    processing = 'processing'
+    done = 'done'
+    declined = 'declined'
+
+
+class Retransmission(IntegerIdModel):
+    owner: Mapped[str] = mapped_column(String(256), nullable=False)
+    amount: Mapped[int] = mapped_column(Money, nullable=False)
+    iban: Mapped[str] = mapped_column(String(34), nullable=False)
+    bic: Mapped[str] = mapped_column(String(11), nullable=False)
+    state = mapped_column(RetransmissionStateEnum, default=RetransmissionStateEnum.pending, nullable=False)
+
+    account_id: Mapped[int] = mapped_column(
+        ForeignKey(Account.id, ondelete="CASCADE"),
+        index=True,
+    )
+    account: Mapped[Account] = relationship(back_populates="retransmission")
+
+    ledger_1_id: Mapped[int] = mapped_column(
+        ForeignKey(Account.id, ondelete="CASCADE"),
+        index=True,
+    )
+    ledger_1: Mapped[Account] = relationship(back_populates="retransmission")
+
+    ledger_2_id: Mapped[int] = mapped_column(
+        ForeignKey(Account.id, ondelete="CASCADE"),
+        index=True,
+    )
+    ledger_2: Mapped[Account] = relationship(back_populates="retransmission")
+
+    reason = mapped_column(String(256))
 
 
 class MT940Error(IntegerIdModel):

@@ -88,6 +88,7 @@ from pycroft.lib.finance import (
 )
 from pycroft.lib.finance.fints import get_fints_transactions, get_fints_client
 from pycroft.lib.finance.matching import UserMatching, AccountMatching
+from pycroft.lib.finance.retransmission import create_retransmission
 from pycroft.lib.mail import MemberNegativeBalance
 from pycroft.lib.user import encode_type2_user_id, user_send_mails
 from pycroft.model.base import ModelBase
@@ -113,7 +114,7 @@ from web.blueprints.finance.forms import (
     ConfirmPaymentReminderMail,
     FinTSTANForm,
     BankAccountIssueTransferForm,
-    BankAccountTransferForm,
+    BankAccountTransferForm, CreateRetransmission,
 )
 from web.blueprints.finance.tables import (
     FinanceTable,
@@ -1875,3 +1876,14 @@ def _ensure_decimal(v: t.Any) -> Decimal:
     if isinstance(v, Decimal):
         return v
     abort(400, f"{v!r} is not a decimal value.")
+
+
+@bp.route('/retransmission/create', methods=("GET", "POST"))
+def create_retransmission_form() -> ResponseReturnValue:
+    form = CreateRetransmission()
+
+    if form.is_submitted() and form.confirm.data:
+        create_retransmission(session, form.account.data, form.owner.data, form.iban.data, form.amount.data)
+    return render_template('generic_form.html',
+                               page_title="Retransmission",
+                               form=form)

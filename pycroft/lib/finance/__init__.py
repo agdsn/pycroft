@@ -21,7 +21,7 @@ from pycroft.model.finance import (
     Transaction,
     BankAccount,
     MT940Error,
-    AccountType,
+    AccountType
 )
 from pycroft.model.user import User
 from .matching import match_activities

@@ -241,3 +241,15 @@ class FixMT940Form(Form):
 class ConfirmPaymentReminderMail(Form):
     confirm = BooleanField("E-Mail an alle Mitglieder mit negativem Guthaben versenden",
                            default=False, validators=[DataRequired()])
+
+class CreateRetransmission(Form):
+    owner = TextField("Kontoinhaber", validators=[DataRequired()])
+    iban = TextField("IBAN", validators=[DataRequired()])
+    bic = TextField("BIC", validators=[DataRequired()])
+    amount = MoneyField("Wert", validators=[DataRequired(message=gettext("Invalid value."))])
+    account = TypeaheadField("Gegenkonto", render_kw={
+        'data_toggle': 'account-typeahead',
+        'data-target': 'account_id'
+    })
+    account_id = HiddenField(validators=[DataRequired()])
+
