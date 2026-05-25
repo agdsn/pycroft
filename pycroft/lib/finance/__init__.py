@@ -21,7 +21,7 @@ from pycroft.model.finance import (
     Transaction,
     BankAccount,
     MT940Error,
-    AccountType
+    AccountType, Retransmission
 )
 from pycroft.model.user import User
 from .matching import match_activities
@@ -140,6 +140,9 @@ def get_accounts_by_type(
 def get_all_bank_accounts(session: Session) -> list[BankAccount]:
     return BankAccount.q.all()
 
+
+def get_all_retransmissions(session: Session) -> list[Retransmission]:
+    return Retransmission.q.all()
 
 def get_unassigned_bank_account_activities(
     session: Session,

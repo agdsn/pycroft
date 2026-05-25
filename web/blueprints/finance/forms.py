@@ -243,13 +243,16 @@ class ConfirmPaymentReminderMail(Form):
                            default=False, validators=[DataRequired()])
 
 class CreateRetransmission(Form):
-    owner = TextField("Kontoinhaber", validators=[DataRequired()])
-    iban = TextField("IBAN", validators=[DataRequired()])
-    bic = TextField("BIC", validators=[DataRequired()])
-    amount = MoneyField("Wert", validators=[DataRequired(message=gettext("Invalid value."))])
     account = TypeaheadField("Gegenkonto", render_kw={
         'data_toggle': 'account-typeahead',
         'data-target': 'account_id'
     })
     account_id = HiddenField(validators=[DataRequired()])
+    owner = TextField("Kontoinhaber", validators=[DataRequired()])
+    iban = TextField("IBAN", validators=[DataRequired()])
+    bic = TextField("BIC", validators=[DataRequired()])
+    bis = DateField(validators=[], default=datetime.date.today())
 
+    def validate_future_date(form, field):
+        if field.data < datetime.date.today():
+            raise ValidationError('The date must be in the future.')

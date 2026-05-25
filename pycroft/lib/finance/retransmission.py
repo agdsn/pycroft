@@ -4,18 +4,17 @@
 
 from sqlalchemy.orm import Session
 
+from pycroft.helpers import date
 from pycroft.lib.finance import estimate_balance
-from pycroft.model.base import IntegerIdModel
 from pycroft.model.finance import Retransmission, RetransmissionStateEnum
 from pycroft.model.user import User
-from tests.lib.infrastructure.conftest import switch
 
 
-def create_retransmission(session: Session, account: User, owner: str, iban: str, bic: str) -> Retransmission:
-    amount = estimate_balance(session, account, )
-    retransmission = Retransmission(account_id=account.id, owner=owner, iban=iban, bic=bic, amount=account.balance)
+def create_retransmission(session: Session, account: User, owner: str, iban: str, bic: str, bis: date) -> Retransmission:
+    amount = estimate_balance(session, account, bis)
+    retransmission = Retransmission(account_id=account.id, owner=owner, iban=iban, bic=bic, amount=amount, state=RetransmissionStateEnum.pending)
     session.add(retransmission)
-
+    session.commit()
     return retransmission
 
 def approve_retransmission(session: Session, retransmission: Retransmission, account: User) -> Retransmission:
@@ -29,8 +28,7 @@ def approve_retransmission(session: Session, retransmission: Retransmission, acc
             retransmission.state = RetransmissionStateEnum.done
         case _:
             raise ValueError
-    session.add(retransmission)
-
+    session.commit()
     return retransmission
 
 def decline_retransmission(session: Session, retransmission: Retransmission, account: User, reson: str) -> Retransmission:
@@ -47,5 +45,6 @@ def decline_retransmission(session: Session, retransmission: Retransmission, acc
 
     retransmission.reason = reson
     session.add(retransmission)
+    session.commit()
 
     return retransmission

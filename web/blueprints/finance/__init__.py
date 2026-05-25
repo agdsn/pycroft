@@ -84,15 +84,15 @@ from pycroft.lib.finance import (
     get_accounts_by_type,
     get_last_import_date,
     get_last_membership_fee,
-    generate_transfer_sepaxml,
+    generate_transfer_sepaxml, get_all_retransmissions,
 )
 from pycroft.lib.finance.fints import get_fints_transactions, get_fints_client
 from pycroft.lib.finance.matching import UserMatching, AccountMatching
-from pycroft.lib.finance.retransmission import create_retransmission
+from pycroft.lib.finance.retransmission import create_retransmission, approve_retransmission
 from pycroft.lib.mail import MemberNegativeBalance
 from pycroft.lib.user import encode_type2_user_id, user_send_mails
 from pycroft.model.base import ModelBase
-from pycroft.model.finance import Account, Transaction
+from pycroft.model.finance import Account, Transaction, Retransmission
 from pycroft.model.finance import (
     BankAccount, BankAccountActivity, Split, MembershipFee, MT940Error)
 from pycroft.model.session import session, utcnow
@@ -135,7 +135,7 @@ from web.blueprints.finance.tables import (
     UsersDueRow,
     ColoredColResponse,
     MembershipFeeRow,
-    FinanceRow,
+    FinanceRow, RetransmissionTable, RetransmissionRow,
 )
 from web.blueprints.helpers.api import json_agg_core
 from web.blueprints.helpers.exception import abort_on_error
@@ -1877,13 +1877,86 @@ def _ensure_decimal(v: t.Any) -> Decimal:
         return v
     abort(400, f"{v!r} is not a decimal value.")
 
+@bp.route('/retransmission/list/json')
+def retransmission_list_json() -> ResponseReturnValue:
+    def actions(retransmission: Retransmission) -> list[BtnColResponse]:
+        return [
+            BtnColResponse(
+                href=url_for(".approve_retransmission_action", retransmission_id=retransmission.id),
+                title="",
+                btn_class="btn-primary btn-sm",
+                icon="fa-eye",
+            ),
+            BtnColResponse(
+                href=url_for(".approve_retransmission_action", retransmission_id=retransmission.id),
+                title="",
+                btn_class="btn-primary btn-sm",
+                icon="fa-file-import",
+            ),
+        ]
+
+    return TableResponse[RetransmissionRow](
+        items=[
+            RetransmissionRow(
+                user =
+            LinkColResponse(
+                href=url_for("user.user_show", user_id=retransmission.account_id),
+                title="{} ({})".format(
+                    retransmission.account.name,
+                    encode_type2_user_id(retransmission.account_id),
+                ),
+                new_tab=True,
+            ),
+                amount=retransmission.amount,
+                state=retransmission.state,
+                created_at=str(retransmission.created_at),
+                fix=actions(retransmission),
+            )
+            for retransmission in get_all_retransmissions(session)
+        ]
+    ).model_dump()
+
+@bp.route("/retransmission", methods=["GET", "POST"])
+@access.require("finance_change")
+def retransmissions() -> ResponseReturnValue:
+    table = RetransmissionTable(data_url=url_for(".retransmission_list_json"))
+    return render_template('finance/retransmission.html', table=table)
+
+
+@bp.route("/retranmission/<int:retransmission_id>", methods=["GET"])
+@access.require("finance_change")
+def approve_retransmission_action(retransmission_id: int):
+    retrans = _get_or_404(session, Retransmission, retransmission_id)
+
+    approve_retransmission(session, retrans, current_user)
+    return redirect(url_for(".retransmissions"))
+
 
 @bp.route('/retransmission/create', methods=("GET", "POST"))
 def create_retransmission_form() -> ResponseReturnValue:
     form = CreateRetransmission()
 
-    if form.is_submitted() and form.confirm.data:
-        create_retransmission(session, form.account.data, form.owner.data, form.iban.data, form.amount.data)
+    if form.validate_on_submit():
+        account = session.get(Account, form.account_id.data)
+        logging.error(f"err {account.balance}")
+        if not account:
+            flash(
+                f"Unable to find user!!!"
+                "vor dem Import manuell korrigiert werden",
+                "error",
+            )
+        else:
+            retransmission = create_retransmission(session, account.user, form.owner.data, form.iban.data, form.bic.data, form.bis.data)
+            flash(
+                f"Retransmission {retransmission}"
+                "vor dem Import manuell korrigiert werden",
+                "error",
+            )
+    form_args = {
+        "form": form,
+    }
+
     return render_template('generic_form.html',
                                page_title="Retransmission",
+                               form_args=form_args,
                                form=form)

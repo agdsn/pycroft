@@ -7,12 +7,15 @@ pycroft.model.finance
 """
 from __future__ import annotations
 import datetime
+import enum
 import typing as t
 from datetime import timedelta, date
 from decimal import Decimal
+
+import sqlalchemy
 from math import fabs
 
-from sqlalchemy import ForeignKey, event, func, select, Enum, ColumnElement, Select
+from sqlalchemy import ForeignKey, event, func, select, Enum, ColumnElement, Select, Date
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship, object_session, Mapped, mapped_column
 from sqlalchemy.schema import CheckConstraint, ForeignKeyConstraint, UniqueConstraint
@@ -436,7 +439,7 @@ class BankAccountActivity(IntegerIdModel):
         UniqueConstraint(transaction_id, account_id),
     )
 
-class RetransmissionStateEnum(SQLAlchemyEnum):
+class RetransmissionStateEnum(enum.Enum):
     pending = 'pending'
     processing = 'processing'
     done = 'done'
@@ -448,25 +451,35 @@ class Retransmission(IntegerIdModel):
     amount: Mapped[int] = mapped_column(Money, nullable=False)
     iban: Mapped[str] = mapped_column(String(34), nullable=False)
     bic: Mapped[str] = mapped_column(String(11), nullable=False)
-    state = mapped_column(RetransmissionStateEnum, default=RetransmissionStateEnum.pending, nullable=False)
+    state = mapped_column(
+    sqlalchemy.Enum(
+        RetransmissionStateEnum,
+        name="retransmission_state_enum"
+    ),
+    default=RetransmissionStateEnum.pending,
+    nullable=False,
+)
+    created_at: Mapped[date] = mapped_column(Date, default=date.today())
 
     account_id: Mapped[int] = mapped_column(
         ForeignKey(Account.id, ondelete="CASCADE"),
         index=True,
     )
-    account: Mapped[Account] = relationship(back_populates="retransmission")
+    account: Mapped[Account] = relationship("Account", foreign_keys=[account_id])
 
     ledger_1_id: Mapped[int] = mapped_column(
         ForeignKey(Account.id, ondelete="CASCADE"),
         index=True,
+        nullable=True
     )
-    ledger_1: Mapped[Account] = relationship(back_populates="retransmission")
+    ledger_1: Mapped[Account| None] = relationship("Account", foreign_keys=[ledger_1_id])
 
     ledger_2_id: Mapped[int] = mapped_column(
         ForeignKey(Account.id, ondelete="CASCADE"),
         index=True,
+        nullable = True
     )
-    ledger_2: Mapped[Account] = relationship(back_populates="retransmission")
+    ledger_2: Mapped[Account| None] = relationship("Account", foreign_keys=[ledger_2_id])
 
     reason = mapped_column(String(256))
 

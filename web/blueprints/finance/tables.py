@@ -347,3 +347,18 @@ class ImportErrorRow(BaseModel):
     name: str
     imported_at: str
     fix: BtnColResponse
+
+class RetransmissionTable(BootstrapTable):
+    """A table for displaying buggy mt940 imports"""
+    user = LinkColumn("User")
+    amount = Column("Amount")
+    created_at = Column("Importiert am")
+    state = Column("State")
+    fix = MultiBtnColumn("Approve")
+
+class RetransmissionRow(BaseModel):
+    user: LinkColResponse
+    amount: float
+    state: str
+    created_at: str
+    fix: list[BtnColResponse]
