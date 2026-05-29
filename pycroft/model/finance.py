@@ -461,25 +461,25 @@ class Retransmission(IntegerIdModel):
 )
     created_at: Mapped[date] = mapped_column(Date, default=date.today())
 
-    account_id: Mapped[int] = mapped_column(
-        ForeignKey(Account.id, ondelete="CASCADE"),
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("user.id", ondelete="CASCADE"),
         index=True,
     )
-    account: Mapped[Account] = relationship("Account", foreign_keys=[account_id])
+    user: Mapped[User] = relationship("User", foreign_keys=[user_id])
 
     ledger_1_id: Mapped[int] = mapped_column(
-        ForeignKey(Account.id, ondelete="CASCADE"),
+        ForeignKey("user.id", ondelete="CASCADE"),
         index=True,
         nullable=True
     )
-    ledger_1: Mapped[Account| None] = relationship("Account", foreign_keys=[ledger_1_id])
+    ledger_1: Mapped[User| None] = relationship("User", foreign_keys=[ledger_1_id])
 
     ledger_2_id: Mapped[int] = mapped_column(
-        ForeignKey(Account.id, ondelete="CASCADE"),
+        ForeignKey("user.id", ondelete="CASCADE"),
         index=True,
         nullable = True
     )
-    ledger_2: Mapped[Account| None] = relationship("Account", foreign_keys=[ledger_2_id])
+    ledger_2: Mapped[User| None] = relationship("User", foreign_keys=[ledger_2_id])
 
     reason = mapped_column(String(256))
 

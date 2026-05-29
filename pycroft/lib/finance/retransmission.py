@@ -10,9 +10,9 @@ from pycroft.model.finance import Retransmission, RetransmissionStateEnum
 from pycroft.model.user import User
 
 
-def create_retransmission(session: Session, account: User, owner: str, iban: str, bic: str, bis: date) -> Retransmission:
-    amount = estimate_balance(session, account, bis)
-    retransmission = Retransmission(account_id=account.id, owner=owner, iban=iban, bic=bic, amount=amount, state=RetransmissionStateEnum.pending)
+def create_retransmission(session: Session, user: User, owner: str, iban: str, bic: str, bis: date) -> Retransmission:
+    amount = estimate_balance(session, user, bis)
+    retransmission = Retransmission(user_id=user.id, owner=owner, iban=iban, bic=bic, amount=amount, state=RetransmissionStateEnum.pending)
     session.add(retransmission)
     session.commit()
     return retransmission
@@ -20,7 +20,7 @@ def create_retransmission(session: Session, account: User, owner: str, iban: str
 def approve_retransmission(session: Session, retransmission: Retransmission, account: User) -> Retransmission:
     match retransmission.state:
         case RetransmissionStateEnum.pending:
-            retransmission.ledger_1.id = account.id
+            retransmission.ledger_1_id = account.id
             retransmission.state = RetransmissionStateEnum.processing
 
         case RetransmissionStateEnum.processing:
@@ -34,7 +34,7 @@ def approve_retransmission(session: Session, retransmission: Retransmission, acc
 def decline_retransmission(session: Session, retransmission: Retransmission, account: User, reson: str) -> Retransmission:
     match retransmission.state:
         case RetransmissionStateEnum.pending:
-            retransmission.ledger_1.id = account.id
+            retransmission.ledger_1_id = account.id
             retransmission.state = RetransmissionStateEnum.declined
 
         case RetransmissionStateEnum.processing:

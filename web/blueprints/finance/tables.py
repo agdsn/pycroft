@@ -354,7 +354,7 @@ class RetransmissionTable(BootstrapTable):
     amount = Column("Amount")
     created_at = Column("Importiert am")
     state = Column("State")
-    fix = MultiBtnColumn("Approve")
+    fix = MultiBtnColumn("Action")
 
 class RetransmissionRow(BaseModel):
     user: LinkColResponse

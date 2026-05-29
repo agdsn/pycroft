@@ -256,3 +256,7 @@ class CreateRetransmission(Form):
     def validate_future_date(form, field):
         if field.data < datetime.date.today():
             raise ValidationError('The date must be in the future.')
+
+class DeclineRetransmission(Form):
+    reason = TextField("Grund", validators=[DataRequired()])
+    inform_user = BooleanField("Nutzer Informieren")

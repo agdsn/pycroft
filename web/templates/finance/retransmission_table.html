@@ -6,7 +6,11 @@
 {% extends "layout.html" %}
 
 {% block content %}
-    <h2>Retransmission</h2>
 
+
+    <a href="{{ url_for(".create_retransmission_form") }}"><i class="fa-solid fa-plus"></i> Neuen Rückerstattungsantrag erstellen</a>
+    <h2 class="page-header">Liste</h2>
+
+    {{ table.render(table_id='retransmission') }}
 
 {% endblock %}
