@@ -18,6 +18,7 @@ from webargs.flaskparser import use_kwargs
 from pycroft.helpers import utc
 from pycroft.helpers.i18n import Message
 from pycroft.lib.finance import estimate_balance, get_last_import_date
+from pycroft.lib.finance.retransmission import create_retransmission
 from pycroft.lib.mpsk_client import mpsk_edit, mpsk_client_create, mpsk_delete
 from pycroft.lib.host import change_mac, host_create, interface_create, host_edit
 from pycroft.lib.net import SubnetFullException
@@ -991,3 +992,52 @@ class UserActiveResource(Resource):
 
 
 api.add_resource(UserActiveResource, "/user/active")
+
+
+class Retransmission(Resource):
+    @use_kwargs({
+        "uid": fields.Int(required=True),
+    },
+        location="form",
+    )
+    def get(self, uid: int):
+        user = session.session.get(User, uid)
+
+        if not user:
+            abort(404, message="No proper name was provided.")
+        end_task = membership_ending_task(user).due
+
+        if estimate_balance(session, user, end_task) <= 0:
+             return jsonify({
+                 "retransmission": False
+             })
+
+        return jsonify({
+            "retransmission": True
+        })
+
+    @use_kwargs({
+        "uid": fields.Int(required=True),
+        "iban": fields.Str(require=True),
+        "bic": fields.Str(require=True),
+        "owner": fields.Str(require=True),
+        },
+        location="form",
+    )
+    def post(self, uid: int, iban: str, bic: str, owner: str) -> ResponseReturnValue:
+        user = session.session.get(User, uid)
+
+        if not user:
+            abort(404, message="No proper name was provided.")
+        end_task = membership_ending_task(user).due
+
+        try:
+            retrans = create_retransmission(session, user, owner, iban, bic, until=end_task)
+        except ValueError:
+            abort(416, message="Nothing to retransmitt")
+
+        return jsonify({
+            "amount": retrans.amount
+        })
+
+api.add_resource(Retransmission, "/user/retransmission")
