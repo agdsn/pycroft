@@ -893,9 +893,6 @@ def _create_field_list_and_matched_activities_dict(
             prefix: entity,  # type: ignore[misc]
             'amount': activity.amount
         }
-        # TODO: Should be removed after 01.10.26
-        if prefix == "user" and activity.bank_account_id == 1:
-            continue
         field_list.append((str(activity.id), BooleanField(str(activity.id), default=True)))
 
     if prefix == "user":
