@@ -1553,7 +1553,7 @@ dependencies = [
     { name = "webargs" },
     { name = "wrapt" },
     { name = "wtforms" },
-    { name = "wtforms-widgets" },
+    { name = "wtforms-widgets", extra = ["sql"] },
 ]
 
 [package.dev-dependencies]
@@ -1582,6 +1582,7 @@ dev = [
     { name = "types-jsonschema" },
     { name = "types-netaddr" },
     { name = "types-passlib" },
+    { name = "types-wtforms" },
     { name = "watchdog" },
 ]
 prod = [
@@ -1630,7 +1631,7 @@ requires-dist = [
     { name = "webargs", specifier = "~=8.3.0" },
     { name = "wrapt", specifier = "~=1.16.0" },
     { name = "wtforms", specifier = "~=2.3.3" },
-    { name = "wtforms-widgets", editable = "deps/wtforms-widgets" },
+    { name = "wtforms-widgets", extras = ["sql"], editable = "deps/wtforms-widgets" },
 ]
 
 [package.metadata.requires-dev]
@@ -1659,6 +1660,7 @@ dev = [
     { name = "types-jsonschema", specifier = "~=4.3.0" },
     { name = "types-netaddr", specifier = "~=1.3.0" },
     { name = "types-passlib", specifier = "~=1.7.7" },
+    { name = "types-wtforms", specifier = ">=3.2.1.20250809" },
     { name = "watchdog", specifier = "~=2.3.1" },
 ]
 prod = [
@@ -2363,6 +2365,18 @@ wheels = [
 ]
 
 [[package]]
+name = "types-wtforms"
+version = "3.2.1.20250809"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "markupsafe" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/2e/f7/72ca8564a59f118dd5ce5b6afcdbb38c297d04950dcaf49873dae8c6ff45/types_wtforms-3.2.1.20250809.tar.gz", hash = "sha256:9108399333be3bde66179f69a610a5d05c25485024f698d5adc3f6a9df20d029", size = 17194, upload-time = "2025-08-09T03:17:24.73Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/fe/5a/ecedecb8a1ccff7ea936fb77a359f8295da36fb7e7985cb4fc147110a091/types_wtforms-3.2.1.20250809-py3-none-any.whl", hash = "sha256:d254cf027c6725e21ad50044da692d57586dd29f38abd3a6b4ec10993f6741cc", size = 24294, upload-time = "2025-08-09T03:17:24.008Z" },
+]
+
+[[package]]
 name = "typing-extensions"
 version = "4.15.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2517,13 +2531,16 @@ wheels = [
 
 [[package]]
 name = "wtforms-widgets"
-version = "1.0.8"
 source = { editable = "deps/wtforms-widgets" }
 dependencies = [
     { name = "flask" },
     { name = "flask-wtf" },
     { name = "markupsafe" },
     { name = "wtforms" },
+]
+
+[package.optional-dependencies]
+sql = [
     { name = "wtforms-sqlalchemy" },
 ]
 
@@ -2533,8 +2550,9 @@ requires-dist = [
     { name = "flask-wtf" },
     { name = "markupsafe" },
     { name = "wtforms" },
-    { name = "wtforms-sqlalchemy" },
+    { name = "wtforms-sqlalchemy", marker = "extra == 'sql'" },
 ]
+provides-extras = ["sql"]
 
 [[package]]
 name = "xmlschema"

@@ -62,7 +62,7 @@ dependencies = [
     "webargs ~= 8.3.0",
     "wrapt ~= 1.16.0",
     "WTForms ~= 2.3.3",
-    "wtforms-widgets",
+    "wtforms-widgets[sql]",
     "sepaxml ~= 2.6.2",
 ]
 
@@ -101,6 +101,7 @@ dev = [
     "types-passlib ~= 1.7.7",
     "watchdog ~= 2.3.1",
     "sepaxml ~= 2.6.2",
+    "types-wtforms>=3.2.1.20250809",
 ]
 
 [project.scripts]
