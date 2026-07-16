@@ -79,6 +79,7 @@ class PycroftFlask(Flask):
                 "OIDC_SCOPES",
                 "OIDC_INTROSPECTION_AUTH_METHOD",
                 "OIDC_ENABLED",
+                "OIDC_OVERWRITE_REDIRECT_URI",
             ]
         )
 

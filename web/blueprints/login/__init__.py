@@ -12,8 +12,9 @@
 
 import typing as t
 
-from flask import Blueprint, render_template, flash, redirect, url_for, request
-from flask import session as flask_session
+from authlib.integrations.base_client import OAuthError
+from authlib.oauth2.rfc6749 import OAuth2Token
+from flask import Blueprint, render_template, flash, redirect, url_for, request, g
 from flask.typing import ResponseValue
 from flask_login import (
     AnonymousUserMixin, LoginManager, current_user, login_required, login_user,
@@ -22,7 +23,6 @@ from flask_oidc import OpenIDConnect
 
 from pycroft.model.session import session
 from pycroft.model.user import User
-from web.blueprints.login.forms import LoginForm
 
 bp = Blueprint('login', __name__, )
 
@@ -50,30 +50,30 @@ def login() -> ResponseValue:
     if current_user is not None and current_user.is_authenticated:
         flash(f'Sie sind bereits als "{current_user.name}" angemeldet!', "warning")
         return redirect(url_for('user.overview'))
-    form = LoginForm()
-    if form.validate_on_submit():
-        user = User.verify_and_get(form.login.data, form.password.data)
-        if user is not None:
-            login_user(user)
-            flash("Erfolgreich angemeldet.", "success")
-            return redirect(request.args.get("next") or url_for("user.overview"))
-        flash("Benutzername und/oder Passwort falsch", "error")
-    if oidc.user_loggedin:
-        info = flask_session["oidc_auth_profile"]
-        username = info.get("pycroft_login", info.get("preferred_username", None))
-        user = User.get(username, session)
-        if info is not None and username is not None and user is not None:
-            login_user(user)
-            flash("Erfolgreich angemeldet.", "success")
-            return redirect(request.args.get("next") or url_for("user.overview"))
-    return render_template("login/login.html", form=form, next=request.args.get("next"))
+    try:
+        token: OAuth2Token = g._oidc_auth.authorize_access_token()
+    except OAuthError:
+        return render_template("login/login.html")
+    profile = g._oidc_auth.userinfo(token=token)
+    username = profile.get("pycroft_login", profile.get("preferred_username", None))
+    groups = profile.get("groups", [])
+    user = User.get(username, session)
+    if (
+        profile is not None
+        and username is not None
+        and user is not None
+        and "mitgliederverwalter" in groups
+    ):
+        login_user(user)
+        flash("Erfolgreich angemeldet.", "success")
+        return redirect(request.args.get("next") or url_for("user.overview"))
+    flash("Anmeldung fehlgeschlagen.", "error")
+    return redirect(url_for("login.login"))
 
 
 @bp.route("/logout")
 @login_required
 def logout() -> ResponseValue:
-    if oidc.user_loggedin:
-        return redirect(url_for("oidc_auth.logout", next=url_for("login.logout")))
     logout_user()
     flash("Sie sind jetzt abgemeldet!", "info")
     return redirect(url_for(".login"))
