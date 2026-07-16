@@ -17,21 +17,5 @@
       <div class="row mt-3">
         {% include "finance/_import_preview.html" with context %}
       </div>
-
-      <div class="row mt-3">
-          <div class="col-12">
-              <h3 class="page-header">Fehlerhafter Import</h3>
-
-              <a class="btn btn-primary" href="{{ url_for('.bank_accounts_import_errors') }}">
-                  <span class="fa fa-times"></span>
-                  Fehlerhafter Import
-              </a>
-
-              <a class="btn btn-primary" href="{{ url_for('.bank_accounts_import_manual') }}">
-                  <span class="fa fa-download"></span>
-                  Manueller Datenimport
-              </a>
-          </div>
-      </div>
     </div>
 {% endblock %}
