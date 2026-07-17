@@ -14,7 +14,7 @@ import typing as t
 
 from authlib.integrations.base_client import OAuthError
 from authlib.oauth2.rfc6749 import OAuth2Token
-from flask import Blueprint, render_template, flash, redirect, url_for, request, g
+from flask import Blueprint, render_template, flash, redirect, url_for, request, g, current_app
 from flask.typing import ResponseValue
 from flask_login import (
     AnonymousUserMixin, LoginManager, current_user, login_required, login_user,
@@ -50,11 +50,14 @@ def login() -> ResponseValue:
     if current_user is not None and current_user.is_authenticated:
         flash(f'Sie sind bereits als "{current_user.name}" angemeldet!', "warning")
         return redirect(url_for('user.overview'))
-    try:
-        token: OAuth2Token = g._oidc_auth.authorize_access_token()
-    except OAuthError:
-        return render_template("login/login.html")
-    profile = g._oidc_auth.userinfo(token=token)
+    if not current_app.config["OIDC_ENABLED"]:
+        profile = current_app.config["OIDC_TESTING_PROFILE"]
+    else:
+        try:
+            token: OAuth2Token = g._oidc_auth.authorize_access_token()
+        except OAuthError:
+            return render_template("login/login.html")
+        profile = g._oidc_auth.userinfo(token=token)
     username = profile.get("pycroft_login", profile.get("preferred_username", None))
     groups = profile.get("groups", [])
     user = User.get(username, session)

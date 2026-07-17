@@ -35,7 +35,7 @@ class TestAnonymous:
         return Context(app.jinja_env, parent=None, name="pseudo", blocks={})
 
     def test_login_page_visible(self, client: TestClient):
-        client.assert_ok("login.login")
+        client.assert_response_code("login.login", 302)
 
     def test_static_content_can_be_fetched(
         self, client: TestClient, jinja_context: Context
@@ -56,8 +56,8 @@ class TestPermissionsAdmin:
     """Test permissions for admin usergroup.
     """
     @pytest.fixture(scope="class", autouse=True)
-    def admin_logged_in(self, admin: User, client: TestClient):
-        with login_context(client, admin.login, "password"):
+    def admin_logged_in(self, admin: User, client: TestClient, app: PycroftFlask):
+        with login_context(client, app, admin.login):
             yield
 
     def test_access_buildings(self, client: TestClient):
@@ -75,8 +75,9 @@ class TestPermissionsFinance:
         self,
         treasurer: User,
         client: TestClient,
+        app: PycroftFlask,
     ) -> None:
-        with login_context(client, treasurer.login, "password"):
+        with login_context(client, app, treasurer.login):
             yield
 
     def test_access_buildings(self, client: TestClient):
@@ -91,7 +92,7 @@ class TestPermissionsUser:
     """
     @pytest.fixture(scope="class", autouse=True)
     def member_logged_in(
-        self, class_session: Session, config: Config, client: TestClient
+        self, class_session: Session, config: Config, client: TestClient, app: PycroftFlask
     ):
         UserFactory.create(
             login="member",
@@ -100,7 +101,7 @@ class TestPermissionsUser:
             membership__includes_today=True,
         )
         class_session.flush()
-        with login_context(client, "member", "password"):
+        with login_context(client, app, "member"):
             yield
 
     def test_access_user(self, client: TestClient, blueprint_urls: BlueprintUrls):

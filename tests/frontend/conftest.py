@@ -115,14 +115,14 @@ def treasurer(module_session: Session, admin_group: PropertyGroup) -> User:
 
 
 @pytest.fixture(scope="module")
-def admin_logged_in(admin: User, module_test_client: TestClient) -> None:
+def admin_logged_in(admin: User, module_test_client: TestClient, app: PycroftFlask) -> None:
     """A module-scoped convenience fixture to log in an admin"""
-    with login_context(module_test_client, admin.login, "password"):
+    with login_context(module_test_client, app, admin.login):
         yield
 
 
 @pytest.fixture(scope="module")
-def treasurer_logged_in(treasurer: User, module_test_client: TestClient) -> None:
+def treasurer_logged_in(treasurer: User, module_test_client: TestClient, app: PycroftFlask) -> None:
     """A module-scoped convenience fixture to log in an admin"""
-    with login_context(module_test_client, treasurer.login, "password"):
+    with login_context(module_test_client, app, treasurer.login):
         yield

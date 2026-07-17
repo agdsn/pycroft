@@ -51,8 +51,8 @@ class TestAppWithoutHadesLogs:
         return class_test_client
 
     @pytest.fixture(scope="class", autouse=True)
-    def admin_logged_in(self, admin: User, client: TestClient):
-        with login_context(client, admin.login, "password"):
+    def admin_logged_in(self, admin: User, client: TestClient, app: PycroftFlask):
+        with login_context(client, app, admin.login):
             yield
 
     @pytest.fixture(scope="class")
@@ -92,8 +92,8 @@ class TestAppWithoutHadesLogs:
 @pytest.mark.usefixtures("admin")
 class TestRoomAndUserLogDisplay:
     @pytest.fixture(scope="class", autouse=True)
-    def admin_logged_in(self, admin, class_test_client: TestClient):
-        with login_context(class_test_client, admin.login, "password"):
+    def admin_logged_in(self, admin, class_test_client: TestClient, app: PycroftFlask):
+        with login_context(class_test_client, app, admin.login):
             yield
 
     @pytest.fixture(scope="class")
@@ -166,8 +166,8 @@ class TestDummyHadesLogs:
         return app
 
     @pytest.fixture(scope="class", autouse=True)
-    def admin_logged_in(self, admin: User, class_test_client: TestClient):
-        with login_context(class_test_client, admin.login, "password"):
+    def admin_logged_in(self, admin: User, class_test_client: TestClient, app: PycroftFlask):
+        with login_context(class_test_client, app, admin.login):
             yield
 
     @pytest.fixture(scope="class")
