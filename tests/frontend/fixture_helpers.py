@@ -20,8 +20,11 @@ from .assertions import TestClient
 @contextlib.contextmanager
 def login_context(test_client: TestClient, app, login: str):
     app.config["OIDC_ENABLED"] = False
-    app.config["OIDC_TESTING_PROFILE"] = {"email": "email", "preferred_username": login,
-                                          "groups": ["mitgliederverwalter"]}
+    app.config["OIDC_TESTING_PROFILE"] = {
+        "email": "email",
+        "preferred_username": login,
+        "groups": ["mitgliederverwalter"],
+    }
     test_client.get(url_for("login.login"))
     yield
     test_client.get("/logout")
