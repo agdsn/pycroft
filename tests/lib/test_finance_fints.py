@@ -14,7 +14,6 @@ from fints.message import FinTSMessage, FinTSInstituteMessage
 from fints.models import SEPAAccount
 from fints.utils import Password
 
-from pycroft.external_services.fints import FinTS3Client
 from pycroft.lib.finance.fints import get_fints_transactions
 from tests.factories.finance import BankAccountFactory as BankAccountFactory_
 
@@ -27,13 +26,12 @@ def test_fints_connection(default_fints_client_args, default_transaction_args):
         server=bank_account.fints_endpoint,
     )
 
-    transactions, errors = get_fints_transactions(
+    transactions = get_fints_transactions(
         **default_transaction_args,
         bank_account=bank_account,
         fints_client=fints_client,
     )
     assert transactions == []
-    assert errors == []
 
 
 def test_transactions_unknown_iban(default_fints_client_args, default_transaction_args):
@@ -80,7 +78,7 @@ class StubHTTPSConnection(FinTSHTTPSConnection):
         return FinTSInstituteMessage(segments="Test!")
 
 
-class StubFintsClient(FinTS3Client):
+class StubFintsClient(FinTS3PinTanClient):
     @t.override
     def __init__(self, bank_identifier, user_id, pin, server, *args, **kwargs):
         self.pin = Password(pin) if pin is not None else pin
