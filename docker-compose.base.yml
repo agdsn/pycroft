@@ -97,3 +97,12 @@ services:
     build:
       context: ./docker/
       dockerfile: mail.Dockerfile
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    environment:
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
+      - KC_HEALTH_ENABLED=true
+    volumes:
+      - ./docker/keycloak/test-realm.json:/opt/keycloak/data/import/realm-config.json
+    command: [ "start-dev", "--import-realm" ]

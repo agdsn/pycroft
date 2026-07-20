@@ -138,6 +138,16 @@ services:
       dev:
         aliases:
           - mail
+  dev-keycloak:
+    extends:
+      file: docker-compose.base.yml
+      service: keycloak
+    ports:
+      - "8080:8080"
+    networks:
+      dev:
+        aliases:
+          - keycloak
 
 volumes:
   home:

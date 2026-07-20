@@ -8,14 +8,25 @@ services:
     extends:
       file: docker-compose.base.yml
       service: dev
+    environment:
+      OIDC_CLIENT_SECRETS: 'web/test_client_secrets.json'
     command: ["/bin/sleep", "10"]
     depends_on:
       - test-db
       - test-ldap
       - test-mq
       - test-dummy-worker
+      - test-keycloak
     networks:
       - test
+  test-keycloak:
+    extends:
+      file: docker-compose.base.yml
+      service: keycloak
+    networks:
+      test:
+        aliases:
+          - keycloak
   test-db:
     extends:
       file: docker-compose.base.yml
