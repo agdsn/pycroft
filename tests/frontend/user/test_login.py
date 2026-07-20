@@ -44,7 +44,7 @@ class TestUserOidcLogin:
 
     def test_callback_flow(self, client: TestClient, app: PycroftFlask):
         app.config["OIDC_ENABLED"] = True
-        response_redirect_to_oidc = client.get(url_for("oidc_auth.login"))
+        response_redirect_to_oidc = client.get(url_for("login.openid_connect"))
         assert response_redirect_to_oidc.status_code == 302
         location = response_redirect_to_oidc.location
 

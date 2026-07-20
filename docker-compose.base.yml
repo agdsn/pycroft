@@ -47,12 +47,6 @@ services:
       # alternative: `scripts.server_run:prepare_server(echo=True)`
       FLASK_APP: scripts.server_run:prepare_server
       FLASK_ENV: development
-      # OIDC Authentication
-      OIDC_CLIENT_SECRETS: 'web/client_secrets.json'
-      OIDC_SCOPES: 'openid email profile groups'
-      OIDC_INTROSPECTION_AUTH_METHOD: 'client_secret_post'
-      OIDC_ENABLED: true
-      OIDC_OVERWRITE_REDIRECT_URI: 'http://localhost:5000/login'
   dev:
     extends: dev-base
     volumes:
@@ -103,6 +97,12 @@ services:
       - KC_BOOTSTRAP_ADMIN_USERNAME=admin
       - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
       - KC_HEALTH_ENABLED=true
+    healthcheck:
+      test: [ "CMD-SHELL", "exec 3<>/dev/tcp/localhost/9000 && echo -e 'GET /health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3 && cat <&3 | grep -q '200 OK'" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     volumes:
       - ./docker/keycloak/test-realm.json:/opt/keycloak/data/import/realm-config.json
     command: [ "start-dev", "--import-realm" ]

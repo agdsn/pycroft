@@ -42,7 +42,7 @@ from .blueprints import (
     mpskclient,
 )
 
-from .blueprints.login import oidc, login_manager
+from .blueprints.login import oauth, login_manager
 from .commands import register_commands
 from .templates import page_resources
 
@@ -75,11 +75,14 @@ class PycroftFlask(Flask):
                 "HADES_RESULT_BACKEND_URI",
                 "HADES_TIMEOUT",
                 "HADES_ROUTING_KEY",
-                "OIDC_CLIENT_SECRETS",
-                "OIDC_SCOPES",
-                "OIDC_INTROSPECTION_AUTH_METHOD",
                 "OIDC_ENABLED",
-                "OIDC_OVERWRITE_REDIRECT_URI",
+                "OIDC_TESTING_PROFILE",
+                "OIDC_REQUIRED_GROUP",
+                "OIDC_REDIRECT_URI",
+                "OIDC_CLIENT_ID",
+                "OIDC_CLIENT_ISSUER_URI",
+                "OIDC_CLIENT_SECRET",
+                "OIDC_CLIENT_SCOPES",
             ]
         )
 
@@ -103,9 +106,37 @@ def make_app(hades_logs: bool = True) -> PycroftFlask:
     """Create and configure the main? Flask app object"""
     app = PycroftFlask(__name__)
 
+    # initialize openid connect client
+    app.config.setdefault("OIDC_ENABLED", True)
+    app.config.setdefault(
+        "OIDC_TESTING_PROFILE",
+        {
+            "email": "email",
+            "preferred_username": "agdsn",
+            "groups": ["mitgliederverwalter"],
+        },
+    )
+    app.config.setdefault("OIDC_REQUIRED_GROUP", "mitgliederverwalter")
+    app.config.setdefault("OIDC_REDIRECT_URI", None)
+    app.config.setdefault("OIDC_CLIENT_ID", None)
+    app.config.setdefault("OIDC_CLIENT_ISSUER_URI", None)
+    app.config.setdefault("OIDC_CLIENT_SECRET", None)
+    app.config.setdefault("OIDC_CLIENT_SCOPES", "openid email profile groups")
+    oauth.init_app(app)
+    provider_url = app.config["OIDC_CLIENT_ISSUER_URI"].rstrip("/")
+    oauth.register(
+        name="oidc",
+        client_id=app.config["OIDC_CLIENT_ID"],
+        client_secret=app.config["OIDC_CLIENT_SECRET"],
+        server_metadata_url=f"{provider_url}/.well-known/openid-configuration",
+        client_kwargs={
+            "scope": app.config["OIDC_CLIENT_SCOPES"],
+            "code_challenge_method": "S256",  # Enables PKCE
+        },
+    )
+
     # initialization code
     login_manager.init_app(app)
-    oidc.init_app(app, prefix="/oidc")
     app.register_blueprint(user.bp, url_prefix="/user")
     app.register_blueprint(facilities.bp, url_prefix="/facilities")
     app.register_blueprint(infrastructure.bp, url_prefix="/infrastructure")
@@ -195,7 +226,6 @@ def make_app(hades_logs: bool = True) -> PycroftFlask:
             "login",
             "api",
             "health",
-            "oidc_auth",
             None,
         ):
             lm = t.cast(LoginManager, current_app.login_manager)  # type: ignore[attr-defined]
