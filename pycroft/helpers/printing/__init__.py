@@ -9,8 +9,9 @@ from io import BytesIO
 from os.path import dirname, join
 
 from reportlab.lib.colors import black
+from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import StyleSheet1, ParagraphStyle
+from reportlab.lib.styles import StyleSheet1, ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import cm
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Image, Table, Spacer
 from reportlab.platypus.flowables import HRFlowable, PageBreak
@@ -18,6 +19,21 @@ from reportlab.rl_config import defaultPageSize
 from reportlab.lib.enums import TA_JUSTIFY, TA_RIGHT, TA_CENTER
 from reportlab.graphics.barcode import qr
 from reportlab.graphics.shapes import Drawing
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.units import cm
+from reportlab.platypus import (
+    HRFlowable,
+    Image,
+    Paragraph,
+    SimpleDocTemplate,
+    Spacer,
+    Table,
+    TableStyle,
+)
+from reportlab.lib.enums import TA_CENTER, TA_RIGHT
+
 
 ASSETS_DIRECTORY = join(dirname(__file__), 'assets')
 ASSETS_LOGO_FILENAME = join(ASSETS_DIRECTORY, 'logo.png')
@@ -579,3 +595,398 @@ def generate_epc_qr_code(
         iban=bank.iban,
         amount=amount,
 	purpose=purpose)
+
+
+
+def _get_styles():
+    stylesheet = getSampleStyleSheet()
+
+    stylesheet.add(ParagraphStyle(
+        "RightText", parent=stylesheet["Normal"], alignment=TA_RIGHT
+    ))
+    stylesheet.add(ParagraphStyle(
+        "CenterText", parent=stylesheet["Normal"], alignment=TA_CENTER
+    ))
+    stylesheet.add(ParagraphStyle(
+        "JustifyText", parent=stylesheet["Normal"], alignment=4  # TA_JUSTIFY
+    ))
+    # BodyText already exists in the default stylesheet; override it in-place
+    stylesheet["BodyText"].spaceBefore = 6
+    stylesheet["BodyText"].spaceAfter = 6
+    stylesheet.add(ParagraphStyle(
+        "SectionHeading",
+        parent=stylesheet["Normal"],
+        fontSize=12,
+        fontName="Helvetica-Bold",
+        spaceBefore=10,
+        spaceAfter=4,
+    ))
+    stylesheet.add(ParagraphStyle(
+        "SmallRight",
+        parent=stylesheet["Normal"],
+        alignment=TA_RIGHT,
+        fontSize=8,
+        spaceBefore=10,
+        spaceAfter=0,
+    ))
+    return stylesheet
+
+
+# ---------------------------------------------------------------------------
+# Public function
+# ---------------------------------------------------------------------------
+
+def generate_demand_for_repayment(
+    user_name: str,
+    user_id: str,
+    amount: float,
+    member_iban: str,
+    member_bic: str,
+    member_name: str ,
+    date: datetime.date,
+    ledger_1: str,
+    ledger_2: str,
+    transactions: list[dict]
+) -> bytes:
+    name = user_name
+
+    buf = BytesIO()
+    pdf = SimpleDocTemplate(
+        buf,
+        pagesize=A4,
+        rightMargin=1.5 * cm,
+        leftMargin=1.5 * cm,
+        topMargin=0.5 * cm,
+        bottomMargin=0.5 * cm,
+    )
+    style = _get_styles()
+    story = []
+
+    im_logo = Image(ASSETS_LOGO_FILENAME, 3.472 * cm, 1 * cm)
+
+
+    shortinfo = Paragraph(name, style["RightText"])
+
+
+    header_data = [[im_logo, shortinfo]]
+    header = Table(
+        header_data,
+        colWidths=[3.972 * cm, 9.5 * cm, 4 * cm],
+        style=[("VALIGN", (0, 0), (-1, -1), "MIDDLE")],
+    )
+    story.append(header)
+
+    story.append(
+        HRFlowable(
+            width="100%",
+            thickness=1,
+            color=colors.black,
+            spaceBefore=0.0 * cm,
+            spaceAfter=0.5 * cm,
+        )
+    )
+
+    story.append(
+        Paragraph(
+            "<b>Antrag auf Erstattung</b>",
+            ParagraphStyle(
+                "Title",
+                parent=style["Normal"],
+                fontSize=16,
+                fontName="Helvetica-Bold",
+                spaceBefore=4,
+                spaceAfter=12,
+            ),
+        )
+    )
+
+
+    personal_data = (
+        [
+            ["Vollst. Name:", name],
+            ["Nutzer-ID:", user_id],
+        ]
+
+    )
+
+    personal_table = Table(
+        personal_data,
+        colWidths=[4 * cm, 10 * cm],
+        style=TableStyle(
+            [
+                ("LINEBELOW", (1, i), (1, i), 0.5, colors.black)
+                for i in range(len(personal_data))
+            ]
+            + [
+                ("TOPPADDING", (0, 0), (-1, -1), 6),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
+            ]
+        ),
+    )
+    story.append(personal_table)
+    story.append(Spacer(1, 0.5 * cm))
+
+    story.append(
+        Paragraph(
+            f"Hiermit beantrage ich bei der AG DSN die Rückerstattung ",
+            style["BodyText"],
+        )
+    )
+
+    story.append(
+        Paragraph(
+            f"Der entsprechende Betrag ist: <b>{amount:,.2f}\u202f€</b>",
+            style["BodyText"],
+        )
+    )
+    story.append(Spacer(1, 0.4 * cm))
+
+    story.append(
+        Paragraph(
+            "Die Rücküberweisung soll auf das folgende Konto erfolgen:",
+            style["BodyText"],
+        )
+    )
+
+    account_data = [
+        ["Empfänger:", member_name],
+        ["IBAN:", member_iban],
+        ["BIC:", member_bic],
+    ]
+    account_table = Table(
+        account_data,
+        colWidths=[4 * cm, 10 * cm],
+        style=TableStyle(
+            [
+                ("LINEBELOW", (1, i), (1, i), 0.5, colors.black)
+                for i in range(len(account_data))
+            ]
+            + [
+                ("TOPPADDING", (0, 0), (-1, -1), 6),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
+            ]
+        ),
+    )
+    story.append(account_table)
+    story.append(Spacer(1, 0.6 * cm))
+
+    sig_data = [["Datum, Unterschrift Mitglied:", f"{date}, {member_name}"]]
+    sig_table = Table(
+        sig_data,
+        colWidths=[7 * cm, pdf.width - 7 * cm],
+        style=TableStyle(
+            [
+                ("LINEBELOW", (1, 0), (1, 0), 1, colors.black),
+                ("TOPPADDING", (0, 0), (-1, -1), 20),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
+            ]
+        ),
+    )
+    story.append(sig_table)
+
+    # ------------------------------------------------------------------
+    # THICK RULE + "Nur von Administratoren" section
+    # ------------------------------------------------------------------
+    story.append(
+        HRFlowable(
+            width="100%",
+            thickness=3,
+            color=colors.black,
+            spaceBefore=0.6 * cm,
+            spaceAfter=0.4 * cm,
+        )
+    )
+
+    story.append(
+        Paragraph(
+            "<b>Nur von Administratoren auszufüllen:</b>",
+            style["SectionHeading"],
+        )
+    )
+
+    # Three audit/sign-off columns at the bottom
+    story.append(Spacer(1, 3.5 * cm))
+
+    footer_labels = [
+        "Prüfung Vorstand",
+        "Prüfung Vorstand",
+    ]
+    footer_data = [["", ""], footer_labels]
+    col_w = pdf.width / 2
+
+    footer_table = Table(
+        footer_data,
+        colWidths=[col_w] * 3,
+        rowHeights=[0.8 * cm, 0.5 * cm],
+        style=TableStyle(
+            [
+                # Top rule for each column (the "signature line")
+                ("LINEABOVE", (0, 0), (0, 0), 0.8, colors.black),
+                ("LINEABOVE", (1, 0), (1, 0), 0.8, colors.black),
+                ("LINEABOVE", (2, 0), (2, 0), 0.8, colors.black),
+                # Center the labels
+                ("ALIGN", (0, 1), (-1, 1), "CENTER"),
+                ("FONTSIZE", (0, 1), (-1, 1), 15),
+                ("TOPPADDING", (0, 0), (-1, -1), 2),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
+            ]
+        ),
+    )
+    story.append(footer_table)
+
+    footer_labels = [
+        ledger_1,
+        ledger_2,
+    ]
+    footer_data = [["", ""], footer_labels]
+    col_w = pdf.width / 2
+
+    footer_table = Table(
+        footer_data,
+        colWidths=[col_w] * 3,
+        rowHeights=[0.8 * cm, 0 * cm],
+        style=TableStyle(
+            [
+                # Center the labels
+                ("ALIGN", (0, 1), (-1, 1), "CENTER"),
+                ("FONTSIZE", (0, 1), (-1, 1), 9),
+                ("TOPPADDING", (0, 0), (-1, -1), 2),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
+            ]
+        ),
+    )
+    story.append(footer_table)
+
+    # ------------------------------------------------------------------
+    # GENERATED DATE
+    # ------------------------------------------------------------------
+    story.append(
+        Paragraph(
+            f"<i>Erstellt am {datetime.date.today()}</i>",
+            style["SmallRight"],
+        )
+    )
+    if transactions:
+        from reportlab.platypus import PageBreak
+
+        story.append(PageBreak())
+
+        im_logo2 = Image(ASSETS_LOGO_FILENAME, 3.472 * cm, 1 * cm)
+
+        header2_data = [[im_logo2, shortinfo]]
+        header2 = Table(
+            header2_data,
+            colWidths=[3.972 * cm, 9.5 * cm, 4 * cm],
+            style=[("VALIGN", (0, 0), (-1, -1), "MIDDLE")],
+        )
+        story.append(header2)
+        story.append(
+            HRFlowable(
+                width="100%", thickness=1, color=colors.black,
+                spaceBefore=0.0 * cm, spaceAfter=0.5 * cm,
+            )
+        )
+
+        # --- Section title ---
+        story.append(
+            Paragraph(
+                "<b>Zahlungsverläufe</b>",
+                ParagraphStyle(
+                    "Title2",
+                    parent=style["Normal"],
+                    fontSize=14,
+                    fontName="Helvetica-Bold",
+                    spaceBefore=4,
+                    spaceAfter=10,
+                ),
+            )
+        )
+
+        # --- Column widths (total = pdf.width) ---
+        col_widths = [
+            2.2 * cm,  # Datum
+            5.5 * cm,  # Beschreibung
+            2.2 * cm,  # Betrag
+            4.5 * cm,  # Gegenkonto / IBAN
+            3.5 * cm,  # Kontoinhaber
+        ]
+
+        # --- Header row ---
+        tx_header = [
+            Paragraph("<b>Datum</b>", style["Normal"]),
+            Paragraph("<b>Beschreibung</b>", style["Normal"]),
+            Paragraph("<b>Betrag (€)</b>", style["Normal"]),
+        ]
+
+        # --- Data rows ---
+        tx_rows = [tx_header]
+        for tx in transactions:
+            datum = tx.transaction.valid_on
+            if hasattr(datum, "strftime"):
+                datum = datum.strftime("%d.%m.%Y")
+
+            betrag = -tx.amount
+            # German number format: +1.234,56 €
+            betrag_fmt = f"{betrag:+,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+            betrag_str = f"{betrag_fmt} €"
+
+            tx_rows.append([
+                Paragraph(str(datum), style["Normal"]),
+                Paragraph(str(tx.transaction.description), style["Normal"]),
+                Paragraph(betrag_str, style["Normal"]),
+            ])
+
+        # --- Table style with alternating row stripes ---
+        tx_style = [
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#dddddd")),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#cccccc")),
+            ("LINEBELOW", (0, 0), (-1, 0), 1, colors.black),
+            ("TOPPADDING", (0, 0), (-1, -1), 4),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+            ("LEFTPADDING", (0, 0), (-1, -1), 4),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 4),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ]
+        for i in range(len(transactions)):
+            if i % 2 == 0:
+                tx_style.append(
+                    ("BACKGROUND", (0, i + 1), (-1, i + 1), colors.HexColor("#f5f5f5"))
+                )
+
+        story.append(
+            Table(tx_rows, colWidths=col_widths, style=TableStyle(tx_style), repeatRows=1)
+        )
+
+        # --- Summe ---
+        total = sum(-tx.amount for tx in transactions)
+        total_fmt = f"{total:+,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+        total_str = f"{total_fmt} €"
+        story.append(Spacer(1, 0.3 * cm))
+        story.append(
+            Paragraph(
+                f"<b>Summe: {total_str}</b>",
+                ParagraphStyle(
+                    "SumRight",
+                    parent=style["Normal"],
+                    alignment=TA_RIGHT,
+                    fontSize=10,
+                ),
+            )
+        )
+
+        # ------------------------------------------------------------------
+        # GENERATED DATE
+        # ------------------------------------------------------------------
+    story.append(
+        Paragraph(
+            f"<i>Erstellt am {datetime.date.today()}</i>",
+            style["SmallRight"],
+        )
+    )
+    # ------------------------------------------------------------------
+    # BUILD
+    # ------------------------------------------------------------------
+    pdf.build(story)
+    return buf.getvalue()

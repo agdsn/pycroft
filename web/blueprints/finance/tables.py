@@ -350,11 +350,11 @@ class ImportErrorRow(BaseModel):
 
 class RetransmissionTable(BootstrapTable):
     """A table for displaying buggy mt940 imports"""
-    user = LinkColumn("User")
-    amount = Column("Amount")
+    user = LinkColumn("Nutzer")
+    amount = Column("Betrag", formatter="table.euroFormatter")
     created_at = Column("Importiert am")
-    state = Column("State")
-    fix = MultiBtnColumn("Action")
+    state = Column("Zustand")
+    fix = MultiBtnColumn("Aktion")
 
 class RetransmissionRow(BaseModel):
     user: LinkColResponse

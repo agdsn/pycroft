@@ -200,6 +200,54 @@ class BankAccountTransferForm(Form):
         if cents < 1 or cents != int(cents):
             raise ValidationError(gettext("Invalid value."))
 
+class RetransferXMLForm(BankAccountTransferForm):
+    owner = TextField("Kontoinhaber", validators=[DataRequired()], render_kw={"readonly": True})
+    iban = TextField("IBAN", validators=[DataRequired()], render_kw={"readonly": True})
+    bic = TextField("BIC", validators=[DataRequired()], render_kw={"readonly": True})
+    amount = MoneyField("Wert", validators=[DataRequired(message=gettext("Invalid value."))], render_kw={"readonly": True})
+    reference = TextField("Verwendungszweck", validators=[DataRequired()])
+
+    def __init__(self, exp_owner: str, exp_iban: str, exp_bic: str, exp_amount: float, user_id: str, **kwargs):
+        super().__init__()
+        self.exp_owner = exp_owner
+        self.exp_iban = exp_iban
+        self.exp_bic = exp_bic
+        self.exp_amount = exp_amount
+
+        self.owner.data = exp_owner
+        self.iban.data = exp_iban
+        self.bic.data = exp_bic
+        self.amount.data = exp_amount
+        self.reference.data = f"{user_id} Rückerstattung zu viel gezahlte Beiträge"
+
+    def validate_iban(self, field: Field) -> None:
+        if field.data != self.exp_iban:
+            raise ValidationError(gettext("Does not match expected IBAN!"))
+
+        try:
+            IBAN(field.data)
+        except ValueError as err:
+            raise ValidationError(gettext("Invalid IBAN.")) from err
+
+    def validate_bic(self, field: Field) -> None:
+        if field.data != self.exp_bic:
+            raise ValidationError(gettext("Does not match expected BIC!"))
+        try:
+            BIC(field.data)
+        except ValueError as err:
+            raise ValidationError(gettext("Invalid BIC.")) from err
+
+    def validate_amount(self, field: Field) -> None:
+        if field.data != self.exp_amount:
+            raise ValidationError(gettext("Does not match expected Amount!"))
+        super().validate_amount(field)
+        #cents = field.data.shift(2)
+        #if cents < 1 or cents != int(cents):
+        #    raise ValidationError(gettext("Invalid value."))
+
+    def validate_owner(self, field: Field) -> None:
+        if field.data != self.exp_owner:
+            raise ValidationError(gettext("Does not match expected Owner!"))
 
 class BankAccountIssueTransferForm(BankAccountTransferForm):
     issue_id = TextField(

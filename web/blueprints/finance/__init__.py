@@ -64,6 +64,7 @@ from wtforms import BooleanField, FormField, Field
 from pycroft import config, lib
 from pycroft.exc import PycroftException
 from pycroft.helpers.i18n import localized
+from pycroft.helpers.printing import generate_demand_for_repayment
 from pycroft.lib import finance
 from pycroft.lib.finance import (
     end_payment_in_default_memberships,
@@ -88,11 +89,12 @@ from pycroft.lib.finance import (
 )
 from pycroft.lib.finance.fints import get_fints_transactions, get_fints_client
 from pycroft.lib.finance.matching import UserMatching, AccountMatching
-from pycroft.lib.finance.retransmission import create_retransmission, approve_retransmission
+from pycroft.lib.finance.retransmission import create_retransmission, approve_retransmission, \
+    decline_retransmission
 from pycroft.lib.mail import MemberNegativeBalance
 from pycroft.lib.user import encode_type2_user_id, user_send_mails
 from pycroft.model.base import ModelBase
-from pycroft.model.finance import Account, Transaction, Retransmission
+from pycroft.model.finance import Account, Transaction, Retransmission, RetransmissionStateEnum
 from pycroft.model.finance import (
     BankAccount, BankAccountActivity, Split, MembershipFee, MT940Error)
 from pycroft.model.session import session, utcnow
@@ -114,7 +116,7 @@ from web.blueprints.finance.forms import (
     ConfirmPaymentReminderMail,
     FinTSTANForm,
     BankAccountIssueTransferForm,
-    BankAccountTransferForm, CreateRetransmission,
+    BankAccountTransferForm, CreateRetransmission, DeclineRetransmission, RetransferXMLForm,
 )
 from web.blueprints.finance.tables import (
     FinanceTable,
@@ -1880,18 +1882,60 @@ def _ensure_decimal(v: t.Any) -> Decimal:
 @bp.route('/retransmission/list/json')
 def retransmission_list_json() -> ResponseReturnValue:
     def actions(retransmission: Retransmission) -> list[BtnColResponse]:
+        if retransmission.state != RetransmissionStateEnum.done and retransmission.state != RetransmissionStateEnum.declined:
+            return [
+                    BtnColResponse(
+                        href=url_for(".approve_retransmission_action", retransmission_id=retransmission.id),
+                        title="",
+                        btn_class="btn-primary btn-sm",
+                        icon="fa-check",
+                    ),
+                BtnColResponse(
+                    href=url_for(".show_retransmission",
+                                 retransmission_id=retransmission.id),
+                    title="",
+                    btn_class="btn-primary btn-sm",
+                    icon="fa-eye",
+                ),
+                    BtnColResponse(
+                        href=url_for(".retransmission_decline", retransmission_id=retransmission.id),
+                        title="",
+                        btn_class="btn-primary btn-sm",
+                        icon="fa-xmark",
+                    ),
+            ]
+
+        if retransmission.state == RetransmissionStateEnum.done:
+            return [
+                BtnColResponse(
+                    href=url_for(".show_retransmission_pdf",
+                                 retransmission_id=retransmission.id),
+                    title="",
+                    btn_class="btn-primary btn-sm",
+                    icon="fa-print",
+                ),
+                BtnColResponse(
+                    href=url_for(".show_retransmission",
+                                 retransmission_id=retransmission.id),
+                    title="",
+                    btn_class="btn-primary btn-sm",
+                    icon="fa-eye",
+                ),
+                BtnColResponse(
+                    href=url_for(".retransmission_xml",
+                                 retransmission_id=retransmission.id),
+                    title="",
+                    btn_class="btn-primary btn-sm",
+                    icon="fa-download",
+                ),
+            ]
         return [
             BtnColResponse(
-                href=url_for(".approve_retransmission_action", retransmission_id=retransmission.id),
+                href=url_for(".show_retransmission",
+                             retransmission_id=retransmission.id),
                 title="",
                 btn_class="btn-primary btn-sm",
                 icon="fa-eye",
-            ),
-            BtnColResponse(
-                href=url_for(".approve_retransmission_action", retransmission_id=retransmission.id),
-                title="",
-                btn_class="btn-primary btn-sm",
-                icon="fa-file-import",
             ),
         ]
 
@@ -1900,10 +1944,10 @@ def retransmission_list_json() -> ResponseReturnValue:
             RetransmissionRow(
                 user =
             LinkColResponse(
-                href=url_for("user.user_show", user_id=retransmission.account_id),
+                href=url_for("user.user_show", user_id=retransmission.user_id),
                 title="{} ({})".format(
-                    retransmission.account.name,
-                    encode_type2_user_id(retransmission.account_id),
+                    retransmission.user.name,
+                    encode_type2_user_id(retransmission.user_id),
                 ),
                 new_tab=True,
             ),
@@ -1916,14 +1960,15 @@ def retransmission_list_json() -> ResponseReturnValue:
         ]
     ).model_dump()
 
-@bp.route("/retransmission", methods=["GET", "POST"])
+@bp.route("/retransmission/list", methods=["GET", "POST"])
 @access.require("finance_change")
+@nav.navigate("Rücküberweisungen", icon="fa-share")
 def retransmissions() -> ResponseReturnValue:
     table = RetransmissionTable(data_url=url_for(".retransmission_list_json"))
-    return render_template('finance/retransmission.html', table=table)
+    return render_template('finance/retransmission_table.html', table=table)
 
 
-@bp.route("/retranmission/<int:retransmission_id>", methods=["GET"])
+@bp.route("/retranmission/<int:retransmission_id>/approve", methods=["GET"])
 @access.require("finance_change")
 def approve_retransmission_action(retransmission_id: int):
     retrans = _get_or_404(session, Retransmission, retransmission_id)
@@ -1932,29 +1977,147 @@ def approve_retransmission_action(retransmission_id: int):
     return redirect(url_for(".retransmissions"))
 
 
+@bp.route("/retranmission/<int:retransmission_id>/print", methods=["GET"])
+def print_retransmission(retransmission_id: int):
+    retrans = _get_or_404(session, Retransmission, retransmission_id)
+    return redirect(url_for(".retransmissions"))
+
+
+@bp.route("/retransmission/<int:retransmission_id>/decline", methods=["GET", "POST"])
+def retransmission_decline(retransmission_id: int):
+    retrans = _get_or_404(session, Retransmission, retransmission_id)
+
+
+    form = DeclineRetransmission()
+    if form.validate_on_submit():
+        decline_retransmission(session, retrans, current_user, form.reason.data)
+        return redirect(url_for(".retransmissions"))
+    form_args = {
+        "form": form,
+    }
+
+    return render_template('generic_form.html',
+                           page_title="Retransmission",
+                           form_args=form_args,
+                           form=form)
+
+
+@bp.route("/retransmission/<int:retransmission_id>", methods=["GET"])
+def show_retransmission(retransmission_id: int):
+    retrans = _get_or_404(session, Retransmission, retransmission_id)
+
+
+
+    return render_template('finance/retransmission.html',
+                           page_title="Retransmission",
+                           retransmission=retrans,
+                           RetransmissionStateEnum=RetransmissionStateEnum
+                           )
+
+
+def make_pdf_response(pdf_data: bytes, filename: str, inline: bool = True):
+    """Turn pdf data into a response with appropriate headers.
+
+    Content-Type: application/pdf
+    Content-Disposition: (inline|attachment); filename="<filename>"
+    """
+    response = make_response(pdf_data)
+    response.headers['Content-Type'] = 'application/pdf'
+    disposition = "{}; filename={}".format('inline' if inline else 'attachment',
+                                           filename)
+    response.headers['Content-Disposition'] = disposition
+    return response
+
+@bp.route("/retransmission/<int:retransmission_id>/pdf", methods=["GET"])
+def show_retransmission_pdf(retransmission_id: int) -> ResponseReturnValue:
+    retrans = _get_or_404(session, Retransmission, retransmission_id)
+
+    build_this_query = session.query(Split).join(Transaction).filter(Split.account == retrans.user.account).all()
+    for i in build_this_query:
+        logger.error(i)
+
+    return make_pdf_response(generate_demand_for_repayment(retrans.user.name, retrans.user_id, retrans.amount, retrans.iban, retrans.bic, retrans.owner, retrans.created_at, retrans.ledger_1.name, retrans.ledger_2.name, build_this_query),
+                             filename=f'retransmission_{retrans.user.name.replace(" ","_")}.pdf')
+
+@bp.route("/retransmission/<int:retransmission_id>/delete", methods=["GET", "POST"])
+@access.require("finance_change")
+def delete_retransmission(retransmission_id: int):
+    retrans = _get_or_404(session, Retransmission, retransmission_id)
+
+    session.delete(retrans)
+    session.commit()
+    return redirect(url_for(".retransmissions"))
+
+
+@bp.route("/retransmission/<int:retransmission_id>/XML", methods=["GET", "POST"])
+def retransmission_xml(retransmission_id: int):
+    retrans = _get_or_404(session, Retransmission, retransmission_id)
+
+    if retrans.state != RetransmissionStateEnum.done:
+        abort(405, "Retransmission is not a state in which the XML can be generated.")
+    form = RetransferXMLForm(retrans.owner, retrans.iban, retrans.bic, retrans.amount, encode_type2_user_id(retrans.user.id))
+    form.bank_account.query = get_all_bank_accounts(session)
+    if form.validate_on_submit():
+        sepa_xml: bytes = generate_transfer_sepaxml(
+            form.bank_account.data, retrans.owner, retrans.iban, retrans.bic, form.reference.data, retrans.amount
+        )
+        download_name = f"retransfer-{retrans.user.id}-{datetime.now().date()}.xml"
+        return send_file(
+            BytesIO(sepa_xml),
+            as_attachment=True,
+            download_name=download_name,
+        )
+    form_args = {
+        "form": form,
+        "cancel_to": url_for(".retransmissions"),
+        "submit_text": "Exportieren",
+    }
+
+    return render_template(
+        "generic_form.html",
+        page_title="Überweisung für Datei-Import",
+        form_args=form_args,
+        form=form,
+    )
+
+
+
 @bp.route('/retransmission/create', methods=("GET", "POST"))
 def create_retransmission_form() -> ResponseReturnValue:
     form = CreateRetransmission()
 
+    form_args = {
+        "form": form,
+    }
     if form.validate_on_submit():
         account = session.get(Account, form.account_id.data)
-        logging.error(f"err {account.balance}")
         if not account:
             flash(
                 f"Unable to find user!!!"
                 "vor dem Import manuell korrigiert werden",
                 "error",
             )
+            return render_template('generic_form.html',
+                                   page_title="Retransmission",
+                                   form_args=form_args,
+                                   form=form)
         else:
-            retransmission = create_retransmission(session, account.user, form.owner.data, form.iban.data, form.bic.data, form.bis.data)
-            flash(
-                f"Retransmission {retransmission}"
-                "vor dem Import manuell korrigiert werden",
-                "error",
-            )
-    form_args = {
-        "form": form,
-    }
+            try:
+                create_retransmission(session, account.user, form.owner.data, form.iban.data, form.bic.data, until=form.bis.data)
+            except ValueError:
+                flash(
+                    f"Nutzer hat nicht genug Geld auf seinem Konto!",
+                    ""
+                    "error",
+                )
+            except LookupError:
+                flash(
+                    f"Es bestehen bereits Rückerstattungsanträge für diesen Nutzer!",
+                    ""
+                    "error",
+                )
+            return redirect(url_for(".retransmissions"))
+
 
     return render_template('generic_form.html',
                                page_title="Retransmission",

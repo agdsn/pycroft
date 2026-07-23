@@ -439,6 +439,7 @@ class BankAccountActivity(IntegerIdModel):
         UniqueConstraint(transaction_id, account_id),
     )
 
+
 class RetransmissionStateEnum(enum.Enum):
     pending = 'pending'
     processing = 'processing'
