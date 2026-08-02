@@ -1572,7 +1572,7 @@ def mail_group() -> ResponseReturnValue:
             groups=form.groups.data,
             subject=form.subject.data,
             body_plain=form.body_plain.data,
-            buildings=form.buildings.data if getattr(form, "building", None) else [],
+            buildings=form.buildings.data if getattr(form, "buildings", None) else [],
         )
 
         flash("Rundmail versendet!", "success")
