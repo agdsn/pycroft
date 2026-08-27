@@ -42,7 +42,7 @@ def prepare_server(echo=False, ensure_schema=False) -> PycroftFlask:
     app.config.from_file("default_config.toml", load=tomllib.load, text=False)
     app.config.from_prefixed_env()
 
-    engine = create_engine(get_connection_string())
+    engine = create_engine(get_connection_string(), isolation_level="SERIALIZABLE")
     if ensure_schema:
         with engine.connect() as connection:
             _ensure_schema_up_to_date(app, connection)
