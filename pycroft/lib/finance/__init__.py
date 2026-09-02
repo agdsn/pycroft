@@ -141,7 +141,7 @@ def get_all_bank_accounts(session: Session) -> list[BankAccount]:
     return BankAccount.q.all()
 
 
-def get_all_retransmissions(session: Session) -> list[Retransmission]:
+def get_all_repayments(session: Session) -> list[Retransmission]:
     return Retransmission.q.all()
 
 def get_unassigned_bank_account_activities(

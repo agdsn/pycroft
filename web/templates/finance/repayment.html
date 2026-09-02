@@ -14,18 +14,18 @@
 <table class="table table-striped table-responsive activities">
   <tr>
     <th>User:</th>
-    <td><a href="{{ url_for('user.user_show', user_id=retransmission.user_id) }}">{{ retransmission.user.name }}</a></td>
+    <td><a href="{{ url_for('user.user_show', user_id=repayment.user_id) }}">{{ repayment.user.name }}</a></td>
   </tr>
   <tr>
     <th>Zurück erstatteter Betrag:</th>
-    <td>{{ retransmission.amount }}</td>
+    <td>{{ repayment.amount }}</td>
   </tr>
   <tr>
     <th>Status:</th>
     <td>
-      {% if retransmission.state == RetransmissionStateEnum.declined %}
+      {% if repayment.state == RetransmissionStateEnum.declined %}
         <div style="color: red;">Abgelehnt</div>
-      {% elif retransmission.state == RetransmissionStateEnum.done %}
+      {% elif repayment.state == RetransmissionStateEnum.done %}
         <div style="color: green">Erstellt</div>
       {% else %}
         <div style="color: yellow">In Bearbeitung</div>
@@ -40,8 +40,8 @@
 
 
 <div>
-<a class="btn btn-success" href="{{ url_for(".show_retransmission_pdf", retransmission_id=retransmission.id) }}">PDF</a>
-<a class="btn btn-danger" href="{{ url_for(".delete_retransmission", retransmission_id=retransmission.id) }}">Löschen</a>
+<a class="btn btn-success" href="{{ url_for(".show_repayment_pdf", repayment_id=repayment.id) }}">PDF</a>
+<a class="btn btn-danger" href="{{ url_for(".delete_repayment", repayment_id=repayment.id) }}">Löschen</a>
 </div>
 
 {% endblock %}

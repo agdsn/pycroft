@@ -455,7 +455,7 @@ class Retransmission(IntegerIdModel):
     state = mapped_column(
     sqlalchemy.Enum(
         RetransmissionStateEnum,
-        name="retransmission_state_enum"
+        name="repayment_state_enum"
     ),
     default=RetransmissionStateEnum.pending,
     nullable=False,
