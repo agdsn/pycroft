@@ -76,6 +76,9 @@ Starting the containers
 -----------------------
 Prerequisites
     * :ref:`docker environment <docker environment>`
+    * The entry `127.0.0.1 keycloak` must be added to your hosts file:
+        * **Linux/macOS:** `/etc/hosts`
+        * **Windows:** `C:\Windows\System32\drivers\etc\hosts`
 
 The dev server and its dependent containers can be started by running
 
