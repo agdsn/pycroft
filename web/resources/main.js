@@ -24,7 +24,6 @@ import 'bootstrap-table/dist/bootstrap-table.css';
 import 'dc/dist/style/dc.css';
 
 import './js/color-mode';
-import './js/account-typeahead';
 import './js/generic-typeahead';
 import './js/alerts';
 import './js/d3locale';
