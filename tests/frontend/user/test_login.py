@@ -42,7 +42,9 @@ class TestUserOidcLogin:
 
         client.get("/logout")
 
-    def test_callback_flow(self, client: TestClient, app: PycroftFlask):
+    def test_callback_flow(self, client: TestClient, app: PycroftFlask, redirect_next_page = None):
+        if redirect_next_page is None:
+            redirect_next_page = url_for("user.overview")
         app.config["OIDC_ENABLED"] = True
         response_redirect_to_oidc = client.get(url_for("login.openid_connect"))
         assert response_redirect_to_oidc.status_code == 302
@@ -67,4 +69,13 @@ class TestUserOidcLogin:
                 response_url.removeprefix("http://localhost:5000")
             )
             assert response_redirect_to_oidc.status_code == 302
-            assert response_redirect_to_oidc.location == url_for("user.overview")
+            assert response_redirect_to_oidc.location == redirect_next_page
+
+        client.get("/logout")
+
+    def test_nextpage_redirect(self, client: TestClient, app: PycroftFlask):
+        app.config["OIDC_ENABLED"] = True
+        response = client.get(url_for("login.login", next=url_for("facilities.overview")))
+        assert response.status_code == 200
+
+        self.test_callback_flow(client, app, redirect_next_page=url_for("facilities.overview"))
