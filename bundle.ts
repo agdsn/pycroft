@@ -10,6 +10,7 @@ const src = path.resolve(__dirname, 'web', 'resources');
 const dst = path.resolve(__dirname, 'web', 'static');
 
 const entryPoints = [
+    ['account-typeahead', './js/account-typeahead.js'],
     ['advanced-search', './js/advanced-search.js'],
     ['balance-chart', './js/balance-chart.js'],
     ['lazy-load-select', './js/lazy-load-select.js'],

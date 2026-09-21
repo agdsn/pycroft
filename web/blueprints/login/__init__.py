@@ -16,6 +16,7 @@ from authlib.integrations.base_client import OAuthError
 from authlib.integrations.flask_client import OAuth
 from authlib.oauth2.rfc6749 import OAuth2Token
 from flask import Blueprint, render_template, flash, redirect, url_for, request, g, current_app
+from flask import session as flask_session
 from flask.typing import ResponseValue
 from flask_login import (
     AnonymousUserMixin, LoginManager, current_user, login_required, login_user,
@@ -50,6 +51,8 @@ def login() -> ResponseValue:
     if current_user is not None and current_user.is_authenticated:
         flash(f'Sie sind bereits als "{current_user.name}" angemeldet!', "warning")
         return redirect(url_for('user.overview'))
+    if request.args.get("next"):
+        flask_session["next"] = request.args.get("next")
     if not current_app.config["OIDC_ENABLED"]:
         profile = current_app.config["OIDC_TESTING_PROFILE"]
     else:
@@ -68,9 +71,14 @@ def login() -> ResponseValue:
         and user is not None
         and (required_group is None or required_group in groups)
     ):
+        if "next" in flask_session:
+            redirect_url = flask_session["next"]
+            flask_session.pop("next", None)
+        else:
+            redirect_url = url_for("user.overview")
         login_user(user)
         flash("Erfolgreich angemeldet.", "success")
-        return redirect(request.args.get("next") or url_for("user.overview"))
+        return redirect(redirect_url)
     flash("Anmeldung fehlgeschlagen.", "error")
     return redirect(url_for("login.login"))
 
