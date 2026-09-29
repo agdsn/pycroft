@@ -71,11 +71,7 @@ def login() -> ResponseValue:
         and user is not None
         and (required_group is None or required_group in groups)
     ):
-        if "next" in flask_session:
-            redirect_url = flask_session["next"]
-            flask_session.pop("next", None)
-        else:
-            redirect_url = url_for("user.overview")
+        redirect_url = flask_session.pop("next", url_for("user.overview"))
         login_user(user)
         flash("Erfolgreich angemeldet.", "success")
         return redirect(redirect_url)
