@@ -52,6 +52,7 @@ from pycroft.lib.membership import (
     change_membership_active_during,
     delete_membership,
 )
+from pycroft.lib.swdd import get_swdd_person_id
 from pycroft.lib.traffic import get_users_with_highest_traffic
 from pycroft.lib.user import encode_type1_user_id, encode_type2_user_id, \
     traffic_history, generate_user_sheet, get_blocked_groups, \
@@ -1285,6 +1286,33 @@ def member_request_edit(pre_member_id: int) -> ResponseReturnValue:
                     prm.swdd_person_id = form.person_id.data
                 else:
                     form.person_id.errors.append("Zu der angegebenen Debitorennummer konnten keine Verträge gefunden werden!",)
+
+                names = form.name.data.split()
+                if len(names) < 2:
+                    form.name.errors.append(
+                        "Vor- und Nachname werden benötigt!",
+                    )
+                else:
+                    swdd_person_id = None
+
+                    for i in range(1, len(names)):
+                        swdd_person_id = get_swdd_person_id(
+                            " ".join(names[:i]), " ".join(names[i:]), form.birthdate.data
+                        )
+                        if swdd_person_id == form.person_id.data:
+                            break
+
+                        # some tenants have an additional semicolon added to their last names
+                        swdd_person_id = get_swdd_person_id(
+                            " ".join(names[:i]), " ".join(names[i:]) + ";", form.birthdate.data
+                        )
+                        if swdd_person_id == form.person_id.data:
+                            break
+
+                    if swdd_person_id != form.person_id.data:
+                        form.person_id.errors.append(
+                            "Verifizierung mit dem SWDD fehlgeschlagen!",
+                        )
 
         room = Room.q.filter_by(building=form.building.data, level=form.level.data,
                                 number=form.room_number.data).first()
