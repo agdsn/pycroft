@@ -273,4 +273,10 @@ extensions = ["i18n"]
 imports = [
     "import typing as t",
     "from flask.helpers import url_for",
+    "from flask.globals import request",
+    "from web.app import PycroftConfig",
 ]
+
+[tool.types_for_jinja.globals]
+config = "PycroftConfig"
+

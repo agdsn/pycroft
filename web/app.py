@@ -14,6 +14,7 @@ from flask import (
     g,
     make_response,
     Response,
+    Config,
 )
 from flask.typing import ResponseValue, ResponseReturnValue
 from flask_babel import Babel
@@ -40,6 +41,7 @@ from .blueprints import (
     host,
     health,
     mpskclient,
+    navigation,
 )
 
 from .blueprints.login import oauth, login_manager
@@ -283,3 +285,7 @@ if dsn := os.getenv('PYCROFT_SENTRY_DSN'):
         traces_sample_rate=1.0,
         before_send=before_send
     )
+
+
+class PycroftConfig(Config):
+    blueprint_navigation: navigation.SegmentedList
