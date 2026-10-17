@@ -115,6 +115,7 @@ alembic = "scripts.alembic_wrapper:main"
 
 [tool.uv.sources]
 wtforms-widgets = { path = "deps/wtforms-widgets", editable = true }
+types-for-jinja = { git = "https://github.com/agdsn/types-for-jinja.git", branch = "main" }
 
 [tool.setuptools]
 include-package-data = true
@@ -200,6 +201,10 @@ module = [
     "pycroft.lib.mpsk_client",
 ]
 strict_optional = true
+
+[[tool.mypy.overrides]]
+module = ["_jinja_stubs", "_jinja_stubs.*"]
+disable_error_code = ["no-redef"]
 
 [tool.pytest.ini_options]
 addopts = "--tb=short --no-header"
