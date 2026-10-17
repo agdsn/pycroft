@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm as Form
 from wtforms.validators import Optional
-from wtforms_widgets.fields.core import TextField, SelectMultipleField
+from wtforms_widgets.fields.core import TextField, SelectField
 from wtforms_widgets.fields.custom import MacField
 from wtforms_widgets.fields.validators import MacAddress
 
@@ -22,4 +22,6 @@ class InterfaceForm(Form):
                      description="z.B. eth0, en0 oder enp0s29u1u1u5",
                      validators=[Optional()])
     mac = MacField("MAC", [MacAddress(message="MAC ist ungültig!"), UniqueMac(annex_field=None)])
-    ips = SelectMultipleField("IPs", validators=[Optional()])
+    ip = SelectField(
+        "IP", validators=[Optional()], coerce=lambda value: None if value == "None" else value
+    )
