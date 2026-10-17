@@ -149,6 +149,7 @@ files = [
     "pycroft/lib",
     "ldap_sync",
     "web",
+    "_jinja_stubs",
 ]
 mypy_path = "stubs"
 namespace_packages = true
@@ -263,4 +264,9 @@ unfixable = [
 "**/*.pyi" = ["F811"]
 
 [tool.types_for_jinja]
+template_dirs = ["web/templates"]
 extensions = ["i18n"]
+imports = [
+    "import typing as t",
+    "from flask.helpers import url_for",
+]

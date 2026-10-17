@@ -1,3 +1,9 @@
+{#def
+from .forms import UserEditForm
+
+user_id: int
+form: UserEditForm
+#}
 {% extends "layout.html" %}
 {% set page_title = "Nutzerdaten ändern" %}
 {% import "macros/forms.html" as forms %}
