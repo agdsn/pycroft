@@ -5,7 +5,7 @@ import typing as t
 from typing import NamedTuple
 
 RE_OUTPUT_LINE = re.compile(
-    r"^(?P<file>[^ ]+):(?P<line>\d+): (?P<severity>[a-z]+): (?P<message>.*)$"
+    r"^(?P<file>.+?):(?P<line>\d+)(?::(?P<col>\d+))?: (?P<severity>[a-z]+): (?P<message>.*)$"
 )
 
 
@@ -14,6 +14,7 @@ class MypyMessage(NamedTuple):
     line: str
     severity: str
     message: str
+    col: str | None = None
 
     @classmethod
     def from_mypy_output(cls, output: str) -> t.Self | None:
@@ -21,11 +22,20 @@ class MypyMessage(NamedTuple):
         if match is None:
             return None
         # TODO support optional ` [error-code]` at end of line
-        return cls(*match.groups())
+        return cls(
+            file=match["file"],
+            line=match["line"],
+            severity=match["severity"],
+            message=match["message"],
+            col=match["col"],
+        )
 
     def as_gh_annotation(self) -> str:
         title = self.severity.capitalize()
-        return f"::{self.severity} file={self.file},line={self.line},title={title}::{self.message}"
+        loc = f"file={self.file},line={self.line}"
+        if self.col is not None:
+            loc += f",col={self.col}"
+        return f"::{self.severity} {loc},title={title}::{self.message}"
 
 
 def main():
