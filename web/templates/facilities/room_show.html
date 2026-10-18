@@ -1,3 +1,24 @@
+{#def
+    from datetime import datetime
+    from pycroft.model.facilities import Room
+    from pycroft.model.port import PatchPort
+    from web.blueprints.facilities.forms import RoomLogEntry
+    from web.blueprints.facilities.tables import PatchPortTable
+    from web.blueprints.facilities.tables import RoomLogTable
+    from web.blueprints.facilities.tables import RoomTenanciesTable
+    from web.table.table import BtnColResponse
+    from web.types import ButtonArgs
+
+    page_title: str
+    room: Room
+    user_buttons: list[BtnColResponse]
+    user_histories: list[tuple[ButtonArgs, datetime | None, datetime | None]]
+    room_tenancies_table: RoomTenanciesTable | None
+    ports: list[PatchPort]
+    patch_port_table: PatchPortTable
+    room_log_table: RoomLogTable
+    form: RoomLogEntry
+#}
 {#
  Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of

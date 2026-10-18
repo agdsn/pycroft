@@ -1,3 +1,12 @@
+{#def
+    from pycroft.lib.facilities import RoomAddressSuggestion
+    from pycroft.model.facilities import Building
+
+    page_title: str
+    building: Building
+    suggested_address: RoomAddressSuggestion | None
+    levels: list[int]
+#}
 {#
  Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
