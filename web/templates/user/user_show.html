@@ -1,6 +1,6 @@
 {#def
   from pycroft.model.user import User
-  from web.blueprints.helpers.logtables import *
+  from web.blueprints.helpers.log_tables import *
   from web.blueprints.user.tables import *
   from web.blueprints.host.tables import *
   from web.blueprints.task.tables import *
@@ -43,8 +43,6 @@
 #}
 {% extends "layout.html" %}
 
-{% import "macros/forms.html" as forms %}
-
 {% macro tabheader(id, name, icon, disabled = False, classes = "", badge = None, badge_color = "") %}
 {# def
   id: str
@@ -76,7 +74,7 @@
   id: str
   classes: str
   disabled: bool
-  caller: t.Callable[[], str]
+  caller()
 #}
 {% if not disabled %}
 <div class="tab-pane fade {{ classes }}" role="tabpanel"
