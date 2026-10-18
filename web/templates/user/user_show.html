@@ -1,5 +1,10 @@
 {#def
   from pycroft.model.user import User
+  from web.blueprints.helpers.logtables import *
+  from web.blueprints.user.tables import *
+  from web.blueprints.host.tables import *
+  from web.blueprints.task.tables import *
+  from web.blueprints.mpskclient.tables import *
 
   user: User
   user_id_old: int
@@ -7,6 +12,15 @@
   balance: int
   is_blocked: bool
   flags: list[dict[str, bool]]
+
+  host_table: HostTable
+  task_table: TaskTable
+  wifi_client_table: MPSKTable
+  log_table_all: LogTableExtended
+  log_table_user: LogTableSpecific
+  log_table_room: LogTableSpecific
+  log_table_tasks: LogTableSpecific
+  log_table_hades: LogTableSpecific
 #}
 {#
  Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
@@ -49,11 +63,12 @@
   id: str
   classes: str
   disabled: bool
+  caller: t.Callable[[], str]
 #}
 {% if not disabled %}
 <div class="tab-pane fade {{ classes }}" role="tabpanel"
      id="{{ id }}" aria-labelledby="tab-{{ id }}">
-  {% include "user/_user_show_" + id + ".html" with context %}
+  {{ caller() }}
 </div>
 {% endif %}
 {% endmacro %}
@@ -83,15 +98,15 @@
       </ul>
 
       <div class="tab-content">
-        {{ tabpane('hosts', classes="in active show") }}
-        {{ tabpane('mpsk') }}
-        {{ tabpane('tasks') }}
-        {{ tabpane('logs') }}
-        {{ tabpane('traffic') }}
-        {{ tabpane('finance') }}
-        {{ tabpane('groups') }}
-        {{ tabpane('room_history') }}
-        {{ tabpane('tenancies', disabled=(user.tenancies | length == 0)) }}
+        {% call tabpane('hosts', classes="in active show") %}{% include "user/_user_show_hosts.html" with context %}{% endcall %}
+        {% call tabpane('mpsk') %}{% include "user/_user_show_mpsk.html" with context %}{% endcall %}
+        {% call tabpane('tasks') %}{% include "user/_user_show_tasks.html" with context %}{% endcall %}
+        {% call tabpane('logs') %}{% include "user/_user_show_logs.html" with context %}{% endcall %}
+        {% call tabpane('traffic') %}{% include "user/_user_show_traffic.html" with context %}{% endcall %}
+        {% call tabpane('finance') %}{% include "user/_user_show_finance.html" with context %}{% endcall %}
+        {% call tabpane('groups') %}{% include "user/_user_show_groups.html" with context %}{% endcall %}
+        {% call tabpane('room_history') %}{% include "user/_user_show_room_history.html" with context %}{% endcall %}
+        {% call tabpane('tenancies', disabled=(user.tenancies | length == 0)) %}{% include "user/_user_show_tenancies.html" with context %}{% endcall %}
       </div>
     <!--</div>-->
   </div>
