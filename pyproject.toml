@@ -275,6 +275,7 @@ extensions = ["i18n"]
 imports = [
     "import typing as t",
     "import pycroft",
+    "import web",
     "from flask.helpers import url_for",
     "from flask.globals import request",
     "from web.app import PycroftConfig",
