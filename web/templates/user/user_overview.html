@@ -11,12 +11,17 @@
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "layout.html" %}
-{% set page_title = "Nutzerübersicht" %}
 
 {% macro badge(href, title, number) %}
-  <a {% if href %}href={{ href }}{% endif %} class="list-group-item">{{ title }}
+  <a
+    {% if href %}
+      href={{ href }}
+    {% endif %}
+    class="list-group-item">{{ title }}
     <span class="float-end badge rounded-pill bg-secondary">{{ number }}</span></a>
 {% endmacro %}
+
+{% set page_title = "Nutzerübersicht" %}
 
 {% block content %}
   <div class="row">

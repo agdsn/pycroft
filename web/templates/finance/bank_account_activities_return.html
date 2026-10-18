@@ -25,7 +25,8 @@
                 <th>Betrag</th>
               </thead>
               <tbody>
-                {% for field in form %}{% if field.type != 'CSRFTokenField' %}
+                {% for field in form %}
+                  {% if field.type != 'CSRFTokenField' %}
                   <tr>
                     <td>{{ field }}</td>
                     <td>{{ activities[field.id]["bank_account"] }}</td>
@@ -34,7 +35,8 @@
                     <td>{{ activities[field.id]["reference"] }}</td>
                     <td>{{ activities[field.id]["amount"] }} &euro;</td>
                   </tr>
-                {% endif %}{% endfor %}
+                  {% endif %}
+                {% endfor %}
               </tbody>
             </table>
         </div>

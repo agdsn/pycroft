@@ -53,7 +53,8 @@ table.activities td.purpose {
                     <th>Betrag</th>
                   </thead>
                   <tbody>
-                    {% for field in form.user %}{% if field.type != 'CSRFTokenField' %}
+                    {% for field in form.user %}
+                      {% if field.type != 'CSRFTokenField' %}
                       <tr>
                         <td>{{ field }}</td>
                         <td class="purpose">{{ activities_user[field.id]['purpose'] }}</td>
@@ -63,7 +64,8 @@ table.activities td.purpose {
                         <td>{{ activities_user[field.id]['user'].name }}</td>
                         <td>{{ activities_user[field.id]['amount'] }} &euro;</td>
                       </tr>
-                    {% endif %}{% endfor %}
+                      {% endif %}
+                    {% endfor %}
                   </tbody>
                 </table>
             </div>
@@ -81,7 +83,8 @@ table.activities td.purpose {
               <th>Betrag</th>
               </thead>
               <tbody>
-              {% for field in form.team %}{% if field.type != 'CSRFTokenField' %}
+              {% for field in form.team %}
+                {% if field.type != 'CSRFTokenField' %}
                 <tr>
                   <td>{{ field }}</td>
                   <td class="purpose">{{ activities_team[field.id]['purpose'] }}</td>
@@ -89,7 +92,8 @@ table.activities td.purpose {
                   <td>{{ activities_team[field.id]['team'].name }}</td>
                   <td>{{ activities_team[field.id]['amount'] }} &euro;</td>
                 </tr>
-              {% endif %}{% endfor %}
+                {% endif %}
+              {% endfor %}
               </tbody>
             </table>
           </div>

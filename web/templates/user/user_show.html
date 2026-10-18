@@ -42,7 +42,6 @@
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "layout.html" %}
-{% set page_title = "Nutzer anzeigen" %}
 
 {% import "macros/forms.html" as forms %}
 
@@ -87,6 +86,8 @@
 {% endif %}
 {% endmacro %}
 
+{% set page_title = "Nutzer anzeigen" %}
+
 {% block content %}
   {# Stammdaten #}
   <section id="master-data">
@@ -112,15 +113,33 @@
       </ul>
 
       <div class="tab-content">
-        {% call tabpane('hosts', classes="in active show") %}{% include "user/_user_show_hosts.html" with context %}{% endcall %}
-        {% call tabpane('mpsk') %}{% include "user/_user_show_mpsk.html" with context %}{% endcall %}
-        {% call tabpane('tasks') %}{% include "user/_user_show_tasks.html" with context %}{% endcall %}
-        {% call tabpane('logs') %}{% include "user/_user_show_logs.html" with context %}{% endcall %}
-        {% call tabpane('traffic') %}{% include "user/_user_show_traffic.html" with context %}{% endcall %}
-        {% call tabpane('finance') %}{% include "user/_user_show_finance.html" with context %}{% endcall %}
-        {% call tabpane('groups') %}{% include "user/_user_show_groups.html" with context %}{% endcall %}
-        {% call tabpane('room_history') %}{% include "user/_user_show_room_history.html" with context %}{% endcall %}
-        {% call tabpane('tenancies', disabled=(user.tenancies | length == 0)) %}{% include "user/_user_show_tenancies.html" with context %}{% endcall %}
+        {% call tabpane('hosts', classes="in active show") %}
+          {% include "user/_user_show_hosts.html" with context %}
+        {% endcall %}
+        {% call tabpane('mpsk') %}
+          {% include "user/_user_show_mpsk.html" with context %}
+        {% endcall %}
+        {% call tabpane('tasks') %}
+          {% include "user/_user_show_tasks.html" with context %}
+        {% endcall %}
+        {% call tabpane('logs') %}
+          {% include "user/_user_show_logs.html" with context %}
+        {% endcall %}
+        {% call tabpane('traffic') %}
+          {% include "user/_user_show_traffic.html" with context %}
+        {% endcall %}
+        {% call tabpane('finance') %}
+          {% include "user/_user_show_finance.html" with context %}
+        {% endcall %}
+        {% call tabpane('groups') %}
+          {% include "user/_user_show_groups.html" with context %}
+        {% endcall %}
+        {% call tabpane('room_history') %}
+          {% include "user/_user_show_room_history.html" with context %}
+        {% endcall %}
+        {% call tabpane('tenancies', disabled=(user.tenancies | length == 0)) %}
+          {% include "user/_user_show_tenancies.html" with context %}
+        {% endcall %}
       </div>
     <!--</div>-->
   </div>
