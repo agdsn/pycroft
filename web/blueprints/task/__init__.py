@@ -185,7 +185,8 @@ def reschedule_user_task(task_id: int) -> ResponseValue:
 
     return render_template(
         "task/reschedule_task.html",
-        form_args={'form': form, 'cancel_to': return_url}
+        form=form,
+        cancel_to=return_url,
     )
 
 
