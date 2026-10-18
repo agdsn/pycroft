@@ -16,11 +16,25 @@
   host_table: HostTable
   task_table: TaskTable
   wifi_client_table: MPSKTable
+  hosts_rooms: set[Room | None]
+  form: UserLogEntry
   log_table_all: LogTableExtended
   log_table_user: LogTableSpecific
   log_table_room: LogTableSpecific
   log_table_tasks: LogTableSpecific
   log_table_hades: LogTableSpecific
+
+  finance_table_regular: FinanceTable
+  finance_table_splitted: FinanceTableSplitted
+  typed_splits: object | None
+
+  granted_properties: list[str]
+  revoked_properties: list[str]
+  membership_table_active: MembershipTable
+  membership_table_all: MembershipTable
+
+  room_history_table: RoomHistoryTable
+  tenancy_table: TenancyTable
 #}
 {#
  Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
