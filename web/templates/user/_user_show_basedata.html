@@ -1,14 +1,19 @@
+{#def
+  from pycroft.model.user import User
+
+  user: User
+  user_id_old: int
+  user_id_new: int
+  balance: int
+  is_blocked: bool
+  flags: list[dict[str, bool]]
+#}
 {#
  Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% import "macros/misc.html" as misc %}
-
-{%- macro info_row(name) %}
-  <dt>{{ name }}</dt>
-  <dd>{{ caller() }}</dd>
-{%- endmacro %}
 
 <div class="row">
   <div class="col-lg-8">

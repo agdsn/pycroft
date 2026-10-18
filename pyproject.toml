@@ -274,6 +274,7 @@ template_dirs = ["web/templates"]
 extensions = ["i18n"]
 imports = [
     "import typing as t",
+    "import pycroft",
     "from flask.helpers import url_for",
     "from flask.globals import request",
     "from web.app import PycroftConfig",
@@ -281,4 +282,5 @@ imports = [
 
 [tool.types_for_jinja.globals]
 config = "PycroftConfig"
+current_user = "pycroft.model.user.User"
 
