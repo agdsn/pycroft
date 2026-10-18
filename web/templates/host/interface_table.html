@@ -1,1 +1,7 @@
+{#def
+  from web.blueprints.host.tables import InterfaceTable
+
+  interface_table: InterfaceTable
+  host_id: int
+#}
 {{ interface_table.render("host_interfaces_" + host_id|string) }}
