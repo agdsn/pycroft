@@ -1,3 +1,13 @@
+{#def
+    from pycroft.model.finance import Transaction
+    from web.blueprints.finance.tables import *
+
+    page_title: str
+    transaction: Transaction
+    transaction_table: TransactionTable
+
+    get_transaction_type: t.Callable[[Transaction], tuple[str, str] | None]
+#}
 {#
  Copyright (c) 2016 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of

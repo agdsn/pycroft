@@ -1,3 +1,10 @@
+{#def
+    from pycroft.model.finance import BankAccountActivity
+
+    transactions: list[BankAccountActivity]
+    old_transactions: list[BankAccountActivity]
+    doubtful_transactions: list[BankAccountActivity]
+#}
 {% if transactions %}
   Folgende Bewegungen werden importiert:
   <table class="table table-striped">

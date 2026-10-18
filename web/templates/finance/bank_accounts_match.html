@@ -1,3 +1,12 @@
+{#def
+    from web.blueprints.finance import TeamMatch, UserMatch
+    from web.blueprints.finance.types import CombinedActivityMatchForm
+
+    page_title: str
+    form: CombinedActivityMatchForm
+    activities_user: dict[str, UserMatch]
+    activities_team: dict[str, TeamMatch]
+#}
 {#
  Copyright (c) 2018 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of

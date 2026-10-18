@@ -1,6 +1,9 @@
+{#def
+    from web.blueprints.finance.tables import *
+    page_title: str
+    unconfirmed_transactions_table: UnconfirmedTransactionsTable
+#}
 {% extends "layout.html" %}
-
-{% import "macros/resources.html" as resources %}
 
 
 {% block content %}

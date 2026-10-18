@@ -1,3 +1,11 @@
+{#def
+    from web.blueprints.finance import ActivityEntry
+    from web.blueprints.finance.forms import ActivityMatchForm
+
+    page_title: str
+    form: ActivityMatchForm
+    activities: dict[str, ActivityEntry]
+#}
 {% extends "layout.html" %}
 
 {% set page_title = "Unzuordenbare Überweisungen zurücküberweisen" %}

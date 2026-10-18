@@ -1,3 +1,7 @@
+{#def
+    page_title: str
+    api_endpoint: str
+#}
 {#
  Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
@@ -5,8 +9,6 @@
 #}
 {% extends "layout.html" %}
 {% set page_title = "Buchungsübersicht" %}
-
-{% import "macros/resources.html" as resources %}
 
 {% block content %}
   <div class="container-fluid" data-chart="transactions-overview" data-url="{{ api_endpoint }}">

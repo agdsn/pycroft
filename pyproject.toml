@@ -278,6 +278,7 @@ imports = [
     "from flask.helpers import url_for",
     "from flask.globals import request",
     "from web.app import PycroftConfig",
+    "from pycroft.helpers.i18n import localized",
 ]
 
 [tool.types_for_jinja.globals]

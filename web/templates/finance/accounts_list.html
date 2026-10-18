@@ -1,3 +1,9 @@
+{#def
+    from pycroft.model.finance import Account, AccountType
+
+    page_title: str
+    accounts: dict[AccountType | t.Literal["LEGACY"], list[Account]]
+#}
 {#
  Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
@@ -5,9 +11,11 @@
 #}
 {% extends "layout.html" %}
 
-{% import "macros/resources.html" as resources %}
-
 {%  macro list_accounts(type, accounts) -%}
+{#def
+    type: str
+    accounts: list[pycroft.model.finance.Account]
+#}
     <div class="col-sm-6 col-md-5 col-lg-4">
         <h3>{{ type }}</h3>
         <ul class="list-unstyled">
