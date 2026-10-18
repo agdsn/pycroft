@@ -117,7 +117,7 @@ alembic = "scripts.alembic_wrapper:main"
 
 [tool.uv.sources]
 wtforms-widgets = { path = "deps/wtforms-widgets", editable = true }
-types-for-jinja = { git = "https://github.com/agdsn/types-for-jinja.git", branch = "main" }
+types-for-jinja = { git = "https://github.com/agdsn/types-for-jinja.git", branch = "b/import-scoping" }
 
 [tool.setuptools]
 include-package-data = true
