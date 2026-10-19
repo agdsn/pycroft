@@ -38,6 +38,10 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         unzip \
         vim \
     && apt-get clean
+# The test and dev containers bind-mount a checkout owned by the host user.
+# Git refuses that directory, versioningit treats the refusal as "not a
+# repository", and `uv sync` dies while building wtforms-widgets.
+RUN git config --system --add safe.directory '*'
 COPY --chmod=755 --from=bunzipper /opt/bun /usr/local/bin/bun
 
 COPY --link . /

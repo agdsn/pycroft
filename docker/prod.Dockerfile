@@ -7,7 +7,9 @@ FROM pycroft-dev AS builder
 
 WORKDIR /opt/pycroft/app
 
-# Download or build wheels of requirements
+# Download or build wheels of third-party requirements. wtforms-widgets is
+# omitted here: versioningit needs the submodule git dir in the superproject,
+# and that is only present after the full tree is copied below.
 COPY --chown=pycroft:pycroft uv.lock pyproject.toml ./
 COPY --chown=pycroft:pycroft ./deps ./deps
 RUN uv export \
@@ -17,17 +19,20 @@ RUN uv export \
       --no-dev \
       --group prod \
     > requirements.prod.txt \
-  && /opt/pycroft/venv/bin/pip wheel --wheel-dir /opt/pycroft/wheel -r requirements.prod.txt \
-  && /opt/pycroft/venv/bin/pip wheel --wheel-dir /opt/pycroft/wheel --no-deps ./deps/wtforms-widgets
+  && /opt/pycroft/venv/bin/pip wheel --wheel-dir /opt/pycroft/wheel -r requirements.prod.txt
 
 # Download JS/CSS dependencies
 COPY --chown=pycroft:pycroft package.json bun.lockb ./
 RUN bun install --frozen-lockfile
 
-# Build Pycroft wheel
+# Build distribution wheels from the checkout. The submodule's .git file
+# points at the superproject git dir, so versioningit only works once both
+# are present. The Pycroft wheel depends on wtforms-widgets; it does not
+# vendor the submodule.
 COPY --chown=pycroft:pycroft . .
 RUN bun run bundle --prod
-RUN /opt/pycroft/venv/bin/pip wheel --no-deps --wheel-dir /opt/pycroft/wheel .
+RUN /opt/pycroft/venv/bin/pip wheel --no-deps --wheel-dir /opt/pycroft/wheel ./deps/wtforms-widgets \
+ && /opt/pycroft/venv/bin/pip wheel --no-deps --wheel-dir /opt/pycroft/wheel .
 
 FROM pycroft-base
 
