@@ -12,45 +12,22 @@ import operator
 import typing as t
 from functools import reduce
 from itertools import tee, chain, filterfalse
+from typing_extensions import sentinel
 
 # from typing_extensions import Self
 
 if t.TYPE_CHECKING:
     from _typeshed import SupportsAllComparisons as Ord
 
-
-def _infinity(name):
-    """
-    Create a single instance of an class with a given name.
-    """
-    return type(name + "Type", (object, ), {
-        '__repr__': lambda self: f"{self.__module__}.{name}",
-        '__str__': lambda self: name,
-        '__unicode__': lambda self: name,
-    })()
-
-
 #: +∞
-PositiveInfinity = _infinity("PositiveInfinity")
-
-
-class PositiveInfinityType:
-    """dummy placeholder type to work around mypy limitations"""
-
-    pass
+PositiveInfinity = sentinel("PositiveInfinity")
 
 
 #: -∞
-NegativeInfinity = _infinity("NegativeInfinity")
+NegativeInfinity = sentinel("NegativeInfinity")
 
 
-class NegativeInfinityType:
-    """dummy placeholder type to work around mypy limitations"""
-
-    pass
-
-
-type TWithInfinity[T] = T | PositiveInfinityType | NegativeInfinityType
+type TWithInfinity[T] = T | PositiveInfinity | NegativeInfinity
 
 
 class Bound[T: Ord](tuple[TWithInfinity[T], bool]):
@@ -85,7 +62,7 @@ class Bound[T: Ord](tuple[TWithInfinity[T], bool]):
         return str(self.value)
 
     @t.override
-    def __new__(cls, value: TWithInfinity, is_closed: bool) -> Bound[T]:
+    def __new__(cls, value: TWithInfinity[T], is_closed: bool) -> Bound[T]:
         if value is NegativeInfinity or value is PositiveInfinity:
             is_closed = False
         return tuple.__new__(cls, (value, is_closed))
@@ -95,34 +72,36 @@ class Bound[T: Ord](tuple[TWithInfinity[T], bool]):
         return hash((self[0], self[1]))
 
     @t.override
-    def __le__(self, other: t.Any) -> bool:
+    def __le__(self, other: Bound[T]) -> bool:  # type: ignore[override]
         if not isinstance(other, Bound):
             return False
+        othervalue = other[0]  # for type narrowing
         if self.value is PositiveInfinity:
-            return other.value is PositiveInfinity
+            return othervalue is PositiveInfinity
         if self.value is NegativeInfinity:
             return True
-        if other.value is PositiveInfinity:
+        if othervalue is PositiveInfinity:
             return True
-        if other.value is NegativeInfinity:
+        if othervalue is NegativeInfinity:
             return False
-        if self.value == other.value:
+        if self.value == othervalue:
             return self.closed and other.closed
-        return self.value <= other.value
+        return bool(self.value <= othervalue)
 
     @t.override
-    def __lt__(self, other: t.Any) -> bool:
+    def __lt__(self, other: Bound[T]) -> bool:  # type: ignore[override]
         if not isinstance(other, Bound):
             return False
+        othervalue = other[0]  # for narrowing
         if self.value is PositiveInfinity:
-            return other.value is PositiveInfinity
+            return othervalue is PositiveInfinity
         if self.value is NegativeInfinity:
             return True
-        if other.value is PositiveInfinity:
+        if othervalue is PositiveInfinity:
             return True
-        if other.value is NegativeInfinity:
+        if othervalue is NegativeInfinity:
             return False
-        return self.value < other.value
+        return bool(self.value < othervalue)
 
     @t.override
     def __gt__(self, other: t.Any) -> bool:
