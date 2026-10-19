@@ -67,6 +67,7 @@ dependencies = [
     "WTForms ~= 2.3.3",
     "wtforms-widgets[sql]",
     "sepaxml ~= 2.7.0",
+    "typing-extensions>=4.16",
 ]
 
 [dependency-groups]
