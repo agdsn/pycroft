@@ -463,7 +463,7 @@ class SplittedTable(BootstrapTable):
                 cols.append(prefixed_col)
         return cols
 
-    @property  # type: ignore[arg-type]
+    @property
     @lazy_join
     @t.override
     def table_header(self) -> t.Iterable[HasDunderStr]:
