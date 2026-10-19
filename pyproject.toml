@@ -54,7 +54,7 @@ dependencies = [
     # passlib 1.7.4 imports pkg_resources, which setuptools removed in 82
     "setuptools ~= 81.0",
     "psycopg2-binary ~= 2.9.10",
-    "pydantic ~= 2.9.2",
+    "pydantic~=2.14",
     "python-dotenv ~= 0.21.0",
     "reportlab ~= 4.2.5", # usersheet generation
     "rich ~= 13.8.0",
