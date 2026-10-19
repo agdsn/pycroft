@@ -76,19 +76,18 @@ def parse_authorization_header(value: str | None) -> str | None:
         return None
 
 
-_P = t.ParamSpec("_P")
-_TF = t.Callable[_P, ResponseReturnValue]
+type _TF[**P] = t.Callable[P, ResponseReturnValue]
 
 
-def authenticate(func: _TF) -> _TF:
-    @t.cast(t.Callable[[_TF], _TF], wraps(func))
+def authenticate[**P](func: _TF[P]) -> _TF[P]:
+    @t.cast(t.Callable[[_TF[P]], _TF[P]], wraps(func))
     @use_kwargs(
         {
             "auth": fields.Str(required=True, data_key="authorization"),
         },
         location="headers",
     )
-    def wrapper(auth: str, *args: _P.args, **kwargs: _P.kwargs) -> ResponseReturnValue:
+    def wrapper(auth: str, *args: P.args, **kwargs: P.kwargs) -> ResponseReturnValue:
         api_key = parse_authorization_header(auth)
 
         if api_key is None:

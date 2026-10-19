@@ -1,3 +1,4 @@
+import typing as t
 from .exceptions import FinTSNoResponseError as FinTSNoResponseError
 from .utils import SubclassesMixin as SubclassesMixin
 from _typeshed import Incomplete
@@ -86,8 +87,9 @@ class SegmentSequence:
     ): ...
 
 class ContainerMeta(type):
+    @t.override
     @classmethod
-    def __prepare__(metacls, name, bases): ...
+    def __prepare__(metacls, name: str, bases: tuple[type, ...], /, **kwds: t.Any) -> t.MutableMapping[str, object]: ...
     def __new__(cls, name, bases, classdict): ...
 
 class Container(metaclass=ContainerMeta):

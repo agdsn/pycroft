@@ -51,8 +51,10 @@ dependencies = [
     "marshmallow ~= 3.20.1",
     "mt-940 ~= 4.19.0",
     "passlib ~= 1.7.1",
+    # passlib 1.7.4 imports pkg_resources, which setuptools removed in 82
+    "setuptools ~= 81.0",
     "psycopg2-binary ~= 2.9.10",
-    "pydantic ~= 2.9.2",
+    "pydantic~=2.14",
     "python-dotenv ~= 0.21.0",
     "reportlab ~= 4.2.5", # usersheet generation
     "rich ~= 13.8.0",
@@ -65,6 +67,7 @@ dependencies = [
     "WTForms ~= 2.3.3",
     "wtforms-widgets[sql]",
     "sepaxml ~= 2.7.0",
+    "typing-extensions>=4.16",
 ]
 
 [dependency-groups]
@@ -81,7 +84,7 @@ dev = [
     "factory-boy ~= 3.3.3",
     "Flask-Testing ~= 0.8.1",
     "guzzle-sphinx-theme @ git+https://github.com/agdsn/guzzle_sphinx_theme.git@977d49fcbdf2b3df9660d813d4b33369391923e1",
-    "mypy ~= 1.11.2",
+    "mypy~=2.4.0",
     "pydot ~= 1.4.1",
     "pyinstrument ~= 4.2.0",
     "pytest ~= 8.4.1",
@@ -103,6 +106,7 @@ dev = [
     "watchdog ~= 2.3.1",
     "sepaxml ~= 2.7.0",
     "types-wtforms>=3.2.1.20250809",
+    "types-for-jinja[lsp]>=1.1.4",
 ]
 
 [project.scripts]
@@ -114,6 +118,7 @@ alembic = "scripts.alembic_wrapper:main"
 
 [tool.uv.sources]
 wtforms-widgets = { path = "deps/wtforms-widgets", editable = true }
+types-for-jinja = { git = "https://github.com/agdsn/types-for-jinja.git", branch = "b/import-scoping" }
 
 [tool.setuptools]
 include-package-data = true
@@ -148,10 +153,10 @@ files = [
     "pycroft/lib",
     "ldap_sync",
     "web",
+    "_jinja_stubs",
 ]
 mypy_path = "stubs"
 namespace_packages = true
-enable_incomplete_feature = ["NewGenericSyntax"]
 
 # global rules
 check_untyped_defs = true
@@ -199,6 +204,10 @@ module = [
     "pycroft.lib.mpsk_client",
 ]
 strict_optional = true
+
+[[tool.mypy.overrides]]
+module = ["_jinja_stubs", "_jinja_stubs.*"]
+disable_error_code = ["no-redef"]
 
 [tool.pytest.ini_options]
 addopts = "--tb=short --no-header"
@@ -260,3 +269,21 @@ unfixable = [
 "pycroft/model/_all.py" = ["F403"]
 "helpers/interactive.py" = ["F403"]
 "**/*.pyi" = ["F811"]
+
+[tool.types_for_jinja]
+template_dirs = ["web/templates"]
+extensions = ["i18n"]
+imports = [
+    "import typing as t",
+    "import pycroft",
+    "import web",
+    "from flask.helpers import url_for",
+    "from flask.globals import request",
+    "from web.app import PycroftConfig",
+    "from pycroft.helpers.i18n import localized",
+]
+
+[tool.types_for_jinja.globals]
+config = "PycroftConfig"
+current_user = "pycroft.model.user.User"
+

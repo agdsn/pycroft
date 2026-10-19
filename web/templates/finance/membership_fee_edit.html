@@ -1,6 +1,11 @@
+{#def
+    from web.blueprints.finance.forms import MembershipFeeEditForm
+
+    page_title: str
+    form: MembershipFeeEditForm
+#}
 {% extends "layout.html" %}
 {% import "macros/forms.html" as forms %}
-{% import "macros/resources.html" as resources %}
 {% set page_title = "Beitrag editieren" %}
 {% block page_css %}{{ resources.link_css('datepicker/css/datepicker3.css') }}{% endblock %}
 {% block single_row_content %}

@@ -12,48 +12,25 @@ import operator
 import typing as t
 from functools import reduce
 from itertools import tee, chain, filterfalse
+from typing_extensions import sentinel
 
 # from typing_extensions import Self
 
 if t.TYPE_CHECKING:
     from _typeshed import SupportsAllComparisons as Ord
 
-
-def _infinity(name):
-    """
-    Create a single instance of an class with a given name.
-    """
-    return type(name + "Type", (object, ), {
-        '__repr__': lambda self: f"{self.__module__}.{name}",
-        '__str__': lambda self: name,
-        '__unicode__': lambda self: name,
-    })()
-
-
 #: +∞
-PositiveInfinity = _infinity("PositiveInfinity")
-
-
-class PositiveInfinityType:
-    """dummy placeholder type to work around mypy limitations"""
-
-    pass
+PositiveInfinity = sentinel("PositiveInfinity")
 
 
 #: -∞
-NegativeInfinity = _infinity("NegativeInfinity")
+NegativeInfinity = sentinel("NegativeInfinity")
 
 
-class NegativeInfinityType:
-    """dummy placeholder type to work around mypy limitations"""
-
-    pass
+type TWithInfinity[T] = T | PositiveInfinity | NegativeInfinity
 
 
-type TWithInfinity[T] = T | PositiveInfinityType | NegativeInfinityType
-
-
-class Bound[T: Ord](tuple):
+class Bound[T: Ord](tuple[TWithInfinity[T], bool]):
     """Represents a bound of an interval, i.e. value + closedness.
 
     The value is either:
@@ -64,12 +41,12 @@ class Bound[T: Ord](tuple):
     """
 
     @property
-    def value(self) -> TWithInfinity:
+    def value(self) -> TWithInfinity[T]:
         return self[0]
 
     @property
     def closed(self) -> bool:
-        return t.cast(bool, self[1])
+        return self[1]
 
     @property
     def pg_identifier(self) -> str:
@@ -85,7 +62,7 @@ class Bound[T: Ord](tuple):
         return str(self.value)
 
     @t.override
-    def __new__(cls, value: TWithInfinity, is_closed: bool) -> Bound[T]:
+    def __new__(cls, value: TWithInfinity[T], is_closed: bool) -> Bound[T]:
         if value is NegativeInfinity or value is PositiveInfinity:
             is_closed = False
         return tuple.__new__(cls, (value, is_closed))
@@ -94,35 +71,45 @@ class Bound[T: Ord](tuple):
     def __hash__(self) -> int:
         return hash((self[0], self[1]))
 
-    def __le__(self, other: Bound[T]) -> bool:  # type: ignore
+    @t.override
+    def __le__(self, other: Bound[T]) -> bool:  # type: ignore[override]
+        if not isinstance(other, Bound):
+            return False
+        othervalue = other[0]  # for type narrowing
         if self.value is PositiveInfinity:
-            return other.value is PositiveInfinity
+            return othervalue is PositiveInfinity
         if self.value is NegativeInfinity:
             return True
-        if other.value is PositiveInfinity:
+        if othervalue is PositiveInfinity:
             return True
-        if other.value is NegativeInfinity:
+        if othervalue is NegativeInfinity:
             return False
-        if self.value == other.value:
+        if self.value == othervalue:
             return self.closed and other.closed
-        return t.cast(T, self.value) <= t.cast(T, other.value)
+        return bool(self.value <= othervalue)
 
-    def __lt__(self, other: Bound[T]) -> bool:  # type: ignore
+    @t.override
+    def __lt__(self, other: Bound[T]) -> bool:  # type: ignore[override]
+        if not isinstance(other, Bound):
+            return False
+        othervalue = other[0]  # for narrowing
         if self.value is PositiveInfinity:
-            return other.value is PositiveInfinity
+            return othervalue is PositiveInfinity
         if self.value is NegativeInfinity:
             return True
-        if other.value is PositiveInfinity:
+        if othervalue is PositiveInfinity:
             return True
-        if other.value is NegativeInfinity:
+        if othervalue is NegativeInfinity:
             return False
-        return t.cast(T, self.value) < t.cast(T, other.value)
+        return bool(self.value < othervalue)
 
-    def __gt__(self, other: Bound[T]) -> bool:  # type: ignore
-        return other < self
+    @t.override
+    def __gt__(self, other: t.Any) -> bool:
+        return isinstance(other, Bound) and other < self
 
-    def __ge__(self, other: Bound[T]) -> bool:  # type: ignore
-        return other <= self
+    @t.override
+    def __ge__(self, other: t.Any) -> bool:
+        return isinstance(other, Bound) and other <= self
 
     @t.override
     def __eq__(self, other: object) -> bool:
@@ -189,7 +176,7 @@ class Interval[T: Ord](tuple):
         :param Bound upper_bound: right interval bound
         :raises ValueError: if lower_bound greater than upper_bound
         """
-        if lower_bound > upper_bound:
+        if lower_bound.__gt__(upper_bound):
             raise ValueError(
                 f"lower_bound > upper_bound ({lower_bound} > {upper_bound})"
             )

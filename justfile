@@ -153,3 +153,20 @@ show_emails:
 
 stop: 
     {{ drc }} stop
+
+# regenerate Jinja stubs and typecheck them with mypy
+check-jinja:
+    uv run types-for-jinja generate
+    uv run types-for-jinja remap -- mypy --color-output _jinja_stubs
+
+# re-run check-jinja when templates change (uses watchdog via uv; no inotifywait)
+watch-jinja:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    just check-jinja || true
+    uv run watchmedo shell-command \
+      --patterns='*.html;*.jinja;*.j2' \
+      --recursive \
+      --drop \
+      --command='just check-jinja' \
+      web/templates

@@ -1,3 +1,11 @@
+{#def
+  from web.blueprints.user.forms import UserMoveForm
+  from web.blueprints.user.tables import TenancyTable
+
+  form: UserMoveForm
+  user_id: str
+  tenancy_table: TenancyTable
+#}
 {#
  Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
@@ -8,7 +16,6 @@
 {% set page_title = "Umzug" %}
 
 {% import "macros/forms.html" as forms %}
-{% import "macros/resources.html" as resources %}
 
 {% block content %}
   <div class="row">
@@ -19,7 +26,7 @@
     </div>
     {{ forms.simple_form(form, '', url_for('.user_show', user_id=user_id)  ) }}
   </div>
-  {% if tenancy_table %}
+  {% if tenancy_table is not None %}
   <div class="row">
     <h3>{{ _("Mietverträge") }}</h3>
     {{ tenancy_table.render("tenancy_table") }}

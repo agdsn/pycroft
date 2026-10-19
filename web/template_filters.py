@@ -26,7 +26,7 @@ from pycroft.helpers.i18n import localized, gettext
 from pycroft.helpers.utc import ensure_tz
 from pycroft.model import session
 
-_filter_registry = {}
+_filter_registry: dict[str, t.Callable] = {}
 
 
 def template_filter[_TF: t.Callable[..., t.Any]](name: str) -> t.Callable[[_TF], _TF]:
