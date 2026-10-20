@@ -409,7 +409,7 @@ def get_user_by_id_or_login(ident: str, email: str) -> User | None:
     return session.session.scalar(stmt)
 
 
-def find_similar_users(name: str, room: Room, ratio: float) -> t.Iterable[User]:
+def find_similar_users(name: str, room: Room, ratio: float) -> list[User]:
     """Given a potential user's name and a room, find users of similar name living in that room.
 
     :param name: The potential user's name

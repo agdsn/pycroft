@@ -23,7 +23,7 @@ from .types import (
 
 def _canonicalize_to_list(
     value: AttributeValues,
-) -> list[str] | list[bytes] | list[int]:
+) -> list[str | bytes | int]:
     """Canonicalize a value to a list.
 
     If value is a list, return it.  If it is None or an empty string,

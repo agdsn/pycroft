@@ -48,7 +48,7 @@ class SupportsFormat(t.Protocol):
         ...
 
     @t.override
-    def __format__(self, format_spec: t.Any) -> str:
+    def __format__(self, format_spec: t.Any, /) -> str:
         ...
 
 

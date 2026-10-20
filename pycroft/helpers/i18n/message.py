@@ -67,7 +67,7 @@ class Message(abc.ABC):
 
     def __init__(self, domain: str | None = None):
         self.domain: str | None = domain
-        self.args: typing.Iterable[Serializable] = ()
+        self.args: tuple[Serializable, ...] = ()
         self.kwargs: dict[str, Serializable] = {}
 
     @abc.abstractmethod
@@ -93,7 +93,7 @@ class Message(abc.ABC):
         self.kwargs = kwargs
         return self
 
-    def localize(self, options: Options = None) -> str:
+    def localize(self, options: Options | None = None) -> str:
         if options is None:
             options = dict()
 

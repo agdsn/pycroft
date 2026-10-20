@@ -174,7 +174,7 @@ class TransactionCreateForm(Form):
     )
     splits = FieldList(FormField(SplitCreateForm), validators=[DataRequired()], min_entries=2)
 
-    def validate_splits(self, field: FormField) -> None:
+    def validate_splits(self, field: FieldList) -> None:
         balance = sum(split_form['amount'].data for split_form in field
                       if split_form['amount'].data is not None)
         if balance != 0:

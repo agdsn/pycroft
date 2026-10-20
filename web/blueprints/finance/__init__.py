@@ -376,7 +376,7 @@ def bank_accounts_import(bank_account_id: int) -> ResponseReturnValue:
 from contextlib import contextmanager
 
 @contextmanager
-def flash_fints_errors() -> t.Iterator[None]:
+def flash_fints_errors() -> t.Generator[None, None, None]:
     try:
         yield
     except (FinTSDialogError, FinTSClientPINError) as e:

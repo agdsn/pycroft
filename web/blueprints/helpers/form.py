@@ -59,8 +59,8 @@ class ConfirmCheckboxField(BooleanField):
     def __init__(
         self,
         label: str | None = None,
-        validators: t.Iterable[t.Any] | None = None,
-        false_values: t.Iterable[t.Any] | None = None,
+        validators: tuple[t.Any, ...] | list[t.Any] | None = None,
+        false_values: t.Collection[t.Any] | None = None,
         **kwargs: t.Any,
     ) -> None:
         kwargs.setdefault("render_kw", {})

@@ -215,7 +215,7 @@ def schedule_user_task(
     return task
 
 
-def get_active_tasks_by_type(type: TaskType) -> t.Sequence[t.Type[Task]]:
+def get_active_tasks_by_type(type: TaskType) -> t.Sequence[Task]:
     task_and_subtypes = with_polymorphic(Task[t.Any, t.Any], "*")
     return session.session.scalars(
         select(task_and_subtypes).where(task_and_subtypes.type == type)

@@ -72,7 +72,7 @@ class Bound[T: Ord](tuple[TWithInfinity[T], bool]):
         return hash((self[0], self[1]))
 
     @t.override
-    def __le__(self, other: Bound[T]) -> bool:  # type: ignore[override]
+    def __le__(self, other: object) -> bool:  # type: ignore[override]
         if not isinstance(other, Bound):
             return False
         othervalue = other[0]  # for type narrowing
@@ -89,7 +89,7 @@ class Bound[T: Ord](tuple[TWithInfinity[T], bool]):
         return bool(self.value <= othervalue)
 
     @t.override
-    def __lt__(self, other: Bound[T]) -> bool:  # type: ignore[override]
+    def __lt__(self, other: object) -> bool:  # type: ignore[override]
         if not isinstance(other, Bound):
             return False
         othervalue = other[0]  # for narrowing

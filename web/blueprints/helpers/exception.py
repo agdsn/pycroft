@@ -30,7 +30,7 @@ ErrorHandler = t.Callable[[PycroftException], None]
 @contextmanager
 def flash_and_wrap_errors(
     handler_map: dict[type[PycroftException], ErrorHandler] | None = None,
-) -> t.Iterator[None]:
+) -> t.Generator[None, None, None]:
     """Flash a message, roll back the session, and wrap unknown errors in a ``PycroftException``
 
     :param handler_map: specifies what to do with exception types.
@@ -65,7 +65,7 @@ def abort_on_error(
     | ResponseReturnValue
     | None = None,
     handler_map: ErrorHandlerMap | None = None,
-) -> t.Iterator[None]:
+) -> t.Generator[None, None, None]:
     """Wraps errors as `PycroftErrors` and turns them into a flash message.
 
     Example:
@@ -97,7 +97,7 @@ def abort_on_error(
         _is_nullary_lambda = (
             callable(error_response) and not signature(error_response).parameters
         )
-        resp: ResponseReturnValue
+        resp: ResponseReturnValue | None
         if _is_nullary_lambda:
             resp = t.cast(t.Callable[[], ResponseReturnValue], error_response)()
         else:
