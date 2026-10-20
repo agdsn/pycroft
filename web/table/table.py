@@ -109,7 +109,7 @@ class Column:
         This uses the arguments provided by :meth:`build_col_args` and
         the :attr:`title` for the inner HTML.
         """
-        if self.hide_if():
+        if self.hide_if and self.hide_if():
             return ""
         return f"<th {self.build_col_args()}>{self.title}</th>"
 
@@ -122,16 +122,16 @@ class custom_formatter_column:
     def __init__(self, formatter_name: str) -> None:
         self.formatter_name = formatter_name
 
-    def __call__(self, cls: type[Column]) -> type[Column]:
+    def __call__[C: Column](self, cls: type[C]) -> type[C]:
         """Decorate the classes `__init__` function to inject the formatter"""
         old_init = cls.__init__
 
-        def __init__(obj, *a, **kw):  # type: ignore[no-untyped-def]
+        def __init__(obj: C, *a, **kw):
             kw.setdefault("escape", False)
             kw.setdefault("formatter", self.formatter_name)
             old_init(obj, *a, **kw)
 
-        cls.__init__ = __init__  # type: ignore[method-assign, assignment]
+        setattr(cls, "__init__", __init__)
         return cls
 
 

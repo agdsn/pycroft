@@ -70,7 +70,7 @@ def get_user_hades_logs(user: User) -> t.Iterator[tuple[PatchPort, RadiusLogEntr
 def is_user_connected(user: User) -> bool:
     try:
         next(patch_port
-             for host in user.hosts
+             for host in user.hosts if host.room is not None
              for patch_port in host.room.connected_patch_ports)
     except StopIteration:
         return False

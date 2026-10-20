@@ -16,7 +16,7 @@ from pycroft.model.alembic import get_alembic_config
 def register_commands(app: Flask) -> None:
     """Register custom commands executable via `flask $command_name`."""
 
-    cli = t.cast(click.Group, app.cli)
+    cli = app.cli
 
     @cli.command("create-model", help="Create the database model.")
     def create_model() -> None:

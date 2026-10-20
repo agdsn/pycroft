@@ -39,17 +39,6 @@ Session: scoped_session[orm.Session] = t.cast(
 )
 session: orm.Session = t.cast(orm.Session, LocalProxy(lambda: Session()))
 
-if TYPE_CHECKING:
-    def session():
-        import warnings
-
-        warnings.warn(
-            "Deprecated: Use dependency injection instead"
-            " (i.e. pass the session explicitly via a parameter)",
-            DeprecationWarning,
-            stacklevel=1,
-        )
-
 
 def set_scoped_session(scoped_session: scoped_session[orm.Session]) -> None:
     Session.remove()

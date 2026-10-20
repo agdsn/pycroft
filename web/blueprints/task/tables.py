@@ -24,16 +24,16 @@ class TaskTable(BootstrapTable):
     creator = LinkColumn("Ersteller")
     status = Column("Status")
     actions = MultiBtnColumn("Aktionen", hide_if=no_membership_change)
-    created = Column(title=None, hide_if=lambda: True)
-    parameters = Column(title=None, hide_if=lambda: True)
-    exception_message = Column(title=None, hide_if=lambda: True)
+    created = Column(title="", hide_if=lambda: True)
+    parameters = Column(title="", hide_if=lambda: True)
+    exception_message = Column(title="", hide_if=lambda: True)
     type = Column("Typ", hide_if=lambda: True)
 
     @t.override
     def __init__(
         self,
         *,
-        hidden_columns: t.Container[str] = None,
+        hidden_columns: t.Container[str] | None = None,
         sort_order: str = "asc",
         **kw: t.Any
     ):

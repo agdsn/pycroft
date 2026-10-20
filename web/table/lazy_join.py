@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing as t
 from functools import wraps
 from types import FunctionType
@@ -83,9 +85,9 @@ def lazy_join(func_or_glue: str) -> Callable[[DecoratedInType], DecoratedOutType
     ...
 
 
-def lazy_join[**P](
+def lazy_join[**P, Q](
     func_or_glue: str | DecoratedInType[P],
-) -> DecoratedOutType[P] | Callable[[DecoratedInType[P]], DecoratedOutType[P]]:
+) -> DecoratedOutType[P] | LazyJoinDecorator:
     if isinstance(func_or_glue, FunctionType):
         # Return the wrapped function
         return LazyJoinDecorator()(func=t.cast(DecoratedInType, func_or_glue))
