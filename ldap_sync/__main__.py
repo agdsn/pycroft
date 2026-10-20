@@ -7,10 +7,9 @@ import logging
 import os
 import typing
 
+from ldap3.core.connection import Connection
 from ldap3.utils.dn import safe_dn
 from sentry_sdk.integrations.logging import LoggingIntegration
-from sqlalchemy.engine import Connection
-from sqlalchemy.orm import Session
 
 from ldap_sync import logger
 from ldap_sync.concepts import types
