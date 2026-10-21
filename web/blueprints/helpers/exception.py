@@ -1,3 +1,4 @@
+from wtforms import Field
 import logging
 import traceback
 import typing as t
@@ -25,6 +26,15 @@ def flash_handler(e: PycroftException) -> None:
 
 
 ErrorHandler = t.Callable[[PycroftException], None]
+
+
+def add_error_handler(field: Field, error: str) -> ErrorHandler:
+    def _h(_err):
+        field.errors = [
+            *field.errors,
+            error
+        ]
+    return _h
 
 
 @contextmanager

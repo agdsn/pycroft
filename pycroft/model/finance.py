@@ -39,7 +39,7 @@ if t.TYPE_CHECKING:
 
 class MembershipFee(IntegerIdModel):
     name: Mapped[str]
-    regular_fee: Mapped[int] = mapped_column(Money, CheckConstraint("regular_fee >= 0"))
+    regular_fee: Mapped[Decimal] = mapped_column(Money, CheckConstraint("regular_fee >= 0"))
 
     # Timedelta after which a member has to pay
     booking_begin: Mapped[timedelta]
@@ -376,7 +376,7 @@ class BankAccount(IntegerIdModel):
         )
 
     @property
-    def last_imported_at(self) -> DateTimeTz:
+    def last_imported_at(self) -> DateTimeTz | None:
         return (
             object_session(self)
             .execute(

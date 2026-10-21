@@ -36,6 +36,10 @@ from flask_wtf import FlaskForm
 from markupsafe import Markup
 from sqlalchemy.orm import Session
 
+import pycroft.lib.user
+import pycroft.lib.address
+import pycroft.lib.logging
+import pycroft.lib.membership
 import pycroft.lib.search
 import pycroft.lib.stats
 from pycroft import lib, config
@@ -311,6 +315,7 @@ def user_show(user_id: int) -> ResponseReturnValue:
     form = UserLogEntry()
 
     if form.validate_on_submit():
+        assert form.message.data is not None
         lib.logging.log_user_event(form.message.data,
                                    author=current_user,
                                    user=user)
@@ -429,8 +434,8 @@ def user_show_logs_json(user_id: int, logtype: str = "all") -> ResponseReturnVal
         abort(404)
     logs = _iter_user_logs(user, logtype)
 
-    def sort_key(l: LogTableRow) -> int | None:
-        return l.created_at.timestamp
+    def sort_key(l: LogTableRow) -> tuple[bool, int]:
+        return (True, ts or 0) if (ts := l.created_at.timestamp) is not None else (False, 0)
 
     return TableResponse[LogTableRow](
         items=sorted(logs, key=sort_key, reverse=True)
@@ -500,7 +505,7 @@ def user_show_groups_json(
                 + (
                     [
                         BtnColResponse(
-                            href=url_end,
+                            href=url_end,  # ty: ignore[invalid-argument-type]
                             title="Beenden",
                             icon="fa-power-off",
                             btn_class="btn-link",
@@ -518,7 +523,7 @@ def user_show_groups_json(
                             btn_class="btn-link",
                         )
                     ]
-                    if session.utcnow() <= membership.active_during.begin
+                    if (b := membership.active_during.begin) and session.utcnow() <= b
                     else []
                 ),
             )
@@ -534,8 +539,8 @@ def add_membership(user_id: int) -> ResponseReturnValue:
     form = UserAddGroupMembership()
 
     if form.validate_on_submit():
-        if form.begins_at.date.data:
-            begins_at = utc.with_min_time(form.begins_at.date.data)
+        if (d := form.begins_at.data) and d.date():
+            begins_at = utc.with_min_time(d.date())
         else:
             begins_at = session.utcnow()
         if not form.ends_at.unlimited.data:
@@ -657,12 +662,14 @@ def create() -> ResponseReturnValue:
 
     if not form.validate_on_submit():
         return default_response()
-    room: Room = get_room(building_id=form.building.data.id, level=form.level.data,
+    room: Room | None = get_room(building_id=form.building.data.id, level=form.level.data,
                           room_number=form.room_number.data)
     if not room:
         flash("Raum scheint nicht zu existieren…", 'error')
         return default_response()
 
+    assert form.name.data is not None
+    assert form.login.data is not None
     with abort_on_error(default_response), session.session.begin_nested():
         new_user, plain_password = lib.user.create_user(
             name=form.name.data,
@@ -717,6 +724,8 @@ def create_non_resident() -> ResponseReturnValue:
 
     if not form.validate_on_submit():
         return default_response()
+    assert form.name.data is not None
+    assert form.login.data is not None
     with abort_on_error(default_response), session.session.begin_nested():
         address = lib.address.get_or_create_address(**form.address_kwargs)
         new_user, plain_password = lib.user.create_user(
@@ -823,7 +832,7 @@ def membership_delete(user_id: int, membership_id: int) -> ResponseReturnValue:
             "error",
         )
         abort(403)
-    if session.utcnow() >= membership.active_during.begin:
+    if (begin := membership.active_during.begin) and session.utcnow() >= begin:
         flash("Nur Mitgliedschaften, die in der Zukunft liegen, können gelöscht werden.", "error")
         abort(403)
     form = FlaskForm()
@@ -885,6 +894,7 @@ def edit_membership(user_id: int, membership_id: int) -> ResponseReturnValue:
     form = UserEditGroupMembership(**membership_data)
 
     if form.validate_on_submit():
+        assert form.begins_at.data is not None
         change_membership_active_during(
             session=session.session,
             membership_id=membership_id,
@@ -919,6 +929,7 @@ def edit_user(user_id: int) -> ResponseReturnValue:
     if form.validate_on_submit():
         success = True
 
+        assert form.name.data is not None
         edited_user = lib.user.edit_name(user, form.name.data, current_user)
         try:
             edited_user = lib.user.edit_email(edited_user, form.email.data,
@@ -933,7 +944,10 @@ def edit_user(user_id: int) -> ResponseReturnValue:
         if edited_user.swdd_person_id != form.person_id.data:
             if form.person_id.data is not None and \
                User.q.filter_by(swdd_person_id=form.person_id.data).filter(User.id != user.id).first():
-                form.person_id.errors.append("Diese Debitorennummer wird bereits verwendet!")
+                form.person_id.errors = [
+                    *form.person_id.errors,
+                    "Diese Debitorennummer wird bereits verwendet!"
+                ]
                 success = False
             else:
                 edited_user = lib.user.edit_person_id(edited_user, form.person_id.data,
@@ -960,6 +974,9 @@ def edit_user_address(user_id: int) -> ResponseReturnValue:
     form = UserEditAddressForm()
     user_show_url = url_for('.user_show', user_id=user.id)
     if form.validate_on_submit():
+        assert form.address_street.data is not None
+        assert form.address_number.data is not None
+        assert form.address_zip_code.data is not None
         edit_address(
             user=user,
             processor=current_user,
@@ -1074,6 +1091,7 @@ def block(user_id: int) -> ResponseReturnValue:
         else:
             ends_at = utc.with_min_time(form.ends_at.date.data, )
 
+        assert form.reason.data is not None
         try:
             during = closedopen(session.utcnow(), ends_at)
             lib.user.block(
@@ -1129,15 +1147,18 @@ def move_out(user_id: int) -> ResponseReturnValue:
     if not form.validate():
         return default_response()
 
-    when = session.utcnow() if form.now.data else utc.with_min_time(form.when.data)
+    if form.now.data:
+        when = session.utcnow()
+    else:
+        assert (date := form.when.data) is not None
+        when = utc.with_min_time(date)
+
     with abort_on_error(default_response), session.session.begin_nested():
         lib.user.move_out(
             user=user,
             comment=form.comment.data,
             processor=current_user,
-            when=session.utcnow()
-            if form.now.data
-            else utc.with_min_time(form.when.data),
+            when=when,
             end_membership=form.end_membership.data,
         )
     session.session.commit()
@@ -1173,7 +1194,12 @@ def move_in(user_id: int) -> ResponseReturnValue:
     if not form.validate():
         return default_response()
 
-    when = session.utcnow() if form.now.data else utc.with_min_time(form.when.data)
+    if form.now.data:
+        when = session.utcnow()
+    else:
+        assert (date := form.when.data) is not None
+        when = utc.with_min_time(date)
+
     with abort_on_error(default_response), session.session.begin_nested():
         lib.user.move_in(
             user=user,
@@ -1212,7 +1238,7 @@ def room_history_json(user_id: int) -> ResponseReturnValue:
                     title=history_entry.room.short_name,
                 ),
             )
-            for history_entry in cast(list[RoomHistoryEntry], user.room_history_entries)
+            for history_entry in user.room_history_entries
         ]
     ).model_dump()
 
@@ -1269,6 +1295,9 @@ def member_request_edit(pre_member_id: int) -> ResponseReturnValue:
     if form.validate_on_submit():
         old_email = prm.email
 
+        assert form.name.data is not None
+        assert form.login.data is not None
+        assert form.birthdate.data is not None
         prm.name = form.name.data
         prm.login = form.login.data
         prm.email = form.email.data
@@ -1284,7 +1313,10 @@ def member_request_edit(pre_member_id: int) -> ResponseReturnValue:
                 if tenancy is not None:
                     prm.swdd_person_id = form.person_id.data
                 else:
-                    form.person_id.errors.append("Zu der angegebenen Debitorennummer konnten keine Verträge gefunden werden!",)
+                    form.person_id.errors = [
+                        *form.person_id.errors,
+                        "Zu der angegebenen Debitorennummer konnten keine Verträge gefunden werden!"
+                    ]
 
         room = Room.q.filter_by(building=form.building.data, level=form.level.data,
                                 number=form.room_number.data).first()
@@ -1442,7 +1474,7 @@ def member_requests_json() -> ResponseReturnValue:
                 ),
                 login=prm.login,
                 email=TextWithBooleanColResponse(
-                    text=prm.email, bool=prm.email_confirmed
+                    text=prm.email or "", bool=prm.email_confirmed
                 ),
                 move_in_date=date_format(prm.move_in_date, formatter=date_filter),
                 action_required=prm.room is not None
@@ -1501,7 +1533,7 @@ def resend_confirmation_mail() -> ResponseReturnValue:
 def archivable_users() -> ResponseReturnValue:
     table = ArchivableMembersTable(data_url=url_for(".archivable_users_json"))
 
-    sess = t.cast(Session, session.session)
+    sess = session.session
 
     return render_template(
         "user/archivable_users.html",
@@ -1514,7 +1546,7 @@ def archivable_users() -> ResponseReturnValue:
 @bp.route("/scrub/mails", methods=["GET", "POST"])
 def scrub_mails() -> ResponseReturnValue:
     """Scrub The mail addresses in batches of 100"""
-    sess = t.cast(Session, session.session)
+    sess = session.session
 
     with sess.begin_nested():
         ids = scrub_all_mails(sess, author=current_user)
@@ -1568,6 +1600,8 @@ def mail_group() -> ResponseReturnValue:
     }
 
     if form.validate_on_submit():
+        assert form.subject.data is not None
+        assert form.body_plain.data is not None
         lib.user.group_send_mail(
             groups=form.groups.data,
             subject=form.subject.data,

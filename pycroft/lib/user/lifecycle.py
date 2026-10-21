@@ -53,8 +53,8 @@ from .mail import user_send_mail, send_confirmation_email
 def create_user(
     name: str,
     login: str,
-    email: str,
-    birthdate: date,
+    email: str | None,
+    birthdate: date | None,
     groups: t.Iterable[PropertyGroup],
     processor: User | None,
     address: Address,
@@ -229,7 +229,7 @@ def move_in(
                     host_existing.owner_id = user.id
 
                     session.session.add(host_existing)
-                    migrate_host(session.session, host_existing, user.room, processor)
+                    migrate_host(session.session, host_existing, room, processor)
                 else:
                     raise MacExistsException
             else:
@@ -320,7 +320,7 @@ def move(
 @with_transaction
 def move_out(
     user: User,
-    comment: str,
+    comment: str | None,
     processor: User,
     when: DateTimeTz,
     end_membership: bool = True,

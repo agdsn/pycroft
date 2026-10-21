@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 
 from flask import request, url_for, Blueprint, Flask
 from web.blueprints.access import BlueprintAccess
-from web.blueprints import bake_endpoint
+from web.blueprints import bake_endpoint, NamedCallable
 
 
 class BlueprintNavigation:
@@ -83,7 +83,7 @@ class BlueprintNavigation:
         return self._access.is_accessible
 
     def navigate[
-        TFun: t.Callable
+        TFun: NamedCallable
     ](
         self,
         text: str,
@@ -153,7 +153,7 @@ class BlueprintNavigation:
         :return: True if active, False else.
         """
         # TODO remove these casts once on `Flask v2`
-        return t.cast(str, self.blueprint.name) == t.cast(str, request.blueprint)
+        return self.blueprint.name == t.cast(str, request.blueprint)
 
     @property
     def get_page_title(self) -> str | None:
@@ -231,6 +231,6 @@ class SegmentedList[TElem]:
 class NavigationItem:
     endpoint: str
     text: str
-    description: str
-    icon: str
+    description: str | None
+    icon: str | None
     weight: int

@@ -131,6 +131,8 @@ def property_group_edit(group_id: int) -> ResponseValue:
     form = PropertyGroupForm(obj=group)
 
     if form.is_submitted():
+        assert form.name.data is not None
+        assert form.permission_level.data is not None
         edit_property_group(group, form.name.data, form.permission_level.data,
                             current_user)
 

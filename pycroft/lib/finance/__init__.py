@@ -60,7 +60,7 @@ from .transaction_crud import (
 
 
 def user_has_paid(user: User) -> bool:
-    return t.cast(int, user.account.balance) <= 0
+    return user.account.balance <= 0
 
 
 def get_typed_splits(

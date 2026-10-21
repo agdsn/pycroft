@@ -29,7 +29,7 @@ class UniqueMac:
         if self.annex_set(form):
             return
 
-        current_mac = getattr(form.meta, "current_mac", None)
+        current_mac = getattr(form, "current_mac", None)
         ci = get_conflicting_interface(session.session, field.data, current_mac)
         if ci is None:
             return

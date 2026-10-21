@@ -31,7 +31,7 @@ class SiteRow(BaseModel):
 
 
 class BuildingLevelRoomTable(BootstrapTable):
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         table_args = {
             'data-sort-name': 'room',
             'data-query-params': 'perhaps_all_users_query_params',
@@ -66,7 +66,7 @@ class RoomOvercrowdedTable(BootstrapTable):
     room = LinkColumn("Raum")
     inhabitants = MultiBtnColumn("Bewohner")
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         table_args = {'data-sort-name': 'room'}
 
 
@@ -76,7 +76,7 @@ class RoomOvercrowdedRow(BaseModel):
 
 
 class PatchPortTable(BootstrapTable):
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         table_args = {
             'data-sort-name': 'name',
         }
@@ -119,7 +119,7 @@ class RoomTenanciesTable(BootstrapTable):
     ends_at = DateColumn("Bis")
     status = Column("Status")
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         table_args = {"data-sort-name": "begins_at"}
 
 

@@ -40,7 +40,7 @@ class ColoredColResponse(BaseModel):
 
 
 class FinanceTable(BootstrapTable):
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         table_args = {
             'data-side-pagination': 'server',
             # 'data-search': 'true',
@@ -128,7 +128,7 @@ class FinanceRow(BaseModel):
 
 
 class FinanceTableSplitted(FinanceTable, SplittedTable):
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         table_args = {
             'data-row-style': False,
             'data-sort-name': False,  # the "valid_on" col doesn't exist here
@@ -221,7 +221,7 @@ class BankAccountTable(BootstrapTable):
         href = url_for(".bank_accounts_create")
         return button_toolbar(gettext("Neues Bankkonto anlegen"), href)
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         table_args = {
             "data-sort-order": "desc",
             "data-sort-name": "last_imported_at",
@@ -279,7 +279,7 @@ class BankAccountActivityTable(BootstrapTable):
             icon="fa-rotate-left",
         )
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         table_args = {
             'data-sort-order': 'desc',
             'data-sort-name': 'valid_on',
@@ -303,7 +303,7 @@ class TransactionTable(BootstrapTable):
     account = LinkColumn("Konto")
     amount = Column("Wert")
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         table_args = {
             'data-row-style': 'table.financeRowFormatter',
         }

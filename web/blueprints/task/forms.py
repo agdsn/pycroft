@@ -17,4 +17,5 @@ class RescheduleTaskForm(BaseForm):
 
     @property
     def full_datetime(self) -> DateTimeTz:
+        assert self.when.data is not None
         return combine_or_midnight(self.when.data, self.when_time.data)

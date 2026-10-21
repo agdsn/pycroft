@@ -286,7 +286,7 @@ class BootstrapTableMeta(type):
     column_attrname_map: OrderedDict  # TODO specify key/val types
 
     @t.override
-    def __new__(
+    def __new__(  # ty: ignore[invalid-method-override]
         mcls: type[BootstrapTableMeta],
         name: str,
         bases: tuple[type, ...],

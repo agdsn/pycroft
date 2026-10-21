@@ -69,8 +69,8 @@ def get_overcrowded_rooms(building_id: int | None = None) -> dict[int, list[User
     )
 
     users = session.session.scalars(stmt).unique().all()
-    users = sorted(users, key=lambda u: u.room.id)
-    return {k: list(v) for k, v in groupby(users, lambda u: u.room.id)}
+    users = sorted(users, key=lambda u: u.room.id)  # ty: ignore[unresolved-attribute]
+    return {k: list(v) for k, v in groupby(users, lambda u: u.room.id)}  # ty: ignore[unresolved-attribute]
 
 
 def similar_rooms_query(
@@ -124,7 +124,7 @@ def edit_room(
     room: Room,
     number: str,
     inhabitable: bool,
-    vo_suchname: str,
+    vo_suchname: str | None,
     address: Address,
     processor: User,
 ) -> Room:
@@ -250,7 +250,7 @@ def determine_building(
     """
     if shortname:
         stmt = select(Building).filter(Building.short_name == shortname)
-        return t.cast(Building, session.session.scalars(stmt).one())
+        return session.session.scalars(stmt).one()
     if id:
         return session.session.get(Building, id)
     return None

@@ -171,7 +171,7 @@ def delete_membership(
     membership_id: int,
     processor: User,
 ) -> None:
-    membership = session.get(Membership, membership_id)
+    membership = session.get_one(Membership, membership_id)
     session.delete(membership)
     message = deferred_gettext("Deleted membership of  group {group}.")
     log_user_event(
@@ -234,7 +234,7 @@ def change_membership_active_during(
 ) -> None:
     """modify the active_during field of a membership"""
 
-    membership = session.get(Membership, membership_id)
+    membership = session.get_one(Membership, membership_id)
     membership.active_during = closedopen(utc.with_min_time(begins_at), ends_at)
 
     message = (

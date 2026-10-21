@@ -44,7 +44,7 @@ def format_parameters[T: t.MutableMapping[str, t.Any]](parameters: T) -> T:
 
 
 def task_row(task: UserTask) -> TaskRow:
-    task_impl = task_type_to_impl.get(task.type)
+    task_impl = task_type_to_impl[task.type]
     return TaskRow(
         id=task.id,
         user=LinkColResponse(
@@ -103,7 +103,7 @@ def task_row(task: UserTask) -> TaskRow:
 def json_tasks_for_user(user_id: int) -> ResponseValue:
     user = get_user_or_404(user_id)
     return TableResponse[TaskRow](
-        items=[task_row(t.cast(UserTask, task)) for task in user.tasks]
+        items=[task_row(task) for task in user.tasks]
     ).model_dump()
 
 

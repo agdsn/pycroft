@@ -230,7 +230,7 @@ def make_app(hades_logs: bool = True) -> PycroftFlask:
             "health",
             None,
         ):
-            lm = t.cast(LoginManager, current_app.login_manager)  # type: ignore[attr-defined]
+            lm = t.cast(PycroftFlask, current_app).login_manager
             return lm.unauthorized()
         return None
 

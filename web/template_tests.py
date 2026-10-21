@@ -66,4 +66,4 @@ def is_dict(value: t.Any) -> bool:
 
 def register_checks(app: Flask) -> None:
     for name in _check_registry:
-        app.jinja_env.tests[name] = _check_registry[name]
+        app.jinja_env.tests[name] = _check_registry[name]  # ty: ignore[invalid-assignment]

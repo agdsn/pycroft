@@ -67,7 +67,9 @@ def _(action: IdleAction, connection: ldap3.Connection) -> None:
 
 def debug_whether_success(logger: logging.Logger, connection: ldap3.Connection) -> None:
     """Communicate whether the last operation on `connection` has been successful."""
-    if connection.result["result"]:
-        logger.warning("Operation unsuccessful: %s", connection.result)
+    result = connection.result
+    assert result is not None
+    if result["result"]:
+        logger.warning("Operation unsuccessful: %s", result)
     else:
         logger.debug("Operation successful")

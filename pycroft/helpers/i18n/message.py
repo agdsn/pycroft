@@ -115,7 +115,7 @@ class Message(abc.ABC):
 
 class ErroneousMessage(Message):
     @t.override
-    def __init__(self, text):
+    def __init__(self, text):  # ty: ignore[invalid-method-override]
         super().__init__(None)
         self.text = text
 
@@ -151,7 +151,7 @@ class NumericalMessage(Message):
     __slots__ = ("singular", "plural", "n")
 
     @t.override
-    def __init__(self, singular, plural, n, domain=None):
+    def __init__(self, singular, plural, n, domain=None):  # ty: ignore[invalid-method-override]
         super().__init__(domain)
         self.singular = singular
         self.plural = plural

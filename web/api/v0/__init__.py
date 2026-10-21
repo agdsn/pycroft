@@ -242,7 +242,7 @@ class ChangeEmailResource(Resource):
         user_id: int,
         password: str,
         new_email: str,
-        forwarded: bool | None = None,
+        forwarded: bool = True,
     ) -> ResponseReturnValue:
         user = get_authenticated_user(user_id, password)
         try:
@@ -498,10 +498,12 @@ class UserInterfaceResource(Resource):
 
         try:
             if host_name:
+                room = interface.host.room
+                assert room is not None
                 host_edit(
                     interface.host,
                     interface.host.owner,
-                    interface.host.room,
+                    room,
                     host_name,
                     user,
                 )
@@ -803,19 +805,20 @@ class RegistrationResource(Resource):
             if room is None:
                 abort(404, message="Invalid room", code="invalid_room")
 
+        last = last_name or ""
         if person_id is not None:
-            swdd_person_id = get_swdd_person_id(first_name, last_name, birthdate)
+            swdd_person_id = get_swdd_person_id(first_name, last, birthdate)
 
             # some tenants have an additional semicolon added to their last names
             if swdd_person_id is None:
                 swdd_person_id = get_swdd_person_id(
-                    first_name, last_name + ";", birthdate
+                    first_name, last + ";", birthdate
                 )
 
             if swdd_person_id != person_id:
                 abort(400, message="Person id does not match", code="person_id_mismatch")
 
-        name = get_name_from_first_last(first_name, last_name)
+        name = get_name_from_first_last(first_name, last)
 
         try:
             mr = create_member_request(
@@ -981,7 +984,7 @@ class UserActiveResource(Resource):
         part_name = user.name.split()
         if (
             user_status.is_active
-            and {*name.split(), *fname.split()}.issubset(part_name)
+            and {*name.split(), *(fname or "").split()}.issubset(part_name)
             and has_birthday
         ):
             return jsonify({"response": True})

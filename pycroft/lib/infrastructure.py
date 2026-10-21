@@ -26,6 +26,11 @@ class PatchPortAlreadyExistsException(PycroftLibException):
     pass
 
 
+def _require_host_room(host: Host) -> Room:
+    assert host.room is not None, f"Host {host.id} has no room"
+    return host.room
+
+
 @with_transaction
 def create_patch_port(
     name: str, room: Room, switch_room: Room, processor: User
@@ -94,8 +99,11 @@ def patch_switch_port_to_patch_port(
             patch_port=patch_port.name,
         )
     )
-    log_room_event(message.to_json(),
-                   processor, switch_port.switch.host.room)
+    log_room_event(
+        message.to_json(),
+        processor,
+        _require_host_room(switch_port.switch.host),
+    )
 
     patch_port.switch_port = switch_port
 
@@ -115,8 +123,11 @@ def remove_patch_to_patch_port(patch_port: PatchPort, processor: User) -> None:
             patch_port=patch_port.name,
         )
     )
-    log_room_event(message.to_json(),
-                   processor, switch_port.switch.host.room)
+    log_room_event(
+        message.to_json(),
+        processor,
+        _require_host_room(switch_port.switch.host),
+    )
 
     patch_port.switch_port = None
 
@@ -135,7 +146,9 @@ def create_switch_port(
     default_vlans_str = ', '.join(str(vlan.vid) for vlan in switch_port.default_vlans)
     message = deferred_gettext("Created switch-port {} on {} with default VLANs {}.")\
         .format(switch_port.name, switch_port.switch.host.name, default_vlans_str)
-    log_room_event(message.to_json(), processor, switch_port.switch.host.room)
+    log_room_event(
+        message.to_json(), processor, _require_host_room(switch_port.switch.host)
+    )
 
     return switch_port
 
@@ -147,7 +160,9 @@ def edit_switch_port(
     if switch_port.name != name:
         message = deferred_gettext("Changed name of switch-port {} to {}.")\
             .format(switch_port.name, name)
-        log_room_event(message.to_json(), processor, switch_port.switch.host.room)
+        log_room_event(
+            message.to_json(), processor, _require_host_room(switch_port.switch.host)
+        )
 
         switch_port.name = name
 
@@ -157,14 +172,18 @@ def edit_switch_port(
         new_default_vlans_str = ', '.join(str(vlan.vid) for vlan in switch_port.default_vlans)
         message = deferred_gettext("Changed default VLANs of switch-port {} to {}.")\
             .format(switch_port.name, new_default_vlans_str)
-        log_room_event(message.to_json(), processor, switch_port.switch.host.room)
+        log_room_event(
+            message.to_json(), processor, _require_host_room(switch_port.switch.host)
+        )
 
 
 @with_transaction
 def delete_switch_port(switch_port: SwitchPort, processor: User) -> None:
     message = deferred_gettext("Deleted switch-port {port} on {host}.")\
         .format(port=switch_port.name, host=switch_port.switch.host.name)
-    log_room_event(message.to_json(), processor, switch_port.switch.host.room)
+    log_room_event(
+        message.to_json(), processor, _require_host_room(switch_port.switch.host)
+    )
 
     session.delete(switch_port)
 
@@ -181,21 +200,21 @@ def edit_switch(
     if switch.host.name != name:
         message = deferred_gettext("Changed switch name from '{old}' to '{new}'.")\
             .format(old=switch.host.name, new=name)
-        log_room_event(message.to_json(), processor, switch.host.room)
+        log_room_event(message.to_json(), processor, _require_host_room(switch.host))
 
         switch.host.name = name
 
     if switch.host.room != room:
         message = deferred_gettext("Moved switch '{}' from {} to {}.")\
             .format(switch.host.name, str(switch.host.room), str(room))
-        log_room_event(message.to_json(), processor, switch.host.room)
+        log_room_event(message.to_json(), processor, _require_host_room(switch.host))
 
         switch.host.room = room
 
     if switch.management_ip != IPAddress(management_ip):
         message = deferred_gettext("Changed management IP of switch '{}' from {} to {}.")\
             .format(switch.host.name, str(switch.management_ip), management_ip)
-        log_room_event(message.to_json(), processor, switch.host.room)
+        log_room_event(message.to_json(), processor, _require_host_room(switch.host))
 
         switch.management_ip = IPAddress(management_ip)
     session.add(switch)
@@ -215,15 +234,14 @@ def create_switch(
 
     message = deferred_gettext("Created switch '{}' with management IP {}.")\
         .format(switch.host.name, str(switch.management_ip))
-    log_room_event(message.to_json(),
-                   processor, switch.host.room)
+    log_room_event(message.to_json(), processor, _require_host_room(switch.host))
 
     return switch
 
 
 def delete_switch(session: Session, switch: Switch, processor: User) -> None:
     message = deferred_gettext("Deleted switch {}.").format(switch.host.name).to_json()
-    log_room_event(message, processor, switch.host.room)
+    log_room_event(message, processor, _require_host_room(switch.host))
 
     session.delete(switch)
     session.delete(switch.host)

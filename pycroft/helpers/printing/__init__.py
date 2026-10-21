@@ -14,7 +14,6 @@ from reportlab.lib.styles import StyleSheet1, ParagraphStyle
 from reportlab.lib.units import cm
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Image, Table, Spacer
 from reportlab.platypus.flowables import HRFlowable, PageBreak
-from reportlab.rl_config import defaultPageSize
 from reportlab.lib.enums import TA_JUSTIFY, TA_RIGHT, TA_CENTER
 from reportlab.graphics.barcode import qr
 from reportlab.graphics.shapes import Drawing
@@ -99,7 +98,7 @@ def generate_user_sheet(
     new_user: bool,
     wifi: bool,
     bank_account: BankAccount,
-    user: User = None,
+    user: User,
     user_id: str | None = None,
     plain_user_password: str | None = None,
     generation_purpose: str = "",
@@ -134,11 +133,6 @@ def generate_user_sheet(
                             bottomMargin=0.5 * cm)
     style = getStyleSheet()
     story = []
-
-    # noinspection Ruff
-    defaultPageSize[0]
-    # noinspection Ruff
-    defaultPageSize[1]
 
     # HEADER
     im_web = Image(ASSETS_WEB_FILENAME, 0.4 * cm, 0.4 * cm)

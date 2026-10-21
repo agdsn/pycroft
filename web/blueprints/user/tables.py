@@ -47,7 +47,7 @@ class MembershipTable(BootstrapTable):
         href = url_for(".add_membership", user_id=self.user_id)
         return button_toolbar("Mitgliedschaft", href)
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         table_args = {
             'data-row-attributes': 'table.membershipRowAttributes',
             'data-row-style': 'table.membershipRowFormatter',
@@ -141,7 +141,7 @@ class PreMemberTable(BootstrapTable):
     move_in_date = DateColumn("Einzug am")
     actions = MultiBtnColumn("Aktionen", hide_if=no_membership_change, width=1)
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         table_args = {
             'data-row-style': 'table.membershipRequestRowFormatter',
         }
@@ -166,7 +166,7 @@ class PreMemberRow(BaseModel):
 
 
 class ArchivableMembersTable(RefreshableTableMixin, BootstrapTable):
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         table_args = {'data-escape': 'false', 'data-sort-stable': True}
 
     id = Column("#")

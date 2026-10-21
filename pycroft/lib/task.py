@@ -189,7 +189,7 @@ task_type_to_impl: Mapping[TaskType, type[UserTaskImpl]] = {
 
 
 def get_task_implementation(task: Task) -> TaskImpl:
-    return task_type_to_impl.get(task.type)()
+    return task_type_to_impl[task.type]()
 
 
 @with_transaction

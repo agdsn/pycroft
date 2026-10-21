@@ -27,7 +27,7 @@ class PatchPort(IntegerIdModel):
     switch_port_id: Mapped[int | None] = mapped_column(
         ForeignKey(SwitchPort.id, ondelete="SET NULL"), unique=True
     )
-    switch_port: Mapped[SwitchPort] = relationship(back_populates="patch_port")
+    switch_port: Mapped[SwitchPort | None] = relationship(back_populates="patch_port")
 
     room_id: Mapped[int] = mapped_column(
         ForeignKey("room.id", ondelete="CASCADE"), index=True

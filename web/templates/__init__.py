@@ -30,7 +30,7 @@ class PageResourceRegistry:
             return ctx.page_resources
 
         res = PageResources(OrderedDict(), [], OrderedDict())
-        ctx.page_resources = res  # type: ignore[attr-defined]
+        setattr(ctx, "page_resources", res)
         return res
 
     @property

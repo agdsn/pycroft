@@ -81,13 +81,15 @@ class VlanRow(BaseModel):
 
 
 class PortTable(BootstrapTable):
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         table_args = {
             'data-sort-name': 'switchport_name',
         }
 
     @t.override
-    def __init__(self, *, switch_id: int, switch_room_id: int, **kw: t.Any) -> None:
+    def __init__(  # ty: ignore[invalid-method-override]
+        self, *, switch_id: int, switch_room_id: int, **kw: t.Any
+    ) -> None:
         super().__init__(**kw)
         self.switch_id = switch_id
         self.switch_room_id = switch_room_id

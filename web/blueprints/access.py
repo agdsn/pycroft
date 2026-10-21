@@ -10,6 +10,10 @@ from werkzeug import Response
 
 from web.blueprints import bake_endpoint
 
+if t.TYPE_CHECKING:
+    from web.app import PycroftFlask
+    from web.blueprints import NamedCallable
+
 
 def _check_properties(properties: t.Iterable[str]) -> bool:
     missing_props = set(properties) - current_user.current_properties_set
@@ -63,7 +67,7 @@ class BlueprintAccess:
         self.endpoint_properties_map: dict[str, tuple[str, ...]] = {}
         blueprint.before_request(self._check_access)
 
-    def require[TFun: t.Callable](self, *required_properties: str) -> t.Callable[[TFun], TFun]:
+    def require[TFun: NamedCallable](self, *required_properties: str) -> t.Callable[[TFun], TFun]:
         """Set per-view function restrictions.
 
         Decorate flask view functions with this decorator to specify properties
@@ -76,13 +80,14 @@ class BlueprintAccess:
         def decorator(f: TFun) -> TFun:
             endpoint = bake_endpoint(self.blueprint, f)
             self.endpoint_properties_map[endpoint] = view_properties
-            f.required_properties = view_properties  # type: ignore[attr-defined]
+            f.required_properties = view_properties  # ty: ignore[unresolved-attribute]
             return f
         return decorator
 
     def _check_access(self) -> Response | None:
         if not current_user.is_authenticated:
-            return t.cast(Response, current_app.login_manager.unauthorized())  # type: ignore[attr-defined]
+            app = t.cast("PycroftFlask", current_app)
+            return t.cast(Response, app.login_manager.unauthorized())
         endpoint = request.endpoint
         properties = chain(self.required_properties,
                            self.endpoint_properties_map.get(endpoint, ()))

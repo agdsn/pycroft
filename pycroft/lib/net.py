@@ -20,14 +20,14 @@ from pycroft.model.types import IPAddress
 
 class SubnetFullException(PycroftLibException):
     @t.override
-    def __init__(self) -> None:
-        super().__init__("Subnet full")
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args if args else ("Subnet full",))
 
 
 class MacExistsException(PycroftLibException):
     @t.override
-    def __init__(self) -> None:
-        super().__init__("MAC address already exists")
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args if args else ("MAC address already exists",))
 
 
 def get_free_ip(subnets: t.Iterable[Subnet]) -> tuple[netaddr.IPAddress, Subnet]:
@@ -38,14 +38,18 @@ def get_free_ip(subnets: t.Iterable[Subnet]) -> tuple[netaddr.IPAddress, Subnet]
 
 
 #TODO: Implement this in the model
-def get_subnets_for_room(room: Room) -> list[Subnet]:
+def get_subnets_for_room(room: Room | None) -> list[Subnet]:
     if not room:
         return list()
 
-    return [s for p in room.connected_patch_ports
-               for v in p.switch_port.default_vlans
-               for s in v.subnets
-               if s.address.version == 4]
+    return [
+        s
+        for p in room.connected_patch_ports
+        if (switch_port := p.switch_port) is not None
+        for v in switch_port.default_vlans
+        for s in v.subnets
+        if s.address.version == 4
+    ]
 
 
 

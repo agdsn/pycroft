@@ -45,7 +45,9 @@ def _fetch_ldap_entries(
         logger.warning("LDAP search not successful.  Result: %s", connection.result)
         return []
 
-    return [r for r in connection.response if r["dn"] != base_dn]
+    response = connection.response
+    assert response is not None
+    return [r for r in response if r["dn"] != base_dn]
 
 
 def _fetch_ldap_users(connection: ldap3.Connection, base_dn: str) -> list[LdapRecord]:

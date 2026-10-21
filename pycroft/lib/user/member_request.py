@@ -138,6 +138,7 @@ def finish_member_request(
     user = user_from_pre_member(prm, processor=processor)
     processor = processor or user
     assert processor is not None
+    assert prm.move_in_date is not None
 
     move_in_datetime = utc.with_min_time(prm.move_in_date)
     move_in(

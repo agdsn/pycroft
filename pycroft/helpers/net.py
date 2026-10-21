@@ -109,7 +109,7 @@ def reverse_pointer(ip_address: netaddr.IPAddress) -> str:
         DeprecationWarning,
         stacklevel=2,
     )
-    return t.cast(str, ip_address.reverse_dns)
+    return ip_address.reverse_dns
 
 
 def get_interface_manufacturer(mac: str) -> str | None:

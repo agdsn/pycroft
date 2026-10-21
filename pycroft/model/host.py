@@ -73,6 +73,7 @@ class Switch(ModelBase):
     host_id: Mapped[int] = mapped_column(
         ForeignKey(Host.id), primary_key=True, index=True
     )
+    # TODO add a constraint that every switch should have a room
     host: Mapped[Host] = relationship(back_populates="switch")
     management_ip: Mapped[netaddr.IPAddress]
 

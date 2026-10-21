@@ -1,5 +1,6 @@
 from collections.abc import Sequence
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from decimal import Decimal
 
 from schwifty import IBAN, BIC
 from sepaxml import SepaTransfer
@@ -21,7 +22,10 @@ def get_activities_to_return(session: Session) -> Sequence[BankAccountActivity]:
         .filter(BankAccountActivity.transaction_id.is_(None))
         .filter(BankAccountActivity.other_account_number != "")
         .filter(BankAccountActivity.amount > 0)
-        .filter(BankAccountActivity.imported_at < ensure_tz(datetime.utcnow() - timedelta(days=14)))
+        .filter(
+            BankAccountActivity.imported_at
+            < ensure_tz(datetime.now(timezone.utc) - timedelta(days=14))
+        )
     )
 
     return session.scalars(statement).all()
@@ -79,7 +83,7 @@ def attribute_activities_as_returned(
 
 
 def generate_transfer_sepaxml(
-    bank_account: BankAccount, owner: str, iban: str, bic: str, reason: str, amount: int
+    bank_account: BankAccount, owner: str, iban: str, bic: str, reason: str, amount: Decimal | int
 ) -> bytes:
     transfer_config: dict = {
         "name": bank_account.owner,

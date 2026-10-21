@@ -1,3 +1,5 @@
+import typing as t
+
 from flask import Blueprint, Flask
 from flask.typing import ResponseReturnValue
 from werkzeug.exceptions import HTTPException
@@ -16,8 +18,11 @@ def handle_error(err: Exception) -> ResponseReturnValue:
         return v0.api.handle_error(err)
 
     assert hasattr(err, "data")
-    headers = err.data.get("headers", None)
-    messages = err.data.get("messages", ["Invalid request."])
+    # only registered for 400/422, so the code is always set
+    assert err.code is not None
+    data = t.cast(dict[str, t.Any], err.data)
+    headers = data.get("headers", None)
+    messages = data.get("messages", ["Invalid request."])
 
     if headers:
         return {"errors": messages}, err.code, headers

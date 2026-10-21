@@ -62,7 +62,9 @@ class Bound[T: Ord](tuple[TWithInfinity[T], bool]):
         return str(self.value)
 
     @t.override
-    def __new__(cls, value: TWithInfinity[T], is_closed: bool) -> Bound[T]:
+    def __new__(  # ty: ignore[invalid-method-override]
+        cls, value: TWithInfinity[T], is_closed: bool
+    ) -> Bound[T]:
         if value is NegativeInfinity or value is PositiveInfinity:
             is_closed = False
         return tuple.__new__(cls, (value, is_closed))
@@ -72,9 +74,7 @@ class Bound[T: Ord](tuple[TWithInfinity[T], bool]):
         return hash((self[0], self[1]))
 
     @t.override
-    def __le__(self, other: object) -> bool:  # type: ignore[override]
-        if not isinstance(other, Bound):
-            return False
+    def __le__(self, other: Bound[T]) -> bool:  # ty: ignore[invalid-method-override]
         othervalue = other[0]  # for type narrowing
         if self.value is PositiveInfinity:
             return othervalue is PositiveInfinity
@@ -89,9 +89,7 @@ class Bound[T: Ord](tuple[TWithInfinity[T], bool]):
         return bool(self.value <= othervalue)
 
     @t.override
-    def __lt__(self, other: object) -> bool:  # type: ignore[override]
-        if not isinstance(other, Bound):
-            return False
+    def __lt__(self, other: Bound[T]) -> bool:  # ty: ignore[invalid-method-override]
         othervalue = other[0]  # for narrowing
         if self.value is PositiveInfinity:
             return othervalue is PositiveInfinity
@@ -104,12 +102,12 @@ class Bound[T: Ord](tuple[TWithInfinity[T], bool]):
         return bool(self.value < othervalue)
 
     @t.override
-    def __gt__(self, other: t.Any) -> bool:
-        return isinstance(other, Bound) and other < self
+    def __gt__(self, other: Bound[T]) -> bool:  # ty: ignore[invalid-method-override]
+        return operator.lt(other, self)
 
     @t.override
-    def __ge__(self, other: t.Any) -> bool:
-        return isinstance(other, Bound) and other <= self
+    def __ge__(self, other: Bound[T]) -> bool:  # ty: ignore[invalid-method-override]
+        return operator.le(other, self)
 
     @t.override
     def __eq__(self, other: object) -> bool:
@@ -248,18 +246,18 @@ class Interval[T: Ord](tuple):
                 self.upper_bound == other.upper_bound)
 
     def __le__(self, other: Interval[T]) -> bool:  # type: ignore
-        return (self.lower_bound < other.lower_bound or
+        return (operator.lt(self.lower_bound, other.lower_bound) or
                 (self.lower_bound == other.lower_bound and
-                 self.upper_bound <= other.upper_bound))
+                 operator.le(self.upper_bound, other.upper_bound)))
 
     def __lt__(self, other: Interval[T]) -> bool:  # type: ignore
-        return (self.lower_bound < other.lower_bound or
+        return (operator.lt(self.lower_bound, other.lower_bound) or
                 (self.lower_bound == other.lower_bound and
-                 self.upper_bound < other.upper_bound))
+                 operator.lt(self.upper_bound, other.upper_bound)))
 
     def __contains__(self, point: T) -> bool:  # type: ignore
         bound = Bound[T](point, True)
-        return self.lower_bound <= bound <= self.upper_bound
+        return operator.le(self.lower_bound, bound) and operator.le(bound, self.upper_bound)
 
     @t.override
     def __str__(self):
@@ -298,7 +296,7 @@ class Interval[T: Ord](tuple):
 
         .. note:: This is not the same as ``self < other``.
         """
-        return self.upper_bound < other.lower_bound
+        return operator.lt(self.upper_bound, other.lower_bound)
 
     def before(self, other: Interval[T]) -> bool:
         """
@@ -309,7 +307,7 @@ class Interval[T: Ord](tuple):
 
         .. note:: This is not the same as ``self <= other``.
         """
-        return self.upper_bound <= other.lower_bound
+        return operator.le(self.upper_bound, other.lower_bound)
 
     def strictly_after(self, other: Interval[T]) -> bool:
         """
@@ -351,8 +349,8 @@ class Interval[T: Ord](tuple):
         Two intervals overlap if each begin is strictly before the other's end.
         This means that the intervals may not be equal.
         """
-        return (self.lower_bound < other.upper_bound and
-                other.lower_bound < self.upper_bound)
+        return (operator.lt(self.lower_bound, other.upper_bound) and
+                operator.lt(other.lower_bound, self.upper_bound))
 
     def overlaps(self, other: Interval[T]) -> bool:
         """
@@ -360,8 +358,8 @@ class Interval[T: Ord](tuple):
 
         Two intervals overlap if each begin is before the other's end.
         """
-        return (self.lower_bound <= other.upper_bound and
-                other.lower_bound <= self.upper_bound)
+        return (operator.le(self.lower_bound, other.upper_bound) and
+                operator.le(other.lower_bound, self.upper_bound))
 
     def strictly_during(self, other: Interval[T]) -> bool:
         """
@@ -371,8 +369,8 @@ class Interval[T: Ord](tuple):
         An interval is strictly during another if its begin is greater than
         the other's and its end is less than the other's.
         """
-        return (other.lower_bound < self.lower_bound and
-                self.upper_bound < other.upper_bound)
+        return (operator.lt(other.lower_bound, self.lower_bound) and
+                operator.lt(self.upper_bound, other.upper_bound))
 
     def during(self, other: Interval[T]) -> bool:
         """
@@ -381,8 +379,8 @@ class Interval[T: Ord](tuple):
         An interval is during another if its begin is greather than or equal to
         the other's and its end is less than or equal to the other's.
         """
-        return (other.lower_bound <= self.lower_bound and
-                self.upper_bound <= other.upper_bound)
+        return (operator.le(other.lower_bound, self.lower_bound) and
+                operator.le(self.upper_bound, other.upper_bound))
 
     def strictly_contains(self, other: Interval[T]) -> bool:
         """
@@ -771,7 +769,7 @@ def _intersect[
             intersect = a.intersect(b)
             if intersect is not None and not intersect.empty:
                 yield intersect
-            if a.upper_bound < b.upper_bound:
+            if operator.lt(a.upper_bound, b.upper_bound):
                 a = next(left)
             else:
                 b = next(right)

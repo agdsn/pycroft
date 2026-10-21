@@ -121,6 +121,10 @@ def switch_show(switch_id: int) -> ResponseValue:
     if not switch:
         flash(f"Switch mit ID {switch_id} nicht gefunden!", "error")
         return redirect(url_for('.switches'))
+    if not switch.host.room_id:
+        flash(f"Switch mit ID {switch_id} ist keinem Raum zugeordnet!", "error")
+        return redirect(url_for('.switches'))
+
     return render_template(
         'infrastructure/switch_show.html',
         page_title=f"Switch: {switch.host.name}",
@@ -197,6 +201,8 @@ def switch_create() -> ResponseValue:
         room = Room.q.filter_by(number=form.room_number.data,
                                 level=form.level.data, building=form.building.data).one()
 
+        assert form.name.data is not None
+        assert form.management_ip.data is not None
         switch = create_switch(
             sess, form.name.data, IPAddress(form.management_ip.data), room, current_user
         )
@@ -224,13 +230,19 @@ def switch_edit(switch_id: int) -> ResponseValue:
         flash(f"Switch mit ID {switch_id} nicht gefunden!", "error")
         return redirect(url_for('.switches'))
 
-    form = SwitchForm(name=switch.host.name, management_ip=switch.management_ip, building=switch.host.room.building,
-                      level=switch.host.room.level, room_number=switch.host.room.number)
+    if not (room := switch.host.room):
+        flash(f"Switch mit ID {switch_id} ist keinem Raum zugeordnet!", "error")
+        return redirect(url_for('.switches'))
+
+    form = SwitchForm(name=switch.host.name, management_ip=switch.management_ip, building=room.building,
+                      level=room.level, room_number=room.number)
 
     if form.validate_on_submit():
         room = Room.q.filter_by(number=form.room_number.data,
                                 level=form.level.data, building=form.building.data).one()
 
+        assert form.name.data is not None
+        assert form.management_ip.data is not None
         edit_switch(sess, switch, form.name.data, form.management_ip.data, room, current_user)
         sess.commit()
         flash("Die Switch wurde erfolgreich bearbeitet.", "success")
@@ -279,30 +291,36 @@ def switch_delete(switch_id: int) -> ResponseValue:
 @bp.route('/switch/<int:switch_id>/port/create', methods=['GET', 'POST'])
 @access.require('infrastructure_change')
 def switch_port_create(switch_id: int) -> ResponseValue:
-    switch = session.session.get(Switch, switch_id)
-
-    if not switch:
+    if not (switch := session.session.get(Switch, switch_id)):
         flash(f"Switch mit ID {switch_id} nicht gefunden!", "error")
+        return redirect(url_for('.switches'))
+
+    if not (room := switch.host.room):
+        flash(f"Switch mit ID {switch_id} ist keinem Raum zugeordnet!", "error")
         return redirect(url_for('.switches'))
 
     form = SwitchPortForm()
 
-    form.patch_port.query = PatchPort.q.filter_by(switch_room=switch.host.room)
+    form.patch_port.query = PatchPort.q.filter_by(switch_room=room)
 
     if not form.is_submitted():
-        form.default_vlans.process_data([VLAN.q.filter_by(name=switch.host.room.building.short_name).first()])
+        form.default_vlans.process_data([VLAN.q.filter_by(name=room.building.short_name).first()])
 
     if form.validate_on_submit():
         error = False
 
         nested = session.session.begin_nested()
+        assert form.name.data is not None
         switch_port = create_switch_port(switch, form.name.data, form.default_vlans.data, current_user)
 
         if form.patch_port.data:
             try:
                 patch_switch_port_to_patch_port(switch_port, form.patch_port.data, current_user)
             except PatchPortAlreadyPatchedException:
-                form.patch_port.errors.append("Dieser Patch-Port ist bereits mit einem Switch-Port verbunden.")
+                form.patch_port.errors = [
+                    *form.patch_port.errors,
+                    "Dieser Patch-Port ist bereits mit einem Switch-Port verbunden."
+                ]
                 error = True
 
         if not error:
@@ -352,6 +370,7 @@ def switch_port_edit(switch_id: int, switch_port_id: int) -> ResponseValue:
 
         # TODO use `handle_errors` instead
         nested = session.session.begin_nested()
+        assert form.name.data is not None
         edit_switch_port(switch_port, form.name.data, form.default_vlans.data, current_user)
 
         if switch_port.patch_port != form.patch_port.data:
@@ -362,7 +381,10 @@ def switch_port_edit(switch_id: int, switch_port_id: int) -> ResponseValue:
                 try:
                     patch_switch_port_to_patch_port(switch_port, form.patch_port.data, current_user)
                 except PatchPortAlreadyPatchedException:
-                    form.patch_port.errors.append("Dieser Patch-Port ist bereits mit einem Switch-Port verbunden.")
+                    form.patch_port.errors = [
+                        *form.patch_port.errors,
+                        "Dieser Patch-Port ist bereits mit einem Switch-Port verbunden."
+                    ]
                     error = True
 
         if not error:

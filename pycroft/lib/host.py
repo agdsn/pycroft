@@ -47,7 +47,7 @@ def generate_hostname(ip_address: netaddr.IPAddress) -> str:
 
 
 @with_transaction
-def host_create(owner: User, room: Room, name: str, processor: User) -> Host:
+def host_create(owner: User, room: Room, name: str | None, processor: User) -> Host:
     host = Host(name=name, owner_id=owner.id, room=room)
 
     session.add(host)
@@ -69,7 +69,7 @@ def host_create(owner: User, room: Room, name: str, processor: User) -> Host:
 
 
 @with_transaction
-def host_edit(host: Host, owner: User, room: Room, name: str, processor: User) -> None:
+def host_edit(host: Host, owner: User, room: Room, name: str | None, processor: User) -> None:
     if host.name != name:
         message = deferred_gettext("Changed name of host '{}' to '{}'.").format(
             host.name, name
@@ -130,7 +130,9 @@ def migrate_host(session: Session, host: Host, new_room: Room, processor: User) 
                 log_user_event(author=processor, user=host.owner, message=message.to_json())
 
     message = deferred_gettext("Moved host '{name}' from {room_old} to {room_new}.").format(
-        name=host.name, room_old=old_room.short_name, room_new=new_room.short_name
+        name=host.name,
+        room_old=old_room.short_name if old_room is not None else None,
+        room_new=new_room.short_name,
     )
 
     log_user_event(author=processor, user=host.owner, message=message.to_json())
@@ -147,7 +149,7 @@ def host_delete(host: Host, processor: User) -> None:
 @with_transaction
 def interface_create(
     host: Host,
-    name: str,
+    name: str | None,
     mac: str,
     ips: t.Iterable[netaddr.IPAddress] | None,
     processor: User,
@@ -189,7 +191,7 @@ def interface_create(
 @with_transaction
 def interface_edit(
     interface: Interface,
-    name: str,
+    name: str | None,
     mac: str,
     ips: t.Iterable[netaddr.IPAddress],
     processor: User,

@@ -87,7 +87,7 @@ def host_edit(host_id: int) -> ResponseReturnValue:
         return default_response()
 
     # existence guaranteed by validator
-    owner = session.session.get(User, form.owner_id.data)
+    owner = session.session.get_one(User, form.owner_id.data)
     with abort_on_error(default_response), session.session.begin_nested():
         if not (
             room := get_room(
@@ -96,7 +96,10 @@ def host_edit(host_id: int) -> ResponseReturnValue:
                 room_number=form.room_number.data,
             )
         ):
-            form.room_number.errors.append("room does not exist")
+            form.room_number.errors = [
+                *form.room_number.errors,
+                "room does not exist"
+            ]
             return default_response()
         lib_host.host_edit(host, owner, room, form.name.data, processor=current_user)
     session.session.commit()
@@ -132,7 +135,7 @@ def host_create() -> ResponseReturnValue:
 
     # existence verified by validator
     # TODO can't we provide an attribute for that on the form?
-    owner = session.session.get(User, form.owner_id.data)
+    owner = session.session.get_one(User, form.owner_id.data)
     with abort_on_error(default_response), session.session.begin_nested():
         if not (
             room := get_room(
@@ -143,7 +146,10 @@ def host_create() -> ResponseReturnValue:
                 room_number=form.room_number.data,
             )
         ):
-            form.room_number.errors.append("room does not exist")
+            form.room_number.errors = [
+                *form.room_number.errors,
+                "room does not exist",
+            ]
             return default_response()
 
         host = lib_host.host_create(owner, room, form.name.data, processor=current_user)
@@ -245,12 +251,12 @@ def interface_delete(interface_id: int) -> ResponseReturnValue:
 def interface_edit(interface_id: int) -> ResponseReturnValue:
     interface = get_interface_or_404(interface_id)
 
-    subnets = get_subnets_for_room(interface.host.room)
+    subnets = get_subnets_for_room(r) if (r := interface.host.room) else []
     current_ips = [ip.address for ip in interface.ips]
     unused_ips = [ip for subnet in subnets for ip in subnet.unused_ips_iter()]
 
     form = InterfaceForm(obj=interface)
-    form.meta.current_mac = interface.mac
+    setattr(form, "current_mac", interface.mac)
     form.ips.choices = [(str(ip), str(ip)) for ip in current_ips + unused_ips]
 
     def default_response() -> ResponseReturnValue:
@@ -269,7 +275,8 @@ def interface_edit(interface_id: int) -> ResponseReturnValue:
     if not form.validate():
         return default_response()
 
-    ips = {IPAddress(ip) for ip in form.ips.data}
+    ips = {IPAddress(ip) for ip in form.ips.data or []}
+    assert form.mac.data is not None
 
     with abort_on_error(default_response), session.session.begin_nested():
         lib_host.interface_edit(
@@ -285,7 +292,7 @@ def interface_edit(interface_id: int) -> ResponseReturnValue:
 @access.require("hosts_change")
 def interface_create(host_id: int) -> ResponseReturnValue:
     host = get_host_or_404(host_id)
-    subnets = get_subnets_for_room(host.room)
+    subnets = get_subnets_for_room(host.room) if host.room else []
     form = InterfaceForm()
     unused_ips = [ip for subnet in subnets for ip in subnet.unused_ips_iter()]
     form.ips.choices = [(str(ip), str(ip)) for ip in unused_ips]
@@ -306,7 +313,8 @@ def interface_create(host_id: int) -> ResponseReturnValue:
     if not form.validate():
         return default_response()
 
-    ips = {IPAddress(ip) for ip in form.ips.data}
+    ips = {IPAddress(ip) for ip in form.ips.data or []}
+    assert form.mac.data is not None
 
     try:
         lib_host.interface_create(
@@ -329,8 +337,10 @@ def interface_create(host_id: int) -> ResponseReturnValue:
 
 def _host_row(host: Host, user_id: int) -> HostRow:
     if host.room:
-        patch_ports = host.room.connected_patch_ports
-        switches = [p.switch_port.switch.host for p in patch_ports]
+        patch_ports = [
+            sp for p in host.room.connected_patch_ports if (sp := p.switch_port) is not None
+        ]
+        switches = [sp.switch.host for sp in patch_ports]
         switch_links = [
             LinkColResponse(
                 href=url_for("infrastructure.switch_show", switch_id=s.id),
@@ -338,7 +348,7 @@ def _host_row(host: Host, user_id: int) -> HostRow:
             )
             for s in switches
         ]
-        ports = ", ".join(p.switch_port.name for p in patch_ports)
+        ports = ", ".join(sp.name for sp in patch_ports)
     else:
         switch_links = []
         ports = None

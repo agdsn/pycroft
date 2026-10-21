@@ -36,7 +36,7 @@ class UserMoveOutSchema(Schema):
 
 @dataclass
 class UserMoveOutParams(TaskParams):
-    comment: str
+    comment: str | None
     end_membership: bool
 
 

@@ -27,6 +27,7 @@ from sqlalchemy.orm import joinedload, aliased
 from sqlalchemy.sql import and_, select, exists
 
 import pycroft.lib.facilities
+import pycroft.lib.logging
 from pycroft import lib
 from pycroft.exc import PycroftException
 from pycroft.helpers.i18n import gettext
@@ -73,7 +74,7 @@ from .tables import (
     RoomTenanciesTable,
     RoomTenanciesRow,
 )
-from ..helpers.exception import abort_on_error, ErrorHandlerMap
+from ..helpers.exception import abort_on_error, ErrorHandlerMap, add_error_handler
 from ..helpers.log_tables import LogTableRow
 from ...template_filters import date_filter
 
@@ -179,6 +180,7 @@ def room_create() -> ResponseReturnValue:
     building = None
     if building_id:
         building = determine_building_or_404(id=building_id)
+    assert building is not None
 
     form = CreateRoomForm(building=building)
 
@@ -197,12 +199,13 @@ def room_create() -> ResponseReturnValue:
         return default_response()
 
     sess = session.session
+    _handlers: ErrorHandlerMap = {RoomAlreadyExistsException: add_error_handler(
+    form.number,
+            "Ein Raum mit diesem Namen existiert bereits in dieser Etage!",
+    )}
 
-    _handlers: ErrorHandlerMap = {
-        RoomAlreadyExistsException: lambda _: form.number.errors.append(
-            "Ein Raum mit diesem Namen existiert bereits in dieser Etage!"
-        )
-    }
+    assert form.level.data is not None
+    assert form.number.data is not None
     with abort_on_error(default_response, _handlers), sess.begin_nested():
         address = get_or_create_address(**form.address_kwargs)
         room = create_room(
@@ -259,10 +262,16 @@ def room_edit(room_id: int) -> ResponseReturnValue:
     sess = session.session
 
     _handlers: ErrorHandlerMap = {
-        RoomAlreadyExistsException: lambda _: form.number.errors.append(
-            "Ein Raum mit diesem Namen existiert bereits in dieser Etage!"
+        RoomAlreadyExistsException: add_error_handler(
+            form.number,
+            "Ein Raum mit diesem Namen existiert bereits in dieser Etage!",
         )
     }
+    if form.number.data is None:
+        # TODO make field required instead?
+        flash("Room data not given", "error")
+        return default_response()
+
     with abort_on_error(default_response, _handlers), sess.begin_nested():
         address = get_or_create_address(**form.address_kwargs)
         edit_room(
@@ -392,10 +401,12 @@ def patch_port_create(switch_room_id: int) -> ResponseReturnValue:
     ).one()
     sess = session.session
     _handlers: ErrorHandlerMap = {
-        PatchPortAlreadyExistsException: lambda _: form.name.errors.append(
-            "Ein Patch-Port mit dieser Bezeichnung existiert bereits in diesem Zimmer."
+        PatchPortAlreadyExistsException: add_error_handler(
+       form.name,
+            "Ein Patch-Port mit dieser Bezeichnung existiert bereits in diesem Zimmer.",
         )
     }
+    assert form.name.data is not None
     with abort_on_error(default_response, _handlers), sess.begin_nested():
         patch_port = create_patch_port(form.name.data, room, switch_room, current_user)
     sess.commit()
@@ -453,10 +464,12 @@ def patch_port_edit(switch_room_id: int, patch_port_id: int) -> ResponseReturnVa
     ).one()
     sess = session.session
     _handlers: ErrorHandlerMap = {
-        PatchPortAlreadyExistsException: lambda _: form.name.errors.append(
-            "Ein Patch-Port mit dieser Bezeichnung existiert bereits in diesem Switchraum."
+        PatchPortAlreadyExistsException: add_error_handler(
+            form.name,
+            "Ein Patch-Port mit dieser Bezeichnung existiert bereits in diesem Switchraum.",
         )
     }
+    assert form.name.data is not None
     with abort_on_error(default_response, _handlers), sess.begin_nested():
         edit_patch_port(patch_port, form.name.data, room, current_user)
     sess.commit()
@@ -513,6 +526,7 @@ def room_show(room_id: int) -> ResponseReturnValue:
     form = RoomLogEntry()
 
     if form.validate_on_submit():
+        assert form.message.data is not None
         lib.logging.log_room_event(form.message.data, current_user, room)
         flash('Kommentar hinzugefügt', 'success')
         session.session.commit()
@@ -680,12 +694,12 @@ def overcrowded_json(building_id: int) -> ResponseReturnValue:
             RoomOvercrowdedRow(
                 room=LinkColResponse(
                     title="{} / {:02d} / {}".format(
-                        inhabitants[0].room.building.short_name,
-                        inhabitants[0].room.level,
-                        inhabitants[0].room.number,
+                        (r := inhabitants[0].room).building.short_name,  # ty: ignore[unresolved-attribute]
+                        r.level,  # ty: ignore[unresolved-attribute]
+                        r.number,  # ty: ignore[unresolved-attribute]
                     ),
                     href=url_for(
-                        "facilities.room_show", room_id=inhabitants[0].room.id
+                        "facilities.room_show", room_id=r.id  # ty: ignore[unresolved-attribute]
                     ),
                 ),
                 inhabitants=[user_button(user) for user in inhabitants],

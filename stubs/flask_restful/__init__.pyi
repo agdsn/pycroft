@@ -4,7 +4,7 @@ from _typeshed import Incomplete
 from flask import Response
 from flask.views import MethodView
 
-def abort(http_status_code, **kwargs) -> None: ...
+def abort(http_status_code, **kwargs) -> t.NoReturn: ...
 
 class Api:
     representations: Incomplete

@@ -7,7 +7,6 @@ pycroft.helpers.user
 """
 import random
 import string
-import typing as t
 from hashlib import sha512
 
 from passlib.apps import ldap_context
@@ -34,7 +33,7 @@ def generate_password(length: int) -> str:
     # without hard to distinguish characters l/1 0/O
     charset = "abcdefghijkmnopqrstuvwxyz!$%&()=.," \
               ":;-_#+23456789ABCDEFGHIJKLMNPQRSTUVWXYZ"
-    return t.cast(str, genword(length=length, chars=charset))
+    return genword(length=length, chars=charset)
 
 
 def hash_password(plaintext_passwd: str) -> str:
@@ -43,7 +42,7 @@ def hash_password(plaintext_passwd: str) -> str:
     The passlib CryptContext is configured to generate the very secure
     ldap_sha512_crypt hashes (a crypt extension available since glibc 2.7).
     """
-    return t.cast(str, crypt_context.hash(plaintext_passwd))
+    return crypt_context.hash(plaintext_passwd)
 
 
 def cleartext_password(plaintext_passwd: str) -> str:
@@ -61,7 +60,7 @@ def verify_password(plaintext_password: str, hash: str) -> bool:
     It uses a crypt_context to verify :rfc:`2307` hashes.
     """
     try:
-        return t.cast(bool, crypt_context.verify(plaintext_password, hash))
+        return crypt_context.verify(plaintext_password, hash)
     # TypeError is required for user entries not having a hash
     except (ValueError, TypeError):
         return False

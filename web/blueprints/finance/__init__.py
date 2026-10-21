@@ -59,7 +59,7 @@ from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from sqlalchemy.sql.expression import literal_column, func, select, Join
 from wtforms import BooleanField, FormField, Field
 
-from pycroft import config, lib
+from pycroft import config
 from pycroft.exc import PycroftException
 from pycroft.helpers.i18n import localized
 from pycroft.lib import finance
@@ -312,6 +312,11 @@ def get_signer() -> Signer:
 def complete_fints_challenge(
     form: FinTSTANForm, bank_account: BankAccount, signer: Signer
 ) -> tuple[FinTS3PinTanClient, bytes]:
+    assert form.fints_client.data is not None
+    assert form.fints_dialog.data is not None
+    assert form.fints_challenge.data is not None
+    assert form.tan.data is not None
+
     client_data = b64_unsign(form.fints_client.data, signer)
     dialog_data = b64_unsign(form.fints_dialog.data, signer)
     challenge = b64_unsign(form.fints_challenge.data, signer)
@@ -427,6 +432,8 @@ def bank_accounts_import_run(bank_account_id: int) -> ResponseReturnValue:
         return display_form_response(imported)
 
     signer = get_signer()
+    assert form.fints_client.data is not None
+    assert form.fints_dialog.data is not None
     fints_client_data = b64_unsign(form.fints_client.data, signer)
     fints_dialog_data = b64_unsign(form.fints_dialog.data, signer)
 
@@ -441,6 +448,8 @@ def bank_accounts_import_run(bank_account_id: int) -> ResponseReturnValue:
     )
 
     try:
+        assert form.start_date.data is not None
+        assert form.end_date.data is not None
         with fints_client.resume_dialog(fints_dialog_data), flash_fints_errors():
             transactions = get_fints_transactions(
                 start_date=form.start_date.data,
@@ -542,6 +551,7 @@ def bank_account_activities_edit(activity_id: int) -> ResponseReturnValue:
             ).one()
             credit_account = activity.bank_account.account
 
+            assert form.description.data is not None
             transaction = finance.simple_transaction(
                 description=form.description.data, debit_account=debit_account,
                 credit_account=credit_account, amount=activity.amount,
@@ -631,12 +641,12 @@ def bank_account_activities_return_do() -> ResponseReturnValue:
     for activity in activities_to_return:
         field_list.append((str(activity.id), BooleanField(str(activity.id), default=True)))
 
-    form: t.Any = _create_form(field_list)()
+    form = _create_form(field_list)()
 
     if not form.validate_on_submit():
         return render_template(
             "finance/bank_account_activities_return.html",
-            form=form(),
+            form=form,
             activities=activities_to_return,
         )
 
@@ -659,7 +669,7 @@ def bank_account_activities_return_do() -> ResponseReturnValue:
 @bp.route("/transfer", defaults={"user_id": None}, methods=["GET", "POST"])
 @bp.route("/transfer/<int:user_id>", methods=["GET", "POST"])
 @nav.navigate("Überweisung", icon="fa-wallet")
-def bank_account_transfer(user_id: int) -> ResponseReturnValue:
+def bank_account_transfer(user_id: int | None) -> ResponseReturnValue:
     if user_id is None:
         form = BankAccountIssueTransferForm()
     else:
@@ -673,16 +683,21 @@ def bank_account_transfer(user_id: int) -> ResponseReturnValue:
 
     if form.validate_on_submit():
         bank_account = form.bank_account.data
-        amount = form.amount.data
-        _ensure_decimal(amount)
+        amount = _ensure_decimal(form.amount.data)
+        assert form.owner.data is not None
+        assert form.iban.data is not None
+        assert form.bic.data is not None
+        assert form.reference.data is not None
 
-        if user_id is None:
-            issue_id: str = form.issue_id.data
-            sepa_reference = f"{form.reference.data} {issue_id} {form.issue_name.data}"
-            download_name = f"{issue_id}.xml"
-        else:
-            sepa_reference = form.reference.data
-            download_name = f"retransfer-{user.id}-{datetime.now().date()}.xml"
+        match form:
+            case BankAccountIssueTransferForm() as f:
+                assert f.issue_id.data is not None
+                issue_id: str = f.issue_id.data
+                sepa_reference = f"{f.reference.data} {issue_id} {f.issue_name.data}"
+                download_name = f"{issue_id}.xml"
+            case _:
+                sepa_reference = form.reference.data
+                download_name = f"retransfer-{user.id}-{datetime.now().date()}.xml"
 
         sepa_xml: bytes = generate_transfer_sepaxml(
             bank_account, form.owner.data, form.iban.data, form.bic.data, sepa_reference, amount
@@ -749,13 +764,11 @@ def _create_field_list_and_matched_activities_dict(
 ):
     # compatibility of this implementation with the overload signatures is hard to verify;
     # mypy is not too good at dependent typing
-    matched_activities: dict[str, UserMatch] | dict[str, TeamMatch]
+    matched_activities: dict[str, t.Any]
     if prefix == "user":
-        matched_activities = t.cast(dict[str, UserMatch], {})
+        matched_activities = {}
     elif prefix == "team":
-        matched_activities = t.cast(dict[str, TeamMatch], {})
-    else:
-        raise ValueError(f"Invalid Prefix: {prefix}")
+        matched_activities = {}
 
     field_list = []
     # mypy cannot verify that the type of `entity` is constant across iterations
@@ -763,7 +776,7 @@ def _create_field_list_and_matched_activities_dict(
         matched_activities[f"{prefix}-{str(activity.id)}"] = {
             'purpose': activity.reference,
             'name': activity.other_name,
-            prefix: entity,  # type: ignore[misc]
+            prefix: entity,
             'amount': activity.amount
         }
         field_list.append((str(activity.id), BooleanField(str(activity.id), default=True)))
@@ -772,7 +785,6 @@ def _create_field_list_and_matched_activities_dict(
         return field_list, t.cast(dict[str, UserMatch], matched_activities)
     if prefix == "team":
         return field_list, t.cast(dict[str, TeamMatch], matched_activities)
-    raise ValueError(f"Invalid Prefix: {prefix}")
 
 
 @bp.route('/bank-account-activities/match/do/', methods=['GET', 'POST'])
@@ -814,10 +826,15 @@ def _create_field_list(
     return field_list
 
 
+class _CombinedMatchForm(t.Protocol):
+    user: "FormField[forms.ActivityMatchForm]"
+    team: "FormField[forms.ActivityMatchForm]"
+
+
 def _create_combined_form(
     field_list_user: t.Iterable[tuple[str, Field]],
     field_list_team: t.Iterable[tuple[str, Field]],
-) -> FlaskForm:
+) -> _CombinedMatchForm:
     form_user = _create_form(field_list_user)
     form_team = _create_form(field_list_team)
 
@@ -1198,7 +1215,7 @@ def transaction_confirm(transaction_id: int) -> ResponseReturnValue:
         flash("Diese Transaktion wurde bereits bestätigt.", 'error')
         abort(400)
 
-    lib.finance.transaction_confirm(transaction, current_user)
+    finance.transaction_confirm(transaction, current_user)
 
     session.commit()
 
@@ -1225,7 +1242,7 @@ def transactions_confirm_selected() -> ResponseReturnValue:
         if isinstance(id, int):
             transaction = session.get(Transaction, int(id))
             if transaction:
-                lib.finance.transaction_confirm(transaction, current_user)
+                finance.transaction_confirm(transaction, current_user)
             else:
                 flash("Transaktion existiert nicht.", "error")
                 abort(404)
@@ -1255,7 +1272,7 @@ def transaction_confirm_all() -> ResponseReturnValue:
         return default_response()
 
     with abort_on_error(error_response=default_response), session.begin_nested():
-        lib.finance.transaction_confirm_all(current_user)
+        finance.transaction_confirm_all(current_user)
     session.commit()
 
     flash("Alle Transaktionen wurden bestätigt.", "success")
@@ -1279,7 +1296,7 @@ def transaction_delete(transaction_id: int) -> ResponseReturnValue:
     form = FlaskForm()
 
     if form.is_submitted():
-        lib.finance.transaction_delete(transaction, current_user)
+        finance.transaction_delete(transaction, current_user)
 
         session.commit()
 
@@ -1302,7 +1319,7 @@ def transaction_delete(transaction_id: int) -> ResponseReturnValue:
 @access.require('finance_show')
 @bp.route('/transactions')
 def transactions_all() -> ResponseReturnValue:
-    url = url_for(".transactions_all_json", **request.args)  # type: ignore[arg-type]
+    url = url_for(".transactions_all_json", **request.args)  # ty: ignore[invalid-argument-type]
     return render_template("finance/transactions_overview.html", api_endpoint=url)
 
 
@@ -1370,6 +1387,7 @@ def transactions_create() -> ResponseReturnValue:
             )
             for split_form in form.splits
         ]
+        assert form.description.data is not None
         transaction = finance.complex_transaction(
             description=form.description.data,
             author=current_user,
@@ -1547,6 +1565,13 @@ def membership_fee_create() -> ResponseReturnValue:
     else:
         form = MembershipFeeCreateForm()
     if form.validate_on_submit():
+        assert form.name.data is not None
+        assert form.booking_begin.data is not None
+        assert form.booking_end.data is not None
+        assert form.payment_deadline.data is not None
+        assert form.payment_deadline_final.data is not None
+        assert form.begins_on.data is not None
+        assert form.ends_on.data is not None
         mfee = MembershipFee(
             name=form.name.data,
             regular_fee=form.regular_fee.data,
@@ -1587,6 +1612,15 @@ def membership_fee_edit(fee_id: int) -> ResponseReturnValue:
             ends_on=fee.ends_on,
         )
     elif form.validate_on_submit():
+        # wtforms legacy: validators do not impact `| None` in types
+        assert form.name.data is not None
+        assert form.regular_fee.data is not None
+        assert form.booking_begin.data is not None
+        assert form.booking_end.data is not None
+        assert form.payment_deadline.data is not None
+        assert form.payment_deadline_final.data is not None
+        assert form.begins_on.data is not None
+        assert form.ends_on.data is not None
         fee.name = form.name.data
         fee.regular_fee = form.regular_fee.data
         fee.booking_begin = timedelta(days=form.booking_begin.data)
