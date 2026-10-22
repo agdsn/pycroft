@@ -7,7 +7,6 @@ from pycroft.lib.exc import PycroftLibException
 from .concepts import Mail
 from .config import config, SmtpSslType
 
-
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
