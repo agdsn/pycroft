@@ -123,7 +123,7 @@ def switch_show(switch_id: int) -> ResponseValue:
         return redirect(url_for('.switches'))
     if not switch.host.room_id:
         flash(f"Switch mit ID {switch_id} ist keinem Raum zugeordnet!", "error")
-        return redirect(url_for('.switches'))
+        return redirect(url_for(".switches"))
 
     return render_template(
         'infrastructure/switch_show.html',
@@ -232,10 +232,15 @@ def switch_edit(switch_id: int) -> ResponseValue:
 
     if not (room := switch.host.room):
         flash(f"Switch mit ID {switch_id} ist keinem Raum zugeordnet!", "error")
-        return redirect(url_for('.switches'))
+        return redirect(url_for(".switches"))
 
-    form = SwitchForm(name=switch.host.name, management_ip=switch.management_ip, building=room.building,
-                      level=room.level, room_number=room.number)
+    form = SwitchForm(
+        name=switch.host.name,
+        management_ip=switch.management_ip,
+        building=room.building,
+        level=room.level,
+        room_number=room.number,
+    )
 
     if form.validate_on_submit():
         room = Room.q.filter_by(number=form.room_number.data,
@@ -293,7 +298,7 @@ def switch_delete(switch_id: int) -> ResponseValue:
 def switch_port_create(switch_id: int) -> ResponseValue:
     if not (switch := session.session.get(Switch, switch_id)):
         flash(f"Switch mit ID {switch_id} nicht gefunden!", "error")
-        return redirect(url_for('.switches'))
+        return redirect(url_for(".switches"))
 
     if not (room := switch.host.room):
         flash(f"Switch mit ID {switch_id} ist keinem Raum zugeordnet!", "error")
@@ -319,7 +324,7 @@ def switch_port_create(switch_id: int) -> ResponseValue:
             except PatchPortAlreadyPatchedException:
                 form.patch_port.errors = [
                     *form.patch_port.errors,
-                    "Dieser Patch-Port ist bereits mit einem Switch-Port verbunden."
+                    "Dieser Patch-Port ist bereits mit einem Switch-Port verbunden.",
                 ]
                 error = True
 
@@ -383,7 +388,7 @@ def switch_port_edit(switch_id: int, switch_port_id: int) -> ResponseValue:
                 except PatchPortAlreadyPatchedException:
                     form.patch_port.errors = [
                         *form.patch_port.errors,
-                        "Dieser Patch-Port ist bereits mit einem Switch-Port verbunden."
+                        "Dieser Patch-Port ist bereits mit einem Switch-Port verbunden.",
                     ]
                     error = True
 

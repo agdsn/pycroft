@@ -17,10 +17,18 @@ def property_group_query() -> Query[PropertyGroup]:
 
 
 def property_group_user_create_query() -> Query[PropertyGroup]:
-    return session.query(PropertyGroup).filter(PropertyGroup.id.in_([
-        config.member_group_id,
-        config.external_group_id,
-    ])).order_by(PropertyGroup.id)
+    return (
+        session.query(PropertyGroup)
+        .filter(
+            PropertyGroup.id.in_(
+                [
+                    config.member_group_id,
+                    config.external_group_id,
+                ]
+            )
+        )
+        .order_by(PropertyGroup.id)
+    )
 
 
 class PropertyGroupForm(Form):

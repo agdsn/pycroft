@@ -82,9 +82,7 @@ class BlueprintNavigation:
         """
         return self._access.is_accessible
 
-    def navigate[
-        TFun: NamedCallable
-    ](
+    def navigate[TFun: NamedCallable](
         self,
         text: str,
         weight: int = 0,

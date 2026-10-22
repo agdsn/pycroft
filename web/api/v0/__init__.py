@@ -811,9 +811,7 @@ class RegistrationResource(Resource):
 
             # some tenants have an additional semicolon added to their last names
             if swdd_person_id is None:
-                swdd_person_id = get_swdd_person_id(
-                    first_name, last + ";", birthdate
-                )
+                swdd_person_id = get_swdd_person_id(first_name, last + ";", birthdate)
 
             if swdd_person_id != person_id:
                 abort(400, message="Person id does not match", code="person_id_mismatch")

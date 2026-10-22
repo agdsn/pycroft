@@ -56,25 +56,34 @@ def select_archivable_members(
     """
     # last_mem: (user_id, mem_id, mem_end)
     last_mem = select_user_and_last_mem().cte("last_mem").prefix_with("materialized")
-    return t.cast(Select[tuple[User, int, datetime]],
-        select()
-        .select_from(last_mem)
-        # Join the granted `do-not-archive` property, if existent
-        .join(CurrentProperty,
-              and_(last_mem.c.user_id == CurrentProperty.user_id,
-                   CurrentProperty.property_name == 'do-not-archive',
-                   not_(CurrentProperty.denied)),
-              isouter=True)
-        # …and use that to filter out the `do-not-archive` occurrences.
-        .filter(CurrentProperty.property_name.is_(None))
-        .join(User, User.id == last_mem.c.user_id)
-        .filter(func.extract("year", last_mem.c.mem_end) + 1 + years_following_eom <= current_year)
-        .with_only_columns(
-            User,
-            last_mem.c.mem_id,
-            last_mem.c.mem_end,
-        )
-    ), last_mem
+    return (
+        t.cast(
+            Select[tuple[User, int, datetime]],
+            select().select_from(last_mem)
+            # Join the granted `do-not-archive` property, if existent
+            .join(
+                CurrentProperty,
+                and_(
+                    last_mem.c.user_id == CurrentProperty.user_id,
+                    CurrentProperty.property_name == "do-not-archive",
+                    not_(CurrentProperty.denied),
+                ),
+                isouter=True,
+            )
+            # …and use that to filter out the `do-not-archive` occurrences.
+            .filter(CurrentProperty.property_name.is_(None))
+            .join(User, User.id == last_mem.c.user_id)
+            .filter(
+                func.extract("year", last_mem.c.mem_end) + 1 + years_following_eom <= current_year
+            )
+            .with_only_columns(
+                User,
+                last_mem.c.mem_id,
+                last_mem.c.mem_end,
+            ),
+        ),
+        last_mem,
+    )
 
 
 def get_archivable_members(
@@ -251,8 +260,10 @@ def scrub_all_mails_stmt(
         )
         .cte("user_log_entries")
     )
-    return select(t.cast(KeyedColumnElement[int], removed_mail_user_ids.c.id))\
-        .add_cte(insert_scrub_log, insert_user_log)
+    return select(t.cast(KeyedColumnElement[int], removed_mail_user_ids.c.id)).add_cte(
+        insert_scrub_log, insert_user_log
+    )
+
 
 def scrubbable_hosts_stmt(year: int) -> Select[tuple[Host]]:
     """All the hosts we can delete.

@@ -46,9 +46,11 @@ class MoveInDateInvalidException(PycroftLibException):
     @t.override
     def __init__(self, *args: object) -> None:
         super().__init__(
-            *args
-            if args
-            else (
-                "The move-in date is invalid (in the past or more than 6 months in the future)",
+            *(
+                args
+                if args
+                else (
+                    "The move-in date is invalid (in the past or more than 6 months in the future)",
+                )
             )
         )

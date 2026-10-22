@@ -9,6 +9,7 @@
 
     :copyright: (c) 2012 by AG DSN.
 """
+
 from wtforms.form import BaseForm
 import logging
 import typing as t

@@ -173,9 +173,8 @@ class LinkColResponse(BaseModel):
     new_tab: bool | None = None
 
 
-@custom_formatter_column('table.linkFormatter')
-class LinkColumn(Column):
-    ...
+@custom_formatter_column("table.linkFormatter")
+class LinkColumn(Column): ...
 
 
 @custom_formatter_column("table.multiLinkFormatter")
@@ -474,7 +473,7 @@ def iso_format(dt: datetime | date | None = None) -> str:
         case None:
             return "n/a"
         case datetime() as dt:
-            return dt.isoformat(sep=' ')
+            return dt.isoformat(sep=" ")
         case _:
             return dt.isoformat()
 

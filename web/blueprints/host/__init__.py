@@ -96,10 +96,7 @@ def host_edit(host_id: int) -> ResponseReturnValue:
                 room_number=form.room_number.data,
             )
         ):
-            form.room_number.errors = [
-                *form.room_number.errors,
-                "room does not exist"
-            ]
+            form.room_number.errors = [*form.room_number.errors, "room does not exist"]
             return default_response()
         lib_host.host_edit(host, owner, room, form.name.data, processor=current_user)
     session.session.commit()

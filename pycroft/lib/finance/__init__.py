@@ -90,19 +90,14 @@ def get_transaction_type(transaction: Transaction) -> tuple[str, str] | None:
 
 
 def get_last_import_date(session: Session) -> datetime | None:
-    date: datetime | None = session.scalars(
-        select(max(BankAccountActivity.imported_at))
-    ).first()
+    date: datetime | None = session.scalars(select(max(BankAccountActivity.imported_at))).first()
     return date
 
 
 def import_newer_than_days(session: Session, days: int) -> bool | None:
     # TODO properly test this
     return session.scalar(
-        select(
-            max(BankAccountActivity.imported_at)
-            >= current_timestamp() - timedelta(days=days)
-        )
+        select(max(BankAccountActivity.imported_at) >= current_timestamp() - timedelta(days=days))
     )
 
 
@@ -126,7 +121,8 @@ def get_accounts_by_type(
     accounts_by_type: dict[AccountType | t.Literal["LEGACY"], list[Account]] = {
         type: list(acc)
         for type, acc in groupby(
-            session.query(Account).filter_by(legacy=False)
+            session.query(Account)
+            .filter_by(legacy=False)
             .outerjoin(User)
             .filter(User.id.is_(None))
             .order_by(Account.type)

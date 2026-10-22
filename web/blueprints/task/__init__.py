@@ -102,9 +102,7 @@ def task_row(task: UserTask) -> TaskRow:
 @bp.route("/user/<int:user_id>/json")
 def json_tasks_for_user(user_id: int) -> ResponseValue:
     user = get_user_or_404(user_id)
-    return TableResponse[TaskRow](
-        items=[task_row(task) for task in user.tasks]
-    ).model_dump()
+    return TableResponse[TaskRow](items=[task_row(task) for task in user.tasks]).model_dump()
 
 
 @bp.route("/user/json")

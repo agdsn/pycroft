@@ -662,8 +662,9 @@ def create() -> ResponseReturnValue:
 
     if not form.validate_on_submit():
         return default_response()
-    room: Room | None = get_room(building_id=form.building.data.id, level=form.level.data,
-                          room_number=form.room_number.data)
+    room: Room | None = get_room(
+        building_id=form.building.data.id, level=form.level.data, room_number=form.room_number.data
+    )
     if not room:
         flash("Raum scheint nicht zu existieren…", 'error')
         return default_response()
@@ -946,7 +947,7 @@ def edit_user(user_id: int) -> ResponseReturnValue:
                User.q.filter_by(swdd_person_id=form.person_id.data).filter(User.id != user.id).first():
                 form.person_id.errors = [
                     *form.person_id.errors,
-                    "Diese Debitorennummer wird bereits verwendet!"
+                    "Diese Debitorennummer wird bereits verwendet!",
                 ]
                 success = False
             else:
@@ -1315,7 +1316,7 @@ def member_request_edit(pre_member_id: int) -> ResponseReturnValue:
                 else:
                     form.person_id.errors = [
                         *form.person_id.errors,
-                        "Zu der angegebenen Debitorennummer konnten keine Verträge gefunden werden!"
+                        "Zu der angegebenen Debitorennummer konnten keine Verträge gefunden werden!",
                     ]
 
         room = Room.q.filter_by(building=form.building.data, level=form.level.data,
@@ -1473,9 +1474,7 @@ def member_requests_json() -> ResponseReturnValue:
                     icon_false="far fa-address-card",
                 ),
                 login=prm.login,
-                email=TextWithBooleanColResponse(
-                    text=prm.email or "", bool=prm.email_confirmed
-                ),
+                email=TextWithBooleanColResponse(text=prm.email or "", bool=prm.email_confirmed),
                 move_in_date=date_format(prm.move_in_date, formatter=date_filter),
                 action_required=prm.room is not None
                 and prm.email_confirmed

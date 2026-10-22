@@ -9,6 +9,7 @@ This module contains functions concerning groups, membership, and property
 management.
 
 """
+
 from __future__ import annotations
 from sqlalchemy.sql.functions import array_agg
 import typing as t
@@ -213,17 +214,13 @@ def user_memberships_query(
     p_denied = aliased(Property)
     memberships = (
         memberships.join(group, Membership.group_id == group.id)
-        .outerjoin(
-            p_granted, and_(p_granted.property_group_id == group.id, p_granted.granted)
-        )
-        .outerjoin(
-            p_denied, and_(p_denied.property_group_id == group.id, ~p_denied.granted)
-        )
+        .outerjoin(p_granted, and_(p_granted.property_group_id == group.id, p_granted.granted))
+        .outerjoin(p_denied, and_(p_denied.property_group_id == group.id, ~p_denied.granted))
         .with_only_columns(
-           Membership,
-           array_agg[list[str]](distinct(p_granted.name)).label("granted"),
-           array_agg[list[str]](distinct(p_denied.name)).label("denied"),
-       )
+            Membership,
+            array_agg[list[str]](distinct(p_granted.name)).label("granted"),
+            array_agg[list[str]](distinct(p_denied.name)).label("denied"),
+        )
         .group_by(Membership.id)
     )
     return session.session.execute(memberships)
@@ -271,8 +268,8 @@ def select_user_and_last_mem() -> Select[tuple[int, int, DateTimeTz]]:
         .with_only_columns(
             User.id.label("user_id"),
             func.last_value(Membership.id, type_=Integer())
-                .over(**window_args, rows=(None, None))
-                .label("mem_id"),
+            .over(**window_args, rows=(None, None))
+            .label("mem_id"),
             t.cast(
                 ColumnElement[DateTimeTz],
                 func.last_value(mem_ends_at)

@@ -2,6 +2,7 @@
 pycroft.lib.swdd
 ~~~~~~~~~~~~~~~~
 """
+
 from pycroft.model.session import session
 import hmac
 import os
@@ -41,8 +42,7 @@ def get_swdd_person_id(first_name: str, last_name: str, birthdate: date) -> int 
 
 def get_relevant_tenancies(person_id: int) -> list[Tenancy]:
     return (
-        session
-        .query(Tenancy)
+        session.query(Tenancy)
         .filter_by(person_id=person_id, status_id=TenancyStatus.ESTABLISHED.value)
         .filter(Tenancy.mietende > func.now())
         .order_by(Tenancy.mietbeginn.desc())

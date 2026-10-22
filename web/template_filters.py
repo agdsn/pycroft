@@ -213,7 +213,7 @@ def account_type_filter(account_type: str) -> str | None:
 
 
 @template_filter("transaction_type")
-def transaction_type_filter(credit_debit_type: tuple[str, str] | None ) -> str:
+def transaction_type_filter(credit_debit_type: tuple[str, str] | None) -> str:
     def remove_prefix(account_type_name: str) -> str:
         return sub(r"[A-Z]+_(?=ASSET)", r"", account_type_name)
 

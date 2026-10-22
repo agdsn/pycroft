@@ -70,7 +70,9 @@ def get_overcrowded_rooms(building_id: int | None = None) -> dict[int, list[User
 
     users = session.session.scalars(stmt).unique().all()
     users = sorted(users, key=lambda u: u.room.id)  # ty: ignore[unresolved-attribute]
-    return {k: list(v) for k, v in groupby(users, lambda u: u.room.id)}  # ty: ignore[unresolved-attribute]
+    return {
+        k: list(v) for k, v in groupby(users, lambda u: u.room.id)
+    }  # ty: ignore[unresolved-attribute]
 
 
 def similar_rooms_query(
@@ -231,10 +233,7 @@ def suggest_room_address_data(building: Building) -> RoomAddressSuggestion | Non
 
 def sort_buildings(buildings: t.Iterable[Building]) -> list[Building]:
     def make_sort_key(building: Building) -> tuple[str, str] | tuple[str, tuple[int, str]]:
-        s = t.cast(
-            list[str],
-            re.split(r"(\d+)([a-zA-Z]?)", building.number)
-        )
+        s = t.cast(list[str], re.split(r"(\d+)([a-zA-Z]?)", building.number))
         if len(s) != 4:
             return building.street, building.number  # split unsuccessful
         return building.street, (int(s[1]), s[2].lower())

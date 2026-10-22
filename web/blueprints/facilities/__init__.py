@@ -199,10 +199,12 @@ def room_create() -> ResponseReturnValue:
         return default_response()
 
     sess = session.session
-    _handlers: ErrorHandlerMap = {RoomAlreadyExistsException: add_error_handler(
-    form.number,
+    _handlers: ErrorHandlerMap = {
+        RoomAlreadyExistsException: add_error_handler(
+            form.number,
             "Ein Raum mit diesem Namen existiert bereits in dieser Etage!",
-    )}
+        )
+    }
 
     assert form.level.data is not None
     assert form.number.data is not None
@@ -402,7 +404,7 @@ def patch_port_create(switch_room_id: int) -> ResponseReturnValue:
     sess = session.session
     _handlers: ErrorHandlerMap = {
         PatchPortAlreadyExistsException: add_error_handler(
-       form.name,
+            form.name,
             "Ein Patch-Port mit dieser Bezeichnung existiert bereits in diesem Zimmer.",
         )
     }
@@ -694,7 +696,9 @@ def overcrowded_json(building_id: int) -> ResponseReturnValue:
             RoomOvercrowdedRow(
                 room=LinkColResponse(
                     title="{} / {:02d} / {}".format(
-                        (r := inhabitants[0].room).building.short_name,  # ty: ignore[unresolved-attribute]
+                        (
+                            r := inhabitants[0].room
+                        ).building.short_name,  # ty: ignore[unresolved-attribute]
                         r.level,  # ty: ignore[unresolved-attribute]
                         r.number,  # ty: ignore[unresolved-attribute]
                     ),

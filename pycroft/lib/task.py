@@ -189,7 +189,7 @@ task_type_to_impl: Mapping[TaskType, type[UserTaskImpl[t.Any]]] = {
 
 
 def get_task_implementation[TSchema, TParams: TaskParams](
-    task: Task[TSchema, TParams]
+    task: Task[TSchema, TParams],
 ) -> TaskImpl[Task[TSchema, TParams], TParams]:
     impl = t.cast(
         type[TaskImpl[Task[TSchema, TParams], TParams]],

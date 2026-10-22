@@ -269,8 +269,8 @@ IGNORED_EXCEPTION_TYPES = (HTTPException,)
 
 if dsn := os.getenv('PYCROFT_SENTRY_DSN'):
     def before_send[_TE](event: _TE, hint: dict[str, t.Any]) -> _TE | None:
-        if 'exc_info' in hint:
-            _exc_type, exc_value, _tb = hint['exc_info']
+        if "exc_info" in hint:
+            _exc_type, exc_value, _tb = hint["exc_info"]
             if isinstance(exc_value, IGNORED_EXCEPTION_TYPES):
                 return None
         return event

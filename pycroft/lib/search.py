@@ -2,6 +2,7 @@
 pycroft.lib.search
 ~~~~~~~~~~~~~~~~~~
 """
+
 from pycroft.model.session import session
 import re
 
