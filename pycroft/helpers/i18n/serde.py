@@ -8,7 +8,7 @@ pycroft.helpers.i18n.serde
 from __future__ import annotations
 
 import operator
-import typing
+import typing as t
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 
@@ -24,7 +24,7 @@ def deserialize_money(v):
         raise ValueError from e
 
 
-def serialize_interval(interval: Interval) -> dict[str, typing.Any]:
+def serialize_interval(interval: Interval[t.Any]) -> dict[str, t.Any]:
     lower = interval.lower_bound
     upper = interval.upper_bound
     lower_value = serialize_param(lower.value) if not lower.unbounded else None
@@ -39,24 +39,23 @@ def serialize_interval(interval: Interval) -> dict[str, typing.Any]:
 
 # pycharm does not support building this dynamically.
 # Thus, we need to hard-code this type alias.
-Serializable = typing.Union[
-    None,
-    bool,
-    str,
-    int,
-    float,
-    Decimal,
-    Money,
-    date,
-    datetime,
-    time,
-    timedelta,
-    Interval,
-]
-
+type Serializable = (
+    None
+    | bool
+    | str
+    | int
+    | float
+    | Decimal
+    | Money
+    | date
+    | datetime
+    | time
+    | timedelta
+    | Interval[t.Any]
+)
 
 # TODO be more specific about return type
-serialize_map: dict[type, typing.Callable] = {
+serialize_map: dict[type, t.Callable[..., t.Any]] = {
     type(None): identity,
     bool: identity,
     float: identity,
@@ -76,7 +75,7 @@ serialize_map: dict[type, typing.Callable] = {
 }
 
 
-def deserialize_interval(value: dict[str, typing.Any]) -> Interval:
+def deserialize_interval(value: dict[str, t.Any]) -> Interval[t.Any]:
     try:
         lower_value = (
             deserialize_param(u)
@@ -109,7 +108,7 @@ def deserialize_interval(value: dict[str, typing.Any]) -> Interval:
     )
 
 
-_deserialize_type_map: dict[type, typing.Callable] = {
+_deserialize_type_map: dict[type, t.Callable[..., t.Any]] = {
     type(None): identity,
     bool: identity,
     str: identity,
@@ -126,7 +125,7 @@ _deserialize_type_map: dict[type, typing.Callable] = {
 
 
 # TODO be more specific
-deserialize_map: dict[str, typing.Callable] = {
+deserialize_map: dict[str, t.Callable[..., t.Any]] = {
     qualified_typename(t): f for t, f in _deserialize_type_map.items()
 }
 

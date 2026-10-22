@@ -31,7 +31,7 @@ logger = logging.getLogger('pycroft.task')
 # to determine the type parameter at construction we would need
 # dependent types, so we're always just instantiating
 # `TaskImpl = TaskImpl[Any, Any]`, anyway.
-class TaskImpl[TTask: Task, TParams: TaskParams](ABC):
+class TaskImpl[TTask: Task[t.Any, t.Any], TParams: TaskParams](ABC):
     name: str
 
     @t.override
@@ -142,7 +142,7 @@ class UserMoveTaskImpl(UserTaskImpl[UserMoveParams]):
         self.new_status = TaskStatus.EXECUTED
 
 
-class UserMoveInTaskImpl(UserTaskImpl):
+class UserMoveInTaskImpl(UserTaskImpl[UserMoveInParams]):
     name = "Einzug"
     type = TaskType.USER_MOVE_IN
 
@@ -181,15 +181,21 @@ class UserMoveInTaskImpl(UserTaskImpl):
         self.new_status = TaskStatus.EXECUTED
 
 
-task_type_to_impl: Mapping[TaskType, type[UserTaskImpl]] = {
+task_type_to_impl: Mapping[TaskType, type[UserTaskImpl[t.Any]]] = {
     TaskType.USER_MOVE: UserMoveTaskImpl,
     TaskType.USER_MOVE_IN: UserMoveInTaskImpl,
     TaskType.USER_MOVE_OUT: UserMoveOutTaskImpl
 }
 
 
-def get_task_implementation(task: Task) -> TaskImpl:
-    return task_type_to_impl[task.type]()
+def get_task_implementation[TSchema, TParams: TaskParams](
+    task: Task[TSchema, TParams]
+) -> TaskImpl[Task[TSchema, TParams], TParams]:
+    impl = t.cast(
+        type[TaskImpl[Task[TSchema, TParams], TParams]],
+        task_type_to_impl[task.type],
+    )
+    return impl()
 
 
 @with_transaction
@@ -215,14 +221,14 @@ def schedule_user_task(
     return task
 
 
-def get_active_tasks_by_type(type: TaskType) -> t.Sequence[Task]:
+def get_active_tasks_by_type(type: TaskType) -> t.Sequence[Task[t.Any, t.Any]]:
     task_and_subtypes = with_polymorphic(Task[t.Any, t.Any], "*")
     return session.session.scalars(
         select(task_and_subtypes).where(task_and_subtypes.type == type)
     ).all()
 
 
-def get_scheduled_tasks(session: Session) -> t.Sequence[Task]:
+def get_scheduled_tasks(session: Session) -> t.Sequence[Task[t.Any, t.Any]]:
     task_and_subtypes = with_polymorphic(Task, "*")
     return session.scalars(
         select(task_and_subtypes).filter(
@@ -233,7 +239,7 @@ def get_scheduled_tasks(session: Session) -> t.Sequence[Task]:
 
 
 @with_transaction
-def cancel_task(task: Task, processor: User) -> None:
+def cancel_task(task: Task[t.Any, t.Any], processor: User) -> None:
     if task.status != TaskStatus.OPEN:
         raise ValueError("Cannot cancel a task that is not open")
 
@@ -242,7 +248,7 @@ def cancel_task(task: Task, processor: User) -> None:
     task.status = TaskStatus.CANCELLED
 
 
-def manually_execute_task(task: Task, processor: User) -> None:
+def manually_execute_task(task: Task[t.Any, t.Any], processor: User) -> None:
     if task.status != TaskStatus.OPEN:
         raise ValueError("Cannot execute a task that is not open")
 
@@ -254,7 +260,7 @@ def manually_execute_task(task: Task, processor: User) -> None:
     task.status = TaskStatus.EXECUTED
 
 
-def reschedule_task(task: Task, due: datetime, processor: User) -> None:
+def reschedule_task(task: Task[t.Any, t.Any], due: datetime, processor: User) -> None:
     if task.status != TaskStatus.OPEN:
         raise ValueError("Cannot execute a task that is not open")
 

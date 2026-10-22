@@ -30,10 +30,10 @@ if typing.TYPE_CHECKING:
     from _typeshed import SupportsAllComparisons as Ord
 
 
-class Formatter[T: Ord, **P](typing.Protocol):
+class Formatter[T, **P](typing.Protocol):
     __option_policy__: OptionPolicy
     # first parameter is `Self`
-    __call__: t.Callable[t.Concatenate[Formatter, T, P], Formattable]
+    __call__: t.Callable[t.Concatenate[Formatter[T, P], T, P], Formattable]
     __name__: str
 
 
@@ -104,12 +104,12 @@ def format_bool(v):
 
 
 @ignore_options
-def format_none(n):
+def format_none(_n):
     return gettext("None")
 
 
 @type_specific_options
-def format_interval(interval: Interval, **options: TypeSpecificOptions):
+def format_interval(interval: Interval[t.Any], **options: TypeSpecificOptions):
     lower_bound = interval.lower_bound
     upper_bound = interval.upper_bound
     assert type(lower_bound) == type(upper_bound)  # noqa: E721
@@ -131,7 +131,7 @@ def identity(x):
     return x
 
 
-formatter_map: dict[type, Formatter] = {
+formatter_map: dict[type, Formatter[t.Any, ...]] = {
     type(None): identity,
     bool: identity,
     str: identity,

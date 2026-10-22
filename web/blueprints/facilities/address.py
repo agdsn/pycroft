@@ -1,3 +1,5 @@
+import typing as t
+
 from sqlalchemy.orm import Session, Query
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 
@@ -14,7 +16,7 @@ ADDRESS_ENTITIES = {
 }
 
 
-def get_address_entity(type: str) -> InstrumentedAttribute:
+def get_address_entity(type: str) -> InstrumentedAttribute[str]:
     try:
         return ADDRESS_ENTITIES[type]
     except KeyError:
@@ -25,8 +27,8 @@ def get_address_entity(type: str) -> InstrumentedAttribute:
 
 
 def address_entity_search_query(
-    query: str, entity: InstrumentedAttribute, session: Session, limit: int
-) -> Query:
+    query: str, entity: InstrumentedAttribute[str], session: Session, limit: int
+) -> Query[t.Any]:
     return (
         session.query()
         .add_columns(entity)

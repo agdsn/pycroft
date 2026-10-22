@@ -24,7 +24,7 @@ def user_search_query(
     email: str | None = None,
     person_id: int | None = None,
     query: str | None = None,
-) -> Query:
+) -> Query[User]:
     result = User.q
     if user_id is not None:
         result = result.filter(User.id == int(user_id))

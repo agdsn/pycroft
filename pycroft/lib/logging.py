@@ -60,7 +60,7 @@ def log_event(
 
 
 def log_task_event(
-    message: str, author: User, task: Task, created_at: datetime | None = None
+    message: str, author: User, task: Task[t.Any, t.Any], created_at: datetime | None = None
 ) -> TaskLogEntry:
     """
     This method will create a new TaskLogEntry.

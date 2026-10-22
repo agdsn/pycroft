@@ -1,3 +1,4 @@
+import typing as t
 from collections.abc import Sequence
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
@@ -31,8 +32,16 @@ def get_activities_to_return(session: Session) -> Sequence[BankAccountActivity]:
     return session.scalars(statement).all()
 
 
+class TransferConfig(t.TypedDict):
+    name: str
+    IBAN: str
+    BIC: str
+    batch: bool
+    currency: str
+
+
 def generate_activities_return_sepaxml(activities: list[BankAccountActivity]) -> bytes:
-    transfer_config: dict = {
+    transfer_config: TransferConfig = {
         "name": config.membership_fee_bank_account.owner,
         "IBAN": config.membership_fee_bank_account.iban,
         "BIC": config.membership_fee_bank_account.bic,
@@ -85,7 +94,7 @@ def attribute_activities_as_returned(
 def generate_transfer_sepaxml(
     bank_account: BankAccount, owner: str, iban: str, bic: str, reason: str, amount: Decimal | int
 ) -> bytes:
-    transfer_config: dict = {
+    transfer_config: TransferConfig = {
         "name": bank_account.owner,
         "IBAN": bank_account.iban,
         "BIC": bank_account.bic,

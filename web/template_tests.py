@@ -7,10 +7,10 @@ from flask import Flask
 
 from pycroft.model.user import User
 
-_check_registry: dict[str, t.Callable] = {}
+_check_registry: dict[str, t.Callable[..., t.Any]] = {}
 
 
-def template_check[_T: t.Callable](name: str) -> t.Callable[[_T], _T]:
+def template_check[_T: t.Callable[..., t.Any]](name: str) -> t.Callable[[_T], _T]:
     def decorator(fn: _T) -> _T:
         _check_registry[name] = fn
         return fn

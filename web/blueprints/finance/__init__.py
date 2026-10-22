@@ -9,6 +9,7 @@
 
     :copyright: (c) 2012 by AG DSN.
 """
+from wtforms.form import BaseForm
 import logging
 import typing as t
 from base64 import b64encode, b64decode
@@ -856,8 +857,8 @@ def _create_form(
     return F
 
 
-def _apply_checked_matches(
-    matching: UserMatching | AccountMatching, subform: FormField
+def _apply_checked_matches[Form: BaseForm](
+    matching: UserMatching | AccountMatching, subform: FormField[Form]
 ) -> list[tuple[BankAccountActivity, User | Account]]:
     # look for all matches which were checked
     matched = []

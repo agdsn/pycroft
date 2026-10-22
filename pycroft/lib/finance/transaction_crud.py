@@ -182,7 +182,7 @@ def build_transactions_query(
     return stmt
 
 
-def _similar_activity_stmt(activity: BankAccountActivity) -> Select:
+def _similar_activity_stmt(activity: BankAccountActivity) -> Select[tuple[BankAccountActivity]]:
     return (
         select()
         .select_from(BankAccountActivity)

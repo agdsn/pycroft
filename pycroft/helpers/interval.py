@@ -138,7 +138,7 @@ class Bound[T: Ord](tuple[TWithInfinity[T], bool]):
         return self.value is NegativeInfinity or self.value is PositiveInfinity
 
 
-class Interval[T: Ord](tuple):
+class Interval[T: Ord](tuple[Bound[T], Bound[T]]):
     """
     Represents an bounded or unbounded interval.
 
@@ -200,14 +200,14 @@ class Interval[T: Ord](tuple):
         """
         :returns: The lower bound object
         """
-        return t.cast(Bound[T], self[0])
+        return self[0]
 
     @property
     def upper_bound(self) -> Bound[T]:
         """
         :returns: The upper bound object
         """
-        return t.cast(Bound[T], self[1])
+        return self[1]
 
     @property
     def begin(self) -> T | None:
@@ -697,7 +697,7 @@ def _chain_ordered[
     a = next(left, None)
     b = next(right, None)
     while a is not None and b is not None:
-        if a < b:
+        if a < b:  # ty: ignore[unsupported-operator]
             yield a
             a = next(left, None)
         else:

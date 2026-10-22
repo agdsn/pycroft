@@ -9,7 +9,7 @@ from wtforms_widgets.fields.core import TextField, QuerySelectField, \
 from wtforms_widgets.fields.filters import to_uppercase, to_lowercase
 
 
-def vlan_query() -> Query:
+def vlan_query() -> Query[VLAN]:
     return VLAN.q.order_by(VLAN.vid)
 
 

@@ -50,5 +50,5 @@ def get_users_with_highest_traffic(days: int, limit: int) -> list[UserTrafficInf
 def delete_old_traffic_data(session: Session) -> int:
     week_ago = func.current_timestamp() - timedelta(weeks=1)
     stmt = delete(TrafficVolume).where(TrafficVolume.timestamp < week_ago)
-    result = t.cast(CursorResult, session.execute(stmt))
+    result = session.execute(stmt)
     return result.rowcount

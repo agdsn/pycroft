@@ -1,3 +1,4 @@
+from web.blueprints.navigation import BlueprintNavigation
 import os
 import typing as t
 
@@ -269,7 +270,7 @@ IGNORED_EXCEPTION_TYPES = (HTTPException,)
 if dsn := os.getenv('PYCROFT_SENTRY_DSN'):
     def before_send[_TE](event: _TE, hint: dict[str, t.Any]) -> _TE | None:
         if 'exc_info' in hint:
-            exc_type, exc_value, _tb = hint['exc_info']
+            _exc_type, exc_value, _tb = hint['exc_info']
             if isinstance(exc_value, IGNORED_EXCEPTION_TYPES):
                 return None
         return event
@@ -288,4 +289,4 @@ if dsn := os.getenv('PYCROFT_SENTRY_DSN'):
 
 
 class PycroftConfig(Config):
-    blueprint_navigation: navigation.SegmentedList
+    blueprint_navigation: navigation.SegmentedList[BlueprintNavigation]

@@ -36,15 +36,15 @@ from ..helpers.form import confirmable_div, ConfirmCheckboxField, \
     iter_prefixed_field_names
 
 
-def user_query() -> Query:
+def user_query() -> Query[User]:
     return User.q.order_by(User.id)
 
 
-def host_query() -> Query:
+def host_query() -> Query[User]:
     return Host.q.order_by(Host.id)
 
 
-def group_query() -> Query:
+def group_query() -> Query[User]:
     return PropertyGroup.q.order_by(PropertyGroup.name)
 
 

@@ -31,7 +31,7 @@ class LazyString:
 
 
 def create_address_field(
-    name: str, *args: t.Any, type: str, render_kw: dict | None = None, **kwargs: t.Any
+    name: str, *args: t.Any, type: str, **kwargs: t.Any
 ) -> TypeaheadField:
     assert type in ADDRESS_ENTITIES, "Unknown address_type"
     return TypeaheadField(
@@ -40,7 +40,7 @@ def create_address_field(
         render_kw={'data-role': 'generic-typeahead',
                    'data-typeahead-name': f"address-{type}",
                    'data-typeahead-url': LazyString(lambda: url_for('facilities.addresses', type=type)),
-                   **(render_kw or {})},
+                  },
         **kwargs
     )
 

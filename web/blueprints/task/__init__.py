@@ -128,7 +128,7 @@ def json_user_tasks() -> ResponseValue:
     ).model_dump()
 
 
-def get_task_or_404(task_id: int) -> Task | NoReturn:
+def get_task_or_404(task_id: int) -> Task[t.Any, t.Any] | NoReturn:
     if task := session.session.get(Task, task_id):
         return task
     abort(404)

@@ -175,18 +175,7 @@ class LinkColResponse(BaseModel):
 
 @custom_formatter_column('table.linkFormatter')
 class LinkColumn(Column):
-    if typing.TYPE_CHECKING:
-        @classmethod
-        def value(
-            cls,
-            *,
-            href: str,
-            title: str,
-            glyphicon: str | None = None,
-            new_tab: bool | None = None,
-        ) -> dict:
-            # for argument types, see `linkFormatter`
-            ...
+    ...
 
 
 @custom_formatter_column("table.multiLinkFormatter")
@@ -283,7 +272,7 @@ class BootstrapTableMeta(type):
 
     _table_args: UnboundTableArgs
     _enforced_url_params: frozenset[tuple[str, str]]
-    column_attrname_map: OrderedDict  # TODO specify key/val types
+    column_attrname_map: OrderedDict[str, str]
 
     @t.override
     def __new__(  # ty: ignore[invalid-method-override]
@@ -307,7 +296,7 @@ class BootstrapTableMeta(type):
         # column_attrname_map and update it as well
         # TODO is the cast appropriate? what if a subclass has a `column_attrname_map` of a different type?
         new_col_attr_map = copy(
-            t.cast(OrderedDict, getattr(cls, "column_attrname_map", OrderedDict()))
+            t.cast(OrderedDict[str, str], getattr(cls, "column_attrname_map", OrderedDict()))
         )
 
         for attrname, new_col in dct.items():
@@ -481,19 +470,19 @@ class SplittedTable(BootstrapTable):
 
 
 def iso_format(dt: datetime | date | None = None) -> str:
-    if dt is None:
-        return "n/a"
-
-    if isinstance(dt, date):
-        return dt.isoformat()
-
-    return dt.isoformat(sep=' ')
+    match dt:
+        case None:
+            return "n/a"
+        case datetime() as dt:
+            return dt.isoformat(sep=' ')
+        case _:
+            return dt.isoformat()
 
 
 def date_format(
     dt: datetime | date | None,
     default: str | None = None,
-    formatter: Callable = iso_format,
+    formatter: Callable[[datetime | date | None], str] = iso_format,
 ) -> DateColResponse:
     if not dt:
         return DateColResponse(
@@ -511,7 +500,7 @@ def date_format(
 def datetime_format(
     dt: datetime | None,
     default: str | None = None,
-    formatter: Callable = iso_format,
+    formatter: Callable[[datetime | None], str] = iso_format,
 ) -> DateColResponse:
     if dt is None:
         return DateColResponse(

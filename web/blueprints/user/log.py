@@ -42,7 +42,7 @@ def iter_hades_switch_ports(room: Room) -> t.Sequence[Row[tuple[str, IPAddress]]
     return session.session.execute(stmt).all()
 
 
-def get_user_hades_logs(user: User) -> t.Iterator[tuple[PatchPort, RadiusLogEntry]]:
+def get_user_hades_logs(user: User) -> t.Iterator[tuple[SwitchPort, RadiusLogEntry]]:
     """Iterate over a user's hades logs
 
     :param user: the user whose logs to display
@@ -53,7 +53,7 @@ def get_user_hades_logs(user: User) -> t.Iterator[tuple[PatchPort, RadiusLogEntr
     # raised even if there's no SwitchPort
 
     do_fetch = hades_logs.fetch_logs
-    q: Query = session.session.query(SwitchPort)
+    q: Query[SwitchPort] = session.session.query(SwitchPort)
     ports = (
         q
         .join(PatchPort)
