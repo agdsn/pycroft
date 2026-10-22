@@ -157,7 +157,7 @@ extra-paths = ["stubs"]
 [tool.ty.rules]
 # unsound-return-statement = "error"
 # missing-type-argument = "error"
-# dynamic-function-decorator-return = "error"
+dynamic-function-decorator-return = "error"
 
 [tool.mypy]
 exclude = "deps/.*/build"
