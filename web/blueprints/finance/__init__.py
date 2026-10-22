@@ -10,6 +10,8 @@
     :copyright: (c) 2012 by AG DSN.
 """
 
+from __future__ import annotations
+
 from wtforms.form import BaseForm
 import logging
 import typing as t
@@ -829,8 +831,8 @@ def _create_field_list(
 
 
 class _CombinedMatchForm(t.Protocol):
-    user: "FormField[forms.ActivityMatchForm]"
-    team: "FormField[forms.ActivityMatchForm]"
+    user: FormField[forms.ActivityMatchForm]
+    team: FormField[forms.ActivityMatchForm]
 
 
 def _create_combined_form(
