@@ -24,7 +24,6 @@ from pycroft.helpers import utc
 from pycroft.lib.user import find_similar_users
 from pycroft.model.address import Address
 from pycroft.model.facilities import Room
-from pycroft.model.host import Host
 from pycroft.model.user import PropertyGroup, User
 from web.blueprints.facilities.forms import building_query, SelectRoomForm, \
     CreateAddressForm

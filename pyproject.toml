@@ -270,6 +270,7 @@ select = [
 ignore = [
     "E741",  # ambiguous variable names
     "E501",  # line length violations (for now)
+    "B010",  # setattr with constant key
 ]
 unfixable = [
     "B",  # fixing bug hazards requires knowledge about the intention

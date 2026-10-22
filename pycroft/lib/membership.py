@@ -18,7 +18,7 @@ from sqlalchemy import and_, func, distinct, Result, nulls_last, ColumnElement, 
 from sqlalchemy.future import select
 from sqlalchemy.orm import aliased, Session
 from sqlalchemy.sql import Select
-from sqlalchemy.sql._typing import _TypedColumnClauseArgument, _ByArgument
+from sqlalchemy.sql._typing import _ByArgument
 
 from pycroft import Config
 from pycroft.helpers import utc

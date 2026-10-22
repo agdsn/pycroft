@@ -1,6 +1,5 @@
 from __future__ import annotations
 import html
-import typing
 import typing as t
 from collections import OrderedDict
 from copy import copy

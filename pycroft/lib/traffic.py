@@ -11,7 +11,7 @@ This module contains functions concerning network traffic
 import typing as t
 from datetime import timedelta
 
-from sqlalchemy import func, select, literal_column, delete, CursorResult
+from sqlalchemy import func, select, literal_column, delete
 from sqlalchemy.orm import join, Session
 
 from pycroft.model import session

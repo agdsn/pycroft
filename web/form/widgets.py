@@ -2,7 +2,7 @@ from wtforms.form import BaseForm
 import typing as t
 
 
-from wtforms import ValidationError, Form
+from wtforms import ValidationError
 from wtforms_widgets.fields.core import StringField
 
 from pycroft.model import session
