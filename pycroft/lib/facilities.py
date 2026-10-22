@@ -193,8 +193,10 @@ class RoomAddressSuggestion:
                + f" {self.country}"
 
 
-def suggest_room_address_data(building: Building) -> RoomAddressSuggestion | None:
+def suggest_room_address_data(building: Building | None) -> RoomAddressSuggestion | None:
     """Return the most common address features of preexisting rooms in a certain building. """
+    if building is None:
+        return
 
     cols = (Address.street, Address.number, Address.zip_code,
             Address.city, Address.state, Address.country)

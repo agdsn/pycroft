@@ -180,7 +180,6 @@ def room_create() -> ResponseReturnValue:
     building = None
     if building_id:
         building = determine_building_or_404(id=building_id)
-    assert building is not None
 
     form = CreateRoomForm(building=building)
 
