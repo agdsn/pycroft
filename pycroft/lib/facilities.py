@@ -69,10 +69,10 @@ def get_overcrowded_rooms(building_id: int | None = None) -> dict[int, list[User
     )
 
     users = session.session.scalars(stmt).unique().all()
-    users = sorted(users, key=lambda u: u.room.id)  # ty: ignore[unresolved-attribute]
+    users = sorted(users, key=lambda u: t.cast(Room, u.room).id)
     return {
-        k: list(v) for k, v in groupby(users, lambda u: u.room.id)
-    }  # ty: ignore[unresolved-attribute]
+        k: list(v) for k, v in groupby(users, lambda u: t.cast(Room, u.room).id)
+    }
 
 
 def similar_rooms_query(
