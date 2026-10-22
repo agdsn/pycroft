@@ -69,8 +69,11 @@ jobs:
       - name: Execute ruff
         run: uv run ruff check --output-format=github .
         if: success() || steps.pip-install.conclusion == 'success'
-      - name: Execute mypy
-        run: uv run ./scripts/run_mypy.sh
+      - name: Run type checking
+        run: |
+          set -euo pipefail
+          uv run types-for-jinja generate
+          uv run ty check --output-format=github | uv run types-for-jinja remap
         if: success() || steps.pip-install.conclusion == 'success'
       # docs stuff
       - name: Build sphinx docs

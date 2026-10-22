@@ -151,13 +151,13 @@ show_emails:
     {{ drc }} --progress=none up -d dev-celery-worker dev-mail
     {{ drc }} logs --no-log-prefix -f dev-mail
 
-stop: 
+stop:
     {{ drc }} stop
 
 # regenerate Jinja stubs and typecheck them with mypy
 check-jinja:
     uv run types-for-jinja generate
-    uv run types-for-jinja remap -- mypy --color-output _jinja_stubs
+    uv run ty check --color=always | uv run types-for-jinja remap
 
 # re-run check-jinja when templates change (uses watchdog via uv; no inotifywait)
 watch-jinja:
