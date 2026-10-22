@@ -10,9 +10,10 @@ management.
 
 """
 from __future__ import annotations
+from sqlalchemy.sql.functions import array_agg
 import typing as t
 
-from sqlalchemy import and_, func, distinct, Result, nulls_last
+from sqlalchemy import and_, func, distinct, Result, nulls_last, ColumnElement, Integer
 from sqlalchemy.future import select
 from sqlalchemy.orm import aliased, Session
 from sqlalchemy.sql import Select
@@ -215,11 +216,14 @@ def user_memberships_query(
         .outerjoin(
             p_granted, and_(p_granted.property_group_id == group.id, p_granted.granted)
         )
-        .add_columns(func.array_agg(distinct(p_granted.name)).label("granted"))
         .outerjoin(
             p_denied, and_(p_denied.property_group_id == group.id, ~p_denied.granted)
         )
-        .add_columns(func.array_agg(distinct(p_denied.name)).label("denied"))
+        .with_only_columns(
+           Membership,
+           array_agg[list[str]](distinct(p_granted.name)).label("granted"),
+           array_agg[list[str]](distinct(p_denied.name)).label("denied"),
+       )
         .group_by(Membership.id)
     )
     return session.session.execute(memberships)
@@ -266,14 +270,11 @@ def select_user_and_last_mem() -> Select[tuple[int, int, DateTimeTz]]:
         .join(Config, Config.member_group_id == Membership.group_id)
         .with_only_columns(
             User.id.label("user_id"),
-            t.cast(
-                _TypedColumnClauseArgument[int],
-                func.last_value(Membership.id)
+            func.last_value(Membership.id, type_=Integer())
                 .over(**window_args, rows=(None, None))
                 .label("mem_id"),
-            ),
             t.cast(
-                _TypedColumnClauseArgument[str],
+                ColumnElement[DateTimeTz],
                 func.last_value(mem_ends_at)
                 .over(**window_args, rows=(None, None))
                 .label("mem_end"),

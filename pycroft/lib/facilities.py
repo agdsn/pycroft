@@ -89,6 +89,7 @@ def similar_rooms_query(
                 *([Room.swdd_vo_suchname == vo_suchname] if vo_suchname else []),
             )
         )
+        .with_only_columns(Room)
     )
 
 
@@ -229,8 +230,11 @@ def suggest_room_address_data(building: Building) -> RoomAddressSuggestion | Non
 
 
 def sort_buildings(buildings: t.Iterable[Building]) -> list[Building]:
-    def make_sort_key(building: Building) -> tuple[str, str | tuple[int, str]]:
-        s = re.split(r"(\d+)([a-zA-Z]?)", building.number)
+    def make_sort_key(building: Building) -> tuple[str, str] | tuple[str, tuple[int, str]]:
+        s = t.cast(
+            list[str],
+            re.split(r"(\d+)([a-zA-Z]?)", building.number)
+        )
         if len(s) != 4:
             return building.street, building.number  # split unsuccessful
         return building.street, (int(s[1]), s[2].lower())

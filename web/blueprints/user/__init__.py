@@ -807,7 +807,7 @@ def move(user_id: int) -> ResponseReturnValue:
         return redirect(url_for(".user_show", user_id=user.id))
 
     flash("Benutzer umgezogen", "success")
-    with abort_on_error(default_response), sess.begin_nested():
+    with abort_on_error(lambda: default_response(refill_form_data=False)), sess.begin_nested():
         sheet = lib.user.store_user_sheet(
             True,
             False,

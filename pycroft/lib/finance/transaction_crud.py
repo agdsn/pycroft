@@ -186,6 +186,7 @@ def _similar_activity_stmt(activity: BankAccountActivity) -> Select[tuple[BankAc
     return (
         select()
         .select_from(BankAccountActivity)
+        .with_only_columns(BankAccountActivity)
         .filter_by(
             bank_account_id=activity.bank_account_id,
             amount=activity.amount,

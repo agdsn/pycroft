@@ -1,3 +1,4 @@
+from pycroft.model.session import session
 from flask_wtf import FlaskForm as Form
 from sqlalchemy.orm import Query
 from wtforms.validators import DataRequired, IPAddress
@@ -10,7 +11,7 @@ from wtforms_widgets.fields.filters import to_uppercase, to_lowercase
 
 
 def vlan_query() -> Query[VLAN]:
-    return VLAN.q.order_by(VLAN.vid)
+    return session.query(VLAN).order_by(VLAN.vid)
 
 
 class SwitchPortForm(Form):

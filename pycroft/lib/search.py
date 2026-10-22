@@ -2,6 +2,7 @@
 pycroft.lib.search
 ~~~~~~~~~~~~~~~~~~
 """
+from pycroft.model.session import session
 import re
 
 from sqlalchemy import or_, func, cast, Text
@@ -25,7 +26,7 @@ def user_search_query(
     person_id: int | None = None,
     query: str | None = None,
 ) -> Query[User]:
-    result = User.q
+    result = session.query(User)
     if user_id is not None:
         result = result.filter(User.id == int(user_id))
     if email:

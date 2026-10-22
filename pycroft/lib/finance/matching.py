@@ -45,7 +45,11 @@ def match_activities() -> tuple[UserMatching, AccountMatching]:
     return matching, team_matching
 
 
-def _and_then[T, U](thing: T | None, f: Callable[[T], U | None]) -> U | None:
+# NOTE: this is slightly off the original intention (monadic bind),
+#  but will work because `ty` can then resolve `U` as `V | None` in many cases.
+#  see also https://github.com/astral-sh/ty/issues/1703
+#  and https://github.com/astral-sh/ty/issues/3557
+def _and_then[T, U](thing: T | None, f: Callable[[T], U]) -> U | None:
     return None if thing is None else f(thing)
 
 

@@ -101,13 +101,15 @@ class Bound[T: Ord](tuple[TWithInfinity[T], bool]):
             return False
         return bool(self.value < othervalue)
 
+    # TODO we should just stop overriding from tuple and use a frozen dataclass with slots.
+    #   This inheritance is premature optimization and causes virtually all typing issues.
     @t.override
     def __gt__(self, other: Bound[T]) -> bool:  # ty: ignore[invalid-method-override]
-        return operator.lt(other, self)
+        return operator.lt(other, self)  # ty: ignore[unsound-return-statement]
 
     @t.override
     def __ge__(self, other: Bound[T]) -> bool:  # ty: ignore[invalid-method-override]
-        return operator.le(other, self)
+        return operator.le(other, self)  # ty: ignore[unsound-return-statement]
 
     @t.override
     def __eq__(self, other: object) -> bool:
@@ -248,16 +250,16 @@ class Interval[T: Ord](tuple[Bound[T], Bound[T]]):
     def __le__(self, other: Interval[T]) -> bool:  # type: ignore
         return (operator.lt(self.lower_bound, other.lower_bound) or
                 (self.lower_bound == other.lower_bound and
-                 operator.le(self.upper_bound, other.upper_bound)))
+                 operator.le(self.upper_bound, other.upper_bound)))  # ty: ignore[unsound-return-statement]
 
     def __lt__(self, other: Interval[T]) -> bool:  # type: ignore
         return (operator.lt(self.lower_bound, other.lower_bound) or
                 (self.lower_bound == other.lower_bound and
-                 operator.lt(self.upper_bound, other.upper_bound)))
+                 operator.lt(self.upper_bound, other.upper_bound)))  # ty: ignore[unsound-return-statement]
 
     def __contains__(self, point: T) -> bool:  # type: ignore
         bound = Bound[T](point, True)
-        return operator.le(self.lower_bound, bound) and operator.le(bound, self.upper_bound)
+        return operator.le(self.lower_bound, bound) and operator.le(bound, self.upper_bound)  # ty: ignore[unsound-return-statement]
 
     @t.override
     def __str__(self):
@@ -296,7 +298,7 @@ class Interval[T: Ord](tuple[Bound[T], Bound[T]]):
 
         .. note:: This is not the same as ``self < other``.
         """
-        return operator.lt(self.upper_bound, other.lower_bound)
+        return operator.lt(self.upper_bound, other.lower_bound)  # ty: ignore[unsound-return-statement]
 
     def before(self, other: Interval[T]) -> bool:
         """
@@ -307,7 +309,7 @@ class Interval[T: Ord](tuple[Bound[T], Bound[T]]):
 
         .. note:: This is not the same as ``self <= other``.
         """
-        return operator.le(self.upper_bound, other.lower_bound)
+        return operator.le(self.upper_bound, other.lower_bound)  # ty: ignore[unsound-return-statement]
 
     def strictly_after(self, other: Interval[T]) -> bool:
         """
@@ -350,7 +352,7 @@ class Interval[T: Ord](tuple[Bound[T], Bound[T]]):
         This means that the intervals may not be equal.
         """
         return (operator.lt(self.lower_bound, other.upper_bound) and
-                operator.lt(other.lower_bound, self.upper_bound))
+                operator.lt(other.lower_bound, self.upper_bound))  # ty: ignore[unsound-return-statement]
 
     def overlaps(self, other: Interval[T]) -> bool:
         """
@@ -359,7 +361,7 @@ class Interval[T: Ord](tuple[Bound[T], Bound[T]]):
         Two intervals overlap if each begin is before the other's end.
         """
         return (operator.le(self.lower_bound, other.upper_bound) and
-                operator.le(other.lower_bound, self.upper_bound))
+                operator.le(other.lower_bound, self.upper_bound))  # ty: ignore[unsound-return-statement]
 
     def strictly_during(self, other: Interval[T]) -> bool:
         """
@@ -370,7 +372,7 @@ class Interval[T: Ord](tuple[Bound[T], Bound[T]]):
         the other's and its end is less than the other's.
         """
         return (operator.lt(other.lower_bound, self.lower_bound) and
-                operator.lt(self.upper_bound, other.upper_bound))
+                operator.lt(self.upper_bound, other.upper_bound))  # ty: ignore[unsound-return-statement]
 
     def during(self, other: Interval[T]) -> bool:
         """
@@ -380,7 +382,7 @@ class Interval[T: Ord](tuple[Bound[T], Bound[T]]):
         the other's and its end is less than or equal to the other's.
         """
         return (operator.le(other.lower_bound, self.lower_bound) and
-                operator.le(self.upper_bound, other.upper_bound))
+                operator.le(self.upper_bound, other.upper_bound))  # ty: ignore[unsound-return-statement]
 
     def strictly_contains(self, other: Interval[T]) -> bool:
         """

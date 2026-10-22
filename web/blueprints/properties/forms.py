@@ -8,15 +8,16 @@ from wtforms.validators import DataRequired, Regexp
 
 from pycroft import config
 from pycroft.model.user import PropertyGroup
+from pycroft.model.session import session
 from wtforms_widgets.fields.core import TextField, IntegerField
 
 
 def property_group_query() -> Query[PropertyGroup]:
-    return PropertyGroup.q.order_by(PropertyGroup.id)
+    return session.query(PropertyGroup).order_by(PropertyGroup.id)
 
 
 def property_group_user_create_query() -> Query[PropertyGroup]:
-    return PropertyGroup.q.filter(PropertyGroup.id.in_([
+    return session.query(PropertyGroup).filter(PropertyGroup.id.in_([
         config.member_group_id,
         config.external_group_id,
     ])).order_by(PropertyGroup.id)

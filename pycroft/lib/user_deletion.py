@@ -5,6 +5,7 @@ pycroft.lib.user_deletion
 This module contains methods concerning user archival and deletion.
 """
 from __future__ import annotations
+from sqlalchemy.sql.elements import KeyedColumnElement
 import typing as t
 from collections.abc import Sequence
 from datetime import datetime
@@ -55,7 +56,7 @@ def select_archivable_members(
     """
     # last_mem: (user_id, mem_id, mem_end)
     last_mem = select_user_and_last_mem().cte("last_mem").prefix_with("materialized")
-    return (
+    return t.cast(Select[tuple[User, int, datetime]],
         select()
         .select_from(last_mem)
         # Join the granted `do-not-archive` property, if existent
@@ -144,7 +145,7 @@ def scrubbable_mails(session: Session) -> ScalarResult[User]:
 
 def scrubbable_mails_count(session: Session, year: int) -> int | None:
     stmt = scrubbable_mails_stmt(year)
-    return session.scalar(stmt.with_only_columns(func.count()))
+    return session.scalar(t.cast(Select[tuple[int]], stmt.with_only_columns(func.count())))
 
 
 def scrub_mail(session: Session, user: User, author: User) -> None:
@@ -250,7 +251,8 @@ def scrub_all_mails_stmt(
         )
         .cte("user_log_entries")
     )
-    return select(removed_mail_user_ids.c.id).add_cte(insert_scrub_log, insert_user_log)
+    return select(t.cast(KeyedColumnElement[int], removed_mail_user_ids.c.id))\
+        .add_cte(insert_scrub_log, insert_user_log)
 
 def scrubbable_hosts_stmt(year: int) -> Select[tuple[Host]]:
     """All the hosts we can delete.

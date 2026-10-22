@@ -36,16 +36,8 @@ from ..helpers.form import confirmable_div, ConfirmCheckboxField, \
     iter_prefixed_field_names
 
 
-def user_query() -> Query[User]:
-    return User.q.order_by(User.id)
-
-
-def host_query() -> Query[User]:
-    return Host.q.order_by(Host.id)
-
-
-def group_query() -> Query[User]:
-    return PropertyGroup.q.order_by(PropertyGroup.name)
+def group_query() -> Query[PropertyGroup]:
+    return session.query(PropertyGroup).order_by(PropertyGroup.name)
 
 
 def validate_unique_login(form: Form, field: Field) -> None:
@@ -130,7 +122,7 @@ class UniqueEmail:
 
     @staticmethod
     def get_conflicting_users(email: str) -> list[User]:
-        return User.q.filter_by(email=email).all()
+        return session.query(User).filter_by(email=email).all()
 
     def __call__(self, form: Form, field: Field) -> None:
         if self.force_set(form):

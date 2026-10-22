@@ -29,11 +29,12 @@ ErrorHandler = t.Callable[[PycroftException], None]
 
 
 def add_error_handler(field: Field, error: str) -> ErrorHandler:
-    def _h(_err):
+    def _h(_err: PycroftException) -> None:
         field.errors = [
             *field.errors,
             error
         ]
+        return
     return _h
 
 

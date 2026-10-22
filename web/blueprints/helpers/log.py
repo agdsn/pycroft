@@ -67,8 +67,8 @@ def radius_description(interface: SupportsFormat, entry: RadiusLogEntry) -> str:
         msg = ("REJECTED - This should never happen!"
                " Please contact a root of your choice.")
     else:
-        msg = "Groups: {}, VLANs: {}".format(", ".join(entry.groups),
-                                             ", ".join(entry.vlans))
+        msg = f"Groups: {", ".join(entry.groups)}, VLANs: {", ".join(entry.vlans)}"
+
     return prefix + msg
 
 

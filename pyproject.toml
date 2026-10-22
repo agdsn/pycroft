@@ -155,7 +155,7 @@ include = [
 extra-paths = ["stubs"]
 
 [tool.ty.rules]
-# unsound-return-statement = "error"
+unsound-return-statement = "error"
 missing-type-argument = "error"
 dynamic-function-decorator-return = "error"
 

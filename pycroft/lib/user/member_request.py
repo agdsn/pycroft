@@ -185,13 +185,12 @@ def user_from_pre_member(pre_member: PreMember, processor: User | None) -> User:
 
 
 def get_member_requests() -> list[PreMember]:
-    prms = (
-        PreMember.q.order_by(PreMember.email_confirmed.desc())
+    return (
+        session.session.query(PreMember)
+        .order_by(PreMember.email_confirmed.desc())
         .order_by(PreMember.registered_at.asc())
         .all()
     )
-
-    return prms
 
 
 @with_transaction
