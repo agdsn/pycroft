@@ -12,13 +12,26 @@ from pycroft.helpers.interval import (
 )
 
 
-@pytest.mark.parametrize('one, other', [
-    ([closed(2, 3), closed(2, None), closed(None, 1), closed(1, 3), closed(2, 3),
-      closed(-10, None)],
-     [closed(None, None)]),
-    ([empty(6), closedopen(1, 2), empty(0), closedopen(2, 3), open(4, 5)],
-     [closedopen(1, 3), open(4, 5)]),
-])
+@pytest.mark.parametrize(
+    "one, other",
+    [
+        (
+            [
+                closed(2, 3),
+                closed(2, None),
+                closed(None, 1),
+                closed(1, 3),
+                closed(2, 3),
+                closed(-10, None),
+            ],
+            [closed(None, None)],
+        ),
+        (
+            [empty(6), closedopen(1, 2), empty(0), closedopen(2, 3), open(4, 5)],
+            [closedopen(1, 3), open(4, 5)],
+        ),
+    ],
+)
 def test_constructor(one: list[Interval], other: list[Interval]):
     assert IntervalSet(one) == IntervalSet(other)
 
@@ -88,13 +101,16 @@ def test_difference(one: list[Interval], other: list[Interval], expected: Interv
     assert IntervalSet(one).difference(IntervalSet(other)) == IntervalSet(expected)
 
 
-@pytest.mark.parametrize('intervals, expected', [
-    ([closed(0, 0)], 0),
-    ([closed(0, 1)], 1),
-    ([closed(0, 0), closed(1, 2), closed(3, 4)], 2),
-    ([closed(0, 1), closed(2, None)], None),
-    ([closed(None, 0), closed(1, 2)], None),
-    ([closed(None, None)], None),
-])
+@pytest.mark.parametrize(
+    "intervals, expected",
+    [
+        ([closed(0, 0)], 0),
+        ([closed(0, 1)], 1),
+        ([closed(0, 0), closed(1, 2), closed(3, 4)], 2),
+        ([closed(0, 1), closed(2, None)], None),
+        ([closed(None, 0), closed(1, 2)], None),
+        ([closed(None, None)], None),
+    ],
+)
 def test_length(intervals: list[Interval], expected: IntervalSet):
     assert IntervalSet(intervals).length == expected

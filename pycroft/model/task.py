@@ -2,6 +2,7 @@
 pycroft.model.task
 ~~~~~~~~~~~~~~~~~~
 """
+
 from __future__ import annotations
 import builtins
 import enum
@@ -23,6 +24,7 @@ from .user import User
 
 if t.TYPE_CHECKING:
     from .logging import TaskLogEntry
+
 
 class TaskType(enum.Enum):
     USER_MOVE_OUT = enum.auto()
@@ -52,7 +54,7 @@ class Task[TSchema, TParams: TaskParams](IntegerIdModel):
     """
 
     discriminator: Mapped[str50] = mapped_column("task_type")
-    __mapper_args__ = {'polymorphic_on': discriminator}
+    __mapper_args__ = {"polymorphic_on": discriminator}
 
     type: Mapped[TaskType]
     due: Mapped[utc.DateTimeTz]
@@ -64,9 +66,7 @@ class Task[TSchema, TParams: TaskParams](IntegerIdModel):
     errors: Mapped[t.Any | None] = mapped_column(JSONB)
 
     # backrefs
-    log_entries: Mapped[list[TaskLogEntry]] = relationship(
-        back_populates="task", viewonly=True
-    )
+    log_entries: Mapped[list[TaskLogEntry]] = relationship(back_populates="task", viewonly=True)
     # /backrefs
 
     @property
@@ -102,11 +102,9 @@ class Task[TSchema, TParams: TaskParams](IntegerIdModel):
 
 
 class UserTask(Task):
-    __mapper_args__ = {'polymorphic_identity': 'user_task'}
+    __mapper_args__ = {"polymorphic_identity": "user_task"}
 
-    id: Mapped[int] = mapped_column(
-        ForeignKey(Task.id, ondelete="CASCADE"), primary_key=True
-    )
+    id: Mapped[int] = mapped_column(ForeignKey(Task.id, ondelete="CASCADE"), primary_key=True)
 
     user_id: Mapped[int] = mapped_column(ForeignKey(User.id))
     user: Mapped[User] = relationship(foreign_keys=[user_id], back_populates="tasks")
@@ -115,7 +113,5 @@ class UserTask(Task):
 task_type_to_schema: Mapping[TaskType, type[Schema]] = {
     TaskType.USER_MOVE: UserMoveSchema,
     TaskType.USER_MOVE_IN: UserMoveInSchema,
-    TaskType.USER_MOVE_OUT: UserMoveOutSchema
+    TaskType.USER_MOVE_OUT: UserMoveOutSchema,
 }
-
-

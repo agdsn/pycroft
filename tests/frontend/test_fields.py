@@ -6,7 +6,7 @@ import string
 import pytest
 from wtforms_widgets.fields.core import DateField
 
-__author__ = 'shreyder'
+__author__ = "shreyder"
 
 
 def test_date_field_format_strings():
@@ -20,8 +20,7 @@ def test_date_field_format_strings():
         assert DateField.convert_format_string("%%" + directive) == "%" + directive
 
     unknown_directives = set(string.ascii_letters).difference(
-        set(DateField.supported_directives.keys()),
-        set(DateField.unsupported_directives)
+        set(DateField.supported_directives.keys()), set(DateField.unsupported_directives)
     )
 
     for directive in unknown_directives:

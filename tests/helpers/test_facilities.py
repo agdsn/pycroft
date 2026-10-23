@@ -22,6 +22,7 @@ def fake_dorm():
         def __init__(self, num):
             self.number = num
             self.street = "fake street"
+
     return fake_dorm
 
 

@@ -34,9 +34,9 @@ default_handler.setFormatter(
 def prepare_server(echo=False, ensure_schema=False) -> PycroftFlask:
     if echo:
         logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
-        logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
-        logging.getLogger('sqlalchemy.pool').setLevel(logging.DEBUG)
-    logging.getLogger('pycroft').addHandler(default_handler)
+        logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
+        logging.getLogger("sqlalchemy.pool").setLevel(logging.DEBUG)
+    logging.getLogger("pycroft").addHandler(default_handler)
 
     app = make_app()
     app.config.from_file("default_config.toml", load=tomllib.load, text=False)
@@ -102,12 +102,13 @@ def _setup_simple_profiling(app):
 
     @app.teardown_request
     def time_response(exception=None):
-        request_time = g.pop('request_time', None)
+        request_time = g.pop("request_time", None)
 
         if request_time:
             time_taken = time.time() - request_time
             if time_taken > 0.5:
                 app.logger.warning(
                     "Response took %s seconds for request %s",
-                    time_taken, request.full_path,
+                    time_taken,
+                    request.full_path,
                 )

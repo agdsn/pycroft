@@ -4,6 +4,7 @@ pycroft.lib.user_deletion
 
 This module contains methods concerning user archival and deletion.
 """
+
 from __future__ import annotations
 from sqlalchemy.sql.elements import KeyedColumnElement
 import typing as t
@@ -36,6 +37,7 @@ class ArchivableMemberInfo(Protocol):
 
 # mrh, not available in py3.10…
 
+
 def select_archivable_members(
     current_year: int,
     years_following_eom: int,
@@ -59,7 +61,8 @@ def select_archivable_members(
     return (
         t.cast(
             Select[tuple[User, int, datetime]],
-            select().select_from(last_mem)
+            select()
+            .select_from(last_mem)
             # Join the granted `do-not-archive` property, if existent
             .join(
                 CurrentProperty,
@@ -226,12 +229,15 @@ def scrub_all_mails_stmt(
         .cte("log_entries")
     )
     log_numbered = (
-        select(insert_log.c.id, func.row_number().over(order_by=insert_log.c.id).label("row_number"))
+        select(
+            insert_log.c.id, func.row_number().over(order_by=insert_log.c.id).label("row_number")
+        )
         .select_from(insert_log)
         .cte()
     )
     user_ids_numbered = (
-        select(removed_mail_user_ids.c.id,
+        select(
+            removed_mail_user_ids.c.id,
             func.row_number().over(order_by=removed_mail_user_ids.c.id).label("row_number"),
         )
         .select_from(removed_mail_user_ids)

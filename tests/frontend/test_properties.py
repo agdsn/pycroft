@@ -23,9 +23,10 @@ class TestPropertiesFrontend:
         )
         response = client.assert_url_response_code(response.location, code=200)
 
-        content = response.data.decode('utf-8')
+        content = response.data.decode("utf-8")
         # This actually should be `assert_flashed`
         assert group_name in content
 
-        assert PropertyGroup.q.filter_by(name=group_name).count() == 1, \
+        assert PropertyGroup.q.filter_by(name=group_name).count() == 1, (
             f"Expected one property group of name '{group_name}'"
+        )

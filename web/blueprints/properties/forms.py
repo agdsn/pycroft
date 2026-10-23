@@ -32,10 +32,15 @@ def property_group_user_create_query() -> Query[PropertyGroup]:
 
 
 class PropertyGroupForm(Form):
-    name = TextField("Gruppenname", [
-        DataRequired("Name?"),
-        Regexp("^[a-zA-Z0-9äöüÄÖÜ ]{3,}$",
-               message="Namen ohne Sonderzeichen und mindestens 3 Buchstaben"
-                       " eingeben! (RegEx: ^[a-zA-Z0-9äöüÄÖÜ ]{3,}$)")
-    ])
+    name = TextField(
+        "Gruppenname",
+        [
+            DataRequired("Name?"),
+            Regexp(
+                "^[a-zA-Z0-9äöüÄÖÜ ]{3,}$",
+                message="Namen ohne Sonderzeichen und mindestens 3 Buchstaben"
+                " eingeben! (RegEx: ^[a-zA-Z0-9äöüÄÖÜ ]{3,}$)",
+            ),
+        ],
+    )
     permission_level = IntegerField("Berechtigungslevel")

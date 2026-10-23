@@ -33,20 +33,18 @@ class SiteRow(BaseModel):
 class BuildingLevelRoomTable(BootstrapTable):
     class Meta:  # ty: ignore[invalid-attribute-override]
         table_args = {
-            'data-sort-name': 'room',
-            'data-query-params': 'perhaps_all_users_query_params',
+            "data-sort-name": "room",
+            "data-query-params": "perhaps_all_users_query_params",
         }
 
     room = LinkColumn("Raum")
-    inhabitants = MultiBtnColumn('Bewohner')
+    inhabitants = MultiBtnColumn("Bewohner")
 
     @property
     @t.override
     def toolbar(self) -> LazilyJoined:
         return toggle_button_toolbar(
-            "Display all users",
-            id="rooms-toggle-all-users",
-            icon="fa-user"
+            "Display all users", id="rooms-toggle-all-users", icon="fa-user"
         )
 
 
@@ -57,6 +55,7 @@ class BuildingLevelRoomRow(BaseModel):
 
 class RoomLogTable(BootstrapTable):
     """Like a log table, just with absolute date column"""
+
     created_at = DateColumn("Erstellt um")
     user = LinkColumn("Nutzer")
     message = Column("Nachricht")
@@ -67,7 +66,7 @@ class RoomOvercrowdedTable(BootstrapTable):
     inhabitants = MultiBtnColumn("Bewohner")
 
     class Meta:  # ty: ignore[invalid-attribute-override]
-        table_args = {'data-sort-name': 'room'}
+        table_args = {"data-sort-name": "room"}
 
 
 class RoomOvercrowdedRow(BaseModel):
@@ -78,14 +77,14 @@ class RoomOvercrowdedRow(BaseModel):
 class PatchPortTable(BootstrapTable):
     class Meta:  # ty: ignore[invalid-attribute-override]
         table_args = {
-            'data-sort-name': 'name',
+            "data-sort-name": "name",
         }
 
-    name = Column('Name', width=2, col_args={'data-sorter': 'table.sortPatchPort'})
-    room = LinkColumn('→ Raum', width=5)
-    switch_port = LinkColumn('→ Switch-Port', width=3, col_args={'data-sorter': 'table.sortPort'})
-    edit_link = BtnColumn('Editieren', hide_if=no_inf_change)
-    delete_link = BtnColumn('Löschen', hide_if=no_inf_change)
+    name = Column("Name", width=2, col_args={"data-sorter": "table.sortPatchPort"})
+    room = LinkColumn("→ Raum", width=5)
+    switch_port = LinkColumn("→ Switch-Port", width=3, col_args={"data-sorter": "table.sortPort"})
+    edit_link = BtnColumn("Editieren", hide_if=no_inf_change)
+    delete_link = BtnColumn("Löschen", hide_if=no_inf_change)
 
     @t.override
     def __init__(self, *, room_id: int | None = None, **kw: t.Any) -> None:

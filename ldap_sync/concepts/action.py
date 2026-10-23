@@ -6,6 +6,7 @@ ldap_sync.concepts.action
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 Actions (Add/Delete/Modify/Nothing)
 """
+
 import dataclasses
 import logging
 import typing as t

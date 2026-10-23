@@ -6,8 +6,7 @@ import datetime
 from flask_wtf import FlaskForm as Form
 from schwifty import IBAN, BIC
 from wtforms import Form as WTForm, ValidationError, Field
-from wtforms.validators import DataRequired, NumberRange, Optional, \
-    InputRequired
+from wtforms.validators import DataRequired, NumberRange, Optional, InputRequired
 
 from pycroft.model.user import User
 from wtforms_widgets.fields.core import (
@@ -33,50 +32,42 @@ from pycroft.model.finance import BankAccount
 
 class MembershipFeeCreateForm(Form):
     name = TextField("Beitragsname", validators=[DataRequired()])
-    regular_fee = MoneyField(
-        "Regulärer Beitrag",
-        validators=[InputRequired(), NumberRange(min=0)]
-    )
+    regular_fee = MoneyField("Regulärer Beitrag", validators=[InputRequired(), NumberRange(min=0)])
 
     # TODO Transform IntegerFields to IntervalFields
 
     booking_begin = IntegerField(
         "Buchungsbeginn (Tage)",
-        description="Ab diesem Tag im Zeitraum wird ein Mitglied "
-                    "als zahlungspflichtig angesehen.",
-        validators=[InputRequired(), NumberRange(min=1)]
+        description="Ab diesem Tag im Zeitraum wird ein Mitglied als zahlungspflichtig angesehen.",
+        validators=[InputRequired(), NumberRange(min=1)],
     )
 
     booking_end = IntegerField(
         "Buchungsende (Tage)",
         description="Bis zu diesem Tag im Zeitraum wird ein neues Mitglied "
-                    "als zahlungspflichtig angesehen.",
-        validators=[InputRequired(), NumberRange(min=1)]
+        "als zahlungspflichtig angesehen.",
+        validators=[InputRequired(), NumberRange(min=1)],
     )
 
     payment_deadline = IntegerField(
         "Zahlungsfrist (Tage)",
         description="Bleibt ein Mitglied mehr Tage als hier angegeben eine "
-                    "Zahlung schuldig, so wird es Mitglied in der "
-                    "Zahlungsrückstands-Gruppe.",
-        validators=[InputRequired(), NumberRange(min=0)]
+        "Zahlung schuldig, so wird es Mitglied in der "
+        "Zahlungsrückstands-Gruppe.",
+        validators=[InputRequired(), NumberRange(min=0)],
     )
 
     payment_deadline_final = IntegerField(
         "Endgültige Zahlungsfrist (Tage)",
         description="Bleibt ein Mitglied mehr Tage als hier angegeben eine "
-                    "Zahlung schuldig, so wird seine Mitgliedschaft beendet.",
-        validators=[InputRequired(), NumberRange(min=0)]
+        "Zahlung schuldig, so wird seine Mitgliedschaft beendet.",
+        validators=[InputRequired(), NumberRange(min=0)],
     )
 
     begins_on = DateField(
-        "Anfang", validators=[DataRequired()], today_btn=True,
-        today_highlight=True
+        "Anfang", validators=[DataRequired()], today_btn=True, today_highlight=True
     )
-    ends_on = DateField(
-        "Ende", validators=[DataRequired()], today_btn=True,
-        today_highlight=True
-    )
+    ends_on = DateField("Ende", validators=[DataRequired()], today_btn=True, today_highlight=True)
 
 
 class FeeApplyForm(Form):
@@ -98,7 +89,7 @@ class BankAccountCreateForm(Form):
     fints = TextField("FinTS-Endpunkt", default="https://mybank.com/…")
 
     def validate_iban(self, field: Field) -> None:
-        if BankAccount.q.filter_by(iban=field.data ).first() is not None:
+        if BankAccount.q.filter_by(iban=field.data).first() is not None:
             raise ValidationError("Konto existiert bereits.")
 
 
@@ -114,10 +105,9 @@ class BankAccountActivityReadForm(Form):
 
 
 class BankAccountActivityEditForm(BankAccountActivityReadForm):
-    account = TypeaheadField("Gegenkonto", render_kw={
-        'data_toggle': 'account-typeahead',
-        'data-target': 'account_id'
-    })
+    account = TypeaheadField(
+        "Gegenkonto", render_kw={"data_toggle": "account-typeahead", "data-target": "account_id"}
+    )
     account_id = HiddenField(validators=[DataRequired()])
     description = StringField("Beschreibung")
 
@@ -143,11 +133,14 @@ class BankAccountActivitiesImportForm(FinTSClientForm):
 class AccountCreateForm(Form):
     name = TextField("Name", validators=[DataRequired()])
     type = SelectField(
-        "Typ", validators=[DataRequired()],
+        "Typ",
+        validators=[DataRequired()],
         choices=[
-            ("ASSET", "Aktivkonto"), ("LIABILITY", "Passivkonto"),
-            ("EXPENSE", "Aufwandskonto"), ("REVENUE", "Ertragskonto"),
-        ]
+            ("ASSET", "Aktivkonto"),
+            ("LIABILITY", "Passivkonto"),
+            ("EXPENSE", "Aufwandskonto"),
+            ("REVENUE", "Ertragskonto"),
+        ],
     )
 
 
@@ -175,8 +168,11 @@ class TransactionCreateForm(Form):
     splits = FieldList(FormField(SplitCreateForm), validators=[DataRequired()], min_entries=2)
 
     def validate_splits(self, field: FieldList) -> None:
-        balance = sum(split_form['amount'].data for split_form in field
-                      if split_form['amount'].data is not None)
+        balance = sum(
+            split_form["amount"].data
+            for split_form in field
+            if split_form["amount"].data is not None
+        )
         if balance != 0:
             raise ValidationError("Buchung ist nicht ausgeglichen.")
 
@@ -231,14 +227,21 @@ def get_user_name_with_id_and_balance(user: User) -> str:
 
 
 class HandlePaymentsInDefaultForm(Form):
-    new_pid_memberships = QuerySelectMultipleField("Neue Mitgliedschaften in der 'Zahlungsrückstand' Gruppe",
-                                                   get_label=get_user_name_with_id_and_balance,
-                                                   render_kw={'size': 20})
-    terminated_member_memberships = QuerySelectMultipleField("Beendete Mitgliedschaften/Auszüge",
-                                                             get_label=get_user_name_with_id_and_balance,
-                                                             render_kw={'size': 20})
+    new_pid_memberships = QuerySelectMultipleField(
+        "Neue Mitgliedschaften in der 'Zahlungsrückstand' Gruppe",
+        get_label=get_user_name_with_id_and_balance,
+        render_kw={"size": 20},
+    )
+    terminated_member_memberships = QuerySelectMultipleField(
+        "Beendete Mitgliedschaften/Auszüge",
+        get_label=get_user_name_with_id_and_balance,
+        render_kw={"size": 20},
+    )
 
 
 class ConfirmPaymentReminderMail(Form):
-    confirm = BooleanField("E-Mail an alle Mitglieder mit negativem Guthaben versenden",
-                           default=False, validators=[DataRequired()])
+    confirm = BooleanField(
+        "E-Mail an alle Mitglieder mit negativem Guthaben versenden",
+        default=False,
+        validators=[DataRequired()],
+    )

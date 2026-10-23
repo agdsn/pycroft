@@ -2,13 +2,14 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
-    pycroft.model.base
-    ~~~~~~~~~~~~~~~~~~
+pycroft.model.base
+~~~~~~~~~~~~~~~~~~
 
-    This module contains base stuff for all models.
+This module contains base stuff for all models.
 
-    :copyright: (c) 2011 by AG DSN.
+:copyright: (c) 2011 by AG DSN.
 """
+
 import re
 import typing as t
 
@@ -32,6 +33,7 @@ from pycroft.model.types import IPAddress, MACAddress, IPNetwork
 
 class _ModelMeta(type(DeclarativeBase)):
     """Metaclass for all mapped Database objects."""
+
     @property
     def q(cls):
         """This is a shortcut for easy querying of whole objects.
@@ -68,29 +70,35 @@ class ModelBase(DeclarativeBase, metaclass=_ModelMeta):
 
     @staticmethod
     def _to_snake_case(name):
-        name = re.sub(r"([A-Z]+)([A-Z][a-z])", r'\1_\2', name)
-        name = re.sub(r"([a-z\d])([A-Z])", r'\1_\2', name)
+        name = re.sub(r"([A-Z]+)([A-Z][a-z])", r"\1_\2", name)
+        name = re.sub(r"([a-z\d])([A-Z])", r"\1_\2", name)
         return name.lower()
 
     def __repr__(self):
         return "{}.{}({})".format(
-            self.__module__, self.__class__.__name__,
-            ", ".join("{}={!r}".format(key, getattr(self, key, "<unknown>"))
-                      for key in self.__mapper__.columns.keys()
-                      if 'passwd' not in key and 'password' not in key)
+            self.__module__,
+            self.__class__.__name__,
+            ", ".join(
+                "{}={!r}".format(key, getattr(self, key, "<unknown>"))
+                for key in self.__mapper__.columns.keys()
+                if "passwd" not in key and "password" not in key
+            ),
         )
 
     def __str__(self):
         return "{}({})".format(
             self.__class__.__name__,
-            ", ".join("{}={}".format(key, getattr(self, key, "<unknown>"))
-                      for key in self.__mapper__.columns.keys()
-                      if 'passwd' not in key and 'password' not in key)
+            ", ".join(
+                "{}={}".format(key, getattr(self, key, "<unknown>"))
+                for key in self.__mapper__.columns.keys()
+                if "passwd" not in key and "password" not in key
+            ),
         )
 
     # __table__: Table
 
     import typing
+
     if typing.TYPE_CHECKING:
         # uncomment that to get the deprecation warnings.
         # unfortunately, this breaks mypy linting because we can't
@@ -107,8 +115,7 @@ class ModelBase(DeclarativeBase, metaclass=_ModelMeta):
             pass
 
 
-class _MappedAsDataclassPatchedMeta(type(OrigMappedAsDataclass), _ModelMeta):
-    ...
+class _MappedAsDataclassPatchedMeta(type(OrigMappedAsDataclass), _ModelMeta): ...
 
 
 class MappedAsDataclass(OrigMappedAsDataclass, metaclass=_MappedAsDataclassPatchedMeta):

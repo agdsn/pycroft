@@ -13,7 +13,7 @@ from tests import factories
 
 
 class Test_User_Passwords:
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def user(self, class_session):
         return factories.UserFactory()
 
@@ -28,9 +28,12 @@ class Test_User_Passwords:
         user.passwd_hash = pw_hash
         session.flush()
 
-        with session.begin_nested(), \
-            pytest.raises(AssertionError,
-                          match="A password-hash with less than 9 chars is not correct!"):
+        with (
+            session.begin_nested(),
+            pytest.raises(
+                AssertionError, match="A password-hash with less than 9 chars is not correct!"
+            ),
+        ):
             user.passwd_hash = password
             session.flush()
 
@@ -63,76 +66,161 @@ class Test_User_Passwords:
 
 
 class Test_User_Login:
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def user(self, class_session):
         """A persistent user (i.e., in the db)"""
         return factories.UserFactory()
 
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def transient_user(self):
         """A user not yet in the db"""
         return factories.UserFactory.build()
 
-    @pytest.mark.parametrize('login', [
-        # simple valid logins
-        "abcdefg", "a-b", "a3b", "a.2b", "a33", "a-4",
-        *("a" * l for l in range(2, 23)),
-    ])
+    @pytest.mark.parametrize(
+        "login",
+        [
+            # simple valid logins
+            "abcdefg",
+            "a-b",
+            "a3b",
+            "a.2b",
+            "a33",
+            "a-4",
+            *("a" * l for l in range(2, 23)),
+        ],
+    )
     def test_good_logins(self, transient_user, login):
         transient_user.login = login
 
-    @pytest.mark.parametrize('login', [
-        # invalid logins (charset)
-        "123", "ABC", "3bc", "_ab", "ab_", "3b_", "_b3", "&&",
-        "a_b", "a_2b", "a_4", "-ab", "ab-", ".ab", "ab.",
-        # blocked logins
-        "abuse", "admin", "administrator", "autoconfig",
-        "broadcasthost", "root", "daemon", "bin", "sys", "sync",
-        "games", "man", "hostmaster", "imap", "info", "is",
-        "isatap", "it", "localdomain", "localhost",
-        "lp", "mail", "mailer-daemon", "news", "uucp", "proxy",
-        "majordom", "marketing", "mis", "noc", "website", "api",
-        "noreply", "no-reply", "pop", "pop3",
-        "postmaster",
-        "postgres", "sales", "smtp", "ssladmin", "status",
-        "ssladministrator", "sslwebmaster", "support",
-        "sysadmin", "usenet", "webmaster", "wpad", "www",
-        "wwwadmin", "backup", "msql", "operator", "user",
-        "ftp", "ftpadmin", "guest", "bb", "nobody", "www-data",
-        "bacula", "contact", "email", "privacy", "anonymous",
-        "web", "git", "username", "log", "login", "help", "name",
-        # logins with bad lengt
-        "a", "a" * 23, "a" * 24
-    ])
+    @pytest.mark.parametrize(
+        "login",
+        [
+            # invalid logins (charset)
+            "123",
+            "ABC",
+            "3bc",
+            "_ab",
+            "ab_",
+            "3b_",
+            "_b3",
+            "&&",
+            "a_b",
+            "a_2b",
+            "a_4",
+            "-ab",
+            "ab-",
+            ".ab",
+            "ab.",
+            # blocked logins
+            "abuse",
+            "admin",
+            "administrator",
+            "autoconfig",
+            "broadcasthost",
+            "root",
+            "daemon",
+            "bin",
+            "sys",
+            "sync",
+            "games",
+            "man",
+            "hostmaster",
+            "imap",
+            "info",
+            "is",
+            "isatap",
+            "it",
+            "localdomain",
+            "localhost",
+            "lp",
+            "mail",
+            "mailer-daemon",
+            "news",
+            "uucp",
+            "proxy",
+            "majordom",
+            "marketing",
+            "mis",
+            "noc",
+            "website",
+            "api",
+            "noreply",
+            "no-reply",
+            "pop",
+            "pop3",
+            "postmaster",
+            "postgres",
+            "sales",
+            "smtp",
+            "ssladmin",
+            "status",
+            "ssladministrator",
+            "sslwebmaster",
+            "support",
+            "sysadmin",
+            "usenet",
+            "webmaster",
+            "wpad",
+            "www",
+            "wwwadmin",
+            "backup",
+            "msql",
+            "operator",
+            "user",
+            "ftp",
+            "ftpadmin",
+            "guest",
+            "bb",
+            "nobody",
+            "www-data",
+            "bacula",
+            "contact",
+            "email",
+            "privacy",
+            "anonymous",
+            "web",
+            "git",
+            "username",
+            "log",
+            "login",
+            "help",
+            "name",
+            # logins with bad lengt
+            "a",
+            "a" * 23,
+            "a" * 24,
+        ],
+    )
     def test_bad_logins(self, transient_user, login):
         with pytest.raises(IllegalLoginError):
             transient_user.login = login
 
     def test_login_cannot_be_changed(self, session, user):
-        with pytest.raises(AssertionError,
-                           match="user already in the database - cannot change login anymore!"):
+        with pytest.raises(
+            AssertionError, match="user already in the database - cannot change login anymore!"
+        ):
             user.login = "abc"
 
     def test_user_login_case_sensitive(self, session, user):
-        password = 'password'
+        password = "password"
         assert User.verify_and_get(user.login, password) == user
         assert User.verify_and_get(user.login.upper(), password) is None
 
 
 class TestUnixAccounts:
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def ldap_user(self, class_session):
         return factories.UserFactory(with_unix_account=True)
 
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def dummy_user(self, class_session):
         return factories.UserFactory()
 
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def custom_account(self, class_session):
         return factories.UnixAccountFactory(gid=27)
 
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def dummy_account(self, class_session):
         return factories.UnixAccountFactory()
 
@@ -150,16 +238,16 @@ class TestUnixAccounts:
 
     def test_account_reference(self, ldap_user, dummy_user):
         assert isinstance(ldap_user.unix_account, UnixAccount)
-        assert ldap_user.unix_account.home_directory.startswith('/home/')
+        assert ldap_user.unix_account.home_directory.startswith("/home/")
         assert dummy_user.unix_account is None
 
 
 class TestActiveHybridMethods:
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def user(self, class_session):
         return factories.UserFactory()
 
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def property_group(self, class_session):
         return factories.PropertyGroupFactory()
 
@@ -167,11 +255,10 @@ class TestActiveHybridMethods:
     def add_membership(self, session, utcnow, user):
         def _add_membership(group):
             with session.begin_nested():
-                m = Membership(
-                    user=user, group=group, active_during=starting_from(utcnow)
-                )
+                m = Membership(user=user, group=group, active_during=starting_from(utcnow))
                 session.add(m)
             return m
+
         return _add_membership
 
     def test_active_memberships(self, session, utcnow, user, property_group, add_membership):
@@ -193,10 +280,16 @@ class TestActiveHybridMethods:
     def create_active_memberships_query(self, user, session):
         def _create_active_memberships_query(when=None):
             return session.scalars(User.active_memberships(when).where(User.id == user.id))
+
         return _create_active_memberships_query
 
     def test_active_memberships_expression(
-        self, session, utcnow, property_group, add_membership, create_active_memberships_query,
+        self,
+        session,
+        utcnow,
+        property_group,
+        add_membership,
+        create_active_memberships_query,
     ):
         query = create_active_memberships_query()
         assert query.all() == []
@@ -223,11 +316,17 @@ class TestActiveHybridMethods:
     def create_active_property_groups_query(self, user, session):
         def _create_active_property_groups_query(when=None):
             return session.scalars(User.active_property_groups(when).where(User.id == user.id))
+
         return _create_active_property_groups_query
 
     def test_active_property_groups_expression(
-        self, session, utcnow, user, property_group,
-        add_membership, create_active_property_groups_query,
+        self,
+        session,
+        utcnow,
+        user,
+        property_group,
+        add_membership,
+        create_active_property_groups_query,
     ):
         query = create_active_property_groups_query()
         assert query.all() == []
@@ -245,40 +344,44 @@ class TestActiveHybridMethods:
 
 
 class Test_has_property:
-    GRANTED_NAME = 'granted'
-    DENIED_NAME = 'denied'
+    GRANTED_NAME = "granted"
+    DENIED_NAME = "denied"
 
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def user(self, class_session):
         return factories.UserFactory()
 
-    @pytest.fixture(scope='class', autouse=True)
+    @pytest.fixture(scope="class", autouse=True)
     def membership(self, class_session, user):
-        group = factories.PropertyGroupFactory(granted={self.GRANTED_NAME},
-                                               denied={self.DENIED_NAME})
+        group = factories.PropertyGroupFactory(
+            granted={self.GRANTED_NAME}, denied={self.DENIED_NAME}
+        )
         return factories.MembershipFactory(group=group, user=user, includes_today=True)
 
-    @pytest.mark.parametrize('property, should_exist', [
-        (GRANTED_NAME, True),
-        (DENIED_NAME, False),
-        ('unused', False),
-    ])
+    @pytest.mark.parametrize(
+        "property, should_exist",
+        [
+            (GRANTED_NAME, True),
+            (DENIED_NAME, False),
+            ("unused", False),
+        ],
+    )
     def test_positive_test(self, session, user, property, should_exist):
         assert user.has_property(property) == should_exist
 
-    @pytest.mark.parametrize('timestamp_getter, should_exist', [
-        (lambda i: i.begin - timedelta(seconds=1), False),
-
-        (lambda i: i.begin, True),
-        (lambda i: i.begin + timedelta(seconds=1), True),
-        (lambda i: i.end - timedelta(seconds=1), True),
-
-        (lambda i: i.end, False),
-        (lambda i: i.end + timedelta(1), False),
-        (lambda i: i.end + timedelta(2), False),
-    ])
-    def test_has_property_interval(self, session, user, membership,
-                                   timestamp_getter, should_exist):
+    @pytest.mark.parametrize(
+        "timestamp_getter, should_exist",
+        [
+            (lambda i: i.begin - timedelta(seconds=1), False),
+            (lambda i: i.begin, True),
+            (lambda i: i.begin + timedelta(seconds=1), True),
+            (lambda i: i.end - timedelta(seconds=1), True),
+            (lambda i: i.end, False),
+            (lambda i: i.end + timedelta(1), False),
+            (lambda i: i.end + timedelta(2), False),
+        ],
+    )
+    def test_has_property_interval(self, session, user, membership, timestamp_getter, should_exist):
         timestamp = timestamp_getter(membership.active_during)
         assert user.has_property(self.GRANTED_NAME, timestamp) == should_exist
 

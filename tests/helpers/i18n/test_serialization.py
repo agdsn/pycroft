@@ -8,19 +8,32 @@ from pycroft.helpers.i18n import localized
 from pycroft.helpers.i18n.types import Money
 from pycroft.helpers.i18n.serde import serialize_param, deserialize_param
 from pycroft.helpers.i18n.message import Message, ErroneousMessage
-from pycroft.helpers.interval import UnboundedInterval, closed, closedopen, \
-    openclosed, open
+from pycroft.helpers.interval import UnboundedInterval, closed, closedopen, openclosed, open
 
 now = datetime.datetime.utcnow()
 then = now + datetime.timedelta(days=1)
 
 
-@pytest.mark.parametrize('value', [
-    "test", True, 42, 0.5, Decimal('3.8e2'), Money(Decimal(20.0), "EUR"),
-    datetime.datetime.utcnow(), datetime.date.today(), datetime.timedelta(1),
-    datetime.datetime.utcnow().time(), UnboundedInterval, closed(now, then), closedopen(now, then),
-    openclosed(now, then), open(now, then),
-])
+@pytest.mark.parametrize(
+    "value",
+    [
+        "test",
+        True,
+        42,
+        0.5,
+        Decimal("3.8e2"),
+        Money(Decimal(20.0), "EUR"),
+        datetime.datetime.utcnow(),
+        datetime.date.today(),
+        datetime.timedelta(1),
+        datetime.datetime.utcnow().time(),
+        UnboundedInterval,
+        closed(now, then),
+        closedopen(now, then),
+        openclosed(now, then),
+        open(now, then),
+    ],
+)
 def test_valid_serialization(value):
     s = serialize_param(value)
     try:
@@ -84,6 +97,7 @@ def test_invalid_parameter(json):
     assert isinstance(m, ErroneousMessage)
     for t in (m.text.lower(), l.lower()):
         assert "parameter deserialization error" in t
+
 
 @pytest.mark.parametrize("serialized", ("5", "42", "42.0", "7"))
 def test_numerical_strings_get_deserialized(serialized: str):

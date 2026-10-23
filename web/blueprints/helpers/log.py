@@ -6,6 +6,7 @@ sources of logs to a dict.  The latter represents a valid table row to
 :class:`LogTableExtended`.
 
 """
+
 import typing as t
 from datetime import datetime, timezone
 from functools import partial
@@ -37,15 +38,14 @@ def format_log_entry(entry: LogEntry, log_type: LogType) -> LogTableRow:
     )
 
 
-format_user_log_entry = partial(format_log_entry, log_type='user')
-format_task_log_entry = partial(format_log_entry, log_type='task')
-format_room_log_entry = partial(format_log_entry, log_type='room')
+format_user_log_entry = partial(format_log_entry, log_type="user")
+format_task_log_entry = partial(format_log_entry, log_type="task")
+format_room_log_entry = partial(format_log_entry, log_type="room")
 
 
 class SupportsFormat(t.Protocol):
     @t.override
-    def __str__(self) -> str:
-        ...
+    def __str__(self) -> str: ...
 
     @t.override
     def __format__(self, format_spec: t.Any, /) -> str: ...
@@ -63,17 +63,14 @@ def radius_description(interface: SupportsFormat, entry: RadiusLogEntry) -> str:
     """
     prefix = f"{interface} – {entry.mac} – "
     if not entry:
-        msg = ("REJECTED - This should never happen!"
-               " Please contact a root of your choice.")
+        msg = "REJECTED - This should never happen! Please contact a root of your choice."
     else:
-        msg = f"Groups: {", ".join(entry.groups)}, VLANs: {", ".join(entry.vlans)}"
+        msg = f"Groups: {', '.join(entry.groups)}, VLANs: {', '.join(entry.vlans)}"
 
     return prefix + msg
 
 
-def format_hades_log_entry(
-    interface: SupportsFormat, entry: RadiusLogEntry
-) -> LogTableRow:
+def format_hades_log_entry(interface: SupportsFormat, entry: RadiusLogEntry) -> LogTableRow:
     """Turn Radius Log entry information into a canonical form
 
     This utilizes :py:func:`radius_description` but returns a dict in
@@ -103,10 +100,12 @@ def format_custom_hades_message(message: str) -> LogTableRow:
     )
 
 
-_msg_disabled = ("WARNING: The HadesLogs extension is not configured properly. "
-                       "Logs cannot be displayed.")
-_msg_disconnected = ("None of this user's hosts (if any) are in a connected room. "
-                     "Logs cannot be displayed.")
+_msg_disabled = (
+    "WARNING: The HadesLogs extension is not configured properly. Logs cannot be displayed."
+)
+_msg_disconnected = (
+    "None of this user's hosts (if any) are in a connected room. Logs cannot be displayed."
+)
 _msg_error = "WARNING: an error occurred when fetching hades logs."
 _msg_timeout = "WARNING: Timeout when fetching hades logs."
 format_hades_disabled = partial(format_custom_hades_message, message=_msg_disabled)

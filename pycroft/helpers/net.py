@@ -5,23 +5,25 @@
 pycroft.helpers.net
 ~~~~~~~~~~~~~~~~~~~
 """
+
 import re
 import typing as t
 
 import netaddr
+
 # Byte represented by 2 hexadecimal digits
 from mac_vendor_lookup import MacLookup
 
-BYTE_PATTERN = r'(?:[a-fA-F0-9]{2})'
+BYTE_PATTERN = r"(?:[a-fA-F0-9]{2})"
 # Pattern for the most significant byte
 # Does not allow the first bit to be set (multicast flag)
-MOST_SIGNIFICANT_BYTE_PATTERN = r'(?:[a-fA-F0-9][02468ACE])'
+MOST_SIGNIFICANT_BYTE_PATTERN = r"(?:[a-fA-F0-9][02468ACE])"
 # Allowed 1 byte separators
-SEP1_PATTERN = r'[-:]'
+SEP1_PATTERN = r"[-:]"
 # Allowed 2 byte separators
-SEP2_PATTERN = r'\.'
+SEP2_PATTERN = r"\."
 # Allowed 3 byte separators
-SEP3_PATTERN = r'-'
+SEP3_PATTERN = r"-"
 
 
 mac_regex = re.compile(
@@ -97,8 +99,9 @@ letter_re = re.compile(r"[a-z]")
 def port_name_sort_key(port_name: str) -> int:
     number = number_re.search(port_name)
     letter = letter_re.search(port_name.lower())
-    return (int(number.group(0) if number else -1) +
-            1024 * ord(letter.group(0) if letter else chr(ord("a") - 1)))
+    return int(number.group(0) if number else -1) + 1024 * ord(
+        letter.group(0) if letter else chr(ord("a") - 1)
+    )
 
 
 def reverse_pointer(ip_address: netaddr.IPAddress) -> str:

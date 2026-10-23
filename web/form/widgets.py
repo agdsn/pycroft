@@ -10,16 +10,14 @@ from pycroft.model.user import User
 
 
 class UserIDField(StringField):
-    """A User-ID Field """
+    """A User-ID Field"""
 
     @t.override
     def __init__(self, *args: t.Any, **kwargs: t.Any) -> None:
         super().__init__(*args, **kwargs)
 
     def __call__(self, **kwargs: t.Any) -> t.Any:
-        return super().__call__(
-            **kwargs
-        )
+        return super().__call__(**kwargs)
 
     @t.override
     def pre_validate(self, form: BaseForm) -> None:

@@ -5,6 +5,7 @@
 pycroft.helpers.i18n
 ~~~~~~~~~~~~~~~~~~~~
 """
+
 from __future__ import annotations
 
 from .deferred import (

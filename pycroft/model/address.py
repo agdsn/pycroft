@@ -34,6 +34,7 @@ class Address(IntegerIdModel):
 
     Establishing these consistencies requires triggers.
     """
+
     street: Mapped[str]
     number: Mapped[str]
     addition: Mapped[str] = mapped_column(server_default="")
@@ -45,7 +46,7 @@ class Address(IntegerIdModel):
     country: Mapped[str] = mapped_column(server_default=DEFAULT_COUNTRY)
 
     __table_args__ = (
-        UniqueConstraint('street', 'number', 'addition', 'zip_code', 'city', 'state', 'country'),
+        UniqueConstraint("street", "number", "addition", "zip_code", "city", "state", "country"),
     )
 
     # backrefs
@@ -59,10 +60,18 @@ class Address(IntegerIdModel):
     def __format__(self, spec="short"):
         """Return the address items separated by the format specifier"""
         city = self.city.upper() if self.country and self.country != DEFAULT_COUNTRY else self.city
-        items: list[str] = [f"{self.street} {self.number} // {self.addition}" if self.addition
-                            else f"{self.street} {self.number}", f"{self.zip_code} {city}"]
+        items: list[str] = [
+            f"{self.street} {self.number} // {self.addition}"
+            if self.addition
+            else f"{self.street} {self.number}",
+            f"{self.zip_code} {city}",
+        ]
         if self.state:
-            state = self.state.upper() if self.country and self.country != DEFAULT_COUNTRY else self.state
+            state = (
+                self.state.upper()
+                if self.country and self.country != DEFAULT_COUNTRY
+                else self.state
+            )
             items.append(f"{state}")
         if self.country and self.country != DEFAULT_COUNTRY:
             items.append(f"{self.country.upper()}")
@@ -74,14 +83,18 @@ class Address(IntegerIdModel):
 manager = ddl.DDLManager()
 
 address_remove_orphans = ddl.Function(
-    'address_remove_orphans', [], 'trigger',
+    "address_remove_orphans",
+    [],
+    "trigger",
     """ BEGIN
       delete from address
       where not exists (select 1 from room where room.address_id = address.id)
       and not exists (select 1 from "user" where "user".address_id = address.id);
       RETURN NULL;
     END;""",
-    volatility='volatile', strict=True,  language='plpgsql'
+    volatility="volatile",
+    strict=True,
+    language="plpgsql",
 )
 manager.add_function(Address.__table__, address_remove_orphans)
 # User trigger for the respective backref added in `user.py`

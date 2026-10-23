@@ -89,7 +89,9 @@ class SegmentSequence:
 class ContainerMeta(type):
     @t.override
     @classmethod
-    def __prepare__(metacls, name: str, bases: tuple[type, ...], /, **kwds: t.Any) -> t.MutableMapping[str, object]: ...
+    def __prepare__(
+        metacls, name: str, bases: tuple[type, ...], /, **kwds: t.Any
+    ) -> t.MutableMapping[str, object]: ...
     def __new__(cls, name, bases, classdict): ...
 
 class Container(metaclass=ContainerMeta):

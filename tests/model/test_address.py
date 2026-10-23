@@ -15,12 +15,15 @@ def all_addrs(session) -> list[Address]:
     return session.scalars(select(Address)).all()
 
 
-@pytest.mark.parametrize('address_kw', [
-    {},
-    {'state': None},
-    {'addition': None},
-    {'addition': None, 'state': None},
-])
+@pytest.mark.parametrize(
+    "address_kw",
+    [
+        {},
+        {"state": None},
+        {"addition": None},
+        {"addition": None, "state": None},
+    ],
+)
 def test_duplicate_address_cannot_be_added(session, address_kw):
     with session.begin_nested():
         address = AddressFactory.create(**address_kw)

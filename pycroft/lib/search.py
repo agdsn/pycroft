@@ -39,42 +39,36 @@ def user_search_query(
     if login:
         result = result.filter(User.login.ilike(f"%{login}%"))
     if mac:
-        result = result.join(User.hosts) \
-            .join(Host.interfaces) \
-            .filter(Interface.mac == mac)
+        result = result.join(User.hosts).join(Host.interfaces).filter(Interface.mac == mac)
     if ip_address:
-        result = result.join(User.hosts) \
-            .join(Host.ips) \
-            .filter(IP.address == ip_address)
+        result = result.join(User.hosts).join(Host.ips).filter(IP.address == ip_address)
 
     if property_group_id is not None:
-        result = result\
-            .join(Membership)\
-            .filter(Membership.active_during.contains(func.current_timestamp()))\
-            .join(PropertyGroup, PropertyGroup.id == Membership.group_id)\
+        result = (
+            result.join(Membership)
+            .filter(Membership.active_during.contains(func.current_timestamp()))
+            .join(PropertyGroup, PropertyGroup.id == Membership.group_id)
             .filter(PropertyGroup.id == property_group_id)
+        )
 
     if building_id is not None:
-        result = result.join(User.room) \
-            .filter(Room.building_id == building_id)
+        result = result.join(User.room).filter(Room.building_id == building_id)
 
     if query:
         query = query.strip()
 
         if re.match(mac_regex, query):
-            result = result.join(User.hosts) \
-                .join(Host.interfaces) \
-                .filter(Interface.mac == query)
+            result = result.join(User.hosts).join(Host.interfaces).filter(Interface.mac == query)
         elif re.match(ip_regex, query):
-            result = result.join(User.hosts) \
-                .join(Host.ips) \
-                .filter(IP.address == query)
+            result = result.join(User.hosts).join(Host.ips).filter(IP.address == query)
         else:
-            result = result.filter(or_(
-                func.lower(User.name).like(func.lower(f"%{query}%")),
-                func.lower(User.login).like(func.lower(f"%{query}%")),
-                cast(User.id, Text).like(f"{query}%"),
-                cast(User.swdd_person_id, Text) == query,
-                cast(User.email, Text) == query,
-            ))
+            result = result.filter(
+                or_(
+                    func.lower(User.name).like(func.lower(f"%{query}%")),
+                    func.lower(User.login).like(func.lower(f"%{query}%")),
+                    cast(User.id, Text).like(f"{query}%"),
+                    cast(User.swdd_person_id, Text) == query,
+                    cast(User.email, Text) == query,
+                )
+            )
     return result

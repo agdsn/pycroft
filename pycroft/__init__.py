@@ -15,6 +15,7 @@ This is the “backend” package, and as such mainly contains
 In particular, this means that *at no point* should there be any dependencies to ``flask`` or
 other frontend-specific libraries.
 """
+
 import typing
 
 from sqlalchemy.orm.exc import NoResultFound

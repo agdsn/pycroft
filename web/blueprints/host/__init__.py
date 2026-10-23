@@ -22,8 +22,8 @@ from web.blueprints.host.forms import InterfaceForm, HostForm
 from web.blueprints.host.tables import InterfaceTable, HostTable, HostRow, InterfaceRow
 from web.table.table import TableResponse, BtnColResponse, LinkColResponse
 
-bp = Blueprint('host', __name__)
-access = BlueprintAccess(bp, required_properties=['user_show'])
+bp = Blueprint("host", __name__)
+access = BlueprintAccess(bp, required_properties=["user_show"])
 
 
 def get_host_or_404(host_id: int) -> Host:
@@ -32,8 +32,9 @@ def get_host_or_404(host_id: int) -> Host:
         abort(404)
     return host
 
-@bp.route('/<int:host_id>/delete', methods=['GET', 'POST'])
-@access.require('hosts_change')
+
+@bp.route("/<int:host_id>/delete", methods=["GET", "POST"])
+@access.require("hosts_change")
 def host_delete(host_id: int) -> ResponseReturnValue:
     host = get_host_or_404(host_id)
     owner = host.owner
@@ -41,15 +42,14 @@ def host_delete(host_id: int) -> ResponseReturnValue:
 
     def default_response() -> ResponseReturnValue:
         form_args = {
-            'form': form,
-            'cancel_to': url_for('user.user_show', user_id=owner.id),
-            'submit_text': 'Löschen',
-            'actions_offset': 0
+            "form": form,
+            "cancel_to": url_for("user.user_show", user_id=owner.id),
+            "submit_text": "Löschen",
+            "actions_offset": 0,
         }
 
         return render_template(
-            'generic_form.html',
-            page_title="Host löschen", form_args=form_args, form=form
+            "generic_form.html", page_title="Host löschen", form_args=form_args, form=form
         )
 
     if not form.is_submitted():
@@ -59,24 +59,20 @@ def host_delete(host_id: int) -> ResponseReturnValue:
         lib_host.host_delete(host, current_user)
     session.session.commit()
 
-    flash("Host erfolgreich gelöscht.", 'success')
-    return redirect(url_for('user.user_show', user_id=owner.id, _anchor='hosts'))
+    flash("Host erfolgreich gelöscht.", "success")
+    return redirect(url_for("user.user_show", user_id=owner.id, _anchor="hosts"))
 
 
-@bp.route('/<int:host_id>/edit', methods=['GET', 'POST'])
-@access.require('hosts_change')
+@bp.route("/<int:host_id>/edit", methods=["GET", "POST"])
+@access.require("hosts_change")
 def host_edit(host_id: int) -> ResponseReturnValue:
     host = get_host_or_404(host_id)
     form = HostForm(obj=host)
 
     def default_response() -> ResponseReturnValue:
-        form_args = {
-            'form': form, 'cancel_to':
-            url_for('user.user_show', user_id=host.owner.id)
-        }
+        form_args = {"form": form, "cancel_to": url_for("user.user_show", user_id=host.owner.id)}
         return render_template(
-            'generic_form.html',
-            page_title="Host editieren", form_args=form_args, form=form
+            "generic_form.html", page_title="Host editieren", form_args=form_args, form=form
         )
 
     if not form.is_submitted():
@@ -101,29 +97,23 @@ def host_edit(host_id: int) -> ResponseReturnValue:
         lib_host.host_edit(host, owner, room, form.name.data, processor=current_user)
     session.session.commit()
 
-    flash("Host erfolgreich bearbeitet.", 'success')
-    return redirect(url_for(
-        'user.user_show',
-        user_id=owner.id, _anchor='hosts'
-    ))
+    flash("Host erfolgreich bearbeitet.", "success")
+    return redirect(url_for("user.user_show", user_id=owner.id, _anchor="hosts"))
 
 
-@bp.route('/create', methods=['GET', 'POST'])
-@access.require('hosts_change')
+@bp.route("/create", methods=["GET", "POST"])
+@access.require("hosts_change")
 def host_create() -> ResponseReturnValue:
     user = get_user_or_404(request.args.get("user_id", default=None, type=int))
     form = HostForm(owner_id=user.id)
 
     def default_response() -> ResponseReturnValue:
-        form_args = {
-            'form': form,
-            'cancel_to': url_for('user.user_show', user_id=user.id)
-        }
+        form_args = {"form": form, "cancel_to": url_for("user.user_show", user_id=user.id)}
 
         return render_template(
-            'generic_form.html',
-            page_title="Host erstellen", form_args=form_args, form=form
+            "generic_form.html", page_title="Host erstellen", form_args=form_args, form=form
         )
+
     if not form.is_submitted():
         refill_room_data(form, user.room)
 
@@ -154,9 +144,7 @@ def host_create() -> ResponseReturnValue:
 
     flash("Host erfolgreich erstellt.", "success")
     return redirect(
-        url_for(
-            ".interface_create", user_id=host.owner_id, host_id=host.id, _anchor="hosts"
-        )
+        url_for(".interface_create", user_id=host.owner_id, host_id=host.id, _anchor="hosts")
     )
 
 
@@ -194,12 +182,13 @@ def host_interfaces_json(host_id: int) -> ResponseReturnValue:
 
 @bp.route("/<int:host_id>/interfaces/table")
 def interface_table(host_id: int) -> ResponseReturnValue:
-    return render_template('host/interface_table.html',
-                           interface_table=InterfaceTable(
-                               data_url=url_for(".host_interfaces_json",
-                                                host_id=host_id),
-                               host_id=host_id),
-                           host_id=host_id)
+    return render_template(
+        "host/interface_table.html",
+        interface_table=InterfaceTable(
+            data_url=url_for(".host_interfaces_json", host_id=host_id), host_id=host_id
+        ),
+        host_id=host_id,
+    )
 
 
 def get_interface_or_404(id: int) -> Interface:
@@ -209,8 +198,8 @@ def get_interface_or_404(id: int) -> Interface:
     return interface
 
 
-@bp.route('/interface/<int:interface_id>/delete', methods=['GET', 'POST'])
-@access.require('hosts_change')
+@bp.route("/interface/<int:interface_id>/delete", methods=["GET", "POST"])
+@access.require("hosts_change")
 def interface_delete(interface_id: int) -> ResponseReturnValue:
     interface = get_interface_or_404(interface_id)
 
@@ -218,16 +207,15 @@ def interface_delete(interface_id: int) -> ResponseReturnValue:
 
     def default_response() -> ResponseReturnValue:
         form_args = {
-            'form': form,
-            'cancel_to': url_for('user.user_show', user_id=interface.host.owner_id),
-            'submit_text': 'Löschen',
-            'actions_offset': 0
+            "form": form,
+            "cancel_to": url_for("user.user_show", user_id=interface.host.owner_id),
+            "submit_text": "Löschen",
+            "actions_offset": 0,
         }
 
-        return render_template('generic_form.html',
-                               page_title="Interface löschen",
-                               form_args=form_args,
-                               form=form)
+        return render_template(
+            "generic_form.html", page_title="Interface löschen", form_args=form_args, form=form
+        )
 
     if not form.is_submitted():
         return default_response()
@@ -236,15 +224,12 @@ def interface_delete(interface_id: int) -> ResponseReturnValue:
         lib_host.interface_delete(interface, current_user)
     session.session.commit()
 
-    flash("Interface erfolgreich gelöscht.", 'success')
-    return redirect(url_for(
-        'user.user_show',
-        user_id=interface.host.owner_id, _anchor='hosts'
-    ))
+    flash("Interface erfolgreich gelöscht.", "success")
+    return redirect(url_for("user.user_show", user_id=interface.host.owner_id, _anchor="hosts"))
 
 
-@bp.route('/interface/<int:interface_id>/edit', methods=['GET', 'POST'])
-@access.require('hosts_change')
+@bp.route("/interface/<int:interface_id>/edit", methods=["GET", "POST"])
+@access.require("hosts_change")
 def interface_edit(interface_id: int) -> ResponseReturnValue:
     interface = get_interface_or_404(interface_id)
 
@@ -258,13 +243,13 @@ def interface_edit(interface_id: int) -> ResponseReturnValue:
 
     def default_response() -> ResponseReturnValue:
         form_args = {
-            'form': form,
-            'cancel_to': url_for('user.user_show', user_id=interface.host.owner_id)
+            "form": form,
+            "cancel_to": url_for("user.user_show", user_id=interface.host.owner_id),
         }
 
-        return render_template('generic_form.html',
-                               page_title="Interface editieren",
-                               form_args=form_args)
+        return render_template(
+            "generic_form.html", page_title="Interface editieren", form_args=form_args
+        )
 
     if not form.is_submitted():
         form.ips.process_data(ip for ip in current_ips)
@@ -281,8 +266,8 @@ def interface_edit(interface_id: int) -> ResponseReturnValue:
         )
     session.session.commit()
 
-    flash("Interface erfolgreich bearbeitet.", 'success')
-    return redirect(url_for('user.user_show', user_id=interface.host.owner_id, _anchor='hosts'))
+    flash("Interface erfolgreich bearbeitet.", "success")
+    return redirect(url_for("user.user_show", user_id=interface.host.owner_id, _anchor="hosts"))
 
 
 @bp.route("/<int:host_id>/interface/create", methods=["GET", "POST"])
@@ -295,14 +280,11 @@ def interface_create(host_id: int) -> ResponseReturnValue:
     form.ips.choices = [(str(ip), str(ip)) for ip in unused_ips]
 
     def default_response() -> ResponseReturnValue:
-        form_args = {
-            'form': form,
-            'cancel_to': url_for('user.user_show', user_id=host.owner.id)
-        }
+        form_args = {"form": form, "cancel_to": url_for("user.user_show", user_id=host.owner.id)}
 
-        return render_template('generic_form.html',
-                               page_title="Interface erstellen",
-                               form_args=form_args)
+        return render_template(
+            "generic_form.html", page_title="Interface erstellen", form_args=form_args
+        )
 
     if not form.is_submitted():
         form.ips.process_data([next(iter(unused_ips), None)])
@@ -314,22 +296,13 @@ def interface_create(host_id: int) -> ResponseReturnValue:
     assert form.mac.data is not None
 
     try:
-        lib_host.interface_create(
-            host,
-            form.name.data,
-            form.mac.data,
-            ips,
-            current_user
-        )
+        lib_host.interface_create(host, form.name.data, form.mac.data, ips, current_user)
         session.session.commit()
     except PycroftException:  # pragma: no cover
         return default_response()
 
-    flash("Interface erfolgreich erstellt.", 'success')
-    return redirect(url_for(
-        'user.user_show',
-        user_id=host.owner.id, _anchor='hosts'
-    ))
+    flash("Interface erfolgreich erstellt.", "success")
+    return redirect(url_for("user.user_show", user_id=host.owner.id, _anchor="hosts"))
 
 
 def _host_row(host: Host, user_id: int) -> HostRow:
@@ -356,11 +329,11 @@ def _host_row(host: Host, user_id: int) -> HostRow:
         port=ports,
         actions=[
             BtnColResponse(
-                    href=url_for('.host_edit', host_id=host.id, user_id=user_id),
-                    title="Bearbeiten",
-                    icon='fa-edit',
-                    btn_class='btn-link'
-                ),
+                href=url_for(".host_edit", host_id=host.id, user_id=user_id),
+                title="Bearbeiten",
+                icon="fa-edit",
+                btn_class="btn-link",
+            ),
             BtnColResponse(
                 href=url_for(".host_delete", host_id=host.id),
                 title="Löschen",

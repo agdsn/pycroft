@@ -2,13 +2,14 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
-    web
-    ~~~~~~~~~~~~~~
+web
+~~~~~~~~~~~~~~
 
-    This package contains the web interface based on flask
+This package contains the web interface based on flask
 
-    :copyright: (c) 2012 by AG DSN.
+:copyright: (c) 2012 by AG DSN.
 """
+
 import typing as t
 import pathlib
 from cmath import log
@@ -33,14 +34,17 @@ def template_filter[_TF: t.Callable[..., t.Any]](name: str) -> t.Callable[[_TF],
     def decorator(fn: _TF) -> _TF:
         _filter_registry[name] = fn
         return fn
+
     return decorator
 
 
-_category_map = {"warning": "Warnung",
-                 "error": "Fehler",
-                 "info": "Hinweis",
-                 "message": "Hinweis",
-                 "success": "Erfolgreich"}
+_category_map = {
+    "warning": "Warnung",
+    "error": "Fehler",
+    "info": "Hinweis",
+    "message": "Hinweis",
+    "success": "Erfolgreich",
+}
 
 template_filter("localized")(localized)
 
@@ -70,7 +74,7 @@ def require(_ctx: Context, asset: str, **kwargs: t.Any) -> str:
         raise RuntimeError("current app has no static folder set")
 
     if asset_map is None or has_changed():
-        path = pathlib.Path(current_app.static_folder, 'manifest.json')
+        path = pathlib.Path(current_app.static_folder, "manifest.json")
         current_app.logger.info("Loading esbuild manifest from %s", path)
         try:
             mtime = path.stat().st_mtime
@@ -101,8 +105,7 @@ def require(_ctx: Context, asset: str, **kwargs: t.Any) -> str:
 
 @template_filter("pretty_category")
 def pretty_category_filter(category: str) -> str:
-    """Make pretty category names for flash messages, etc
-    """
+    """Make pretty category names for flash messages, etc"""
     return _category_map.get(category, "Hinweis")
 
 
@@ -170,21 +173,21 @@ def prefix_unit_filter(
 ) -> str:
     units = list(chain(unit, (p + unit for p in prefixes)))
     if value > 0:
-        n = min(int(log(value, factor).real), len(units)-1)
-        #todo change decimal formatting appropriately, previous {0:,4f} is wrong
-        return f"{float(value)/factor**n:,f} {units[n]}"
+        n = min(int(log(value, factor).real), len(units) - 1)
+        # todo change decimal formatting appropriately, previous {0:,4f} is wrong
+        return f"{float(value) / factor**n:,f} {units[n]}"
 
     return f"0 {units[0]}"
 
 
 @template_filter("byte_size")
 def byte_size_filter(value: float | Decimal) -> str:
-    return prefix_unit_filter(value, 'B', 1024, ['Ki', 'Mi', 'Gi', 'Ti'])
+    return prefix_unit_filter(value, "B", 1024, ["Ki", "Mi", "Gi", "Ti"])
 
 
 @template_filter("money")
 def money_filter(amount: float | Decimal) -> str:
-    return (f"{amount:.2f}\u202f€").replace('.', ',')
+    return (f"{amount:.2f}\u202f€").replace(".", ",")
 
 
 @template_filter("icon")
@@ -192,7 +195,7 @@ def icon_filter(icon_class: str) -> str:
     if len(tokens := icon_class.split(maxsplit=1)) == 2:
         prefix, icon = tokens
     else:
-        prefix = 'fas'
+        prefix = "fas"
         [icon] = tokens
     return f"{prefix} {icon}"
 
@@ -230,7 +233,7 @@ def transaction_type_filter(credit_debit_type: tuple[str, str] | None) -> str:
         ("EXPENSE", "ASSET"): gettext("Expense"),
         ("ASSET", "EXPENSE"): gettext("Correcting entry (Expense)"),
         ("ASSET", "ASSET"): gettext("Asset exchange"),
-        ("LIABILITY", "LIABILITY"): gettext("Liability exchange")
+        ("LIABILITY", "LIABILITY"): gettext("Liability exchange"),
     }
     return types.get(replacer(credit_debit_type), gettext("Unknown"))
 

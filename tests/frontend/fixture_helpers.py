@@ -64,9 +64,7 @@ def prepare_app_for_testing(app):
     app.debug = True
     # Disable the CSRF in testing mode
     app.config["WTF_CSRF_ENABLED"] = False
-    app.config["SECRET_KEY"] = "".join(
-        random.choice(string.ascii_letters) for _ in range(20)
-    )
+    app.config["SECRET_KEY"] = "".join(random.choice(string.ascii_letters) for _ in range(20))
     app.config["SERVER_NAME"] = "localhost.localdomain"
     return app
 

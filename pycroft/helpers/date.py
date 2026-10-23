@@ -2,6 +2,7 @@
 pycroft.helpers.date
 ~~~~~~~~~~~~~~~~~~~~
 """
+
 from calendar import monthrange
 from datetime import date
 

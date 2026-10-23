@@ -7,23 +7,26 @@ from ldap_sync.sources.db import _fetch_db_users, _UserProxyType
 from tests import factories
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def group(module_session):
-    return factories.PropertyGroupFactory.create(granted={'ldap', 'ldap_login_enabled'})
+    return factories.PropertyGroupFactory.create(granted={"ldap", "ldap_login_enabled"})
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def deny_group(module_session):
-    return factories.PropertyGroupFactory.create(denied={'ldap_login_enabled'})
+    return factories.PropertyGroupFactory.create(denied={"ldap_login_enabled"})
 
 
 @pytest.fixture
 def deny_membership(session, deny_group, user):
     return factories.MembershipFactory(
-        user=user, group=deny_group, includes_today=True,
+        user=user,
+        group=deny_group,
+        includes_today=True,
     )
 
-@pytest.fixture(scope='module')
+
+@pytest.fixture(scope="module")
 def user(module_session, group):
     return factories.UserFactory.create(
         with_unix_account=True,
@@ -33,9 +36,7 @@ def user(module_session, group):
 
 
 def test_one_user_fetch(session, user):
-    assert _fetch_db_users(session) == [
-        tuple(_UserProxyType(user, should_be_blocked=False))
-    ]
+    assert _fetch_db_users(session) == [tuple(_UserProxyType(user, should_be_blocked=False))]
 
 
 def test_one_user_fetch_with_property(session, user):

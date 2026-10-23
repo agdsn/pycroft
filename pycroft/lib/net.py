@@ -5,6 +5,7 @@
 pycroft.lib.net
 ~~~~~~~~~~~~~~~
 """
+
 import typing as t
 
 import netaddr
@@ -17,6 +18,7 @@ from pycroft.model.facilities import Room
 from pycroft.model.host import IP
 from pycroft.model.net import Subnet
 from pycroft.model.types import IPAddress
+
 
 class SubnetFullException(PycroftLibException):
     @t.override
@@ -37,7 +39,7 @@ def get_free_ip(subnets: t.Iterable[Subnet]) -> tuple[netaddr.IPAddress, Subnet]
         raise SubnetFullException from None
 
 
-#TODO: Implement this in the model
+# TODO: Implement this in the model
 def get_subnets_for_room(room: Room | None) -> list[Subnet]:
     if not room:
         return list()
@@ -50,7 +52,6 @@ def get_subnets_for_room(room: Room | None) -> list[Subnet]:
         for s in v.subnets
         if s.address.version == 4
     ]
-
 
 
 def calculate_max_ips(subnet: Subnet) -> int:
@@ -73,15 +74,19 @@ class SubnetUsage(t.NamedTuple):
 
 def get_subnets_with_usage() -> list[tuple[Subnet, SubnetUsage]]:
     is_unreserved_ip = and_(
-        IP.address >= cast(func.host(func.network(
-            Subnet.address) + Subnet.reserved_addresses_bottom + 1), IPAddress),
-        IP.address <= cast(func.host(
-            func.broadcast(Subnet.address) - Subnet.reserved_addresses_top - 1),
-            IPAddress)
+        IP.address
+        >= cast(
+            func.host(func.network(Subnet.address) + Subnet.reserved_addresses_bottom + 1),
+            IPAddress,
+        ),
+        IP.address
+        <= cast(
+            func.host(func.broadcast(Subnet.address) - Subnet.reserved_addresses_top - 1), IPAddress
+        ),
     )
 
     subnets_with_used_ips = (
-        session.session.query(Subnet, func.count(IP.id).label('used_ips'))
+        session.session.query(Subnet, func.count(IP.id).label("used_ips"))
         .outerjoin(IP, and_(IP.subnet_id == Subnet.id, is_unreserved_ip))
         .group_by(Subnet.id)
     ).all()

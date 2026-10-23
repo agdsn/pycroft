@@ -15,14 +15,13 @@ from pycroft.model import drop_db_model, create_db_model
 from pycroft.model.session import set_scoped_session, Session as PycSessionProxy
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def engine(pytestconfig):
     try:
-        uri = os.environ['PYCROFT_DB_URI']
+        uri = os.environ["PYCROFT_DB_URI"]
     except KeyError:
         raise RuntimeError(
-            "Environment variable PYCROFT_DB_URI must be "
-            "set to an SQLalchemy connection string."
+            "Environment variable PYCROFT_DB_URI must be set to an SQLalchemy connection string."
         ) from None
     verbosity = pytestconfig.getoption("verbose")
     if verbosity:
@@ -34,7 +33,7 @@ def engine(pytestconfig):
     return create_engine(uri, poolclass=SingletonThreadPool, future=True)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def clean_engine(engine):
     connection = engine.connect()
     drop_db_model(connection)
@@ -44,7 +43,7 @@ def clean_engine(engine):
     return engine
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def connection(clean_engine):
     engine = clean_engine
     connection = engine.connect()
@@ -59,7 +58,8 @@ def connection(clean_engine):
     transaction.rollback()
     connection.close()
 
-@pytest.fixture(scope='module')
+
+@pytest.fixture(scope="module")
 def module_transaction(connection):
     nested = connection.begin_nested()
     yield nested
@@ -69,16 +69,18 @@ def module_transaction(connection):
         nested.rollback()
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def module_session(connection, module_transaction) -> Session:
     """Provides a session to a created database.
 
     Rolled back after use
     """
     nested = module_transaction
+
     class NoCommitSession(Session):
         def commit(self):
             self.flush()
+
     s = scoped_session(sessionmaker(bind=connection, future=True, class_=NoCommitSession))
     set_scoped_session(s)
     session = cast(Session, s())
@@ -108,7 +110,7 @@ def _rollback_if_active(transaction):
         transaction.rollback()
 
 
-@pytest.fixture(scope='class')
+@pytest.fixture(scope="class")
 def class_session(module_session, module_transaction) -> Session:
     # starts a transaction & rolls it back after each class' test
     session = module_session

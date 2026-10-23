@@ -18,6 +18,7 @@ from ..factories.property import FinancePropertyGroupFactory, MembershipFactory
 def app() -> PycroftFlask:
     """A fully configured flask app for frontend tests"""
     from web import make_app
+
     return prepare_app_for_testing(make_app())
 
 
@@ -73,7 +74,8 @@ def config(module_session: Session) -> Config:
 @pytest.fixture(scope="session")
 def blueprint_urls(app: PycroftFlask) -> BlueprintUrls:
     def _blueprint_urls(
-        blueprint_name: str, methods: set[str] = {"GET", "POST"}  # noqa: B006
+        blueprint_name: str,
+        methods: set[str] = {"GET", "POST"},  # noqa: B006
     ) -> list[str]:
         return [
             (_build_rule(request_ctx.url_adapter, rule), method)
@@ -81,6 +83,7 @@ def blueprint_urls(app: PycroftFlask) -> BlueprintUrls:
             for method in rule.methods & methods
             if rule.endpoint.startswith(f"{blueprint_name}.")
         ]
+
     return _blueprint_urls
 
 

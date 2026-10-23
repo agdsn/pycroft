@@ -69,7 +69,7 @@ class Column:
         self.width = width
         self.col_args = col_args if col_args is not None else {}
         if escape is not None:
-            self.col_args['data-escape'] = "true" if escape else "false"
+            self.col_args["data-escape"] = "true" if escape else "false"
         self.sortable = sortable
         self.hide_if = hide_if
 
@@ -92,11 +92,11 @@ class Column:
             dict of html attributes.
         """
         html_args: dict[str, HtmlParamValue] = {
-            'class': f"col-sm-{self.width}" if self.width else False,
-            'data-sortable': "true" if self.sortable else "false",
-            'data-field': self.name,
-            'data-formatter': self.formatter,
-            'data-cell-style': self.cell_style,
+            "class": f"col-sm-{self.width}" if self.width else False,
+            "data-sortable": "true" if self.sortable else "false",
+            "data-field": self.name,
+            "data-formatter": self.formatter,
+            "data-cell-style": self.cell_style,
         }
         html_args.update(self.col_args)
         html_args.update(kwargs)
@@ -147,7 +147,7 @@ class BtnColResponse(BaseModel):
     icon: IconClass | list[IconClass] | None = None
 
 
-@custom_formatter_column('table.btnFormatter')
+@custom_formatter_column("table.btnFormatter")
 class BtnColumn(Column):
     @t.override
     def __init__(self, *a: t.Any, **kw: t.Any) -> None:
@@ -157,7 +157,7 @@ class BtnColumn(Column):
         super().__init__(*a, **kw)
 
 
-@custom_formatter_column('table.multiBtnFormatter')
+@custom_formatter_column("table.multiBtnFormatter")
 class MultiBtnColumn(Column):
     @t.override
     def __init__(self, *a: t.Any, **kw: t.Any) -> None:
@@ -184,7 +184,7 @@ class MultiLinkColumn(Column):
         super().__init__(*a, **kw)
 
 
-@custom_formatter_column('table.dateFormatter')
+@custom_formatter_column("table.dateFormatter")
 class DateColumn(Column):
     pass
 
@@ -196,7 +196,7 @@ class DateColResponse(BaseModel):
     timestamp: int | None = None
 
 
-@custom_formatter_column('table.relativeDateFormatter')
+@custom_formatter_column("table.relativeDateFormatter")
 class RelativeDateColumn(Column):
     pass
 
@@ -204,12 +204,12 @@ class RelativeDateColumn(Column):
 RelativeDateResponse = DateColResponse
 
 
-@custom_formatter_column('table.textWithBooleanFormatter')
+@custom_formatter_column("table.textWithBooleanFormatter")
 class TextWithBooleanColumn(Column):
     pass
 
 
-@custom_formatter_column('table.userFormatter')
+@custom_formatter_column("table.userFormatter")
 class UserColumn(Column):
     pass
 
@@ -226,7 +226,7 @@ class UserColResponseNative(LinkColResponse):
 UserColResponse = UserColResponsePlain | UserColResponseNative
 
 
-@custom_formatter_column('table.ibanFormatter')
+@custom_formatter_column("table.ibanFormatter")
 class IbanColumn(Column):
     pass
 
@@ -235,13 +235,11 @@ UnboundTableArgs = frozenset[tuple[str, Any]]
 TableArgs = dict[str, HasDunderStr]
 
 
-def _infer_table_args(
-    meta_obj: object, superclass_table_args: TableArgs
-) -> UnboundTableArgs:
+def _infer_table_args(meta_obj: object, superclass_table_args: TableArgs) -> UnboundTableArgs:
     args: TableArgs = {}
     args.update(**superclass_table_args)
     if meta_obj:
-        args.update(**getattr(meta_obj, 'table_args', {}))
+        args.update(**getattr(meta_obj, "table_args", {}))
 
     return frozenset(args.items())
 
@@ -252,7 +250,7 @@ def _infer_enforced_url_params(
     params: dict[str, str] = {}
     params.update(**superclass_params)
     if meta_obj:
-        params.update(**getattr(meta_obj, 'enforced_url_params', {}))
+        params.update(**getattr(meta_obj, "enforced_url_params", {}))
 
     return frozenset(params.items())
 
@@ -282,7 +280,7 @@ class BootstrapTableMeta(type):
         meta = dct.pop("Meta", None)
         cls = super().__new__(mcls, name, bases, dct)
 
-        old_table_args = dict(getattr(cls, '_table_args', {}))
+        old_table_args = dict(getattr(cls, "_table_args", {}))
         # the type is frozenset for immutability
         cls._table_args = _infer_table_args(meta, old_table_args)
 
@@ -299,7 +297,7 @@ class BootstrapTableMeta(type):
 
         for attrname, new_col in dct.items():
             if isinstance(new_col, Column):
-                if not hasattr(new_col, 'name') or not new_col.name:
+                if not hasattr(new_col, "name") or not new_col.name:
                     new_col.name = attrname
                 new_col_attr_map[new_col.name] = attrname
         cls.column_attrname_map = new_col_attr_map
@@ -331,13 +329,13 @@ class BootstrapTable(metaclass=BootstrapTableMeta):
     table_args: TableArgs
 
     class Meta:
-        table_args = {'data-toggle': "table", "data-icons-prefix": "fa"}
+        table_args = {"data-toggle": "table", "data-icons-prefix": "fa"}
 
     def __init__(self, *, data_url: str, table_args: TableArgs | None = None) -> None:
         self.data_url = enforce_url_params(data_url, dict(self._enforced_url_params))
         # un-freeze the classes table args so it can be modified on the instance
         self.table_args = dict(self._table_args)
-        self.table_args.setdefault('data-url', self.data_url)
+        self.table_args.setdefault("data-url", self.data_url)
         if table_args:
             self.table_args.update(table_args)
 
@@ -361,8 +359,8 @@ class BootstrapTable(metaclass=BootstrapTableMeta):
     def _init_table_args(self) -> None:
         """Set the defaults of :py:attr:`table_args`"""
         default_args = {
-            'data-toggle': "table",
-            'data-url': self.data_url,
+            "data-toggle": "table",
+            "data-url": self.data_url,
         }
         for key, val in default_args.items():
             self.table_args.setdefault(key, val)
@@ -408,8 +406,7 @@ class BootstrapTable(metaclass=BootstrapTableMeta):
         yield "</table>"
 
     def render(self, table_id: str) -> Markup:
-        """Render the table, use _render() directly if jinja2 isn't available
-        """
+        """Render the table, use _render() directly if jinja2 isn't available"""
         return Markup(self._render(table_id))
 
 
@@ -432,6 +429,7 @@ class SplittedTable(BootstrapTable):
     have columns ``name, id``, the effective column list will be
     ``a_name, a_id, b_name, b_id``.
     """
+
     splits: Iterable[tuple[str, str]]
 
     def _iter_typed_splits(self) -> t.Iterator[TableSplit]:
@@ -457,8 +455,7 @@ class SplittedTable(BootstrapTable):
         yield "<thead>"
         yield "<tr>"
         for split in self._iter_typed_splits():
-            yield (
-                f'<th colspan="{len(super().columns)}" class="text-center">{split.title}</th>')
+            yield (f'<th colspan="{len(super().columns)}" class="text-center">{split.title}</th>')
         yield "</tr>"
 
         yield "<tr>"
@@ -489,9 +486,7 @@ def date_format(
         )
     return DateColResponse(
         formatted=formatter(dt),
-        timestamp=int(
-            datetime.combine(dt, time.min.replace(tzinfo=timezone.utc)).timestamp()
-        ),
+        timestamp=int(datetime.combine(dt, time.min.replace(tzinfo=timezone.utc)).timestamp()),
     )
 
 
@@ -531,23 +526,19 @@ def enforce_url_params(url: str, params: dict[str, str]) -> str:
 def button_toolbar(
     title: str, href: str, id: str | bool = False, icon: str = "fa-plus"
 ) -> t.Iterator[str]:
-    params = html_params(
-        class_="btn btn-default btn-outline-secondary", href=href, id=id
-    )
+    params = html_params(class_="btn btn-default btn-outline-secondary", href=href, id=id)
     yield f"<a {params}>"
-    yield f"<span class=\"fa {icon}\"></span>"
+    yield f'<span class="fa {icon}"></span>'
     yield " "
     yield title
     yield "</a>"
 
 
 @lazy_join
-def toggle_button_toolbar(
-    title: str, id: str, icon: str = "fa-plus"
-) -> t.Iterator[str]:
+def toggle_button_toolbar(title: str, id: str, icon: str = "fa-plus") -> t.Iterator[str]:
     yield f'<input type="checkbox" class="btn-check" autocomplete="off" id="{id}">'
     yield f'<label class="btn btn-default btn-outline-secondary" for="{id}">'
-    yield f"<span class=\"fa {icon}\"></span>"
+    yield f'<span class="fa {icon}"></span>'
     yield " "
     yield title
     yield "</label>"
@@ -566,13 +557,13 @@ def html_params(**kwargs: HtmlParamValue) -> str:
         k = k.rstrip("_")
 
         if v is True:
-            v = 'true'
+            v = "true"
         elif v is False:
             continue
 
         params.append(f'{str(k)}="{html.escape(str(v))}"')
 
-    return ' '.join(params)
+    return " ".join(params)
 
 
 class TableResponse[TRow: BaseModel](BaseModel):

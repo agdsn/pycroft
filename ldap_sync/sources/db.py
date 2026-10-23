@@ -13,6 +13,7 @@ Most prominently:
 * :func:`fetch_db_groups`
 
 """
+
 import typing
 from typing import NamedTuple
 
@@ -42,9 +43,7 @@ class _UserProxyType(NamedTuple):
     should_be_blocked: bool
 
 
-def _fetch_db_users(
-    session: Session, required_property: str | None = None
-) -> list[_UserProxyType]:
+def _fetch_db_users(session: Session, required_property: str | None = None) -> list[_UserProxyType]:
     """Fetch users to be synced, plus whether ``ldap_login_enabled`` is set.
 
     If the ``ldap_login_enabled`` flag is not present,
@@ -75,9 +74,7 @@ def _fetch_db_users(
         )
         # additional info:
         #  absence of `ldap_login_enabled` property → should_be_blocked
-        .add_columns(
-            not_blocked_property.c.property_name.is_(None).label("should_be_blocked")
-        )
+        .add_columns(not_blocked_property.c.property_name.is_(None).label("should_be_blocked"))
         .outerjoin(
             not_blocked_property,
             and_(
@@ -105,10 +102,7 @@ def fetch_db_users(
         yield conversion.db_user_to_record(res.User, base_dn, res.should_be_blocked)
 
 
-def _warn_users_without_accounts(
-    session: Session,
-    required_property: str | None
-) -> None:
+def _warn_users_without_accounts(session: Session, required_property: str | None) -> None:
     no_unix_account_stmt = select().select_from(User)
     # two method calls don't count as method chaining
     # fmt: off
@@ -211,9 +205,7 @@ def _fetch_db_properties(session: Session) -> list[_PropertyProxyType]:
             CurrentProperty.property_name.label("name"),
             func.array_agg(User.login).label("members"),
         )
-        .select_from(
-            join(CurrentProperty, User, onclause=CurrentProperty.user_id == User.id)
-        )
+        .select_from(join(CurrentProperty, User, onclause=CurrentProperty.user_id == User.id))
         .where(CurrentProperty.property_name.in_(EXPORTED_PROPERTIES))
         .group_by(CurrentProperty.property_name)
     ).fetchall()

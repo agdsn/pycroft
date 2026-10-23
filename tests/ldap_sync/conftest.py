@@ -87,9 +87,7 @@ def clean_ldap_base(get_connection, sync_config):
         for base in sync_config.iter_bases_to_create():
             result = conn.add(base, "organizationalUnit")
             if not result:  # pragma: no cover
-                raise RuntimeError(
-                    f"Couldn't create dn {base} as organizationalUnit", result
-                )
+                raise RuntimeError(f"Couldn't create dn {base} as organizationalUnit", result)
 
         result = conn.add(
             f"cn=default,{sync_config.policies_dn}",

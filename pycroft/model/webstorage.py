@@ -5,6 +5,7 @@
 pycroft.model.webstorage
 ~~~~~~~~~~~~~~~~~~~~~~~~
 """
+
 from sqlalchemy import func, LargeBinary
 from sqlalchemy.orm import Mapped, mapped_column
 

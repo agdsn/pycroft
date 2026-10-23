@@ -8,8 +8,7 @@ from flask_login import current_user
 from sqlalchemy import select
 
 from pycroft.exc import PycroftException
-from pycroft.lib.task import cancel_task, task_type_to_impl, \
-    manually_execute_task, reschedule_task
+from pycroft.lib.task import cancel_task, task_type_to_impl, manually_execute_task, reschedule_task
 from pycroft.model import session
 from pycroft.model.facilities import Building
 from pycroft.model.task import Task, TaskStatus, UserTask
@@ -27,9 +26,9 @@ from web.table.table import (
 )
 from web.template_filters import datetime_filter
 
-bp = Blueprint('task', __name__)
-access = BlueprintAccess(bp, required_properties=['user_show'])
-nav = BlueprintNavigation(bp, "Tasks", icon='fa-tasks', blueprint_access=access)
+bp = Blueprint("task", __name__)
+access = BlueprintAccess(bp, required_properties=["user_show"])
+nav = BlueprintNavigation(bp, "Tasks", icon="fa-tasks", blueprint_access=access)
 
 
 def format_parameters[T: t.MutableMapping[str, t.Any]](parameters: T) -> T:
@@ -48,8 +47,7 @@ def task_row(task: UserTask) -> TaskRow:
     return TaskRow(
         id=task.id,
         user=LinkColResponse(
-            href=url_for('user.user_show', user_id=task.user.id),
-            title=task.user.name
+            href=url_for("user.user_show", user_id=task.user.id), title=task.user.name
         ),
         name=task_impl.name,
         type=task.type.name,  # actually redundant, because we assume UserTask
@@ -59,35 +57,34 @@ def task_row(task: UserTask) -> TaskRow:
         due=datetime_format(task.due, default="", formatter=datetime_filter),
         created=f"{task.created:%Y-%m-%d %H:%M:%S}",
         creator=LinkColResponse(
-            href=url_for('user.user_show', user_id=task.creator.id),
-            title=task.creator.name
+            href=url_for("user.user_show", user_id=task.creator.id), title=task.creator.name
         ),
         actions=[
             BtnColResponse(
                 href=url_for(
-                    '.cancel_user_task',
+                    ".cancel_user_task",
                     task_id=task.id,
-                    redirect=url_for('user.user_show', user_id=task.user.id, _anchor='tasks')
+                    redirect=url_for("user.user_show", user_id=task.user.id, _anchor="tasks"),
                 ),
                 title="Abbrechen",
-                icon='fa-times',
-                btn_class='btn-link'
+                icon="fa-times",
+                btn_class="btn-link",
             ),
             BtnColResponse(
                 href=url_for(
-                    '.reschedule_user_task',
+                    ".reschedule_user_task",
                     task_id=task.id,
-                    redirect=url_for('user.user_show', user_id=task.user.id, _anchor='tasks')
+                    redirect=url_for("user.user_show", user_id=task.user.id, _anchor="tasks"),
                 ),
                 title="Datum Ändern",
-                icon='fa-calendar-alt',
-                btn_class='btn-link'
+                icon="fa-calendar-alt",
+                btn_class="btn-link",
             ),
             BtnColResponse(
                 href=url_for(
-                    '.manually_execute_user_task',
+                    ".manually_execute_user_task",
                     task_id=task.id,
-                    redirect=url_for('user.user_show', user_id=task.user.id, _anchor='tasks')
+                    redirect=url_for("user.user_show", user_id=task.user.id, _anchor="tasks"),
                 ),
                 title="Sofort ausführen",
                 icon="fa-fast-forward",
@@ -120,9 +117,7 @@ def json_user_tasks() -> ResponseValue:
         tasks = tasks
 
     return TableResponse[TaskRow](
-        items=[
-            task_row(t.cast(UserTask, task)) for task in session.session.scalars(tasks)
-        ]
+        items=[task_row(t.cast(UserTask, task)) for task in session.session.scalars(tasks)]
     ).model_dump()
 
 
@@ -133,7 +128,7 @@ def get_task_or_404(task_id: int) -> Task[t.Any, t.Any] | NoReturn:
 
 
 @bp.route("/<int:task_id>/manually_execute")
-@access.require('user_change')
+@access.require("user_change")
 def manually_execute_user_task(task_id: int) -> ResponseValue:
     task = get_task_or_404(task_id)
     try:
@@ -142,43 +137,43 @@ def manually_execute_user_task(task_id: int) -> ResponseValue:
     except Exception as e:
         if not isinstance(e, PycroftException):
             import logging
-            logging.getLogger('pycroft.web').error(
-                "Unexpected error in manual task execution: %s", e,
-                exc_info=True
+
+            logging.getLogger("pycroft.web").error(
+                "Unexpected error in manual task execution: %s", e, exc_info=True
             )
-        flash(f"Fehler bei der Ausführung: {e}", 'error')
+        flash(f"Fehler bei der Ausführung: {e}", "error")
         session.session.rollback()
     else:
-        flash("Aufgabe erfolgreich ausgeführt", 'success')
+        flash("Aufgabe erfolgreich ausgeführt", "success")
 
     return redirect_or_404(request.args.get("redirect"))
 
 
 @bp.route("/<int:task_id>/cancel")
-@access.require('user_change')
+@access.require("user_change")
 def cancel_user_task(task_id: int) -> ResponseValue:
     task = get_task_or_404(task_id)
 
     cancel_task(task, current_user)
     session.session.commit()
 
-    flash('Aufgabe erfolgreich abgebrochen.', 'success')
+    flash("Aufgabe erfolgreich abgebrochen.", "success")
     return redirect_or_404(request.args.get("redirect"))
 
 
-@bp.route("/<int:task_id>/reschedule", methods=['GET', 'POST'])
-@access.require('user_change')
+@bp.route("/<int:task_id>/reschedule", methods=["GET", "POST"])
+@access.require("user_change")
 def reschedule_user_task(task_id: int) -> ResponseValue:
     task = get_task_or_404(task_id)
 
     form = RescheduleTaskForm()
     assert isinstance(task, UserTask)
-    return_url = url_for('user.user_show', user_id=task.user.id, _anchor='tasks')
+    return_url = url_for("user.user_show", user_id=task.user.id, _anchor="tasks")
 
     if form.validate_on_submit():
         reschedule_task(task, form.full_datetime, processor=current_user)
         session.session.commit()
-        flash(f'Datum erfolgreich auf {form.full_datetime} geändert.', 'success')
+        flash(f"Datum erfolgreich auf {form.full_datetime} geändert.", "success")
         return redirect(return_url)
 
     return render_template(
@@ -188,14 +183,14 @@ def reschedule_user_task(task_id: int) -> ResponseValue:
     )
 
 
-
 @bp.route("/user")
 @nav.navigate("Tasks")
 def user_tasks() -> ResponseValue:
     return render_template(
         "task/tasks.html",
-        task_table=TaskTable(data_url=url_for('.json_user_tasks', open_only=1)),
-        task_failed_table=TaskTable(data_url=url_for('.json_user_tasks', failed_only=1),
-                                    sort_order='desc'),
-        page_title="Aufgaben (Nutzer)"
+        task_table=TaskTable(data_url=url_for(".json_user_tasks", open_only=1)),
+        task_failed_table=TaskTable(
+            data_url=url_for(".json_user_tasks", failed_only=1), sort_order="desc"
+        ),
+        page_title="Aufgaben (Nutzer)",
     )

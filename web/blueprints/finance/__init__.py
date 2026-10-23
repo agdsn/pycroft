@@ -2,12 +2,12 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
-    web.blueprints.finance
-    ~~~~~~~~~~~~~~
+web.blueprints.finance
+~~~~~~~~~~~~~~
 
-    This module defines view functions for /finance
+This module defines view functions for /finance
 
-    :copyright: (c) 2012 by AG DSN.
+:copyright: (c) 2012 by AG DSN.
 """
 
 from __future__ import annotations
@@ -146,20 +146,21 @@ from web.template_tests import privilege_check
 
 from . import forms
 
-bp = Blueprint('finance', __name__)
-access = BlueprintAccess(bp, required_properties=['finance_show'])
-nav = BlueprintNavigation(bp, "Finanzen", icon='fa-euro-sign', blueprint_access=access)
+bp = Blueprint("finance", __name__)
+access = BlueprintAccess(bp, required_properties=["finance_show"])
+nav = BlueprintNavigation(bp, "Finanzen", icon="fa-euro-sign", blueprint_access=access)
 logger = logging.getLogger(__name__)
 
 
-@bp.route('/')
-@bp.route('/bank-accounts')
-@bp.route('/bank-accounts/list')
-@nav.navigate("Bankkonten", icon='fa-university')
+@bp.route("/")
+@bp.route("/bank-accounts")
+@bp.route("/bank-accounts/list")
+@nav.navigate("Bankkonten", icon="fa-university")
 def bank_accounts_list() -> ResponseReturnValue:
     bank_account_table = BankAccountTable(
-        data_url=url_for('.bank_accounts_list_json'),
-        create_account=privilege_check(current_user, 'finance_change'))
+        data_url=url_for(".bank_accounts_list_json"),
+        create_account=privilege_check(current_user, "finance_change"),
+    )
 
     bank_account_activity_table = BankAccountActivityTable(
         data_url=url_for(".bank_accounts_activities_json"),
@@ -167,13 +168,13 @@ def bank_accounts_list() -> ResponseReturnValue:
     )
 
     return render_template(
-        'finance/bank_accounts_list.html',
+        "finance/bank_accounts_list.html",
         bank_account_table=bank_account_table,
         bank_account_activity_table=bank_account_activity_table,
     )
 
 
-@bp.route('/bank-accounts/list/json')
+@bp.route("/bank-accounts/list/json")
 def bank_accounts_list_json() -> ResponseReturnValue:
     def actions(bank_account: BankAccount) -> list[BtnColResponse]:
         return [
@@ -212,7 +213,7 @@ def bank_accounts_list_json() -> ResponseReturnValue:
     ).model_dump()
 
 
-@bp.route('/bank-accounts/activities/json')
+@bp.route("/bank-accounts/activities/json")
 def bank_accounts_activities_json() -> ResponseReturnValue:
     def actions(activity_id: int) -> list[BtnColResponse]:
         return [
@@ -336,9 +337,9 @@ def complete_fints_challenge(
     )
 
     response = NeedRetryResponse.from_data(challenge)
-    assert isinstance(
-        response, NeedTANResponse
-    ), "reconstructed NeedRetryResponse is not an instance of NeedTANResponse"
+    assert isinstance(response, NeedTANResponse), (
+        "reconstructed NeedRetryResponse is not an instance of NeedTANResponse"
+    )
 
     with client.resume_dialog(dialog_data):
         client.send_tan(response, form.tan.data)
@@ -384,22 +385,26 @@ def bank_accounts_import(bank_account_id: int) -> ResponseReturnValue:
 
 from contextlib import contextmanager
 
+
 @contextmanager
 def flash_fints_errors() -> t.Generator[None, None, None]:
     try:
         yield
     except (FinTSDialogError, FinTSClientPINError) as e:
-        flash(f"Ungültige FinTS-Logindaten: '{e}'", 'error')
+        flash(f"Ungültige FinTS-Logindaten: '{e}'", "error")
         raise PycroftException from e
     except FinTSClientTemporaryAuthError as e:
         flash(f"Temporärer Fehler bei der Authentifizierung: '{e}'", "error")
         raise PycroftException from e
     except FinTSError as e:
-        flash(f"Anderer FinTS-Fehler: '{e}'", 'error')
+        flash(f"Anderer FinTS-Fehler: '{e}'", "error")
         raise PycroftException from e
     except KeyError as e:
-        flash('Das gewünschte Konto kann mit diesem Online-Banking-Zugang\
-                nicht erreicht werden.', 'error')
+        flash(
+            "Das gewünschte Konto kann mit diesem Online-Banking-Zugang\
+                nicht erreicht werden.",
+            "error",
+        )
         raise PycroftException from e
 
 
@@ -414,13 +419,13 @@ def bank_accounts_import_run(bank_account_id: int) -> ResponseReturnValue:
         imported: ImportedTransactions,
     ) -> str:
         return render_template(
-            'finance/bank_accounts_import.html', form=form,
+            "finance/bank_accounts_import.html",
+            form=form,
             transactions=imported.new,
             old_transactions=imported.old,
             doubtful_transactions=imported.doubtful,
             bank_account_id=bank_account.id,
         )
-
 
     if not form.is_submitted():
         form.start_date.data = (
@@ -490,8 +495,8 @@ def bank_accounts_import_run(bank_account_id: int) -> ResponseReturnValue:
     return redirect(url_for(".accounts_show", account_id=bank_account.account_id))
 
 
-@bp.route('/bank-accounts/create', methods=['GET', 'POST'])
-@access.require('finance_change')
+@bp.route("/bank-accounts/create", methods=["GET", "POST"])
+@access.require("finance_change")
 def bank_accounts_create() -> ResponseReturnValue:
     form = BankAccountCreateForm()
 
@@ -505,101 +510,110 @@ def bank_accounts_create() -> ResponseReturnValue:
             iban=form.iban.data,
             bic=form.bic.data,
             fints_endpoint=form.fints.data,
-            account=Account(name=form.name.data, type='BANK_ASSET'),
+            account=Account(name=form.name.data, type="BANK_ASSET"),
         )
         session.add(new_bank_account)
         session.commit()
         flash("Bankkonto wurde erstellt.", "success")
-        return redirect(url_for('.bank_accounts_list'))
+        return redirect(url_for(".bank_accounts_list"))
 
-    return render_template('finance/bank_accounts_create.html',
-                           form=form, page_title="Bankkonto erstellen")
+    return render_template(
+        "finance/bank_accounts_create.html", form=form, page_title="Bankkonto erstellen"
+    )
 
 
-@bp.route('/bank-account-activities/<activity_id>',
-          methods=["GET", "POST"])
+@bp.route("/bank-account-activities/<activity_id>", methods=["GET", "POST"])
 def bank_account_activities_edit(activity_id: int) -> ResponseReturnValue:
     activity = session.get(BankAccountActivity, activity_id)
 
     if activity is None:
-        flash(f"Bankbewegung mit ID {activity_id} existiert nicht!", 'error')
+        flash(f"Bankbewegung mit ID {activity_id} existiert nicht!", "error")
         abort(404)
 
     if activity.transaction_id is not None:
         form = BankAccountActivityReadForm(
-            obj=activity, bank_account_name=activity.bank_account.name)
+            obj=activity, bank_account_name=activity.bank_account.name
+        )
 
         if activity.transaction_id:
             flash("Bankbewegung ist bereits zugewiesen!", "warning")
 
         form_args = {
-            'form': form,
-            'show_submit': False,
-            'show_cancel': False,
+            "form": form,
+            "show_submit": False,
+            "show_cancel": False,
         }
 
-        return render_template('generic_form.html',
-                               page_title="Bankbewegung",
-                               form_args=form_args,
-                               form=form)
+        return render_template(
+            "generic_form.html", page_title="Bankbewegung", form_args=form_args, form=form
+        )
 
     else:
         form = BankAccountActivityEditForm(
-            obj=activity, bank_account_name=activity.bank_account.name,
-            description=activity.reference)
+            obj=activity,
+            bank_account_name=activity.bank_account.name,
+            description=activity.reference,
+        )
 
         if form.validate_on_submit():
             # TODO use `session.get`
-            debit_account = Account.q.filter(
-                Account.id == form.account_id.data
-            ).one()
+            debit_account = Account.q.filter(Account.id == form.account_id.data).one()
             credit_account = activity.bank_account.account
 
             assert form.description.data is not None
             transaction = finance.simple_transaction(
-                description=form.description.data, debit_account=debit_account,
-                credit_account=credit_account, amount=activity.amount,
-                author=current_user, valid_on=activity.valid_on,
-                confirmed=current_user.member_of(config.treasurer_group))
-            activity.split = next(split for split in transaction.splits
-                                  if split.account_id == credit_account.id)
+                description=form.description.data,
+                debit_account=debit_account,
+                credit_account=credit_account,
+                amount=activity.amount,
+                author=current_user,
+                valid_on=activity.valid_on,
+                confirmed=current_user.member_of(config.treasurer_group),
+            )
+            activity.split = next(
+                split for split in transaction.splits if split.account_id == credit_account.id
+            )
             session.add(activity)
 
             end_payment_in_default_memberships(current_user)
 
             session.commit()
 
-            flash("Transaktion erfolgreich erstellt.", 'success')
+            flash("Transaktion erfolgreich erstellt.", "success")
 
-            return redirect(url_for('.bank_accounts_list'))
+            return redirect(url_for(".bank_accounts_list"))
 
         form_args = {
-            'form': form,
-            'cancel_to': url_for('.bank_accounts_list'),
-            'submit_text': 'Zuweisen',
+            "form": form,
+            "cancel_to": url_for(".bank_accounts_list"),
+            "submit_text": "Zuweisen",
         }
 
-        return render_template('generic_form.html',
-                               page_title="Bankbewegung zuweisen",
-                               form_args=form_args,
-                               form=form)
+        return render_template(
+            "generic_form.html", page_title="Bankbewegung zuweisen", form_args=form_args, form=form
+        )
 
 
-@bp.route('/bank-account-activities/match/')
-@access.require('finance_change')
+@bp.route("/bank-account-activities/match/")
+@access.require("finance_change")
 def bank_account_activities_match() -> ResponseReturnValue:
     matching_user, matching_team = match_activities()
 
-    field_list_user, matched_activities_user \
-        = _create_field_list_and_matched_activities_dict(matching_user, "user")
-    field_list_team, matched_activities_team \
-        = _create_field_list_and_matched_activities_dict(matching_team, "team")
+    field_list_user, matched_activities_user = _create_field_list_and_matched_activities_dict(
+        matching_user, "user"
+    )
+    field_list_team, matched_activities_team = _create_field_list_and_matched_activities_dict(
+        matching_team, "team"
+    )
 
     form = _create_combined_form(field_list_user, field_list_team)
 
-    return render_template('finance/bank_accounts_match.html', form=form,
-                           activities_user=matched_activities_user,
-                           activities_team=matched_activities_team)
+    return render_template(
+        "finance/bank_accounts_match.html",
+        form=form,
+        activities_user=matched_activities_user,
+        activities_team=matched_activities_team,
+    )
 
 
 class ActivityEntry(t.TypedDict):
@@ -747,25 +761,19 @@ BooleanFieldList = list[t.Tuple[str, BooleanField]]
 @t.overload
 def _create_field_list_and_matched_activities_dict(
     matching: t.Mapping[BankAccountActivity, Account], prefix: t.Literal["team"]
-) -> tuple[BooleanFieldList, dict[str, TeamMatch]]:
-    ...
+) -> tuple[BooleanFieldList, dict[str, TeamMatch]]: ...
 
 
 @t.overload
 def _create_field_list_and_matched_activities_dict(
     matching: t.Mapping[BankAccountActivity, User], prefix: t.Literal["user"]
-) -> tuple[BooleanFieldList, dict[str, UserMatch]]:
-    ...
+) -> tuple[BooleanFieldList, dict[str, UserMatch]]: ...
 
 
 def _create_field_list_and_matched_activities_dict(
-    matching: t.Mapping[BankAccountActivity, User]
-    | t.Mapping[BankAccountActivity, Account],
+    matching: t.Mapping[BankAccountActivity, User] | t.Mapping[BankAccountActivity, Account],
     prefix: t.Literal["user", "team"],
-) -> (
-    tuple[BooleanFieldList, dict[str, UserMatch]]
-    | tuple[BooleanFieldList, dict[str, TeamMatch]]
-):
+) -> tuple[BooleanFieldList, dict[str, UserMatch]] | tuple[BooleanFieldList, dict[str, TeamMatch]]:
     # compatibility of this implementation with the overload signatures is hard to verify;
     # mypy is not too good at dependent typing
     matched_activities: dict[str, t.Any]
@@ -778,10 +786,10 @@ def _create_field_list_and_matched_activities_dict(
     # mypy cannot verify that the type of `entity` is constant across iterations
     for activity, entity in matching.items():
         matched_activities[f"{prefix}-{str(activity.id)}"] = {
-            'purpose': activity.reference,
-            'name': activity.other_name,
+            "purpose": activity.reference,
+            "name": activity.other_name,
             prefix: entity,
-            'amount': activity.amount
+            "amount": activity.amount,
         }
         field_list.append((str(activity.id), BooleanField(str(activity.id), default=True)))
 
@@ -791,8 +799,8 @@ def _create_field_list_and_matched_activities_dict(
         return field_list, t.cast(dict[str, TeamMatch], matched_activities)
 
 
-@bp.route('/bank-account-activities/match/do/', methods=['GET', 'POST'])
-@access.require('finance_change')
+@bp.route("/bank-account-activities/match/do/", methods=["GET", "POST"])
+@access.require("finance_change")
 def bank_account_activities_do_match() -> ResponseReturnValue:
     # Generate form again
     matching_user, matching_team = match_activities()
@@ -812,20 +820,27 @@ def bank_account_activities_do_match() -> ResponseReturnValue:
         session.flush()
         session.commit()
 
-    return render_template('finance/bank_accounts_matched.html', matched_user=matched_user,
-                           matched_team=matched_team)
+    return render_template(
+        "finance/bank_accounts_matched.html", matched_user=matched_user, matched_team=matched_team
+    )
 
 
 def _create_field_list(
-    matching: t.Mapping[BankAccountActivity, User | Account]
+    matching: t.Mapping[BankAccountActivity, User | Account],
 ) -> list[tuple[str, BooleanField]]:
     # TODO use list comprehension
     field_list = []
     for activity, entity in matching.items():
         field_list.append(
-            (str(activity.id), BooleanField('{} ({}€) -> {} ({})'.format(
-                activity.reference, activity.amount, entity.name, entity.id
-            ))))
+            (
+                str(activity.id),
+                BooleanField(
+                    "{} ({}€) -> {} ({})".format(
+                        activity.reference, activity.amount, entity.name, entity.id
+                    )
+                ),
+            )
+        )
 
     return field_list
 
@@ -849,13 +864,11 @@ def _create_combined_form(
     return Form()
 
 
-def _create_form(
-    field_list: t.Iterable[tuple[str, Field]]
-) -> type[forms.ActivityMatchForm]:
+def _create_form(field_list: t.Iterable[tuple[str, Field]]) -> type[forms.ActivityMatchForm]:
     class F(forms.ActivityMatchForm):
         pass
 
-    for (name, field) in field_list:
+    for name, field in field_list:
         setattr(F, name, field)
     return F
 
@@ -872,11 +885,14 @@ def _apply_checked_matches[Form: BaseForm](
             transaction = finance.simple_transaction(
                 description=activity.reference,
                 debit_account=debit_account,
-                credit_account=credit_account, amount=activity.amount,
-                author=current_user, valid_on=activity.valid_on
+                credit_account=credit_account,
+                amount=activity.amount,
+                author=current_user,
+                valid_on=activity.valid_on,
             )
-            activity.split = next(split for split in transaction.splits
-                                  if split.account_id == credit_account.id)
+            activity.split = next(
+                split for split in transaction.splits if split.account_id == credit_account.id
+            )
 
             session.add(activity)
             matched.append((activity, entity))
@@ -884,9 +900,9 @@ def _apply_checked_matches[Form: BaseForm](
     return matched
 
 
-@bp.route('/accounts/')
-@bp.route('/accounts/list')
-@nav.navigate("Konten", icon='fa-money-check-alt')
+@bp.route("/accounts/")
+@bp.route("/accounts/list")
+@nav.navigate("Konten", icon="fa-money-check-alt")
 def accounts_list() -> ResponseReturnValue:
     return render_template(
         "finance/accounts_list.html",
@@ -894,8 +910,8 @@ def accounts_list() -> ResponseReturnValue:
     )
 
 
-@bp.route('/account/<int:account_id>/toggle-legacy')
-@access.require('finance_change')
+@bp.route("/account/<int:account_id>/toggle-legacy")
+@access.require("finance_change")
 def account_toggle_legacy(account_id: int) -> ResponseReturnValue:
     account = session.get(Account, account_id)
 
@@ -908,12 +924,12 @@ def account_toggle_legacy(account_id: int) -> ResponseReturnValue:
 
     flash("Der Status des Kontos wurde umgeschaltet.", "success")
 
-    return redirect(url_for('.accounts_show', account_id=account_id))
+    return redirect(url_for(".accounts_show", account_id=account_id))
 
 
-@bp.route('/accounts/<int:account_id>/balance/json')
+@bp.route("/accounts/<int:account_id>/balance/json")
 def balance_json(account_id: int) -> ResponseReturnValue:
-    invert = request.args.get('invert', 'False') == 'True'
+    invert = request.args.get("invert", "False") == "True"
 
     sum_exp: ColumnElement[int] = t.cast(
         Over[int],
@@ -923,25 +939,23 @@ def balance_json(account_id: int) -> ResponseReturnValue:
     if invert:
         sum_exp = -sum_exp
 
-    balance_json = (select(Transaction.valid_on,
-                           sum_exp.label("balance")
-                           )
-                    .select_from(
-        Join(Split, Transaction,
-             Split.transaction_id == Transaction.id))
-                    .where(Split.account_id == account_id))
+    balance_json = (
+        select(Transaction.valid_on, sum_exp.label("balance"))
+        .select_from(Join(Split, Transaction, Split.transaction_id == Transaction.id))
+        .where(Split.account_id == account_id)
+    )
 
     res = session.scalar(json_agg_core(balance_json))
     assert res is not None
     return {"items": res}
 
 
-@bp.route('/accounts/<int:account_id>')
+@bp.route("/accounts/<int:account_id>")
 def accounts_show(account_id: int) -> ResponseReturnValue:
     account = session.get(Account, account_id)
 
     if account is None:
-        flash(f"Konto mit ID {account_id} existiert nicht!", 'error')
+        flash(f"Konto mit ID {account_id} existiert nicht!", "error")
         abort(404)
 
     # TODO extract to lib function
@@ -951,8 +965,7 @@ def accounts_show(account_id: int) -> ResponseReturnValue:
         user = None
     except MultipleResultsFound:
         user = User.q.filter_by(account_id=account.id).first()
-        flash("Es existieren mehrere Nutzer, die mit diesem Konto"
-              " verbunden sind!", "warning")
+        flash("Es existieren mehrere Nutzer, die mit diesem Konto verbunden sind!", "warning")
 
     inverted = account.type == "USER_ASSET"
 
@@ -960,10 +973,11 @@ def accounts_show(account_id: int) -> ResponseReturnValue:
     balance = -account.balance if inverted else account.balance
 
     return render_template(
-        'finance/accounts_show.html',
-        account=account, user=user, balance=balance,
-        balance_json_url=url_for('.balance_json', account_id=account_id,
-                                 invert=inverted),
+        "finance/accounts_show.html",
+        account=account,
+        user=user,
+        balance=balance,
+        balance_json_url=url_for(".balance_json", account_id=account_id, invert=inverted),
         finance_table_regular=FinanceTable(
             data_url=tbl_data_url,
             saldo=account.balance,
@@ -974,7 +988,7 @@ def accounts_show(account_id: int) -> ResponseReturnValue:
             saldo=account.balance,
             inverted=inverted,
         ),
-        account_name=localized(account.name, {int: {'insert_commas': False}})
+        account_name=localized(account.name, {int: {"insert_commas": False}}),
     )
 
 
@@ -985,11 +999,10 @@ def _format_row(split: Split, style: str | None, prefix: str | None = None) -> d
         # 'posted_by': (split.transaction.author.id, split.transaction.author.name),
         valid_on=date_filter(split.transaction.valid_on),
         description=LinkColResponse(
-            href=url_for("finance.transactions_show",
-                         transaction_id=split.transaction_id),
+            href=url_for("finance.transactions_show", transaction_id=split.transaction_id),
             title=localized(split.transaction.description)
             if split.transaction.description
-            else 'Keine Beschreibung'
+            else "Keine Beschreibung",
         ),
         amount=ColoredColResponse(
             value=money_filter(-split.amount if inverted else split.amount),
@@ -999,40 +1012,44 @@ def _format_row(split: Split, style: str | None, prefix: str | None = None) -> d
     ).model_dump()
     if prefix is None:
         return row
-    return {f'{prefix}_{key}': val for key, val in row.items()}
+    return {f"{prefix}_{key}": val for key, val in row.items()}
 
 
-def _prefixed_merge[
-    T, U
-](a: t.Mapping[str, T], prefix_a: str, b: t.Mapping[str, U], prefix_b: str) -> dict[str, T | U]:
+def _prefixed_merge[T, U](
+    a: t.Mapping[str, T], prefix_a: str, b: t.Mapping[str, U], prefix_b: str
+) -> dict[str, T | U]:
     result: dict[str, T | U] = {}
-    result.update(**{f'{prefix_a}_{k}': v
-                     for k, v in a.items()})
-    result.update(**{f'{prefix_b}_{k}': v
-                     for k, v in b.items()})
+    result.update(**{f"{prefix_a}_{k}": v for k, v in a.items()})
+    result.update(**{f"{prefix_b}_{k}": v for k, v in b.items()})
     return result
 
 
-@bp.route('/accounts/<int:account_id>/json')
+@bp.route("/accounts/<int:account_id>/json")
 def accounts_show_json(account_id: int) -> ResponseReturnValue:
-    style = request.args.get('style')
-    limit = request.args.get('limit', type=int)
-    offset = request.args.get('offset', type=int)
-    sort_by = request.args.get('sort', default="valid_on")
-    sort_order = request.args.get('order', default="desc")
-    search = request.args.get('search')
-    splitted = request.args.get('splitted', default=False, type=bool)
+    style = request.args.get("style")
+    limit = request.args.get("limit", type=int)
+    offset = request.args.get("offset", type=int)
+    sort_by = request.args.get("sort", default="valid_on")
+    sort_order = request.args.get("order", default="desc")
+    search = request.args.get("search")
+    splitted = request.args.get("splitted", default=False, type=bool)
     if sort_by.startswith("soll_") or sort_order.startswith("haben_"):
-        sort_by = '_'.join(sort_by.split('_')[1:])
+        sort_by = "_".join(sort_by.split("_")[1:])
 
     account = session.get(Account, account_id) or abort(404)
 
     total = Split.q.join(Transaction).filter(Split.account == account).count()
 
-    build_this_query = partial(build_transactions_query,
-                               account=account, search=search, sort_by=sort_by,
-                               sort_order=sort_order, offset=offset,
-                               limit=limit, eagerload=True)
+    build_this_query = partial(
+        build_transactions_query,
+        account=account,
+        search=search,
+        sort_by=sort_by,
+        sort_order=sort_order,
+        offset=offset,
+        limit=limit,
+        eagerload=True,
+    )
 
     def rows_from_query(query: Select[tuple[Split]]) -> list[dict[str, t.Any]]:
         # iterating over `query` executes it
@@ -1042,12 +1059,14 @@ def accounts_show_json(account_id: int) -> ResponseReturnValue:
         rows_pos = rows_from_query(build_this_query(positive=True))
         rows_neg = rows_from_query(build_this_query(positive=False))
 
-        _keys = ['posted_at', 'valid_on', 'description', 'amount']
-        _filler = {key: None for key in chain(('soll_' + key for key in _keys),
-                                              ('haben_' + key for key in _keys))}
+        _keys = ["posted_at", "valid_on", "description", "amount"]
+        _filler = {
+            key: None
+            for key in chain(("soll_" + key for key in _keys), ("haben_" + key for key in _keys))
+        }
 
         rows = [
-            _prefixed_merge(split_pos, 'soll', split_neg, 'haben')
+            _prefixed_merge(split_pos, "soll", split_neg, "haben")
             for split_pos, split_neg in zip_longest(rows_pos, rows_neg, fillvalue=_filler)
         ]
     else:
@@ -1058,7 +1077,7 @@ def accounts_show_json(account_id: int) -> ResponseReturnValue:
     return {"name": account.name, "items": {"total": total, "rows": rows}}
 
 
-@bp.route('/transactions/<int:transaction_id>')
+@bp.route("/transactions/<int:transaction_id>")
 def transactions_show(transaction_id: int) -> ResponseReturnValue:
     transaction = session.get(Transaction, transaction_id)
 
@@ -1066,17 +1085,17 @@ def transactions_show(transaction_id: int) -> ResponseReturnValue:
         abort(404)
 
     return render_template(
-        'finance/transactions_show.html',
+        "finance/transactions_show.html",
         transaction=transaction,
         get_transaction_type=finance.get_transaction_type,
         localized=localized,
         transaction_table=TransactionTable(
-            data_url=url_for(".transactions_show_json",
-                             transaction_id=transaction.id)),
+            data_url=url_for(".transactions_show_json", transaction_id=transaction.id)
+        ),
     )
 
 
-@bp.route('/transactions/<int:transaction_id>/json')
+@bp.route("/transactions/<int:transaction_id>/json")
 def transactions_show_json(transaction_id: int) -> ResponseReturnValue:
     transaction = _get_or_404(session, Transaction, transaction_id)
     return TransactionSplitResponse(
@@ -1085,7 +1104,7 @@ def transactions_show_json(transaction_id: int) -> ResponseReturnValue:
             TransactionSplitRow(
                 account=LinkColResponse(
                     href=url_for(".accounts_show", account_id=split.account_id),
-                    title=localized(split.account.name, {int: {'insert_commas': False}})
+                    title=localized(split.account.name, {int: {"insert_commas": False}}),
                 ),
                 amount=money_filter(split.amount),
                 row_positive=split.amount > 0,
@@ -1095,14 +1114,15 @@ def transactions_show_json(transaction_id: int) -> ResponseReturnValue:
     ).model_dump()
 
 
-@bp.route('/transactions/unconfirmed')
-@nav.navigate("Unbestätigte Transaktionen", icon='fa-question')
+@bp.route("/transactions/unconfirmed")
+@nav.navigate("Unbestätigte Transaktionen", icon="fa-question")
 def transactions_unconfirmed() -> ResponseReturnValue:
     return render_template(
-        'finance/transactions_unconfirmed.html',
+        "finance/transactions_unconfirmed.html",
         page_title="Unbestätigte Transaktionen",
         unconfirmed_transactions_table=UnconfirmedTransactionsTable(
-            data_url=url_for(".transactions_unconfirmed_json"))
+            data_url=url_for(".transactions_unconfirmed_json")
+        ),
     )
 
 
@@ -1182,11 +1202,7 @@ def _format_transaction_row(
 @bp.route("/transactions/unconfirmed/json")
 def transactions_unconfirmed_json() -> ResponseReturnValue:
     # TODO extract transaction fetch (with user/bank account) to lib function
-    transactions = (
-        Transaction.q.filter_by(confirmed=False)
-        .order_by(Transaction.posted_at)
-        .all()
-    )
+    transactions = Transaction.q.filter_by(confirmed=False).order_by(Transaction.posted_at).all()
     return TableResponse[UnconfirmedTransactionsRow](
         items=[
             _format_transaction_row(
@@ -1196,9 +1212,7 @@ def transactions_unconfirmed_json() -> ResponseReturnValue:
                 ),
                 bank_acc_act=(
                     # TODO do eager load
-                    BankAccountActivity.q.filter_by(
-                        transaction_id=transaction.id
-                    ).first()
+                    BankAccountActivity.q.filter_by(transaction_id=transaction.id).first()
                 ),
             )
             for transaction in transactions
@@ -1206,17 +1220,17 @@ def transactions_unconfirmed_json() -> ResponseReturnValue:
     ).model_dump()
 
 
-@bp.route('/transaction/<int:transaction_id>/confirm', methods=['GET', 'POST'])
-@access.require('finance_change')
+@bp.route("/transaction/<int:transaction_id>/confirm", methods=["GET", "POST"])
+@access.require("finance_change")
 def transaction_confirm(transaction_id: int) -> ResponseReturnValue:
     transaction = session.get(Transaction, transaction_id)
 
     if transaction is None:
-        flash("Transaktion existiert nicht.", 'error')
+        flash("Transaktion existiert nicht.", "error")
         abort(404)
 
     if transaction.confirmed:
-        flash("Diese Transaktion wurde bereits bestätigt.", 'error')
+        flash("Diese Transaktion wurde bereits bestätigt.", "error")
         abort(400)
 
     finance.transaction_confirm(transaction, current_user)
@@ -1255,22 +1269,24 @@ def transactions_confirm_selected() -> ResponseReturnValue:
     return redirect(url_for(".transactions_unconfirmed"))
 
 
-@bp.route('/transaction/confirm', methods=['GET', 'POST'])
-@access.require('finance_change')
+@bp.route("/transaction/confirm", methods=["GET", "POST"])
+@access.require("finance_change")
 def transaction_confirm_all() -> ResponseReturnValue:
     form = FlaskForm()
 
     def default_response() -> str:
         form_args = {
-            'form': form,
-            'cancel_to': url_for('.transactions_unconfirmed'),
-            'submit_text': 'Alle Bestätigen',
-            'actions_offset': 0
+            "form": form,
+            "cancel_to": url_for(".transactions_unconfirmed"),
+            "submit_text": "Alle Bestätigen",
+            "actions_offset": 0,
         }
-        return render_template('generic_form.html',
-                               page_title="Alle Transaktionen (älter als 1h) bestätigen",
-                               form_args=form_args,
-                               form=form)
+        return render_template(
+            "generic_form.html",
+            page_title="Alle Transaktionen (älter als 1h) bestätigen",
+            form_args=form_args,
+            form=form,
+        )
 
     if not form.is_submitted():
         return default_response()
@@ -1283,18 +1299,20 @@ def transaction_confirm_all() -> ResponseReturnValue:
     return redirect(url_for(".transactions_unconfirmed"))
 
 
-@bp.route('/transaction/<int:transaction_id>/delete', methods=['GET', 'POST'])
-@access.require('finance_change')
+@bp.route("/transaction/<int:transaction_id>/delete", methods=["GET", "POST"])
+@access.require("finance_change")
 def transaction_delete(transaction_id: int) -> ResponseReturnValue:
     transaction = session.get(Transaction, transaction_id)
 
     if transaction is None:
-        flash("Transaktion existiert nicht.", 'error')
+        flash("Transaktion existiert nicht.", "error")
         abort(404)
 
     if transaction.confirmed:
-        flash("Diese Transaktion wurde bereits bestätigt und kann daher nicht gelöscht werden.",
-              'error')
+        flash(
+            "Diese Transaktion wurde bereits bestätigt und kann daher nicht gelöscht werden.",
+            "error",
+        )
         abort(400)
 
     form = FlaskForm()
@@ -1304,60 +1322,56 @@ def transaction_delete(transaction_id: int) -> ResponseReturnValue:
 
         session.commit()
 
-        flash('Transaktion gelöscht.', 'success')
-        return redirect(url_for('.transactions_unconfirmed'))
+        flash("Transaktion gelöscht.", "success")
+        return redirect(url_for(".transactions_unconfirmed"))
 
     form_args = {
-        'form': form,
-        'cancel_to': url_for('.transactions_unconfirmed'),
-        'submit_text': 'Löschen',
-        'actions_offset': 0
+        "form": form,
+        "cancel_to": url_for(".transactions_unconfirmed"),
+        "submit_text": "Löschen",
+        "actions_offset": 0,
     }
 
-    return render_template('generic_form.html',
-                           page_title="Transaktion löschen",
-                           form_args=form_args,
-                           form=form)
+    return render_template(
+        "generic_form.html", page_title="Transaktion löschen", form_args=form_args, form=form
+    )
 
 
-@access.require('finance_show')
-@bp.route('/transactions')
+@access.require("finance_show")
+@bp.route("/transactions")
 def transactions_all() -> ResponseReturnValue:
     url = url_for(".transactions_all_json", **request.args)  # ty: ignore[invalid-argument-type]
     return render_template("finance/transactions_overview.html", api_endpoint=url)
 
 
-@access.require('finance_show')
-@bp.route('/transactions/json')
+@access.require("finance_show")
+@bp.route("/transactions/json")
 def transactions_all_json() -> ResponseReturnValue:
-    lower = request.args.get('after', "")
-    upper = request.args.get('before', "")
-    filter = request.args.get('filter', "nonuser")
+    lower = request.args.get("after", "")
+    upper = request.args.get("before", "")
+    filter = request.args.get("filter", "nonuser")
     transactions: FromClause
     if filter == "nonuser":
-        non_user_transactions = (select(Split.transaction_id)
-                                 .select_from(
-            Join(Split, User,
-                 (User.account_id == Split.account_id),
-                 isouter=True))
-                                 .group_by(Split.transaction_id)
-                                 .having(func.bool_and(User.id.is_(None)))
-                                 .alias("nut"))
+        non_user_transactions = (
+            select(Split.transaction_id)
+            .select_from(Join(Split, User, (User.account_id == Split.account_id), isouter=True))
+            .group_by(Split.transaction_id)
+            .having(func.bool_and(User.id.is_(None)))
+            .alias("nut")
+        )
 
         tid: ColumnClause[int] = literal_column("nut.transaction_id")
-        transactions = non_user_transactions.join(Transaction,
-                                                  Transaction.id == tid)
+        transactions = non_user_transactions.join(Transaction, Transaction.id == tid)
     else:
         transactions = Transaction.__table__
 
-    q = (select(Transaction.id,
-                Transaction.valid_on,
-                Split.account_id,
-                Account.type,
-                Split.amount)
-         .select_from(transactions
-                      .join(Split, Split.transaction_id == Transaction.id)
-                      .join(Account, Account.id == Split.account_id)))
+    q = select(
+        Transaction.id, Transaction.valid_on, Split.account_id, Account.type, Split.amount
+    ).select_from(
+        transactions.join(Split, Split.transaction_id == Transaction.id).join(
+            Account, Account.id == Split.account_id
+        )
+    )
 
     try:
         datetime.strptime(lower, "%Y-%m-%d").date()
@@ -1377,9 +1391,9 @@ def transactions_all_json() -> ResponseReturnValue:
     return {"items": res or []}
 
 
-@bp.route('/transactions/create', methods=['GET', 'POST'])
-@nav.navigate('Buchung erstellen', icon='fa-plus')
-@access.require('finance_change')
+@bp.route("/transactions/create", methods=["GET", "POST"])
+@nav.navigate("Buchung erstellen", icon="fa-plus")
+@access.require("finance_change")
 def transactions_create() -> ResponseReturnValue:
     form = TransactionCreateForm()
 
@@ -1404,16 +1418,12 @@ def transactions_create() -> ResponseReturnValue:
 
         session.commit()
 
-        return redirect(url_for('.transactions_show',
-                                transaction_id=transaction.id))
-    return render_template(
-        'finance/transactions_create.html',
-        form=form
-    )
+        return redirect(url_for(".transactions_show", transaction_id=transaction.id))
+    return render_template("finance/transactions_create.html", form=form)
 
 
-@bp.route('/accounts/create', methods=['GET', 'POST'])
-@access.require('finance_change')
+@bp.route("/accounts/create", methods=["GET", "POST"])
+@access.require("finance_change")
 def accounts_create() -> ResponseReturnValue:
     form = AccountCreateForm()
 
@@ -1421,25 +1431,23 @@ def accounts_create() -> ResponseReturnValue:
         new_account = Account(name=form.name.data, type=form.type.data)
         session.add(new_account)
         session.commit()
-        return redirect(url_for('.accounts_list'))
+        return redirect(url_for(".accounts_list"))
 
-    return render_template('finance/accounts_create.html', form=form,
-                           page_title="Konto erstellen")
+    return render_template("finance/accounts_create.html", form=form, page_title="Konto erstellen")
 
 
-@bp.route("/membership_fee/<int:fee_id>/book", methods=['GET', 'POST'])
-@access.require('finance_change')
+@bp.route("/membership_fee/<int:fee_id>/book", methods=["GET", "POST"])
+@access.require("finance_change")
 def membership_fee_book(fee_id: int) -> ResponseReturnValue:
     fee = session.get(MembershipFee, fee_id)
 
     if fee is None:
-        flash('Ein Beitrag mit dieser ID existiert nicht!', 'error')
+        flash("Ein Beitrag mit dieser ID existiert nicht!", "error")
         abort(404)
 
     form = FeeApplyForm()
     if form.is_submitted():
-        affected_users = post_transactions_for_membership_fee(
-            fee, current_user)
+        affected_users = post_transactions_for_membership_fee(fee, current_user)
 
         session.commit()
 
@@ -1447,9 +1455,10 @@ def membership_fee_book(fee_id: int) -> ResponseReturnValue:
 
         return redirect(url_for(".membership_fees"))
 
-    table = UsersDueTable(data_url=url_for('.membership_fee_users_due_json', fee_id=fee.id))
-    return render_template('finance/membership_fee_book.html', form=form,
-                           page_title='Beitrag buchen', table=table)
+    table = UsersDueTable(data_url=url_for(".membership_fee_users_due_json", fee_id=fee.id))
+    return render_template(
+        "finance/membership_fee_book.html", form=form, page_title="Beitrag buchen", table=table
+    )
 
 
 @bp.route("/membership_fee/<int:fee_id>/users_due_json")
@@ -1459,11 +1468,11 @@ def membership_fee_users_due_json(fee_id: int) -> ResponseReturnValue:
     if fee is None:
         abort(404)
 
-    affected_users = post_transactions_for_membership_fee(
-        fee, current_user, simulate=True)
+    affected_users = post_transactions_for_membership_fee(fee, current_user, simulate=True)
 
     fee_description = localized(
-        finance.membership_fee_description.format(fee_name=fee.name).to_json())
+        finance.membership_fee_description.format(fee_name=fee.name).to_json()
+    )
 
     return TableResponse[UsersDueRow](
         items=[
@@ -1492,12 +1501,12 @@ def membership_fee_users_due_json(fee_id: int) -> ResponseReturnValue:
 @nav.navigate("Beiträge", icon="fa-hand-holding-usd")
 @access.require("finance_change")
 def membership_fees() -> ResponseReturnValue:
-    table = MembershipFeeTable(data_url=url_for('.membership_fees_json'))
-    return render_template('finance/membership_fees.html', table=table)
+    table = MembershipFeeTable(data_url=url_for(".membership_fees_json"))
+    return render_template("finance/membership_fees.html", table=table)
 
 
 @bp.route("/membership_fees/json")
-@access.require('finance_change')
+@access.require("finance_change")
 def membership_fees_json() -> ResponseReturnValue:
     return TableResponse[MembershipFeeRow](
         items=[
@@ -1534,15 +1543,13 @@ def membership_fees_json() -> ResponseReturnValue:
                     ),
                 ],
             )
-            for membership_fee in MembershipFee.q.order_by(
-                MembershipFee.begins_on.desc()
-            ).all()
+            for membership_fee in MembershipFee.q.order_by(MembershipFee.begins_on.desc()).all()
         ]
     ).model_dump()
 
 
-@bp.route('/membership_fee/create', methods=("GET", "POST"))
-@access.require('finance_change')
+@bp.route("/membership_fee/create", methods=("GET", "POST"))
+@access.require("finance_change")
 def membership_fee_create() -> ResponseReturnValue:
     previous_fee = get_last_membership_fee(session)
     if previous_fee:
@@ -1553,8 +1560,7 @@ def membership_fee_create() -> ResponseReturnValue:
             day=(next_month - timedelta(days=next_month.day)).day
         )
 
-        name_default = str(begins_on_default.year) \
-                       + "-" + "%02d" % begins_on_default.month
+        name_default = str(begins_on_default.year) + "-" + "%02d" % begins_on_default.month
 
         form = MembershipFeeCreateForm(
             name=name_default,
@@ -1590,16 +1596,16 @@ def membership_fee_create() -> ResponseReturnValue:
         session.commit()
         flash("Beitrag erfolgreich erstellt.", "success")
         return redirect(url_for(".membership_fees"))
-    return render_template('finance/membership_fee_create.html', form=form)
+    return render_template("finance/membership_fee_create.html", form=form)
 
 
-@bp.route('/membership_fee/<int:fee_id>/edit', methods=("GET", "POST"))
-@access.require('finance_change')
+@bp.route("/membership_fee/<int:fee_id>/edit", methods=("GET", "POST"))
+@access.require("finance_change")
 def membership_fee_edit(fee_id: int) -> ResponseReturnValue:
     fee = session.get(MembershipFee, fee_id)
 
     if fee is None:
-        flash('Ein Beitrag mit dieser ID existiert nicht!', 'error')
+        flash("Ein Beitrag mit dieser ID existiert nicht!", "error")
         abort(404)
 
     form = MembershipFeeEditForm()
@@ -1636,16 +1642,17 @@ def membership_fee_edit(fee_id: int) -> ResponseReturnValue:
 
         session.commit()
         return redirect(url_for(".membership_fees"))
-    return render_template('finance/membership_fee_edit.html', form=form)
+    return render_template("finance/membership_fee_edit.html", form=form)
 
 
-@bp.route('/membership_fees/handle_payments_in_default', methods=("GET", "POST"))
-@access.require('finance_change')
+@bp.route("/membership_fees/handle_payments_in_default", methods=("GET", "POST"))
+@access.require("finance_change")
 def handle_payments_in_default() -> ResponseReturnValue:
     finance.end_payment_in_default_memberships(current_user)
 
-    users_pid_membership_all, users_membership_terminated_all = \
+    users_pid_membership_all, users_membership_terminated_all = (
         finance.get_users_with_payment_in_default(session)
+    )
 
     form = HandlePaymentsInDefaultForm()
 
@@ -1669,25 +1676,28 @@ def handle_payments_in_default() -> ResponseReturnValue:
         take_actions_for_payment_in_default_users(
             users_pid_membership=users_pid_membership,
             users_membership_terminated=users_membership_terminated,
-            processor=current_user)
+            processor=current_user,
+        )
         session.commit()
         flash("Zahlungsrückstände behandelt.", "success")
         return redirect(url_for(".membership_fees"))
 
     form_args = {
-        'form': form,
-        'cancel_to': url_for('.membership_fees'),
-        'submit_text': 'Anwenden',
-        'actions_offset': 0
+        "form": form,
+        "cancel_to": url_for(".membership_fees"),
+        "submit_text": "Anwenden",
+        "actions_offset": 0,
     }
 
-    return render_template('generic_form.html',
-                           page_title="Zahlungsrückstände behandeln",
-                           form_args=form_args,
-                           form=form)
+    return render_template(
+        "generic_form.html",
+        page_title="Zahlungsrückstände behandeln",
+        form_args=form_args,
+        form=form,
+    )
 
 
-@bp.route('/json/accounts/system')
+@bp.route("/json/accounts/system")
 def json_accounts_system() -> ResponseReturnValue:
     return {
         "accounts": [
@@ -1701,16 +1711,22 @@ def json_accounts_system() -> ResponseReturnValue:
     }
 
 
-@bp.route('/json/accounts/user-search')
+@bp.route("/json/accounts/user-search")
 def json_accounts_user_search() -> ResponseReturnValue:
-    query = request.args['query']
-    results = session.query(
-        Account.id, User.id, User.login, User.name
-    ).select_from(User).join(Account).filter(
-        or_(func.lower(User.name).like(func.lower(f"%{query}%")),
-            func.lower(User.login).like(func.lower(f"%{query}%")),
-            cast(User.id, Text).like(f"{query}%"))
-    ).all()
+    query = request.args["query"]
+    results = (
+        session.query(Account.id, User.id, User.login, User.name)
+        .select_from(User)
+        .join(Account)
+        .filter(
+            or_(
+                func.lower(User.name).like(func.lower(f"%{query}%")),
+                func.lower(User.login).like(func.lower(f"%{query}%")),
+                cast(User.id, Text).like(f"{query}%"),
+            )
+        )
+        .all()
+    )
     return {
         "accounts": [
             {
@@ -1724,8 +1740,8 @@ def json_accounts_user_search() -> ResponseReturnValue:
     }
 
 
-@bp.route('/membership_fees/payments_in_default_csv')
-@access.require('finance_change')
+@bp.route("/membership_fees/payments_in_default_csv")
+@access.require("finance_change")
 def csv_payments_in_default() -> ResponseReturnValue:
     csv_str = get_pid_csv()
 
@@ -1736,8 +1752,8 @@ def csv_payments_in_default() -> ResponseReturnValue:
     return output
 
 
-@bp.route('/membership_fees/payment_reminder_mail', methods=("GET", "POST"))
-@access.require('finance_change')
+@bp.route("/membership_fees/payment_reminder_mail", methods=("GET", "POST"))
+@access.require("finance_change")
 def payment_reminder_mail() -> ResponseReturnValue:
     form = ConfirmPaymentReminderMail()
 
@@ -1758,18 +1774,20 @@ def payment_reminder_mail() -> ResponseReturnValue:
         return redirect(url_for(".membership_fees"))
 
     form_args = {
-        'form': form,
-        'cancel_to': url_for('.membership_fees'),
-        'submit_text': 'Mails versenden',
-        'actions_offset': 0,
-        'form_render_mode': 'basic',
-        'field_render_mode': 'basic',
+        "form": form,
+        "cancel_to": url_for(".membership_fees"),
+        "submit_text": "Mails versenden",
+        "actions_offset": 0,
+        "form_render_mode": "basic",
+        "field_render_mode": "basic",
     }
 
-    return render_template('generic_form.html',
-                           page_title="Zahlungserinnerungen per E-Mail versenden",
-                           form_args=form_args,
-                           form=form)
+    return render_template(
+        "generic_form.html",
+        page_title="Zahlungserinnerungen per E-Mail versenden",
+        form_args=form_args,
+        form=form,
+    )
 
 
 def _get_or_404[TModel: ModelBase](session: Session, Model: type[TModel], pkey: t.Any) -> TModel:

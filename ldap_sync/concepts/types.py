@@ -6,13 +6,12 @@ ldap_sync.concepts.types
 ~~~~~~~~~~~~~~~~~~~~~~~~
 Type aliases, :class:`NewTypes <typing.NewType>`, etc.
 """
+
 import typing
 from typing import Union
 
 AttributeValues = Union[
-    str, bytes, int,
-    typing.Collection[str], typing.Collection[bytes], typing.Collection[int],
-    None
+    str, bytes, int, typing.Collection[str], typing.Collection[bytes], typing.Collection[int], None
 ]
 Attributes = dict[str, AttributeValues]
 # Depending on the LDAP scheme, attributes may be single-valued or multi-valued
@@ -24,7 +23,7 @@ NormalizedAttributes = dict[
 ]
 
 #: An LDAP Distinguished Name
-DN = typing.NewType('DN', str)
+DN = typing.NewType("DN", str)
 
 
 # an ldap record, as represented by the `ldap3` response dict.

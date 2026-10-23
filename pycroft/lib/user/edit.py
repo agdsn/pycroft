@@ -55,7 +55,7 @@ def edit_email(
 
     if not can_target(user, processor):
         raise PermissionError(
-            "cannot change email of a user with a" " greater or equal permission level."
+            "cannot change email of a user with a greater or equal permission level."
         )
 
     if not email:

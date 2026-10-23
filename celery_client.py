@@ -24,12 +24,13 @@ True
 ```
 
 """
+
 import sys
 
 from web.app import make_app
 from hades_logs import hades_logs
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = make_app()
     with app.app_context():
         hades_logs.celery.start(sys.argv)

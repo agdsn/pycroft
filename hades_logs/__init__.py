@@ -5,6 +5,7 @@ hades_logs
 This module provides access to Hades' radius logs utilizing its celery
 RPC api.
 """
+
 import typing as t
 import logging
 
@@ -66,23 +67,21 @@ class HadesLogs:
 
     def __init__(self, app: Flask | None = None) -> None:
         self.app = app
-        self.logger = logging.getLogger('hades_logs')
+        self.logger = logging.getLogger("hades_logs")
         if app is not None:
             self.init_app(app)
 
     def init_app(self, app: Flask) -> None:
         try:
-            app_name = app.config['HADES_CELERY_APP_NAME']
-            broker_uri = app.config['HADES_BROKER_URI']
-            backend_uri = app.config['HADES_RESULT_BACKEND_URI']
-            routing_key = app.config.get('HADES_ROUTING_KEY', 'masters.root.agdsn')
+            app_name = app.config["HADES_CELERY_APP_NAME"]
+            broker_uri = app.config["HADES_BROKER_URI"]
+            backend_uri = app.config["HADES_RESULT_BACKEND_URI"]
+            routing_key = app.config.get("HADES_ROUTING_KEY", "masters.root.agdsn")
         except KeyError as e:
             self.logger.warning("Missing config key: %s\n%s", e, _CONFIGURATION_DOCS)
             raise KeyError(f"Missing config key: {e}") from e
-        self.timeout = app.config.get('HADES_TIMEOUT', 5)
-        task_default_exchange = app.config.get(
-            "HADES_TASK_DEFAULT_EXCHANGE", "hades.rpc-call"
-        )
+        self.timeout = app.config.get("HADES_TIMEOUT", 5)
+        task_default_exchange = app.config.get("HADES_TASK_DEFAULT_EXCHANGE", "hades.rpc-call")
         result_exchange = app.config.get("HADES_RESULT_EXCHANGE", "hades.rpc-result")
 
         self.celery = HadesCelery(
@@ -95,7 +94,7 @@ class HadesLogs:
         )
         # Gets run only on success
         self.logger.info("Initialization complete, registering 'hades_logs' extension")
-        app.extensions['hades_logs'] = self
+        app.extensions["hades_logs"] = self
 
     def create_task(self, name, *args, **kwargs):
         """Create a Celery task object by name, args and kwargs
@@ -110,7 +109,7 @@ class HadesLogs:
 
         :rtype: :py:obj:`celery.Signature`
         """
-        full_task_name = f'{self.celery.main}.{name}'
+        full_task_name = f"{self.celery.main}.{name}"
         return self.celery.signature(full_task_name, args=args, kwargs=kwargs)
 
     def fetch_logs(
@@ -130,12 +129,16 @@ class HadesLogs:
         if reduced:
             reductor = reduce_radius_logs
         else:
+
             def reductor(x):
                 return x
 
-        task = self.create_task(name='get_auth_attempts_at_port',
-                                nas_ip_address=nasipaddress, nas_port_id=nasportid,
-                                limit=limit)
+        task = self.create_task(
+            name="get_auth_attempts_at_port",
+            nas_ip_address=nasipaddress,
+            nas_port_id=nasportid,
+            limit=limit,
+        )
 
         return reductor(RadiusLogEntry(*e) for e in self.wait_for_task(task))
 
@@ -160,11 +163,9 @@ class HadesLogs:
 
 def _get_extension():
     try:
-        return current_app.extensions['hades_logs']
+        return current_app.extensions["hades_logs"]
     except KeyError:
-        raise HadesConfigError(
-            "No HadesLogs instance registered to current Flask app"
-        ) from None
+        raise HadesConfigError("No HadesLogs instance registered to current Flask app") from None
 
 
 hades_logs: HadesLogs = LocalProxy(_get_extension)

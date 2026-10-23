@@ -15,17 +15,20 @@ from .. import factories
 
 
 class TestInterfaceValidators:
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def host(self, class_session):
         return factories.HostFactory()
 
-    @pytest.mark.parametrize('mac', [
-        'ff:ff:ff:ff:ff',
-        "ff:ff:ff:ff:ff:ff",
-        "ff:asjfjsdaf:ff:ff:ff:ff",
-        "aj:00:ff:1f:ff:ff",
-        "ff:ff:ff:ff:ff:ff:ff",
-    ])
+    @pytest.mark.parametrize(
+        "mac",
+        [
+            "ff:ff:ff:ff:ff",
+            "ff:ff:ff:ff:ff:ff",
+            "ff:asjfjsdaf:ff:ff:ff:ff",
+            "aj:00:ff:1f:ff:ff",
+            "ff:ff:ff:ff:ff:ff:ff",
+        ],
+    )
     def test_bad_macs(self, session, host, mac):
         interface = Interface(host=host)
         assert object_state(interface).transient
@@ -36,9 +39,12 @@ class TestInterfaceValidators:
             session.add(interface)
             session.flush()
 
-    @pytest.mark.parametrize('mac', [
-        "00:00:00:01:00:00",
-    ])
+    @pytest.mark.parametrize(
+        "mac",
+        [
+            "00:00:00:01:00:00",
+        ],
+    )
     def test_good_macs(self, session, host, mac):
         interface = Interface(host=host)
         assert object_state(interface).transient
@@ -49,19 +55,19 @@ class TestInterfaceValidators:
 
 
 class TestIpModel:
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def subnet(self, class_session):
         return factories.SubnetFactory.create()
 
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def subnet2(self, class_session):
         return factories.SubnetFactory.create()
 
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def interface(self, class_session):
         return factories.InterfaceFactory()
 
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def ip_addr(self, class_session, subnet, interface):
         ip, _ = get_free_ip((subnet,))
         addr = IP(interface=interface, address=ip, subnet=subnet)
@@ -81,12 +87,12 @@ class TestIpModel:
             session.flush()
 
     def test_correct_subnet_and_ip(self, session, subnet, interface):
-        ip_address, _ = get_free_ip((subnet, ))
+        ip_address, _ = get_free_ip((subnet,))
 
         with session.begin_nested():
             session.add(IP(interface=interface, address=ip_address, subnet=subnet))
 
-        ip_address, _ = get_free_ip((subnet, ))
+        ip_address, _ = get_free_ip((subnet,))
         with session.begin_nested():
             session.add(IP(address=ip_address, subnet=subnet, interface=interface))
 
@@ -94,7 +100,7 @@ class TestIpModel:
             IP.q.filter(IP.interface == interface).delete()
 
     def test_missing_subnet(self, session, interface, subnet):
-        ip_address, _ = get_free_ip((subnet, ))
+        ip_address, _ = get_free_ip((subnet,))
         with pytest.raises(IntegrityError), session.begin_nested():
             session.add(IP(interface=interface, address=ip_address))
 
@@ -103,7 +109,7 @@ class TestIpModel:
             session.add(IP(interface=interface, subnet=subnet))
 
     def test_wrong_subnet(self, interface, subnet, subnet2):
-        ip_address, _ = get_free_ip((subnet, ))
+        ip_address, _ = get_free_ip((subnet,))
 
         ip = IP(interface=interface, address=ip_address)
 
@@ -120,21 +126,21 @@ class TestIpModel:
 
 
 class TestVariousCascades:
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def user(self, class_session):
         user = factories.UserFactory.build(with_host=True)
         class_session.add(user)
         return user
 
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def host(self, user):
         return user.hosts[0]
 
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def interface(self, host):
         return host.interfaces[0]
 
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def ips(self, class_session, interface):
         ips = factories.IPFactory.create_batch(3, interface=interface)
         # there's probably a better way to do this, e.g. by introducing an `IpWithTrafficFactory`
@@ -142,7 +148,7 @@ class TestVariousCascades:
             factories.TrafficVolumeFactory.create_batch(4, ip=ip)
         return ips
 
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def ip(self, ips):
         return ips[0]
 
@@ -181,26 +187,25 @@ class TestVariousCascades:
 
 
 class TestDefaultVlanCascades:
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def vlans(self, class_session):
         return factories.VLANFactory.create_batch(2)
 
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def vlan(self, vlans):
         return vlans[0]
 
     # autouse because this provides the `default_vlans`
-    @pytest.fixture(scope='class', autouse=True)
+    @pytest.fixture(scope="class", autouse=True)
     def ports(self, vlans):
         return factories.SwitchPortFactory.create_batch(2, default_vlans=vlans)
 
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def port(self, ports):
         return ports[0]
 
     def test_default_vlan_associations_cascade_on_delete_vlan(self, session, vlan):
-        associations_query = session.query(switch_port_default_vlans)\
-            .filter_by(vlan_id=vlan.id)
+        associations_query = session.query(switch_port_default_vlans).filter_by(vlan_id=vlan.id)
 
         assert associations_query.count() == 2
         for subnet in vlan.subnets:
@@ -209,8 +214,9 @@ class TestDefaultVlanCascades:
         assert associations_query.count() == 0
 
     def test_default_vlan_associations_cascade_on_delete_switch_port(self, session, port):
-        associations_query = session.query(switch_port_default_vlans)\
-            .filter_by(switch_port_id=port.id)
+        associations_query = session.query(switch_port_default_vlans).filter_by(
+            switch_port_id=port.id
+        )
 
         assert associations_query.count() == 2
         session.delete(port)

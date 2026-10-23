@@ -2,13 +2,14 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
-    pycroft.model.logging
-    ~~~~~~~~~~~~~~~~~~~~~
+pycroft.model.logging
+~~~~~~~~~~~~~~~~~~~~~
 
-    This module contains the classes LogEntry, UserLogEntry, TrafficVolume.
+This module contains the classes LogEntry, UserLogEntry, TrafficVolume.
 
-    :copyright: (c) 2011 by AG DSN.
+:copyright: (c) 2011 by AG DSN.
 """
+
 from __future__ import annotations
 import typing as t
 from sqlalchemy import ForeignKey
@@ -44,13 +45,9 @@ class LogEntry(IntegerIdModel):
 
 class TaskLogEntry(LogEntry):
     __mapper_args__ = {"polymorphic_identity": "task_log_entry"}
-    id: Mapped[int] = mapped_column(
-        ForeignKey(LogEntry.id, ondelete="CASCADE"), primary_key=True
-    )
+    id: Mapped[int] = mapped_column(ForeignKey(LogEntry.id, ondelete="CASCADE"), primary_key=True)
 
-    task_id: Mapped[int] = mapped_column(
-        ForeignKey("task.id", ondelete="CASCADE"), index=True
-    )
+    task_id: Mapped[int] = mapped_column(ForeignKey("task.id", ondelete="CASCADE"), index=True)
     task: Mapped[Task] = relationship(back_populates="log_entries")
 
     # many to one from UserLogEntry to User
@@ -64,13 +61,9 @@ class TaskLogEntry(LogEntry):
 
 class UserLogEntry(LogEntry):
     __mapper_args__ = {"polymorphic_identity": "user_log_entry"}
-    id: Mapped[int] = mapped_column(
-        ForeignKey(LogEntry.id, ondelete="CASCADE"), primary_key=True
-    )
+    id: Mapped[int] = mapped_column(ForeignKey(LogEntry.id, ondelete="CASCADE"), primary_key=True)
 
-    user_id: Mapped[int] = mapped_column(
-        ForeignKey("user.id", ondelete="CASCADE"), index=True
-    )
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id", ondelete="CASCADE"), index=True)
     user: Mapped[User] = relationship(back_populates="log_entries")
 
 
@@ -79,7 +72,5 @@ class RoomLogEntry(LogEntry):
     id: Mapped[int] = mapped_column(ForeignKey("log_entry.id"), primary_key=True)
 
     # many to one from RoomLogEntry to Room
-    room_id: Mapped[int] = mapped_column(
-        ForeignKey("room.id", ondelete="CASCADE"), index=True
-    )
+    room_id: Mapped[int] = mapped_column(ForeignKey("room.id", ondelete="CASCADE"), index=True)
     room: Mapped[Room] = relationship(back_populates="log_entries")

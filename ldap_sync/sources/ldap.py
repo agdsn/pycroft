@@ -5,6 +5,7 @@
 ldap_sync.sources.ldap
 ~~~~~~~~~~~~~~~~~~~~~~
 """
+
 import ssl
 import typing
 
@@ -24,12 +25,8 @@ def establish_and_return_ldap_connection(config: SyncConfig) -> ldap3.Connection
             ca_certs_data=config.ca_certs_data,
             validate=ssl.CERT_REQUIRED,
         )
-    server = ldap3.Server(
-        host=config.host, port=config.port, use_ssl=config.use_ssl, tls=tls
-    )
-    return ldap3.Connection(
-        server, user=config.bind_dn, password=config.bind_pw, auto_bind=True
-    )
+    server = ldap3.Server(host=config.host, port=config.port, use_ssl=config.use_ssl, tls=tls)
+    return ldap3.Connection(server, user=config.bind_dn, password=config.bind_pw, auto_bind=True)
 
 
 def _fetch_ldap_entries(
@@ -59,32 +56,22 @@ def _fetch_ldap_users(connection: ldap3.Connection, base_dn: str) -> list[LdapRe
     )
 
 
-def fetch_ldap_users(
-    connection: ldap3.Connection, base_dn: str
-) -> typing.Iterator[UserRecord]:
+def fetch_ldap_users(connection: ldap3.Connection, base_dn: str) -> typing.Iterator[UserRecord]:
     for r in _fetch_ldap_users(connection, base_dn):
         yield conversion.ldap_user_to_record(r)
 
 
 def _fetch_ldap_groups(connection: ldap3.Connection, base_dn: str) -> list[LdapRecord]:
-    return _fetch_ldap_entries(
-        connection, base_dn, search_filter="(objectclass=groupOfMembers)"
-    )
+    return _fetch_ldap_entries(connection, base_dn, search_filter="(objectclass=groupOfMembers)")
 
 
-def fetch_ldap_groups(
-    connection: ldap3.Connection, base_dn: str
-) -> typing.Iterator[GroupRecord]:
+def fetch_ldap_groups(connection: ldap3.Connection, base_dn: str) -> typing.Iterator[GroupRecord]:
     for r in _fetch_ldap_groups(connection, base_dn):
         yield conversion.ldap_group_to_record(r)
 
 
-def _fetch_ldap_properties(
-    connection: ldap3.Connection, base_dn: str
-) -> list[LdapRecord]:
-    return _fetch_ldap_entries(
-        connection, base_dn, search_filter="(objectclass=groupOfMembers)"
-    )
+def _fetch_ldap_properties(connection: ldap3.Connection, base_dn: str) -> list[LdapRecord]:
+    return _fetch_ldap_entries(connection, base_dn, search_filter="(objectclass=groupOfMembers)")
 
 
 def fetch_ldap_properties(

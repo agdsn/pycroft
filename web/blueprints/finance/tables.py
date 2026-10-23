@@ -29,7 +29,7 @@ from web.table.table import (
 from web.template_filters import money_filter
 
 
-@custom_formatter_column('table.coloredFormatter')
+@custom_formatter_column("table.coloredFormatter")
 class ColoredColumn(Column):
     pass
 
@@ -42,11 +42,11 @@ class ColoredColResponse(BaseModel):
 class FinanceTable(BootstrapTable):
     class Meta:  # ty: ignore[invalid-attribute-override]
         table_args = {
-            'data-side-pagination': 'server',
+            "data-side-pagination": "server",
             # 'data-search': 'true',
-            'data-sort-order': 'desc',
+            "data-sort-order": "desc",
             # 'data-sort-name': 'valid_on',
-            'data-page-list': '[5, 10, 25, 50, 100]'
+            "data-page-list": "[5, 10, 25, 50, 100]",
         }
 
     @t.override
@@ -70,13 +70,11 @@ class FinanceTable(BootstrapTable):
 
         if inverted and saldo is not None:
             self._enforced_url_params = frozenset(
-                {('style', 'inverted')}
-                .union(self._enforced_url_params)
+                {("style", "inverted")}.union(self._enforced_url_params)
             )
             self.saldo = -saldo
 
         super().__init__(**kw)
-
 
         self.user_id = user_id
         self.table_footer_offset = 3
@@ -84,7 +82,7 @@ class FinanceTable(BootstrapTable):
     posted_at = Column("Erstellt um")
     valid_on = Column("Gültig am")
     description = LinkColumn("Beschreibung")
-    amount = ColoredColumn("Wert", cell_style='table.tdRelativeCellStyle')
+    amount = ColoredColumn("Wert", cell_style="table.tdRelativeCellStyle")
 
     @property
     @t.override
@@ -106,13 +104,12 @@ class FinanceTable(BootstrapTable):
         yield "<tfoot>"
         yield "<tr>"
 
-        yield f"<td colspan=\"{self.table_footer_offset}\" class=\"text-right\">"
+        yield f'<td colspan="{self.table_footer_offset}" class="text-right">'
         yield "<strong>Saldo:</strong>"
         yield "</td>"
 
         yield "<td>"
-        yield "{}".format(money_filter(self.saldo)
-                          if self.saldo is not None else "-")
+        yield "{}".format(money_filter(self.saldo) if self.saldo is not None else "-")
         yield "</td>"
 
         yield "</tr>"
@@ -130,12 +127,12 @@ class FinanceRow(BaseModel):
 class FinanceTableSplitted(FinanceTable, SplittedTable):
     class Meta:  # ty: ignore[invalid-attribute-override]
         table_args = {
-            'data-row-style': False,
-            'data-sort-name': False,  # the "valid_on" col doesn't exist here
+            "data-row-style": False,
+            "data-sort-name": False,  # the "valid_on" col doesn't exist here
         }
-        enforced_url_params = {'splitted': True}
+        enforced_url_params = {"splitted": True}
 
-    splits = (('soll', "Soll"), ('haben', "Haben"))
+    splits = (("soll", "Soll"), ("haben", "Haben"))
 
     @t.override
     def __init__(self, **kw: t.Any) -> None:
@@ -144,11 +141,12 @@ class FinanceTableSplitted(FinanceTable, SplittedTable):
 
 
 def no_finance_change() -> bool:
-    return not current_user.has_property('finance_change')
+    return not current_user.has_property("finance_change")
 
 
 class MembershipFeeTable(BootstrapTable):
     """A table for displaying the current membership fees"""
+
     name = Column("Name")
     regular_fee = Column("Regulär")
     payment_deadline = Column("Frist")
@@ -176,7 +174,8 @@ class MembershipFeeRow(BaseModel):
 
 
 class UsersDueTable(BootstrapTable):
-    """A table for displaying the users that """
+    """A table for displaying the users that"""
+
     user_id = Column("Nutzer-ID")
     user = LinkColumn("Name")
     valid_on = Column("Gültig am")
@@ -200,6 +199,7 @@ class BankAccountTable(BootstrapTable):
     :param bool create_account: An optional switch adding
         a “create bank account” button to the toolbar
     """
+
     name = Column("Name")
     bank = Column("Bank")
     iban = IbanColumn("IBAN")
@@ -253,11 +253,11 @@ class BankAccountActivityTable(BootstrapTable):
     def __init__(self, *, finance_change: bool = False, **kw: t.Any) -> None:
         self.finance_change = finance_change
 
-        table_args = kw.pop('table_args', {})
-        table_args.setdefault('data-detail-view', "true")
-        table_args.setdefault('data-row-style', "table.financeRowFormatter")
-        table_args.setdefault('data-detail-formatter', "table.bankAccountActivitiesDetailFormatter")
-        kw['table_args'] = table_args
+        table_args = kw.pop("table_args", {})
+        table_args.setdefault("data-detail-view", "true")
+        table_args.setdefault("data-row-style", "table.financeRowFormatter")
+        table_args.setdefault("data-detail-formatter", "table.bankAccountActivitiesDetailFormatter")
+        kw["table_args"] = table_args
 
         super().__init__(**kw)
 
@@ -281,8 +281,8 @@ class BankAccountActivityTable(BootstrapTable):
 
     class Meta:  # ty: ignore[invalid-attribute-override]
         table_args = {
-            'data-sort-order': 'desc',
-            'data-sort-name': 'valid_on',
+            "data-sort-order": "desc",
+            "data-sort-name": "valid_on",
         }
 
 
@@ -299,13 +299,14 @@ class BankAccountActivityRow(BaseModel):
 
 
 class TransactionTable(BootstrapTable):
-    """A table for displaying bank account activities """
+    """A table for displaying bank account activities"""
+
     account = LinkColumn("Konto")
     amount = Column("Wert")
 
     class Meta:  # ty: ignore[invalid-attribute-override]
         table_args = {
-            'data-row-style': 'table.financeRowFormatter',
+            "data-row-style": "table.financeRowFormatter",
         }
 
 
@@ -320,7 +321,8 @@ class TransactionSplitResponse(TableResponse[TransactionSplitRow]):
 
 
 class UnconfirmedTransactionsTable(BootstrapTable):
-    """A table for displaying unconfirmed transactions """
+    """A table for displaying unconfirmed transactions"""
+
     selection = Column("Checkbox", col_args={"data-checkbox": "true"})
     id = Column("id")
     description = LinkColumn("Beschreibung")

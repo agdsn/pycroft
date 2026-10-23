@@ -2,13 +2,14 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
-    pycroft.model.session
-    ~~~~~~~~~~~~~~~~~~~~~
+pycroft.model.session
+~~~~~~~~~~~~~~~~~~~~~
 
-    This module contains the session stuff for db actions.
+This module contains the session stuff for db actions.
 
-    :copyright: (c) 2011 by AG DSN.
+:copyright: (c) 2011 by AG DSN.
 """
+
 import typing as t
 from typing import overload, Any
 from collections.abc import Callable

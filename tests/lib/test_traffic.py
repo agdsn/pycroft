@@ -23,9 +23,7 @@ def interface(module_session: Session):
         *[(d, True) for d in range(8, 20)],
     ),
 )
-def test_traffic_volume_cleanup(
-    session, interface: Interface, age_days: int, old: bool
-):
+def test_traffic_volume_cleanup(session, interface: Interface, age_days: int, old: bool):
     f.TrafficVolumeFactory(
         timestamp=datetime.utcnow() - timedelta(age_days),
         ip__interface=interface,
@@ -36,10 +34,8 @@ def test_traffic_volume_cleanup(
     got_deleted = num_deleted == 1
 
     if old:
-        assert (
-            got_deleted
-        ), f"Traffic volume from {age_days} days ago didn't get deleted in cleanup"
+        assert got_deleted, f"Traffic volume from {age_days} days ago didn't get deleted in cleanup"
     else:
-        assert (
-            not got_deleted
-        ), f"Traffic volume from {age_days} days ago unexpectedly got deleted in cleanup"
+        assert not got_deleted, (
+            f"Traffic volume from {age_days} days ago unexpectedly got deleted in cleanup"
+        )

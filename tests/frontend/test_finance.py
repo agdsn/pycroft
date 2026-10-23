@@ -110,13 +110,9 @@ def account(module_session: Session) -> Account:
 
 class TestActivityEdit:
     @pytest.fixture(scope="class")
-    def transaction(
-        self, class_session, bank_account, account, activity
-    ) -> Transaction:
+    def transaction(self, class_session, bank_account, account, activity) -> Transaction:
         transaction = f.TransactionFactory(bank_account_activities=[activity])
-        activity.split = Split(
-            account=bank_account.account, transaction=transaction, amount=100
-        )
+        activity.split = Split(account=bank_account.account, transaction=transaction, amount=100)
         Split(account=account, transaction=transaction, amount=-100)
         class_session.add_all([activity, transaction])
         class_session.flush()
@@ -159,12 +155,11 @@ class TestActivityEdit:
             data={},
         )
 
-    def test_edit_assigned_activity(
-        self, client, session, activity, transaction, account
-    ):
+    def test_edit_assigned_activity(self, client, session, activity, transaction, account):
         # read-only form
-        with client.renders_template("generic_form.html"), client.flashes_message(
-            "bereits zugewiesen", "warning"
+        with (
+            client.renders_template("generic_form.html"),
+            client.flashes_message("bereits zugewiesen", "warning"),
         ):
             client.assert_url_ok(
                 url_for("finance.bank_account_activities_edit", activity_id=activity.id)
@@ -206,21 +201,15 @@ class TestAccount:
 
     def test_user_account_show(self, client, member_account):
         with client.renders_template("finance/accounts_show.html"):
-            client.assert_url_ok(
-                url_for("finance.accounts_show", account_id=member_account.id)
-            )
+            client.assert_url_ok(url_for("finance.accounts_show", account_id=member_account.id))
 
     def test_nonexistent_account_show(self, client):
-        client.assert_url_response_code(
-            url_for("finance.accounts_show", account_id=9999), 404
-        )
+        client.assert_url_response_code(url_for("finance.accounts_show", account_id=9999), 404)
 
     def test_system_account_show(self, client, config):
         with client.renders_template("finance/accounts_show.html"):
             client.assert_url_ok(
-                url_for(
-                    "finance.accounts_show", account_id=config.membership_fee_account.id
-                )
+                url_for("finance.accounts_show", account_id=config.membership_fee_account.id)
             )
 
     @pytest.mark.parametrize(
@@ -234,9 +223,7 @@ class TestAccount:
     )
     def test_accounts_show_json(self, client: TestClient, member_account, query_args):
         resp = client.assert_url_ok(
-            url_for(
-                "finance.accounts_show_json", account_id=member_account.id, **query_args
-            ),
+            url_for("finance.accounts_show_json", account_id=member_account.id, **query_args),
         )
         assert (j := resp.json)["name"] == member_account.name
         assert (i := j["items"])
@@ -247,9 +234,7 @@ class TestAccount:
     def test_get_system_accounts(self, config, client):
         accounts = client.assert_ok("finance.json_accounts_system").json["accounts"]
         assert len(accounts) > 0
-        assert config.membership_fee_account.name in [
-            a["account_name"] for a in accounts
-        ]
+        assert config.membership_fee_account.name in [a["account_name"] for a in accounts]
         assert config.membership_fee_account.id in [a["account_id"] for a in accounts]
 
     @pytest.mark.parametrize(
@@ -258,9 +243,7 @@ class TestAccount:
     )
     def test_search_user_account(self, member_account, client, query_from_account):
         query = query_from_account(member_account)
-        resp = client.assert_url_ok(
-            url_for("finance.json_accounts_user_search", query=query)
-        )
+        resp = client.assert_url_ok(url_for("finance.json_accounts_user_search", query=query))
         account = assert_one(resp.json.get("accounts", []))
         assert account["account_id"] == member_account.id
 
@@ -296,15 +279,11 @@ class TestAccountToggleLegacy:
         session.refresh(account)
         assert account.legacy is True
 
-    def test_account_unset_legacy(
-        self, session, client: TestClient, legacy_account: Account
-    ):
+    def test_account_unset_legacy(self, session, client: TestClient, legacy_account: Account):
         assert legacy_account.legacy is True
         client.assert_url_redirects(
             url_for("finance.account_toggle_legacy", account_id=legacy_account.id),
-            expected_location=url_for(
-                "finance.accounts_show", account_id=legacy_account.id
-            ),
+            expected_location=url_for("finance.accounts_show", account_id=legacy_account.id),
         )
         session.refresh(legacy_account)
         assert legacy_account.legacy is False
@@ -329,9 +308,7 @@ class TestAccountCreate:
             data=formdata,
             expected_location=url_for("finance.accounts_list"),
         )
-        acc = session.scalars(
-            select(Account).filter_by(name="Test (newly created)")
-        ).one_or_none()
+        acc = session.scalars(select(Account).filter_by(name="Test (newly created)")).one_or_none()
         assert acc is not None
         assert not acc.legacy
 
@@ -367,9 +344,7 @@ class TestPaymentReminderMail:
                 "finance.payment_reminder_mail", method="POST", data={"confirm": True}
             )
 
-    def test_get_payment_reminder_mail_post(
-        self, session, client: TestClient, activity
-    ):
+    def test_get_payment_reminder_mail_post(self, session, client: TestClient, activity):
         activity.imported_at = datetime.now()
         session.add(activity)
         session.flush()
@@ -453,12 +428,8 @@ class TestUnconfirmedTransaction:
             {"before": "2060-01-01"},
         ],
     )
-    def test_transactions_all_json(
-        self, client: TestClient, query_args: dict[str, str]
-    ):
-        resp = client.assert_url_ok(
-            url_for("finance.transactions_all_json", **query_args)
-        )
+    def test_transactions_all_json(self, client: TestClient, query_args: dict[str, str]):
+        resp = client.assert_url_ok(url_for("finance.transactions_all_json", **query_args))
         assert resp.json["items"]
 
 
@@ -468,9 +439,7 @@ class TestConfirmation:
         self, client: TestClient, unconfirmed_transaction: Transaction, method: str
     ):
         client.assert_url_redirects(
-            url_for(
-                "finance.transaction_confirm", transaction_id=unconfirmed_transaction.id
-            ),
+            url_for("finance.transaction_confirm", transaction_id=unconfirmed_transaction.id),
             method=method,
             expected_location=url_for("finance.transactions_unconfirmed"),
         )
@@ -513,9 +482,7 @@ class TestTransactionDelete:
         class_session.flush()
         return t
 
-    def test_transaction_delete_post(
-        self, client: TestClient, transaction: Transaction
-    ):
+    def test_transaction_delete_post(self, client: TestClient, transaction: Transaction):
         assert transaction.id is not None
         client.assert_url_redirects(
             url_for("finance.transaction_delete", transaction_id=transaction.id),
@@ -594,9 +561,7 @@ def membership_fee(class_session) -> MembershipFee:
 class TestMembershipFeeBook:
     def test_membership_fee_book_get(self, client, membership_fee):
         with client.renders_template("finance/membership_fee_book.html"):
-            client.assert_url_ok(
-                url_for("finance.membership_fee_book", fee_id=membership_fee.id)
-            )
+            client.assert_url_ok(url_for("finance.membership_fee_book", fee_id=membership_fee.id))
 
     def test_membership_fee_book_404(self, client):
         with client.flashes_message("existiert nicht", category="error"):
@@ -713,9 +678,7 @@ class TestMembershipFeeCreate(MembershipFeeTest):
 class TestMembershipFeeEdit(MembershipFeeTest):
     def test_get(self, client, membership_fee):
         with client.renders_template("finance/membership_fee_edit.html"):
-            client.assert_url_ok(
-                url_for("finance.membership_fee_edit", fee_id=membership_fee.id)
-            )
+            client.assert_url_ok(url_for("finance.membership_fee_edit", fee_id=membership_fee.id))
 
     def test_404(self, client):
         client.assert_url_response_code(
@@ -773,9 +736,7 @@ class TestConfirmSelected:
             code=404,
         )
 
-    def test_confirm_selected(
-        self, client: TestClient, unconfirmed_transaction: Transaction
-    ):
+    def test_confirm_selected(self, client: TestClient, unconfirmed_transaction: Transaction):
         resp = client.assert_url_ok(url_for("finance.transactions_unconfirmed_json"))
         assert len(resp.json["items"]) >= 1
         client.assert_url_response_code(

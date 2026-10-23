@@ -81,6 +81,7 @@ def build_full_subnet(interface):
             IP(address=ip, subnet=net, interface=interface) for ip in net.usable_ip_range
         )
         return net
+
     return _build
 
 

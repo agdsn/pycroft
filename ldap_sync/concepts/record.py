@@ -21,6 +21,7 @@ from .types import (
     AttributeValues,
 )
 
+
 def _canonicalize_to_list(
     value: AttributeValues,
 ) -> list[str | bytes | int]:

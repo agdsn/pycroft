@@ -34,7 +34,13 @@ class Balance(Model):
     status: Incomplete
     amount: Incomplete
     date: Incomplete
-    def __init__(self, status: Incomplete | None = ..., amount: Incomplete | None = ..., date: Incomplete | None = ..., **kwargs) -> None: ...
+    def __init__(
+        self,
+        status: Incomplete | None = ...,
+        amount: Incomplete | None = ...,
+        date: Incomplete | None = ...,
+        **kwargs,
+    ) -> None: ...
 
 class Transactions(t.Sequence):
     DEFAULT_PROCESSORS: Incomplete
@@ -42,7 +48,9 @@ class Transactions(t.Sequence):
     tags: Incomplete
     transactions: Incomplete
     data: Incomplete
-    def __init__(self, processors: Incomplete | None = ..., tags: Incomplete | None = ...) -> None: ...
+    def __init__(
+        self, processors: Incomplete | None = ..., tags: Incomplete | None = ...
+    ) -> None: ...
     @property
     def currency(self): ...
     @staticmethod

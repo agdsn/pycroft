@@ -9,8 +9,7 @@ from sqlalchemy.orm import Session
 from pycroft.helpers.interval import single
 from pycroft.lib.search import user_search_query
 from pycroft.model.user import User, PropertyGroup
-from tests.factories import UserFactory, PropertyGroupFactory, \
-    MembershipFactory
+from tests.factories import UserFactory, PropertyGroupFactory, MembershipFactory
 
 
 def s(**kw):
@@ -19,9 +18,7 @@ def s(**kw):
 
 @pytest.fixture(scope="module")
 def other_user(module_session: Session) -> User:
-    return UserFactory.create(
-        name="Franz", login="franz", email="fr@a.nz", with_host=True
-    )
+    return UserFactory.create(name="Franz", login="franz", email="fr@a.nz", with_host=True)
 
 
 @pytest.mark.usefixtures("session")
@@ -34,9 +31,9 @@ class TestSearchUserBaseData:
     def user(self, class_session) -> User:
         return UserFactory.create(
             with_host=True,
-            name='Hans Müller',
-            login='hans.mueller',
-            email='hans@mueller.com',
+            name="Hans Müller",
+            login="hans.mueller",
+            email="hans@mueller.com",
         )
 
     def test_name_search(self, user):

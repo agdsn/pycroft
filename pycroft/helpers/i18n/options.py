@@ -2,6 +2,7 @@
 pycroft.helpers.i18n.options
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 """
+
 from __future__ import annotations
 
 import typing

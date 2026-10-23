@@ -5,6 +5,7 @@
 pycroft.model.facilities
 ~~~~~~~~~~~~~~~~~~~~~~~~
 """
+
 from __future__ import annotations
 import operator
 import typing as t
@@ -78,12 +79,12 @@ class Room(IntegerIdModel):
     swdd_vo_suchname: Mapped[str | None]
 
     connected_patch_ports: Mapped[list[PatchPort]] = relationship(
-        primaryjoin='and_(PatchPort.room_id == Room.id, PatchPort.switch_port_id.is_not(None))',
+        primaryjoin="and_(PatchPort.room_id == Room.id, PatchPort.switch_port_id.is_not(None))",
         viewonly=True,
     )
 
     users_sharing_address: Mapped[list[User]] = relationship(
-        primaryjoin='and_(User.room_id == Room.id, User.address_id == Room.address_id)',
+        primaryjoin="and_(User.room_id == Room.id, User.address_id == Room.address_id)",
         viewonly=True,
     )
 
@@ -91,9 +92,7 @@ class Room(IntegerIdModel):
     users: Mapped[list[User]] = relationship(back_populates="room", viewonly=True)
     hosts: Mapped[list[Host]] = relationship(back_populates="room")
     room_history_entries: Mapped[list[RoomHistoryEntry]] = relationship(
-        back_populates="room",
-        order_by="RoomHistoryEntry.id",
-        viewonly=True
+        back_populates="room", order_by="RoomHistoryEntry.id", viewonly=True
     )
     log_entries: Mapped[list[RoomLogEntry]] = relationship(
         back_populates="room", viewonly=True, cascade="all, delete-orphan"
@@ -128,7 +127,10 @@ class Room(IntegerIdModel):
         from pycroft.model.host import Host
         from pycroft.model.host import Switch
 
-        return Host.q.join(Switch, Host.id == Switch.host_id).filter(Host.room_id==self.id).first() is not None
+        return (
+            Host.q.join(Switch, Host.id == Switch.host_id).filter(Host.room_id == self.id).first()
+            is not None
+        )
 
     @property
     def latest_log_entry(self) -> RoomLogEntry | None:
@@ -136,14 +138,17 @@ class Room(IntegerIdModel):
             return None
         return max(le, key=operator.attrgetter("created_at"))
 
-    __table_args__ = (UniqueConstraint('swdd_vo_suchname'),)
+    __table_args__ = (UniqueConstraint("swdd_vo_suchname"),)
 
 
 manager = ddl.DDLManager()
-manager.add_trigger(Room.__table__, ddl.Trigger(
-    'room_address_cleanup_trigger',
+manager.add_trigger(
     Room.__table__,
-    ('UPDATE', 'DELETE'),
-    f'{address_remove_orphans.name}()',
-))
+    ddl.Trigger(
+        "room_address_cleanup_trigger",
+        Room.__table__,
+        ("UPDATE", "DELETE"),
+        f"{address_remove_orphans.name}()",
+    ),
+)
 manager.register()

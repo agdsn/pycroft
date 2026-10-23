@@ -5,6 +5,7 @@
 pycroft.helpers.i18n.serde
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 """
+
 from __future__ import annotations
 
 import operator
@@ -78,15 +79,11 @@ serialize_map: dict[type, t.Callable[..., t.Any]] = {
 def deserialize_interval(value: dict[str, t.Any]) -> Interval[t.Any]:
     try:
         lower_value = (
-            deserialize_param(u)
-            if (u := value["lower_value"]) is not None
-            else NegativeInfinity
+            deserialize_param(u) if (u := value["lower_value"]) is not None else NegativeInfinity
         )
         lower_closed = value["lower_closed"]
         upper_value = (
-            deserialize_param(u)
-            if (u := value["upper_value"]) is not None
-            else PositiveInfinity
+            deserialize_param(u) if (u := value["upper_value"]) is not None else PositiveInfinity
         )
         upper_closed = value["upper_closed"]
     except KeyError as e:
@@ -133,16 +130,15 @@ deserialize_map: dict[str, t.Callable[..., t.Any]] = {
 def serialize_param(param):
     concrete_type = type(param)
     serializers = (
-        (type_, serialize_map[type_])
-        for type_ in concrete_type.__mro__
-        if type_ in serialize_map
+        (type_, serialize_map[type_]) for type_ in concrete_type.__mro__ if type_ in serialize_map
     )
     try:
         type_, serializer = next(serializers)
     except StopIteration:
         raise TypeError(
-            "No serialization available for type {} or any"
-            "supertype".format(qualified_typename(concrete_type))
+            "No serialization available for type {} or anysupertype".format(
+                qualified_typename(concrete_type)
+            )
         ) from None
     return {"type": qualified_typename(type_), "value": serializer(param)}
 

@@ -34,10 +34,10 @@ class HadesCelery(Celery):
         self.conf["result_exchange_type"] = "direct"
         self.conf["task_default_exchange_type"] = "topic"
         self.conf["task_create_missing_queues"] = False
-        self.conf['task_serializer'] = 'json'
-        self.conf['event_serializer'] = 'json'
-        self.conf['result_serializer'] = 'json'
-        self.conf['broker_transport_options'] = {
+        self.conf["task_serializer"] = "json"
+        self.conf["event_serializer"] = "json"
+        self.conf["result_serializer"] = "json"
+        self.conf["broker_transport_options"] = {
             "max_retries": 3,
             "interval_start": 0,
             "interval_step": 0.2,
@@ -50,6 +50,6 @@ class HadesCelery(Celery):
     def signature(self, *a, **kw):
         if self.routing_key is not None:
             kw = kw.copy()
-            kw.setdefault('options', {})
-            kw['options']['routing_key'] = self.routing_key
+            kw.setdefault("options", {})
+            kw["options"]["routing_key"] = self.routing_key
         return super().signature(*a, **kw)

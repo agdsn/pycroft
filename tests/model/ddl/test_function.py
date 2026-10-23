@@ -7,10 +7,10 @@ class TestFunction:
         func = Function("do_foo", [], "INTEGER", "BEGIN; RETURN NULL; END;")
         stmt = CreateFunction(func)
         assert literal_compile(stmt) == (
-            'CREATE FUNCTION do_foo() '
-            'RETURNS INTEGER VOLATILE LANGUAGE sql AS $$\n'
-            'BEGIN; RETURN NULL; END;\n'
-            '$$'
+            "CREATE FUNCTION do_foo() "
+            "RETURNS INTEGER VOLATILE LANGUAGE sql AS $$\n"
+            "BEGIN; RETURN NULL; END;\n"
+            "$$"
         )
 
     def test_create_function_with_quoting(self):
@@ -18,7 +18,7 @@ class TestFunction:
         stmt = CreateFunction(func)
         assert literal_compile(stmt) == (
             'CREATE FUNCTION "do foo"() '
-            'RETURNS INTEGER VOLATILE LANGUAGE sql AS $$\n'
-            'BEGIN; RETURN NULL; END;\n'
-            '$$'
+            "RETURNS INTEGER VOLATILE LANGUAGE sql AS $$\n"
+            "BEGIN; RETURN NULL; END;\n"
+            "$$"
         )

@@ -54,6 +54,7 @@ class PycroftFlask(Flask):
     """
     Extend the Flask class to set Jinja options.
     """
+
     jinja_options = ImmutableDict(
         Flask.jinja_options,
         extensions=[
@@ -194,18 +195,20 @@ def make_app(hades_logs: bool = True) -> PycroftFlask:
             message = gettext("Page not found.")
         else:
             raise AssertionError()
-        return render_template('error.html', error=message), code
+        return render_template("error.html", error=message), code
 
-    @app.route('/')
+    @app.route("/")
     def redirect_to_index() -> ResponseValue:
-        return redirect(url_for('user.overview'))
+        return redirect(url_for("user.overview"))
 
-    @app.route('/debug-sentry')
+    @app.route("/debug-sentry")
     def debug_sentry() -> t.NoReturn:
         app.logger.warning("Someone used the debug-sentry endpoint! Also, this is a test warning.")
         app.logger.info("An info log for inbetween")
-        app.logger.error("Someone used the debug-sentry endpoint! Also, this is a test error.",
-                         extra={'pi': 3.141})
+        app.logger.error(
+            "Someone used the debug-sentry endpoint! Also, this is a test error.",
+            extra={"pi": 3.141},
+        )
         div_by_zero = 1 / 0  # noqa
         assert False  # noqa: B011
 
@@ -267,7 +270,8 @@ def register_pyinstrument(app: Flask) -> None:
 IGNORED_EXCEPTION_TYPES = (HTTPException,)
 
 
-if dsn := os.getenv('PYCROFT_SENTRY_DSN'):
+if dsn := os.getenv("PYCROFT_SENTRY_DSN"):
+
     def before_send[_TE](event: _TE, hint: dict[str, t.Any]) -> _TE | None:
         if "exc_info" in hint:
             _exc_type, exc_value, _tb = hint["exc_info"]
@@ -284,7 +288,7 @@ if dsn := os.getenv('PYCROFT_SENTRY_DSN'):
         dsn=dsn,
         integrations=[FlaskIntegration(), logging_integration],
         traces_sample_rate=1.0,
-        before_send=before_send
+        before_send=before_send,
     )
 
 

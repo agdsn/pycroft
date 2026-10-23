@@ -5,6 +5,7 @@
 pycroft.model.port
 ~~~~~~~~~~~~~~~~~~
 """
+
 from __future__ import annotations
 
 from sqlalchemy import String, ForeignKey
@@ -29,9 +30,7 @@ class PatchPort(IntegerIdModel):
     )
     switch_port: Mapped[SwitchPort | None] = relationship(back_populates="patch_port")
 
-    room_id: Mapped[int] = mapped_column(
-        ForeignKey("room.id", ondelete="CASCADE"), index=True
-    )
+    room_id: Mapped[int] = mapped_column(ForeignKey("room.id", ondelete="CASCADE"), index=True)
     room: Mapped[Room] = relationship(
         foreign_keys=room_id,
         back_populates="patch_ports",
@@ -40,15 +39,16 @@ class PatchPort(IntegerIdModel):
     switch_room_id: Mapped[int] = mapped_column(ForeignKey("room.id"), index=True)
     switch_room: Mapped[Room] = relationship(foreign_keys=switch_room_id)
 
-    #__table_args__ = (UniqueConstraint("name", "switch_room_id"),)
+    # __table_args__ = (UniqueConstraint("name", "switch_room_id"),)
 
 
 # Ensure that a connected switch is in the switch_room (patch_port.switch_room_id)
 manager.add_function(
     PatchPort.__table__,
     ddl.Function(
-        'patch_port_switch_in_switch_room', [],
-        'trigger',
+        "patch_port_switch_in_switch_room",
+        [],
+        "trigger",
         """
         DECLARE
           v_patch_port patch_port;
@@ -70,19 +70,22 @@ manager.add_function(
           RETURN NULL;
         END;
         """,
-        volatility='stable', strict=True, language='plpgsql'
-    )
+        volatility="stable",
+        strict=True,
+        language="plpgsql",
+    ),
 )
 
 manager.add_constraint_trigger(
     PatchPort.__table__,
     ddl.ConstraintTrigger(
-        'patch_port_switch_in_switch_room_trigger',
+        "patch_port_switch_in_switch_room_trigger",
         PatchPort.__table__,
-        ('INSERT', 'UPDATE'),
-        'patch_port_switch_in_switch_room()',
-        deferrable=True, initially_deferred=True,
-    )
+        ("INSERT", "UPDATE"),
+        "patch_port_switch_in_switch_room()",
+        deferrable=True,
+        initially_deferred=True,
+    ),
 )
 
 manager.register()

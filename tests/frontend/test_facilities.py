@@ -24,9 +24,7 @@ def client(module_test_client: TestClient) -> TestClient:
 
 
 def test_root_redirect(client):
-    client.assert_redirects(
-        "facilities.root", expected_location=url_for("facilities.overview")
-    )
+    client.assert_redirects("facilities.root", expected_location=url_for("facilities.overview"))
 
 
 class TestSitesOverview:
@@ -50,9 +48,7 @@ class TestSite:
             client.assert_url_ok(url_for("facilities.site_show", site_id=site.id))
 
     def test_get_nonexistent_site(self, client):
-        client.assert_url_response_code(
-            url_for("facilities.site_show", site_id=999), code=404
-        )
+        client.assert_url_response_code(url_for("facilities.site_show", site_id=999), code=404)
 
 
 class TestBuilding:
@@ -85,14 +81,13 @@ class TestBuilding:
             client.assert_url_ok(f"/facilities/room/{room.id}")
 
     def test_show_nonexistent_room(self, client):
-        client.assert_url_response_code(
-            url_for("facilities.room_show", room_id=999), code=404
-        )
+        client.assert_url_response_code(url_for("facilities.room_show", room_id=999), code=404)
 
     def test_post_room_logs(self, client, room):
-        with client.renders_template(
-            "facilities/room_show.html"
-        ), client.flashes_message("Kommentar hinzugefügt", category="success"):
+        with (
+            client.renders_template("facilities/room_show.html"),
+            client.flashes_message("Kommentar hinzugefügt", category="success"),
+        ):
             client.assert_url_ok(
                 url_for("facilities.room_show", room_id=room.id),
                 method="POST",
@@ -100,9 +95,7 @@ class TestBuilding:
             )
 
     def test_room_logs_json(self, client, room):
-        resp = client.assert_url_ok(
-            url_for("facilities.room_logs_json", room_id=room.id)
-        )
+        resp = client.assert_url_ok(url_for("facilities.room_logs_json", room_id=room.id))
         assert "items" in (j := resp.json)
         assert j["items"]
 
@@ -116,26 +109,18 @@ class TestBuilding:
         )
 
     def test_building_levels_json(self, client, building):
-        resp = client.assert_url_ok(
-            url_for("facilities.json_levels", building=building.id)
-        )
+        resp = client.assert_url_ok(url_for("facilities.json_levels", building=building.id))
         assert resp.json.get("items")
 
     def test_building_rooms_json(self, client, room):
         resp = client.assert_url_ok(
-            url_for(
-                "facilities.json_rooms", building=room.building.id, level=room.level
-            )
+            url_for("facilities.json_rooms", building=room.building.id, level=room.level)
         )
         assert resp.json.get("items")
 
-    def test_building_level_rooms(
-        self, client: TestClient, building: Building, room: Room
-    ):
+    def test_building_level_rooms(self, client: TestClient, building: Building, room: Room):
         with client.renders_template("facilities/rooms.html"):
-            client.assert_url_ok(
-                f"/facilities/building/{building.id}/level/{room.level}/rooms/"
-            )
+            client.assert_url_ok(f"/facilities/building/{building.id}/level/{room.level}/rooms/")
 
 
 class TestRoomTenancies:
@@ -187,9 +172,7 @@ class TestOvercrowdedRooms:
             client.assert_url_ok(f"/facilities/overcrowded/{building.id}")
 
     def test_per_building_overcrowded_json(self, client, building):
-        resp = client.assert_url_ok(
-            url_for("facilities.overcrowded_json", building=building.id)
-        )
+        resp = client.assert_url_ok(url_for("facilities.overcrowded_json", building=building.id))
         assert_one(resp.json.get("items"))
 
 
@@ -279,8 +262,9 @@ class TestRoomEdit:
             client.assert_url_response_code(url_for(ep, room_id=999), code=404)
 
     def test_get(self, url, client):
-        with client.renders_template("generic_form.html"), client.flashes_message(
-            "Adresse des Raums teilen", category="info"
+        with (
+            client.renders_template("generic_form.html"),
+            client.flashes_message("Adresse des Raums teilen", category="info"),
         ):
             client.assert_url_ok(url)
 
@@ -456,16 +440,12 @@ class TestPatchPortEdit:
 
     def test_get_nonexistent_patch_port(self, client, ep, room):
         with client.flashes_message("nicht gefunden", category="error"):
-            client.assert_url_redirects(
-                url_for(ep, switch_room_id=room.id, patch_port_id=999)
-            )
+            client.assert_url_redirects(url_for(ep, switch_room_id=room.id, patch_port_id=999))
 
     def test_get_patch_port_wrong_room(self, client, ep, room, patch_port_other_room):
         with client.flashes_message("ist nicht im .*raum", category="error"):
             client.assert_url_redirects(
-                url_for(
-                    ep, switch_room_id=room.id, patch_port_id=patch_port_other_room.id
-                )
+                url_for(ep, switch_room_id=room.id, patch_port_id=patch_port_other_room.id)
             )
 
     def test_get_correct_patch_port(self, client, url):
@@ -502,9 +482,7 @@ class TestPatchPortDelete:
 
     @pytest.fixture(scope="class")
     def url(self, ep, patch_port) -> str:
-        return url_for(
-            ep, switch_room_id=patch_port.switch_room_id, patch_port_id=patch_port.id
-        )
+        return url_for(ep, switch_room_id=patch_port.switch_room_id, patch_port_id=patch_port.id)
 
     def test_get(self, client, url):
         with client.renders_template("generic_form.html"):

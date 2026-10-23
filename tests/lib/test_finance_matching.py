@@ -18,9 +18,7 @@ def team_account(module_session: Session) -> Account:
 def activity(module_session: Session) -> BankAccountActivity:
     bank_account = BankAccountFactory.create()
     activity, *rest = (
-        BankAccountActivityFactory.create(
-            bank_account=bank_account, reference=reference
-        )
+        BankAccountActivityFactory.create(bank_account=bank_account, reference=reference)
         for reference in [
             "Erstattung 2020-N15 (Pizza)",  # this activity should match
             "Erstattung 2020-NN",

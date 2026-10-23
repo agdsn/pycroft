@@ -281,6 +281,7 @@ def user_non_member(module_session) -> User:
 def user_non_member2(module_session) -> User:
     return f.UserFactory()
 
+
 @pytest.fixture
 def user_without_wifi_pw(module_session, config) -> User:
     user = f.UserFactory(

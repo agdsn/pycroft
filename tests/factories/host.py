@@ -11,9 +11,9 @@ from tests.factories.user import UserFactory
 
 class UnicastMacProvider(BaseProvider):
     def unicast_mac_address(self):
-        mac = [self.generator.random.randint(0x00, 0xff) for i in range(0, 6)]
-        mac[0] = mac[0] & 0xfe
-        return ':'.join('%02x' % x for x in mac)
+        mac = [self.generator.random.randint(0x00, 0xFF) for i in range(0, 6)]
+        mac[0] = mac[0] & 0xFE
+        return ":".join("%02x" % x for x in mac)
 
 
 factory.Faker.add_provider(UnicastMacProvider)
@@ -22,10 +22,10 @@ factory.Faker.add_provider(UnicastMacProvider)
 class IPFactory(BaseFactory):
     class Meta:
         model = IP
-        exclude = ('str_address',)
+        exclude = ("str_address",)
 
     # TODO is there a way to ensure that the IP address we generate is in the given subnet?
-    str_address = factory.Faker('ipv4', network=False)
+    str_address = factory.Faker("ipv4", network=False)
     address = factory.LazyAttribute(lambda o: IPAddress(o.str_address))
     # interface = factory.SubFactory(InterfaceFactory)
     subnet = factory.SubFactory(SubnetFactory, address=IPNetwork("0.0.0.0/0"))
@@ -34,13 +34,15 @@ class IPFactory(BaseFactory):
 class InterfaceFactory(BaseFactory):
     class Meta:
         model = Interface
-    mac = factory.Faker('unicast_mac_address')
-    host = factory.SubFactory('tests.factories.host.BareHostFactory')
-    ip = factory.RelatedFactory(IPFactory, 'interface')
+
+    mac = factory.Faker("unicast_mac_address")
+    host = factory.SubFactory("tests.factories.host.BareHostFactory")
+    ip = factory.RelatedFactory(IPFactory, "interface")
 
 
 class BareHostFactory(BaseFactory):
     """A host without owner or interface."""
+
     class Meta:
         model = Host
 
@@ -49,7 +51,7 @@ class BareHostFactory(BaseFactory):
 
 class HostFactory(BareHostFactory):
     owner = factory.SubFactory(UserFactory)
-    interface = factory.RelatedFactory(InterfaceFactory, 'host')
+    interface = factory.RelatedFactory(InterfaceFactory, "host")
 
 
 class SwitchFactory(BaseFactory):
@@ -57,13 +59,14 @@ class SwitchFactory(BaseFactory):
         model = Switch
 
     host = factory.SubFactory(HostFactory, interface=None, room__inhabitable=False)
-    management_ip = factory.Faker('ipv4')
-    switch_port = factory.RelatedFactory('tests.factories.host.SwitchPortFactory', 'switch')
+    management_ip = factory.Faker("ipv4")
+    switch_port = factory.RelatedFactory("tests.factories.host.SwitchPortFactory", "switch")
 
 
 class SwitchPortFactory(BaseFactory):
     class Meta:
         model = SwitchPort
+
     switch = factory.SubFactory(SwitchFactory)
     name = factory.Sequence(lambda n: f"SwitchPort {n}")
 

@@ -2,13 +2,14 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
-    pycroft.model.user
-    ~~~~~~~~~~~~~~~~~~
+pycroft.model.user
+~~~~~~~~~~~~~~~~~~
 
-    This module contains the class User.
+This module contains the class User.
 
-    :copyright: (c) 2011 by AG DSN.
+:copyright: (c) 2011 by AG DSN.
 """
+
 from __future__ import annotations
 
 import operator
@@ -53,9 +54,12 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.util import has_identity
 
 from pycroft.helpers.interval import single, Interval, starting_from
-from pycroft.helpers.user import hash_password, verify_password, \
-    cleartext_password, \
-    clear_password_prefix
+from pycroft.helpers.user import (
+    hash_password,
+    verify_password,
+    cleartext_password,
+    clear_password_prefix,
+)
 from pycroft.helpers import utc
 from pycroft.model import session, ddl
 from pycroft.model.address import Address, address_remove_orphans
@@ -94,10 +98,9 @@ class IllegalEmailError(PycroftModelException, ValueError):
 
 
 str_deferred = t.Annotated[str, mapped_column(deferred=True)]
-room_fk = t.Annotated[
-    int,
-    mapped_column(ForeignKey("room.id", ondelete="SET NULL"), index=True)
-]
+room_fk = t.Annotated[int, mapped_column(ForeignKey("room.id", ondelete="SET NULL"), index=True)]
+
+
 class BaseUser(IntegerIdModel):
     __abstract__ = True
 
@@ -127,28 +130,92 @@ class BaseUser(IntegerIdModel):
             # Can continue with lowercase characters, numbers and some punctuation
             # but between punctuation characters must be characters or numbers
             (?:[.-]?[a-z0-9])+$
-            """, re.VERBOSE)
+            """,
+        re.VERBOSE,
+    )
     login_regex_ci = re.compile(login_regex.pattern, re.VERBOSE | re.IGNORECASE)
-    email_regex = re.compile(r"^[a-zA-Z0-9!#$%&'*+\-/=?^_`{|}~]+"
-                             r"(?:\.[a-zA-Z0-9!#$%&'*+\-/=?^_`{|}~]+)*"
-                             r"@(?:[a-zA-Z0-9]+(?:\.|-))+[a-zA-Z]+$")
+    email_regex = re.compile(
+        r"^[a-zA-Z0-9!#$%&'*+\-/=?^_`{|}~]+"
+        r"(?:\.[a-zA-Z0-9!#$%&'*+\-/=?^_`{|}~]+)*"
+        r"@(?:[a-zA-Z0-9]+(?:\.|-))+[a-zA-Z]+$"
+    )
 
-    blocked_logins = {"abuse", "admin", "administrator", "autoconfig",
-                      "broadcasthost", "root", "daemon", "bin", "sys", "sync",
-                      "games", "man", "hostmaster", "imap", "info", "is",
-                      "isatap", "it", "localdomain", "localhost",
-                      "lp", "mail", "mailer-daemon", "news", "uucp", "proxy",
-                      # ground control to
-                      "majordom", "marketing", "mis", "noc", "website", "api",
-                      "noreply", "no-reply",
-                      "pop", "pop3", "postmaster",
-                      "postgres", "sales", "smtp", "ssladmin", "status",
-                      "ssladministrator", "sslwebmaster", "support",
-                      "sysadmin", "usenet", "webmaster", "wpad", "www",
-                      "wwwadmin", "backup", "msql", "operator", "user",
-                      "ftp", "ftpadmin", "guest", "bb", "nobody", "www-data",
-                      "bacula", "contact", "email", "privacy", "anonymous",
-                      "web", "git", "username", "log", "login", "help", "name"}
+    blocked_logins = {
+        "abuse",
+        "admin",
+        "administrator",
+        "autoconfig",
+        "broadcasthost",
+        "root",
+        "daemon",
+        "bin",
+        "sys",
+        "sync",
+        "games",
+        "man",
+        "hostmaster",
+        "imap",
+        "info",
+        "is",
+        "isatap",
+        "it",
+        "localdomain",
+        "localhost",
+        "lp",
+        "mail",
+        "mailer-daemon",
+        "news",
+        "uucp",
+        "proxy",
+        # ground control to
+        "majordom",
+        "marketing",
+        "mis",
+        "noc",
+        "website",
+        "api",
+        "noreply",
+        "no-reply",
+        "pop",
+        "pop3",
+        "postmaster",
+        "postgres",
+        "sales",
+        "smtp",
+        "ssladmin",
+        "status",
+        "ssladministrator",
+        "sslwebmaster",
+        "support",
+        "sysadmin",
+        "usenet",
+        "webmaster",
+        "wpad",
+        "www",
+        "wwwadmin",
+        "backup",
+        "msql",
+        "operator",
+        "user",
+        "ftp",
+        "ftpadmin",
+        "guest",
+        "bb",
+        "nobody",
+        "www-data",
+        "bacula",
+        "contact",
+        "email",
+        "privacy",
+        "anonymous",
+        "web",
+        "git",
+        "username",
+        "log",
+        "login",
+        "help",
+        "name",
+    }
 
     login_character_limit = 22
 
@@ -159,7 +226,7 @@ class BaseUser(IntegerIdModel):
         if password is not None:
             self.password = password
 
-    @validates('login')
+    @validates("login")
     def validate_login(self, _, value):
         if not self.login_regex.match(value):
             raise IllegalLoginError(
@@ -179,7 +246,7 @@ class BaseUser(IntegerIdModel):
             )
         return value
 
-    @validates('email')
+    @validates("email")
     def validate_email(self, _, value):
         if value is None:
             return value
@@ -187,17 +254,14 @@ class BaseUser(IntegerIdModel):
             raise IllegalEmailError(f"Illegal email '{value}'")
         return value
 
-    @validates('passwd_hash')
+    @validates("passwd_hash")
     def validate_passwd_hash(self, _, value):
         assert value is not None, "Cannot clear the password hash!"
-        assert len(value) > 9, "A password-hash with less than 9 chars is " \
-                               "not correct!"
+        assert len(value) > 9, "A password-hash with less than 9 chars is not correct!"
         return value
 
     def check_password(self, plaintext_password: str) -> bool:
-        """verify a given plaintext password against the users passwd hash.
-
-        """
+        """verify a given plaintext password against the users passwd hash."""
         return verify_password(plaintext_password, self.passwd_hash)
 
     @property
@@ -244,17 +308,12 @@ class User(BaseUser, UserMixin):
 
     # backrefs
     memberships: Mapped[list[Membership]] = relationship(
-        back_populates="user",
-        cascade="all, delete-orphan"
+        back_populates="user", cascade="all, delete-orphan"
     )
     room_history_entries: Mapped[list[RoomHistoryEntry]] = relationship(
-        back_populates="user",
-        order_by="RoomHistoryEntry.id",
-        viewonly=True
+        back_populates="user", order_by="RoomHistoryEntry.id", viewonly=True
     )
-    hosts: Mapped[list[Host]] = relationship(
-        back_populates="owner", cascade="all, delete-orphan"
-    )
+    hosts: Mapped[list[Host]] = relationship(back_populates="owner", cascade="all, delete-orphan")
 
     mpsk_clients: Mapped[list[MPSKClient]] = relationship(
         back_populates="owner", cascade="all, delete-orphan"
@@ -264,8 +323,10 @@ class User(BaseUser, UserMixin):
         back_populates="author", viewonly=True
     )
     log_entries: Mapped[list[UserLogEntry]] = relationship(
-        back_populates="user", foreign_keys="UserLogEntry.user_id",
-        viewonly=True, cascade="all, delete-orphan"
+        back_populates="user",
+        foreign_keys="UserLogEntry.user_id",
+        viewonly=True,
+        cascade="all, delete-orphan",
     )
     task_log_entries: Mapped[list[TaskLogEntry]] = relationship(
         back_populates="user", viewonly=True
@@ -310,30 +371,35 @@ class User(BaseUser, UserMixin):
     def has_custom_address(cls):
         return and_(
             cls.room_id.isnot(None),
-            exists(select(null())
-                  .select_from(Room)
-                  .where(Room.id == cls.room_id)
-                  .where(Room.address_id != cls.address_id))
+            exists(
+                select(null())
+                .select_from(Room)
+                .where(Room.id == cls.room_id)
+                .where(Room.address_id != cls.address_id)
+            ),
         )
 
-    @validates('login')
+    @validates("login")
     @t.override
     def validate_login(self, _, value):
-        assert not has_identity(
-            self), "user already in the database - cannot change login anymore!"
+        assert not has_identity(self), "user already in the database - cannot change login anymore!"
 
         return super().validate_login(_, value)
 
-    property_groups = relationship("PropertyGroup",
-                                   secondary=lambda: Membership.__table__,
-                                   viewonly=True)
+    property_groups = relationship(
+        "PropertyGroup", secondary=lambda: Membership.__table__, viewonly=True
+    )
 
     @hybrid_method
     def traffic_for_days(self, days):
         from pycroft.model.traffic import TrafficVolume
 
-        return sum(v.amount for v in TrafficVolume.q.filter_by(user_id=self.id)
-                   .filter(TrafficVolume.timestamp >= (session.utcnow() - timedelta(days-1)).date()))
+        return sum(
+            v.amount
+            for v in TrafficVolume.q.filter_by(user_id=self.id).filter(
+                TrafficVolume.timestamp >= (session.utcnow() - timedelta(days - 1)).date()
+            )
+        )
 
     @traffic_for_days.expression
     def traffic_for_days(self, days):
@@ -345,12 +411,12 @@ class User(BaseUser, UserMixin):
             .date()
             .where(TrafficVolume.user_id == self.id)
         )
+
     #: This is a relationship to the `current_property` view filtering out
     #: the entries with `denied=True`.
     current_properties: Mapped[list[CurrentProperty]] = relationship(
         "CurrentProperty",
-        primaryjoin="and_(User.id == foreign(CurrentProperty.user_id),"
-        "~CurrentProperty.denied)",
+        primaryjoin="and_(User.id == foreign(CurrentProperty.user_id),~CurrentProperty.denied)",
         order_by="CurrentProperty.property_name",
         viewonly=True,
     )
@@ -383,8 +449,10 @@ class User(BaseUser, UserMixin):
 
         :returns: `None` if the `wifi_passwd_hash` is not set or is not cleartext.
         """
-        if self.wifi_passwd_hash is not None and self.wifi_passwd_hash.startswith(clear_password_prefix):
-            return self.wifi_passwd_hash.replace(clear_password_prefix, '', 1)
+        if self.wifi_passwd_hash is not None and self.wifi_passwd_hash.startswith(
+            clear_password_prefix
+        ):
+            return self.wifi_passwd_hash.replace(clear_password_prefix, "", 1)
 
         return None
 
@@ -410,10 +478,10 @@ class User(BaseUser, UserMixin):
             return user if user.check_password(plaintext_password) else None
 
     current_memberships = relationship(
-        'Membership',
-        primaryjoin='and_(Membership.user_id==User.id,'
-                    '     Membership.active_during.contains(func.current_timestamp()))',
-        viewonly=True
+        "Membership",
+        primaryjoin="and_(Membership.user_id==User.id,"
+        "     Membership.active_during.contains(func.current_timestamp()))",
+        viewonly=True,
     )
 
     @hybrid_method
@@ -421,39 +489,41 @@ class User(BaseUser, UserMixin):
         if when is None:
             now = session.utcnow()
             when = single(now)
-        return [m for m in self.memberships
-                if when.overlaps(m.active_during.closure)]
+        return [m for m in self.memberships if when.overlaps(m.active_during.closure)]
 
     @active_memberships.expression
     def active_memberships(cls, when=None):
         return (
             select(Membership)
             .select_from(join(cls, Membership))
-            .where(Membership.active_during & when if when
-                   else Membership.active_during.contains(func.current_timestamp()))
+            .where(
+                Membership.active_during & when
+                if when
+                else Membership.active_during.contains(func.current_timestamp())
+            )
         )
 
     @hybrid_method
     def active_property_groups(self, when: Interval | None = None) -> list[PropertyGroup]:
         sess = object_session(self)
         when = when or single(session.utcnow())
-        return sess.query(
-            PropertyGroup
-        ).join(
-            Membership
-        ).filter(
-            Membership.active_during & when,
-            Membership.user_id == self.id
-        ).all()
+        return (
+            sess.query(PropertyGroup)
+            .join(Membership)
+            .filter(Membership.active_during & when, Membership.user_id == self.id)
+            .all()
+        )
 
     @active_property_groups.expression
     def active_property_groups(cls, when=None):
-        return select(PropertyGroup).select_from(
-            join(PropertyGroup,
-                 Membership).join(cls)
-        ).where(
-            Membership.active_during & when if when
-            else Membership.active_during.contains(func.current_timestamp())
+        return (
+            select(PropertyGroup)
+            .select_from(join(PropertyGroup, Membership).join(cls))
+            .where(
+                Membership.active_during & when
+                if when
+                else Membership.active_during.contains(func.current_timestamp())
+            )
         )
 
     def member_of(self, group: PropertyGroup, when: Interval | None = None) -> bool:
@@ -479,8 +549,10 @@ class User(BaseUser, UserMixin):
 
     @property
     def permission_level(self) -> int:
-        return max((membership.group.permission_level for membership in self.active_memberships()),
-                   default=0)
+        return max(
+            (membership.group.permission_level for membership in self.active_memberships()),
+            default=0,
+        )
 
     @property
     def email_internal(self):
@@ -505,8 +577,9 @@ def create_pgcrypto(target, connection, **kw):
 manager.add_function(
     User.__table__,
     ddl.Function(
-        'user_room_change_update_history', [],
-        'trigger',
+        "user_room_change_update_history",
+        [],
+        "trigger",
         """
         BEGIN
             IF old.room_id IS DISTINCT FROM new.room_id THEN
@@ -530,27 +603,32 @@ manager.add_function(
             RETURN NULL;
         END;
         """,
-        volatility='volatile', strict=True, language='plpgsql'
-    )
+        volatility="volatile",
+        strict=True,
+        language="plpgsql",
+    ),
 )
 
 manager.add_trigger(
     User.__table__,
     ddl.Trigger(
-        'user_room_change_update_history_trigger',
+        "user_room_change_update_history_trigger",
         User.__table__,
-        ('UPDATE', 'INSERT'),
-        'user_room_change_update_history()'
-    )
+        ("UPDATE", "INSERT"),
+        "user_room_change_update_history()",
+    ),
 )
 
 
-manager.add_trigger(User.__table__, ddl.Trigger(
-    'user_address_cleanup_trigger',
+manager.add_trigger(
     User.__table__,
-    ('UPDATE', 'DELETE'),
-    f'{address_remove_orphans.name}()',
-))
+    ddl.Trigger(
+        "user_address_cleanup_trigger",
+        User.__table__,
+        ("UPDATE", "DELETE"),
+        f"{address_remove_orphans.name}()",
+    ),
+)
 
 
 class Group(IntegerIdModel):
@@ -577,59 +655,62 @@ class Group(IntegerIdModel):
         :param Interval when:
         :rtype: list[User]
         """
-        return object_session(self).query(User).join(
-            Membership, Membership.user_id == User.id
-        ).filter(
-            (Membership.active_during & when) if when
-            else Membership.active_during.contains(func.current_timestamp()),
-            Membership.group_id == self.id
-        ).all()
+        return (
+            object_session(self)
+            .query(User)
+            .join(Membership, Membership.user_id == User.id)
+            .filter(
+                (Membership.active_during & when)
+                if when
+                else Membership.active_during.contains(func.current_timestamp()),
+                Membership.group_id == self.id,
+            )
+            .all()
+        )
 
     @active_users.expression
     def active_users(cls, when=None):
-        return select(User).select_from(
-            join(User, Membership).join(cls)
-        ).where(
-            Membership.active_during & when if when
-            else Membership.active_during.contains(func.current_timestamp())
+        return (
+            select(User)
+            .select_from(join(User, Membership).join(cls))
+            .where(
+                Membership.active_during & when
+                if when
+                else Membership.active_during.contains(func.current_timestamp())
+            )
         )
 
 
 class Membership(IntegerIdModel):
-    active_during: Mapped[Interval[utc.DateTimeTz]] = mapped_column(
-        TsTzRange, nullable=False
-    )
+    active_during: Mapped[Interval[utc.DateTimeTz]] = mapped_column(TsTzRange, nullable=False)
 
     def disable(self, at=None):
         if at is None:
             at = object_session(self).scalar(select(func.current_timestamp()))
 
         self.active_during = self.active_during - starting_from(at)
-        flag_modified(self, 'active_during')
+        flag_modified(self, "active_during")
 
     # many to one from Membership to Group
-    group_id: Mapped[int] = mapped_column(
-        ForeignKey(Group.id, ondelete="CASCADE"), index=True
-    )
+    group_id: Mapped[int] = mapped_column(ForeignKey(Group.id, ondelete="CASCADE"), index=True)
     group: Mapped[Group] = relationship(back_populates="memberships")
 
     # many to one from Membership to User
-    user_id: Mapped[int] = mapped_column(
-        ForeignKey(User.id, ondelete="CASCADE"), index=True
-    )
+    user_id: Mapped[int] = mapped_column(ForeignKey(User.id, ondelete="CASCADE"), index=True)
     user: Mapped[User] = relationship(back_populates="memberships")
 
     __table_args__ = (
-        Index('ix_membership_active_during', 'active_during', postgresql_using='gist'),
+        Index("ix_membership_active_during", "active_during", postgresql_using="gist"),
         ExcludeConstraint(  # there should be no two memberships…
-            (group_id, '='),  # …with the same user
-            (user_id, '='),  # …and the same group
-            (active_during, '&&'),  # …and overlapping durations
-            using='gist'
+            (group_id, "="),  # …with the same user
+            (user_id, "="),  # …and the same group
+            (active_during, "&&"),  # …and overlapping durations
+            using="gist",
         ),
     )
 
-@event.listens_for(Membership.__table__, 'before_create')
+
+@event.listens_for(Membership.__table__, "before_create")
 def create_btree_gist(target, connection, **kw):
     connection.execute(text("create extension if not exists btree_gist"))
 
@@ -641,8 +722,7 @@ class PropertyGroup(Group):
 
     # TODO type
     property_grants = association_proxy(
-        "properties", "granted",
-        creator=lambda k, v: Property(name=k, granted=v)
+        "properties", "granted", creator=lambda k, v: Property(name=k, granted=v)
     )
     # backrefs
     properties: Mapped[dict[str, Property]] = relationship(
@@ -660,9 +740,7 @@ class Property(IntegerIdModel):
 
     # many to one from Property to PropertyGroup
     # nullable=True
-    property_group_id: Mapped[int] = mapped_column(
-        ForeignKey(PropertyGroup.id), index=True
-    )
+    property_group_id: Mapped[int] = mapped_column(ForeignKey(PropertyGroup.id), index=True)
     # TODO prüfen, ob cascade Properties löscht, wenn zugehörige PGroup deleted
     property_group: Mapped[PropertyGroup] = relationship(back_populates="properties")
 
@@ -675,25 +753,21 @@ class RoomHistoryEntry(IntegerIdModel):
             at = object_session(self).scalar(select(func.current_timestamp()))
 
         self.active_during = self.active_during - starting_from(at)
-        flag_modified(self, 'active_during')
+        flag_modified(self, "active_during")
 
-    room_id: Mapped[int] = mapped_column(
-        ForeignKey("room.id", ondelete="CASCADE"), index=True
-    )
+    room_id: Mapped[int] = mapped_column(ForeignKey("room.id", ondelete="CASCADE"), index=True)
     room: Mapped[Room] = relationship(back_populates="room_history_entries")
 
-    user_id: Mapped[int] = mapped_column(
-        ForeignKey(User.id, ondelete="CASCADE"), index=True
-    )
+    user_id: Mapped[int] = mapped_column(ForeignKey(User.id, ondelete="CASCADE"), index=True)
     user: Mapped[User] = relationship(back_populates="room_history_entries")
 
     __table_args__ = (
-        Index('ix_room_history_entry_active_during', 'active_during', postgresql_using='gist'),
+        Index("ix_room_history_entry_active_during", "active_during", postgresql_using="gist"),
         ExcludeConstraint(  # there should be no two room_history_entries
-            (room_id, '='),  # …in the same room
-            (user_id, '='),  # …and for the same user
-            (active_during, '&&'),  # …and overlapping durations
-            using='gist'
+            (room_id, "="),  # …in the same room
+            (user_id, "="),  # …and for the same user
+            (active_during, "&&"),  # …and overlapping durations
+            using="gist",
         ),
     )
 
@@ -717,7 +791,7 @@ class PreMember(BaseUser):
 
     @t.override
     def __init__(self, **kwargs: typing.Any) -> None:
-        password = kwargs.pop('password', None)
+        password = kwargs.pop("password", None)
         super().__init__(**kwargs)
         if password is not None:
             self.password = password

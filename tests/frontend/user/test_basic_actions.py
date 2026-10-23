@@ -79,9 +79,7 @@ class TestInhabitingUser:
 
     def test_user_cannot_be_moved_back_in(self, client: TestClient, user: User):
         # attempt to move the user back in
-        with client.flashes_message(
-            f"Nutzer {user.id} ist nicht ausgezogen!", category="error"
-        ):
+        with client.flashes_message(f"Nutzer {user.id} ist nicht ausgezogen!", category="error"):
             client.assert_url_response_code(
                 url_for("user.move_in", user_id=user.id),
                 code=404,
@@ -135,29 +133,25 @@ class TestUserMovedOut:
             )
 
     def test_static_datasheet(self, client: TestClient, user: User):
-        response = client.assert_url_ok(
-            url_for("user.static_datasheet", user_id=user.id)
-        )
+        response = client.assert_url_ok(url_for("user.static_datasheet", user_id=user.id))
         assert response.data.startswith(b"%PDF")
         headers = response.headers
         assert headers.get("Content-Type") == "application/pdf"
         assert (
-            headers.get("Content-Disposition")
-            == f"inline; filename=user_sheet_plain_{user.id}.pdf"
+            headers.get("Content-Disposition") == f"inline; filename=user_sheet_plain_{user.id}.pdf"
         )
 
     def test_password_reset(self, client: TestClient, user: User):
-        with client.flashes_message(
-            "Passwort erfolgreich zurückgesetzt.", category="success"
-        ):
+        with client.flashes_message("Passwort erfolgreich zurückgesetzt.", category="success"):
             client.post(url_for("user.reset_password", user_id=user.id))
 
         # access user_sheet
         response = client.assert_ok("user.user_sheet")
         assert WebStorage.q.count() == 1
-        assert response.headers.get('Content-Type') == "application/pdf"
-        assert response.headers.get('Content-Disposition') == "inline; filename=user_sheet.pdf"
+        assert response.headers.get("Content-Type") == "application/pdf"
+        assert response.headers.get("Content-Disposition") == "inline; filename=user_sheet.pdf"
         assert response.data.startswith(b"%PDF")
+
 
 @pytest.mark.usefixtures("session")
 class TestUserEndMembership:
@@ -231,9 +225,7 @@ class TestNewUserDatasheet:
         with client.flashes_message("Benutzer angelegt.", category="success"):
             yield
 
-    def test_user_create_data_sheet(
-        self, client: TestClient, room: Room, config: Config
-    ):
+    def test_user_create_data_sheet(self, client: TestClient, room: Room, config: Config):
         with self.assert_create_confirmed(client):
             client.assert_redirects(
                 "user.create",
@@ -253,8 +245,8 @@ class TestNewUserDatasheet:
             )
         response = client.assert_ok("user.user_sheet")
         assert WebStorage.q.count() == 1
-        assert response.headers.get('Content-Type') == "application/pdf"
-        assert response.headers.get('Content-Disposition') == "inline; filename=user_sheet.pdf"
+        assert response.headers.get("Content-Type") == "application/pdf"
+        assert response.headers.get("Content-Disposition") == "inline; filename=user_sheet.pdf"
         assert response.data.startswith(b"%PDF")
 
     @pytest.fixture(scope="session")

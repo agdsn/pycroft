@@ -21,8 +21,7 @@ from pycroft.lib.finance import estimate_balance, get_last_import_date
 from pycroft.lib.mpsk_client import mpsk_edit, mpsk_client_create, mpsk_delete
 from pycroft.lib.host import change_mac, host_create, interface_create, host_edit
 from pycroft.lib.net import SubnetFullException
-from pycroft.lib.swdd import get_swdd_person_id, get_relevant_tenancies, \
-    get_first_tenancy_with_room
+from pycroft.lib.swdd import get_swdd_person_id, get_relevant_tenancies, get_first_tenancy_with_room
 from pycroft.lib.task import cancel_task
 from pycroft.lib.user import (
     encode_type2_user_id,
@@ -71,7 +70,7 @@ def parse_authorization_header(value: str | None) -> str | None:
 
     try:
         auth_type, api_key = value.split(maxsplit=1)
-        return api_key if auth_type.lower() == 'apikey' else None
+        return api_key if auth_type.lower() == "apikey" else None
     except ValueError:
         return None
 
@@ -93,7 +92,7 @@ def authenticate[**P](func: _TF[P]) -> _TF[P]:
         if api_key is None:
             abort(401, message="Missing API key.")
 
-        if current_app.config['PYCROFT_API_KEY'] != api_key:
+        if current_app.config["PYCROFT_API_KEY"] != api_key:
             abort(401, message="Invalid API key.")
 
         return func(*args, **kwargs)
@@ -153,7 +152,7 @@ def generate_user_data(user: User) -> Response:
         for split in user.account.splits
     ]
 
-    finance_history = sorted(finance_history, key=lambda e: e['valid_on'], reverse=True)
+    finance_history = sorted(finance_history, key=lambda e: e["valid_on"], reverse=True)
 
     last_import_ts = get_last_import_date(session.session)
     last_finance_update = last_import_ts and last_import_ts.date() or None
@@ -177,18 +176,18 @@ def generate_user_data(user: User) -> Response:
         name=user.name,
         login=user.login,
         status={
-            'member': user_status.member,
-            'traffic_exceeded': user_status.traffic_exceeded,
-            'network_access': user_status.network_access,
-            'account_balanced': user_status.account_balanced,
-            'violation': user_status.violation
+            "member": user_status.member,
+            "traffic_exceeded": user_status.traffic_exceeded,
+            "network_access": user_status.network_access,
+            "account_balanced": user_status.account_balanced,
+            "violation": user_status.violation,
         },
         room=user.room.short_name if user.room is not None else None,
         interfaces=interface_info,
         mail=user.email,
         mail_forwarded=user.email_forwarded,
         mail_confirmed=user.email_confirmed,
-        cache='cache_access' in props,
+        cache="cache_access" in props,
         # TODO: make `has_property` use `current_property`
         properties=list(props),
         traffic_history=[e.__dict__ for e in traffic_history],
@@ -210,14 +209,10 @@ class UserResource(Resource):
             user_id,
             options=[
                 joinedload(User.room).joinedload(Room.building),
-                joinedload(User.hosts)
-                .joinedload(Host.interfaces)
-                .joinedload(Interface.ips),
+                joinedload(User.hosts).joinedload(Host.interfaces).joinedload(Interface.ips),
                 undefer(User.wifi_passwd_hash),
                 selectinload(User.mpsk_clients),
-                joinedload(User.account)
-                .selectinload(Account.splits)
-                .joinedload(Split.transaction),
+                joinedload(User.account).selectinload(Account.splits).joinedload(Split.transaction),
                 selectinload(User.tasks.of_type(with_polymorphic(Task, "*"))),
                 selectinload(User.current_properties),
             ],
@@ -225,7 +220,7 @@ class UserResource(Resource):
         return generate_user_data(user)
 
 
-api.add_resource(UserResource, '/user/<int:user_id>')
+api.add_resource(UserResource, "/user/<int:user_id>")
 
 
 class ChangeEmailResource(Resource):
@@ -249,11 +244,11 @@ class ChangeEmailResource(Resource):
             edit_email(user, new_email, forwarded, processor=user)
             session.session.commit()
         except IllegalEmailError:
-            abort(400, message='Invalid email address.')
+            abort(400, message="Invalid email address.")
         return "Email has been changed."
 
 
-api.add_resource(ChangeEmailResource, '/user/<int:user_id>/change-email')
+api.add_resource(ChangeEmailResource, "/user/<int:user_id>/change-email")
 
 
 class ChangePasswordResource(Resource):
@@ -264,29 +259,28 @@ class ChangePasswordResource(Resource):
         },
         location="form",
     )
-    def post(
-        self, user_id: int, old_password: str, new_password: str
-    ) -> ResponseReturnValue:
+    def post(self, user_id: int, old_password: str, new_password: str) -> ResponseReturnValue:
         user = get_authenticated_user(user_id, old_password)
         change_password(user, new_password)
         session.session.commit()
         return "Password has been changed."
 
 
-api.add_resource(ChangePasswordResource, '/user/<int:user_id>/change-password')
+api.add_resource(ChangePasswordResource, "/user/<int:user_id>/change-password")
 
 
 class FinanceHistoryResource(Resource):
     def get(self, user_id: int) -> ResponseReturnValue:
         user = get_user_or_404(user_id)
-        return jsonify([
-            {'valid_on': s.transaction.valid_on.isoformat(), 'amount': s.amount}
-            for s in
-            sorted(user.account.splits, key=lambda s: s.transaction.valid_on)
-        ])
+        return jsonify(
+            [
+                {"valid_on": s.transaction.valid_on.isoformat(), "amount": s.amount}
+                for s in sorted(user.account.splits, key=lambda s: s.transaction.valid_on)
+            ]
+        )
 
 
-api.add_resource(FinanceHistoryResource, '/user/<int:user_id>/finance-history')
+api.add_resource(FinanceHistoryResource, "/user/<int:user_id>/finance-history")
 
 
 class AuthenticationResource(Resource):
@@ -301,10 +295,10 @@ class AuthenticationResource(Resource):
         user = User.verify_and_get(login=login, plaintext_password=password)
         if user is None:
             abort(401, message="Authentication failed")
-        return {'id': user.id}
+        return {"id": user.id}
 
 
-api.add_resource(AuthenticationResource, '/user/authenticate')
+api.add_resource(AuthenticationResource, "/user/authenticate")
 
 
 class UserByIPResource(Resource):
@@ -315,37 +309,40 @@ class UserByIPResource(Resource):
         location="query",
     )
     def get(self, ipv4: IPv4Address | IPv6Address) -> ResponseReturnValue:
-        user = session.session.scalars(
-            select(User)
-            .join(Host)
-            .join(Interface)
-            .join(IP)
-            .where(IP.address == ipv4)
-            .options(
-                # multi-valued, but effectively one-valued:
-                # a user has only one IP (except in rare cases) → joinedload
-                joinedload(User.hosts, innerjoin=True)
+        user = (
+            session.session.scalars(
+                select(User)
+                .join(Host)
+                .join(Interface)
+                .join(IP)
+                .where(IP.address == ipv4)
+                .options(
+                    # multi-valued, but effectively one-valued:
+                    # a user has only one IP (except in rare cases) → joinedload
+                    joinedload(User.hosts, innerjoin=True)
                     .joinedload(Host.interfaces, innerjoin=True)
                     .joinedload(Interface.ips, innerjoin=True),
-                # single-valued → joinedload
-                joinedload(User.room, innerjoin=True)
-                    .joinedload(Room.building, innerjoin=True),
-                # 1 account, but many splits
-                joinedload(User.account, innerjoin=True)
+                    # single-valued → joinedload
+                    joinedload(User.room, innerjoin=True).joinedload(Room.building, innerjoin=True),
+                    # 1 account, but many splits
+                    joinedload(User.account, innerjoin=True)
                     # many splits → load afterwards with `select/where/in`
                     .selectinload(Account.splits)
                     .joinedload(Split.transaction, innerjoin=True),
-                # many properties
-                selectinload(User.current_properties),
+                    # many properties
+                    selectinload(User.current_properties),
+                )
             )
-        ).unique().one_or_none()
+            .unique()
+            .one_or_none()
+        )
 
         if user is None:
             abort(404, message=f"IP {ipv4} is not related to a user")
         return generate_user_data(user)
 
 
-api.add_resource(UserByIPResource, '/user/from-ip')
+api.add_resource(UserByIPResource, "/user/from-ip")
 
 
 class MPSKSClientsResource(Resource):
@@ -491,10 +488,7 @@ class UserInterfaceResource(Resource):
         user = get_authenticated_user(user_id, password)
         interface = get_interface_or_404(interface_id)
         if interface.host.owner != user:
-            abort(
-                404,
-                message=f"User {user_id} does not have a host with interface {interface_id}"
-            )
+            abort(404, message=f"User {user_id} does not have a host with interface {interface_id}")
 
         try:
             if host_name:
@@ -511,14 +505,13 @@ class UserInterfaceResource(Resource):
             session.session.add(interface)
             session.session.commit()
         except InvalidMACAddressException:
-            abort(400, message='Invalid mac address.')
+            abort(400, message="Invalid mac address.")
         except IntegrityError:
-            abort(400, message='Mac address is already in use.')
+            abort(400, message="Mac address is already in use.")
         return "Mac address has been changed."
 
 
-api.add_resource(UserInterfaceResource,
-                 '/user/<int:user_id>/change-mac/<int:interface_id>')
+api.add_resource(UserInterfaceResource, "/user/<int:user_id>/change-mac/<int:interface_id>")
 
 
 class ActivateNetworkAccessResource(Resource):
@@ -544,7 +537,7 @@ class ActivateNetworkAccessResource(Resource):
         if user.room is None:
             abort(424, message="User is not living in a dormitory.")
 
-        if not user.has_property('network_access'):
+        if not user.has_property("network_access"):
             abort(403, message="User has no network access.")
 
         interfaces = Interface.q.join(Host).filter(Host.owner_id == user.id).all()
@@ -565,17 +558,16 @@ class ActivateNetworkAccessResource(Resource):
 
             session.session.commit()
         except InvalidMACAddressException:
-            abort(400, message='Invalid mac address.')
+            abort(400, message="Invalid mac address.")
         except IntegrityError:
-            abort(400, message='Mac address is already in use.')
+            abort(400, message="Mac address is already in use.")
         except SubnetFullException:
-            abort(422, message='Subnet full.')
+            abort(422, message="Subnet full.")
 
-        return jsonify({'success': True})
+        return jsonify({"success": True})
 
 
-api.add_resource(ActivateNetworkAccessResource,
-                 '/user/<int:user_id>/activate-network-access')
+api.add_resource(ActivateNetworkAccessResource, "/user/<int:user_id>/activate-network-access")
 
 
 class TerminateMembershipResource(Resource):
@@ -604,9 +596,7 @@ class TerminateMembershipResource(Resource):
         },
         location="form",
     )
-    def post(
-        self, user_id: int, end_date: date, comment: str | None = None
-    ) -> ResponseReturnValue:
+    def post(self, user_id: int, end_date: date, comment: str | None = None) -> ResponseReturnValue:
         """
         Terminate the membership on the given date
 
@@ -617,10 +607,9 @@ class TerminateMembershipResource(Resource):
         user = get_user_or_404(user_id)
 
         if membership_ending_task(user) is not None:
-            abort(400, message="The termination of the membership has already"
-                               " been scheduled.")
+            abort(400, message="The termination of the membership has already been scheduled.")
 
-        if not user.has_property('member'):
+        if not user.has_property("member"):
             abort(400, message="User is not a member.")
 
         move_out(
@@ -650,7 +639,7 @@ class TerminateMembershipResource(Resource):
         if task is None:
             abort(400, message="There is no termination scheduled")
 
-        if not user.has_property('member'):
+        if not user.has_property("member"):
             abort(400, message="User is not a member.")
 
         cancel_task(task, user)
@@ -660,8 +649,7 @@ class TerminateMembershipResource(Resource):
         return "Membership termination cancelled."
 
 
-api.add_resource(TerminateMembershipResource,
-                 '/user/<int:user_id>/terminate-membership')
+api.add_resource(TerminateMembershipResource, "/user/<int:user_id>/terminate-membership")
 
 
 class ResetWifiPasswordResource(Resource):
@@ -681,8 +669,7 @@ class ResetWifiPasswordResource(Resource):
         return new_password
 
 
-api.add_resource(ResetWifiPasswordResource,
-                 '/user/<int:user_id>/reset-wifi-password')
+api.add_resource(ResetWifiPasswordResource, "/user/<int:user_id>/reset-wifi-password")
 
 
 class RegistrationResource(Resource):
@@ -727,20 +714,21 @@ class RegistrationResource(Resource):
             swdd_person_id = get_swdd_person_id(first_name, last_name + ";", birthdate)
 
         if swdd_person_id is None or swdd_person_id != person_id:
-            abort(404, message="No tenancies found for this data",
-                  code="no_tenancies")
+            abort(404, message="No tenancies found for this data", code="no_tenancies")
 
         tenancies = get_relevant_tenancies(swdd_person_id)
 
         if not tenancies:
-            abort(404, message="No active or future tenancies found",
-                  code="no_relevant_tenancies")
+            abort(404, message="No active or future tenancies found", code="no_relevant_tenancies")
 
         newest_tenancy = get_first_tenancy_with_room(tenancies)
 
         if newest_tenancy is None:
-            abort(404, message="Cannot associate a room with any tenancy",
-                  code="no_room_for_tenancies")
+            abort(
+                404,
+                message="Cannot associate a room with any tenancy",
+                code="no_room_for_tenancies",
+            )
 
         if previous_dorm is None:
             if get_user_by_swdd_person_id(swdd_person_id) is not None:
@@ -751,18 +739,23 @@ class RegistrationResource(Resource):
 
             check_similar_user_in_room(name, newest_tenancy.room)
         except UserExistsInRoomException:
-            abort(400, message="A user with a similar name already lives in this room",
-                  code="similar_user_exists")
+            abort(
+                400,
+                message="A user with a similar name already lives in this room",
+                code="similar_user_exists",
+            )
 
-        return jsonify({
-            'id': newest_tenancy.persvv_id,
-            'vo_suchname': newest_tenancy.vo_suchname,
-            'begin': newest_tenancy.mietbeginn.isoformat(),
-            'end': newest_tenancy.mietende.isoformat(),
-            'room_id': newest_tenancy.room.id,
-            'building': newest_tenancy.room.building.street_and_number,
-            'room': newest_tenancy.room.level_and_number
-        })
+        return jsonify(
+            {
+                "id": newest_tenancy.persvv_id,
+                "vo_suchname": newest_tenancy.vo_suchname,
+                "begin": newest_tenancy.mietbeginn.isoformat(),
+                "end": newest_tenancy.mietende.isoformat(),
+                "room_id": newest_tenancy.room.id,
+                "building": newest_tenancy.room.building.street_and_number,
+                "room": newest_tenancy.room.level_and_number,
+            }
+        )
 
     @use_kwargs(
         {
@@ -833,8 +826,11 @@ class RegistrationResource(Resource):
         except UserExistsException:
             abort(400, message="User already exists", code="user_exists")
         except UserExistsInRoomException:
-            abort(400, message="A user with a similar name already lives in this room",
-                  code="similar_user_exists")
+            abort(
+                400,
+                message="A user with a similar name already lives in this room",
+                code="similar_user_exists",
+            )
         except EmailTakenException:
             abort(400, message="E-Mail address already in use", code="email_taken")
         except LoginTakenException:
@@ -844,8 +840,11 @@ class RegistrationResource(Resource):
         except IllegalLoginError:
             abort(400, message="Illegal login", code="login_illegal")
         except NoTenancyForRoomException:
-            abort(400, message="The given person has no tenancy for the room",
-                  code="no_tenancy_in_room")
+            abort(
+                400,
+                message="The given person has no tenancy for the room",
+                code="no_tenancy_in_room",
+            )
         except MoveInDateInvalidException:
             abort(400, message="The move-in date is invalid", code="move_in_date_invalid")
         else:
@@ -856,8 +855,7 @@ class RegistrationResource(Resource):
         )  # the `abort`s from `flask_restful` don't return `NoReturn`
 
 
-api.add_resource(RegistrationResource,
-                 '/register')
+api.add_resource(RegistrationResource, "/register")
 
 
 class EmailConfirmResource(Resource):
@@ -871,13 +869,13 @@ class EmailConfirmResource(Resource):
         user = session.session.get(User, user_id)
 
         if user is None:
-            abort(404, message='User not found')
+            abort(404, message="User not found")
 
         send_confirmation_email(user)
 
         session.session.commit()
 
-        return jsonify({'success': True})
+        return jsonify({"success": True})
 
     @use_kwargs(
         {
@@ -893,10 +891,10 @@ class EmailConfirmResource(Resource):
 
         session.session.commit()
 
-        return jsonify({'type': user_type, 'reg_result': reg_result})
+        return jsonify({"type": user_type, "reg_result": reg_result})
 
 
-api.add_resource(EmailConfirmResource,  '/register/confirm')
+api.add_resource(EmailConfirmResource, "/register/confirm")
 
 
 class ResetPasswordResource(Resource):
@@ -910,7 +908,7 @@ class ResetPasswordResource(Resource):
     def post(self, ident: str, email: str) -> ResponseReturnValue:
         user = get_user_by_id_or_login(ident, email)
 
-        if user is None or not user.has_property('sipa_login'):
+        if user is None or not user.has_property("sipa_login"):
             abort(404, message="Not found", code="not_found")
 
         if not send_password_reset_mail(user):
@@ -918,9 +916,7 @@ class ResetPasswordResource(Resource):
 
         session.session.commit()
 
-        return {
-            'success': True
-        }
+        return {"success": True}
 
     @use_kwargs(
         {
@@ -935,12 +931,10 @@ class ResetPasswordResource(Resource):
 
         session.session.commit()
 
-        return {
-            'success': True
-        }
+        return {"success": True}
 
 
-api.add_resource(ResetPasswordResource, '/user/reset-password')
+api.add_resource(ResetPasswordResource, "/user/reset-password")
 
 
 class UserActiveResource(Resource):

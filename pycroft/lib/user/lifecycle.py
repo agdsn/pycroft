@@ -9,6 +9,7 @@ This module contains.
 
 :copyright: (c) 2012 by AG DSN.
 """
+
 import typing as t
 from datetime import date
 from sqlalchemy import select, exists
@@ -301,7 +302,7 @@ def move(
 
     args = {"old_room": str(old_room), "new_room": str(new_room)}
     if comment:
-        message = deferred_gettext("Moved from {old_room} to {new_room}.\n" "Comment: {comment}")
+        message = deferred_gettext("Moved from {old_room} to {new_room}.\nComment: {comment}")
         args.update(comment=comment)
     else:
         message = deferred_gettext("Moved from {old_room} to {new_room}.")

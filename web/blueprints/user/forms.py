@@ -8,14 +8,21 @@ from markupsafe import escape, Markup
 from sqlalchemy import select
 from sqlalchemy.orm import Query
 from wtforms import Field
-from wtforms.validators import (
-    Regexp, ValidationError, DataRequired, Email, Optional)
+from wtforms.validators import Regexp, ValidationError, DataRequired, Email, Optional
 
 from pycroft.helpers.utc import DateTimeTz
 from pycroft.model.session import session
-from wtforms_widgets.fields.core import TextField, TextAreaField, BooleanField, \
-    QuerySelectField, FormField, \
-    QuerySelectMultipleField, DateField, IntegerField, TimeField
+from wtforms_widgets.fields.core import (
+    TextField,
+    TextAreaField,
+    BooleanField,
+    QuerySelectField,
+    FormField,
+    QuerySelectMultipleField,
+    DateField,
+    IntegerField,
+    TimeField,
+)
 from wtforms_widgets.fields.custom import MacField
 from wtforms_widgets.fields.filters import empty_to_none, to_lowercase
 from wtforms_widgets.fields.validators import OptionalIf, MacAddress
@@ -25,14 +32,11 @@ from pycroft.lib.user import find_similar_users
 from pycroft.model.address import Address
 from pycroft.model.facilities import Room
 from pycroft.model.user import PropertyGroup, User
-from web.blueprints.facilities.forms import building_query, SelectRoomForm, \
-    CreateAddressForm
+from web.blueprints.facilities.forms import building_query, SelectRoomForm, CreateAddressForm
 from web.blueprints.helpers.host import UniqueMac
-from web.blueprints.properties.forms import property_group_query, \
-    property_group_user_create_query
+from web.blueprints.properties.forms import property_group_query, property_group_user_create_query
 from web.form.widgets import UserIDField
-from ..helpers.form import confirmable_div, ConfirmCheckboxField, \
-    iter_prefixed_field_names
+from ..helpers.form import confirmable_div, ConfirmCheckboxField, iter_prefixed_field_names
 
 
 def group_query() -> Query[PropertyGroup]:
@@ -55,9 +59,9 @@ class UniqueName:
 
     def __init__(self, force_field: str | None = "force") -> None:
         self.force_field = force_field
-        self.building_field = 'building'
-        self.level_field = 'level'
-        self.room_number_field = 'room_number'
+        self.building_field = "building"
+        self.level_field = "level"
+        self.room_number_field = "room_number"
         self.ratio = 0.6
 
     def force_set(self, form: Form) -> bool:
@@ -76,23 +80,25 @@ class UniqueName:
             return None
 
         # TODO this should be a lib function!
-        return session.scalar(
-            select(Room).filter_by(number=number, level=level, building=building)
-        )
+        return session.scalar(select(Room).filter_by(number=number, level=level, building=building))
 
     def __call__(self, form: Form, field: Field) -> None:
         if self.force_set(form):
             return
         if (room := self.try_get_room(form)) is None:
             return
-        if not (conflicting_inhabitants := find_similar_users(name=field.data, room=room,
-                                                              ratio=self.ratio)):
+        if not (
+            conflicting_inhabitants := find_similar_users(
+                name=field.data, room=room, ratio=self.ratio
+            )
+        ):
             return
 
         user_links = ", ".join(
-            f"""<a target="_blank" href="{url_for('user.user_show', user_id=user.id)}"/>
+            f"""<a target="_blank" href="{url_for("user.user_show", user_id=user.id)}"/>
                   {escape(user.name)}
-                </a>""" for user in conflicting_inhabitants
+                </a>"""
+            for user in conflicting_inhabitants
         )
         raise ValidationError(
             Markup(
@@ -130,8 +136,9 @@ class UniqueEmail:
             return
 
         user_links = ", ".join(
-            f"""<a target="_blank" href="{url_for('user.user_show', user_id=user.id)}"/>
-                {escape(user.name)}</a>""" for user in conflicting_users
+            f"""<a target="_blank" href="{url_for("user.user_show", user_id=user.id)}"/>
+                {escape(user.name)}</a>"""
+            for user in conflicting_users
         )
         raise ValidationError(
             Markup(
@@ -147,16 +154,20 @@ class UserSearchForm(Form):
     login = TextField("Unix-Login")
     mac = MacField("MAC-Adresse")
     ip_address = TextField("IP-Adresse")
-    property_group_id = QuerySelectField("Eigenschaftsgruppe",
-                                get_label='name',
-                                query_factory=property_group_query,
-                                allow_blank=True,
-                                blank_text="<Eigenschaftsgruppe>")
-    building_id = QuerySelectField("Wohnheim",
-                                get_label='short_name',
-                                query_factory=building_query,
-                                allow_blank=True,
-                                blank_text="<Wohnheim>")
+    property_group_id = QuerySelectField(
+        "Eigenschaftsgruppe",
+        get_label="name",
+        query_factory=property_group_query,
+        allow_blank=True,
+        blank_text="<Eigenschaftsgruppe>",
+    )
+    building_id = QuerySelectField(
+        "Wohnheim",
+        get_label="short_name",
+        query_factory=building_query,
+        allow_blank=True,
+        blank_text="<Wohnheim>",
+    )
     email = TextField("E-Mail")
     person_id = TextField("Debitorennummer")
 
@@ -167,12 +178,10 @@ class UserResetPasswordForm(Form):
 
 class UserEditForm(Form):
     name = TextField("Name", [DataRequired(message="Name wird benötigt!")])
-    email = TextField("E-Mail",
-                      [Optional(), Email("E-Mail-Adresse ist ungültig!")])
+    email = TextField("E-Mail", [Optional(), Email("E-Mail-Adresse ist ungültig!")])
     email_forwarded = BooleanField("E-Mail Weiterleitung", default=True)
     birthdate = DateField("Geburtsdatum", [Optional()])
-    person_id = IntegerField("Debitorennummer", [Optional()],
-                             filters=[empty_to_none])
+    person_id = IntegerField("Debitorennummer", [Optional()], filters=[empty_to_none])
 
 
 class UserEditAddressForm(CreateAddressForm):
@@ -186,13 +195,19 @@ class UserEditAddressForm(CreateAddressForm):
 
 
 class UserMoveForm(SelectRoomForm):
-    comment = TextAreaField("Kommentar", description='Wenn gegeben Referenz zum Ticket',
-                            render_kw={'placeholder': 'ticket#<TicketNr> / <TicketNr> / ticket:<ticketId>'})
+    comment = TextAreaField(
+        "Kommentar",
+        description="Wenn gegeben Referenz zum Ticket",
+        render_kw={"placeholder": "ticket#<TicketNr> / <TicketNr> / ticket:<ticketId>"},
+    )
     now = BooleanField("Sofort", default=False)
     when = DateField("Umzug am", [OptionalIf("now")])
-    when_time = TimeField("Genaue Zeit", [Optional()],
-                          description="Optional. In UTC angeben.",
-                          render_kw={'placeholder': 'hh:mm'})
+    when_time = TimeField(
+        "Genaue Zeit",
+        [Optional()],
+        description="Optional. In UTC angeben.",
+        render_kw={"placeholder": "hh:mm"},
+    )
 
     def get_execution_time(self, now: DateTimeTz) -> DateTimeTz:
         if self.now.data:
@@ -202,26 +217,28 @@ class UserMoveForm(SelectRoomForm):
 
 
 class UserBaseDataForm(Form):
-    name = TextField("Name", [DataRequired(message="Name wird benötigt!"),
-                               UniqueName()])
+    name = TextField("Name", [DataRequired(message="Name wird benötigt!"), UniqueName()])
 
-    login = TextField("Login", [
-        DataRequired(message="Login wird benötigt!"),
-        Regexp(regex=User.login_regex_ci, message="Login ist ungültig!"),
-        validate_unique_login
-    ], filters=[to_lowercase])
-    email = TextField("E-Mail", [Email(message="E-Mail ist ungueltig!"),
-                                  Optional()], filters=[empty_to_none])
+    login = TextField(
+        "Login",
+        [
+            DataRequired(message="Login wird benötigt!"),
+            Regexp(regex=User.login_regex_ci, message="Login ist ungültig!"),
+            validate_unique_login,
+        ],
+        filters=[to_lowercase],
+    )
+    email = TextField(
+        "E-Mail", [Email(message="E-Mail ist ungueltig!"), Optional()], filters=[empty_to_none]
+    )
 
 
 class UserCreateForm(UserBaseDataForm, SelectRoomForm):
-    birthdate = DateField("Geburtsdatum",
-                          [OptionalIf('mac', invert=True)])
-    mac = MacField("MAC",
-                   [Optional(), MacAddress(message="MAC ist ungültig!"), UniqueMac()])
-    property_groups = QuerySelectMultipleField("Gruppen",
-                                      get_label='name',
-                                      query_factory=property_group_user_create_query)
+    birthdate = DateField("Geburtsdatum", [OptionalIf("mac", invert=True)])
+    mac = MacField("MAC", [Optional(), MacAddress(message="MAC ist ungültig!"), UniqueMac()])
+    property_groups = QuerySelectMultipleField(
+        "Gruppen", get_label="name", query_factory=property_group_user_create_query
+    )
     annex = ConfirmCheckboxField("Host annektieren")
     force = ConfirmCheckboxField("* Hinweise ignorieren")
 
@@ -234,22 +251,32 @@ class NonResidentUserCreateForm(UserBaseDataForm, CreateAddressForm):
     Does not contain mac, since created hosts would not have a room set, anyway.
     If necessary, a device can be created afterwards.
     """
+
     birthdate = DateField("Geburtsdatum")
-    property_groups = QuerySelectMultipleField("Gruppen",
-                                      get_label='name',
-                                      query_factory=property_group_user_create_query)
+    property_groups = QuerySelectMultipleField(
+        "Gruppen", get_label="name", query_factory=property_group_user_create_query
+    )
 
     _order = (
-        'name', 'login',
-        *iter_prefixed_field_names(CreateAddressForm, 'address_'),
-        'email', 'birthdate', 'property_groups'
+        "name",
+        "login",
+        *iter_prefixed_field_names(CreateAddressForm, "address_"),
+        "email",
+        "birthdate",
+        "property_groups",
     )
 
 
 class PreMemberEditForm(UserBaseDataForm, SelectRoomForm):
     # overrides `email` from UserBaseDataForm
-    email = TextField("E-Mail", [DataRequired("Mitgliedschaftsanfragen benötigen E-Mail"),
-                                 Email(message="E-Mail ist ungueltig!")], filters=[empty_to_none])
+    email = TextField(
+        "E-Mail",
+        [
+            DataRequired("Mitgliedschaftsanfragen benötigen E-Mail"),
+            Email(message="E-Mail ist ungueltig!"),
+        ],
+        filters=[empty_to_none],
+    )
     birthdate = DateField("Geburtsdatum", [DataRequired("Das Geburtsdatum wird benötigt!")])
     move_in_date = DateField("Einzugsdatum", [Optional()])
     person_id = IntegerField("Debitorennummer", [Optional()], filters=[empty_to_none])
@@ -280,7 +307,7 @@ class PreMemberMergeConfirmForm(Form):
 class UserMoveInForm(UserMoveForm):
     now = BooleanField("Sofort", default=False)
     when = DateField("Einzug am", [OptionalIf("now")])
-    birthdate = DateField("Geburtsdatum", [OptionalIf('mac', invert=True)])
+    birthdate = DateField("Geburtsdatum", [OptionalIf("mac", invert=True)])
     mac = MacField("MAC", [Optional()])
     begin_membership = BooleanField("Mitgliedschaft beginnen", [Optional()])
 
@@ -300,8 +327,7 @@ class OptionallyUnlimitedEndDateForm(Form):
 
 
 class UserAddGroupMembership(Form):
-    group = QuerySelectField("Gruppe", get_label='name',
-                             query_factory=group_query)
+    group = QuerySelectField("Gruppe", get_label="name", query_factory=group_query)
     begins_at = FormField(OptionallyDirectBeginDateForm)
     ends_at = FormField(OptionallyUnlimitedEndDateForm)
 
@@ -346,7 +372,10 @@ class GroupMailForm(Form):
         default=[],
     )
     subject = TextField("Betreff", [DataRequired()])
-    body_plain = TextAreaField("E-Mail (plaintext)", [DataRequired()],
-                               description="Verfügbar: {name}, {login}, {id}, {email}, "
-                                           "{email_internal}, {room_short}, {swdd_person_id}")
+    body_plain = TextAreaField(
+        "E-Mail (plaintext)",
+        [DataRequired()],
+        description="Verfügbar: {name}, {login}, {id}, {email}, "
+        "{email_internal}, {room_short}, {swdd_person_id}",
+    )
     confirm = BooleanField("Bestätigung", [DataRequired()], default=False)

@@ -27,8 +27,7 @@ def assertValidJSON(json_string):
         pytest.fail(f"Export failed schema validation: {e}")
 
 
-def assertSimpleMessageCorrect(m, message, domain, args, kwargs,
-                               expected_result):
+def assertSimpleMessageCorrect(m, message, domain, args, kwargs, expected_result):
     assert isinstance(m, SimpleMessage)
     assert m.message == message
     assertMessageEquals(m, domain, args, kwargs, expected_result)
@@ -39,8 +38,7 @@ def assertSimpleMessageCorrect(m, message, domain, args, kwargs,
     assertMessageEquals(m2, domain, args, kwargs, expected_result)
 
 
-def assertNumericMessageCorrect(m, singular, plural, n, domain,
-                                args, kwargs, expected_result):
+def assertNumericMessageCorrect(m, singular, plural, n, domain, args, kwargs, expected_result):
     assert isinstance(m, NumericalMessage)
     assert m.singular == singular
     assert m.plural == plural
