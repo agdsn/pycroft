@@ -41,9 +41,7 @@ class Message(abc.ABC):
         try:
             jsonschema.validate(obj, schema)
         except jsonschema.ValidationError as e:
-            return ErroneousMessage(
-                "Message validation failed: {} for message {}".format(e, json_string)
-            )
+            return ErroneousMessage(f"Message validation failed: {e} for message {json_string}")
         args = obj.get("args", ())
         kwargs = obj.get("kwargs", {})
         try:
@@ -52,7 +50,7 @@ class Message(abc.ABC):
         except (TypeError, ValueError) as e:
             error = "".join(traceback.format_exception_only(type(e), e))
             return ErroneousMessage(
-                "Parameter deserialization error: {} in message: {}".format(error, json_string)
+                f"Parameter deserialization error: {error} in message: {json_string}"
             )
         m: Message
         if "plural" in obj:

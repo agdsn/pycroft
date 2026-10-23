@@ -644,7 +644,7 @@ class IntervalSet[T: Ord](collections.abc.Sequence[Interval[T]]):
 
     @t.override
     def __repr__(self):
-        return "{}.{}({!r})".format(self.__module__, self.__class__.__name__, self._intervals)
+        return f"{self.__module__}.{self.__class__.__name__}({self._intervals!r})"
 
     @t.override
     def __str__(self):

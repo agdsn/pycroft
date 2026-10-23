@@ -519,7 +519,7 @@ def visit_create_view(element: CreateView, compiler: Compiled, **kw: t.Any) -> s
         opt_view_options = None
     compiled_query = compiler.sql_compiler.process(view.query, literal_binds=True)
     if view.check_option is not None:
-        opt_check_option = "WITH {} CHECK OPTION".format(view.check_option.upper())
+        opt_check_option = f"WITH {view.check_option.upper()} CHECK OPTION"
     else:
         opt_check_option = None
 

@@ -132,10 +132,10 @@ class Money(TypeDecorator):
     def process_bind_param(value, dialect):
         """"""
         if not isinstance(value, Number):
-            raise ValueError("{} is not a valid money amount".format(repr(value)))
+            raise ValueError(f"{repr(value)} is not a valid money amount")
         cents = Decimal(value).scaleb(2)
         if int(cents) != cents:
-            raise ValueError("{} is not a valid money amount".format(Decimal(value)))
+            raise ValueError(f"{Decimal(value)} is not a valid money amount")
         else:
             return int(cents)
 

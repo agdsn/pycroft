@@ -160,7 +160,7 @@ def generate_user_sheet(
                 style["RightText"],
             )
         else:
-            shortinfo = Paragraph("{name}".format(name=user.name), style["RightText"])
+            shortinfo = Paragraph(f"{user.name}", style["RightText"])
 
         data = [
             [im_web, "https://agdsn.de", im_t, "/ag_dsn"],
@@ -331,7 +331,7 @@ def generate_user_sheet(
                 room=str(user.room.number),
             )
         else:
-            purpose = "{id}, {name}".format(id=user_id, name=user.name)
+            purpose = f"{user_id}, {user.name}"
 
         amount = contribution / 100
         data = [
@@ -411,7 +411,7 @@ def generate_user_sheet(
                 style["RightText"],
             )
         else:
-            shortinfo = Paragraph("{name}".format(name=user.name), style["RightText"])
+            shortinfo = Paragraph(f"{user.name}", style["RightText"])
 
         data = [
             [im_web, "https://agdsn.de", im_t, "/ag_dsn"],

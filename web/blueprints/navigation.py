@@ -202,9 +202,7 @@ class BlueprintNavigation:
         """
 
         if self.blueprint.name not in app.blueprints:
-            raise Exception(
-                "Blueprint {} is not registred in Flask app".format(self.blueprint.name)
-            )
+            raise Exception(f"Blueprint {self.blueprint.name} is not registred in Flask app")
         else:
             assert app.blueprints[self.blueprint.name] is self.blueprint, (
                 "Blueprint resistred as {} in Flask app is not the one you register navigation for!"
