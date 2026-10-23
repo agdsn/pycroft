@@ -91,7 +91,7 @@ dev = [
     "pytest-freezegun ~= 0.4.2",
     "pytest-timeout ~= 2.1.0",
     # required for pycharm „run with coverage“ reporting
-    "ruff ~= 0.3.2",
+    "ruff~=0.17.2",
     "sphinx ~= 7.3.7",
     "sphinx-autobuild ~= 2021.3.14",
     "sphinx-toolbox ~= 3.7.0",
