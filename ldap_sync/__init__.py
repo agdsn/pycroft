@@ -10,6 +10,7 @@ The process is separated into the following steps:
 3. Create a diff (:mod:`ldap_sync.diff_records`)
 4. Execute the actions (:mod:`ldap_sync.execution`)
 """
+
 import logging
 
-logger = logging.getLogger('ldap_sync')
+logger = logging.getLogger("ldap_sync")

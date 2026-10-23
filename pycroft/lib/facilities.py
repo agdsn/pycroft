@@ -2,6 +2,7 @@
 pycroft.lib.facilities
 ~~~~~~~~~~~~~~~~~~~~~~
 """
+
 import logging
 import re
 import typing as t
@@ -103,17 +104,17 @@ def create_room(
     inhabitable: bool = True,
     vo_suchname: str | None = None,
 ) -> Room:
-    if row_exists(
-        session.session, similar_rooms_query(number, level, building, vo_suchname)
-    ):
+    if row_exists(session.session, similar_rooms_query(number, level, building, vo_suchname)):
         raise RoomAlreadyExistsException
 
-    room = Room(number=number,
-                level=level,
-                inhabitable=inhabitable,
-                building=building,
-                address=address,
-                swdd_vo_suchname=vo_suchname)
+    room = Room(
+        number=number,
+        level=level,
+        inhabitable=inhabitable,
+        building=building,
+        address=address,
+        swdd_vo_suchname=vo_suchname,
+    )
 
     log_room_event("Room created.", processor, room)
 
@@ -132,39 +133,36 @@ def edit_room(
     if room.number != number:
         if row_exists(
             session.session,
-            similar_rooms_query(number, room.level, room.building).filter(
-                Room.id != room.id
-            ),
+            similar_rooms_query(number, room.level, room.building).filter(Room.id != room.id),
         ):
             raise RoomAlreadyExistsException()
 
-        message = (
-            deferred_gettext("Renamed room from {} to {}.")
-            .format(room.number, number)
-        )
+        message = deferred_gettext("Renamed room from {} to {}.").format(room.number, number)
         log_room_event(message.to_json(), processor, room)
         room.number = number
 
     if room.inhabitable != inhabitable:
-        message = (
-            deferred_gettext("Changed inhabitable status to {}.")
-            .format(inhabitable)
-        )
+        message = deferred_gettext("Changed inhabitable status to {}.").format(inhabitable)
         log_room_event(message.to_json(), processor, room)
         room.inhabitable = inhabitable
 
     if room.swdd_vo_suchname != vo_suchname:
         log_room_event(
             deferred_gettext("Changed VO id from {} to {}.")
-                .format(room.swdd_vo_suchname, vo_suchname).to_json(),
-            processor, room
+            .format(room.swdd_vo_suchname, vo_suchname)
+            .to_json(),
+            processor,
+            room,
         )
         room.swdd_vo_suchname = vo_suchname
 
     if room.address != address:
         room.address = address
-        log_room_event(deferred_gettext("Changed address to {}").format(str(address)).to_json(),
-                       processor, room)
+        log_room_event(
+            deferred_gettext("Changed address to {}").format(str(address)).to_json(),
+            processor,
+            room,
+        )
         for user in room.users_sharing_address:
             user.address = room.address
 
@@ -188,27 +186,35 @@ class RoomAddressSuggestion:
 
     @t.override
     def __str__(self) -> str:
-        return f"{self.street} {self.number}, {self.zip_code} {self.city}," \
-               + (f" {self.state}," if self.state else "") \
-               + f" {self.country}"
+        return (
+            f"{self.street} {self.number}, {self.zip_code} {self.city},"
+            + (f" {self.state}," if self.state else "")
+            + f" {self.country}"
+        )
 
 
 def suggest_room_address_data(building: Building | None) -> RoomAddressSuggestion | None:
-    """Return the most common address features of preexisting rooms in a certain building. """
+    """Return the most common address features of preexisting rooms in a certain building."""
     if building is None:
         return
 
-    cols = (Address.street, Address.number, Address.zip_code,
-            Address.city, Address.state, Address.country)
+    cols = (
+        Address.street,
+        Address.number,
+        Address.zip_code,
+        Address.city,
+        Address.state,
+        Address.country,
+    )
     stmt = (
         select()
         .select_from(Room)
         .join(Address)
         .add_columns(*cols)
-        .add_columns(func.count().label('count'))
+        .add_columns(func.count().label("count"))
         .filter(Room.building == building)
         .group_by(*cols)
-        .order_by(literal_column('count').desc())
+        .order_by(literal_column("count").desc())
     )
 
     rows = session.session.execute(stmt).all()
@@ -221,12 +227,17 @@ def suggest_room_address_data(building: Building | None) -> RoomAddressSuggestio
     row, *rest = rows
     suggestion = row_to_suggestion(row)
     if rest:
-        logger.warning("Address suggestion for building '%s' not unique (%d total):\n"
-                       "first suggestion:\n  %s (%d times),\n"
-                       "runner-up suggestion:\n  %s (%d times)",
-                       building.short_name, len(rows),
-                       suggestion, row.count,
-                       row_to_suggestion(rest[0]), rest[0].count)
+        logger.warning(
+            "Address suggestion for building '%s' not unique (%d total):\n"
+            "first suggestion:\n  %s (%d times),\n"
+            "runner-up suggestion:\n  %s (%d times)",
+            building.short_name,
+            len(rows),
+            suggestion,
+            row.count,
+            row_to_suggestion(rest[0]),
+            rest[0].count,
+        )
 
     return suggestion
 
@@ -241,9 +252,7 @@ def sort_buildings(buildings: t.Iterable[Building]) -> list[Building]:
     return sorted(buildings, key=make_sort_key)
 
 
-def determine_building(
-    shortname: str | None = None, id: int | None = None
-) -> Building | None:
+def determine_building(shortname: str | None = None, id: int | None = None) -> Building | None:
     """Determine building from shortname or id in this order.
 
     :param shortname: The short name of the building

@@ -2,6 +2,7 @@
 pycroft.lib.infrastructure
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 """
+
 import typing as t
 
 from netaddr import IPAddress
@@ -32,9 +33,7 @@ def _require_host_room(host: Host) -> Room:
 
 
 @with_transaction
-def create_patch_port(
-    name: str, room: Room, switch_room: Room, processor: User
-) -> PatchPort:
+def create_patch_port(name: str, room: Room, switch_room: Room, processor: User) -> PatchPort:
     # This check can be removed as soon as the unique constraint exists
     if PatchPort.q.filter_by(name=name, switch_room=switch_room).first():
         raise PatchPortAlreadyExistsException()
@@ -52,25 +51,23 @@ def create_patch_port(
 
 
 @with_transaction
-def edit_patch_port(
-    patch_port: PatchPort, name: str, room: Room, processor: User
-) -> None:
+def edit_patch_port(patch_port: PatchPort, name: str, room: Room, processor: User) -> None:
     if patch_port.name != name:
         # This check can be removed as soon as the unique constraint exists
         if PatchPort.q.filter_by(name=name, switch_room=patch_port.switch_room).first():
             raise PatchPortAlreadyExistsException()
 
-        message = deferred_gettext("Changed name of patch-port {patch_port_name} to {name}.")\
-            .format(patch_port_name=patch_port.name, name=name)
+        message = deferred_gettext(
+            "Changed name of patch-port {patch_port_name} to {name}."
+        ).format(patch_port_name=patch_port.name, name=name)
         log_room_event(message.to_json(), processor, patch_port.switch_room)
 
         patch_port.name = name
 
     if patch_port.room != room:
-        message = deferred_gettext("Changed room of patch-port {pp}"
-                                   " from {old_room} to {new_room}.")\
-            .format(pp=patch_port.name, old_room=patch_port.room.short_name,
-                    new_room=room.short_name)
+        message = deferred_gettext(
+            "Changed room of patch-port {pp} from {old_room} to {new_room}."
+        ).format(pp=patch_port.name, old_room=patch_port.room.short_name, new_room=room.short_name)
         log_room_event(message.to_json(), processor, patch_port.switch_room)
 
         patch_port.room = room
@@ -91,13 +88,10 @@ def patch_switch_port_to_patch_port(
     if patch_port.switch_port:
         raise PatchPortAlreadyPatchedException()
 
-    message = (
-        deferred_gettext("Added patch from {host}/{switch_port} to {patch_port}.")
-        .format(
-            host=switch_port.switch.host.name,
-            switch_port=switch_port.name,
-            patch_port=patch_port.name,
-        )
+    message = deferred_gettext("Added patch from {host}/{switch_port} to {patch_port}.").format(
+        host=switch_port.switch.host.name,
+        switch_port=switch_port.name,
+        patch_port=patch_port.name,
     )
     log_room_event(
         message.to_json(),
@@ -115,13 +109,10 @@ def remove_patch_to_patch_port(patch_port: PatchPort, processor: User) -> None:
 
     switch_port = patch_port.switch_port
 
-    message = (
-        deferred_gettext("Removed patch from {host}/{switch_port} to {patch_port}.")
-        .format(
-            host=switch_port.switch.host.name,
-            switch_port=switch_port.name,
-            patch_port=patch_port.name,
-        )
+    message = deferred_gettext("Removed patch from {host}/{switch_port} to {patch_port}.").format(
+        host=switch_port.switch.host.name,
+        switch_port=switch_port.name,
+        patch_port=patch_port.name,
     )
     log_room_event(
         message.to_json(),

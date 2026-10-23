@@ -5,6 +5,7 @@
 pycroft.lib.finance
 ~~~~~~~~~~~~~~~~~~~
 """
+
 import typing
 import typing as t
 from datetime import datetime, timedelta
@@ -76,12 +77,8 @@ def get_typed_splits(
 
 
 def get_transaction_type(transaction: Transaction) -> tuple[str, str] | None:
-    credited_types = {
-        split.account.type for split in transaction.splits if split.amount > 0
-    }
-    debited_types = {
-        split.account.type for split in transaction.splits if split.amount < 0
-    }
+    credited_types = {split.account.type for split in transaction.splits if split.amount > 0}
+    debited_types = {split.account.type for split in transaction.splits if split.amount < 0}
     if len(credited_types) == len(debited_types) == 1:
         [cred_type] = credited_types
         [deb_type] = debited_types

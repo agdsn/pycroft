@@ -5,6 +5,7 @@
 pycroft.helpers.errorcode
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 """
+
 import typing as t
 from abc import ABCMeta, abstractmethod
 
@@ -32,6 +33,7 @@ class ErrorCode(metaclass=ABCMeta):
 
     Subclasses must implement at least the calculate method.
     """
+
     @abstractmethod
     def calculate(self, number: int) -> int:
         pass

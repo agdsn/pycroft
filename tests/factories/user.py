@@ -13,26 +13,26 @@ from .facilities import RoomFactory
 from .finance import AccountFactory
 
 
-
 # Using SHA1 password hash for performance.
 #: >>> from pycroft.helpers.user import crypt_context
 #: >>> crypt_context.hash("password", scheme="ldap_sha1")
 PASSWORD = "{SHA}W6ph5Mm5Pz8GgiULbPgzG37mj9g="
 
+
 class UserFactory(BaseFactory):
     class Meta:
         model = User
 
-    login = Faker('user_name')
-    name = Faker('name')
-    registered_at = Faker('date_time')
+    login = Faker("user_name")
+    name = Faker("name")
+    registered_at = Faker("date_time")
     password = None
     passwd_hash = PASSWORD
     wifi_passwd_hash = "{clear}password"
-    email = Faker('email')
+    email = Faker("email")
     account = factory.SubFactory(AccountFactory, type="USER_ASSET")
     room = factory.SubFactory(RoomFactory)
-    address = factory.SelfAttribute('room.address')
+    address = factory.SelfAttribute("room.address")
     unix_account = None
     swdd_person_id = None
     birthdate = None
@@ -43,41 +43,44 @@ class UserFactory(BaseFactory):
 
         See https://factoryboy.readthedocs.io/en/stable/recipes.html#custom-manager-methods.
         """
-        assert 'password' in kwargs
-        assert 'passwd_hash' in kwargs
-        if kwargs.get('password'):
-            kwargs.pop('passwd_hash')
+        assert "password" in kwargs
+        assert "passwd_hash" in kwargs
+        if kwargs.get("password"):
+            kwargs.pop("passwd_hash")
         return super()._create(model_class, *args, **kwargs)
 
     class Params:
         with_unix_account = factory.Trait(
-            unix_account=factory.SubFactory('tests.factories.user.UnixAccountFactory',
-                                            login=factory.SelfAttribute('..login'))
+            unix_account=factory.SubFactory(
+                "tests.factories.user.UnixAccountFactory", login=factory.SelfAttribute("..login")
+            )
         )
         with_membership = factory.Trait(
-            membership=factory.RelatedFactory('tests.factories.property.MembershipFactory',
-                                              'user')
+            membership=factory.RelatedFactory("tests.factories.property.MembershipFactory", "user")
         )
         with_host = factory.Trait(
-            host=factory.RelatedFactory('tests.factories.host.HostFactory', 'owner',
-                                        room=factory.SelfAttribute('..room'))
+            host=factory.RelatedFactory(
+                "tests.factories.host.HostFactory", "owner", room=factory.SelfAttribute("..room")
+            )
         )
         # needs either with_host or a room!
         patched = factory.Trait(room__patched_with_subnet=True)
         without_room = factory.Trait(
             room=None,
-            address=factory.SubFactory('tests.factories.address.AddressFactory'),
+            address=factory.SubFactory("tests.factories.address.AddressFactory"),
         )
         with_creation_log_entry = factory.Trait(
             log_entry=factory.RelatedFactory(
-                'tests.factories.log.UserLogEntryFactory', 'user',
-                created_at=factory.SelfAttribute('..registered_at'),
+                "tests.factories.log.UserLogEntryFactory",
+                "user",
+                created_at=factory.SelfAttribute("..registered_at"),
                 message="User created",
             )
         )
         with_random_task = factory.Trait(
             task=factory.RelatedFactory(
-                'tests.factories.task.UserTaskFactory', 'user',
+                "tests.factories.task.UserTaskFactory",
+                "user",
                 self_created=True,
                 due_yesterday=True,
             )
@@ -100,7 +103,7 @@ class UnixAccountFactory(BaseFactory):
         model = UnixAccount
 
     class Params:
-        login = Faker('user_name')
+        login = Faker("user_name")
 
     uid = None
     gid = None

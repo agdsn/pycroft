@@ -7,6 +7,7 @@ from collections import OrderedDict
 from flask import Flask
 from flask.globals import request_ctx
 
+
 class LinkedScript(t.NamedTuple):
     url: str
     mime_type: str

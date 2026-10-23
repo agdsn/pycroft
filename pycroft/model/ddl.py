@@ -5,6 +5,7 @@
 pycroft.model.ddl
 ~~~~~~~~~~~~~~~~~
 """
+
 import inspect
 import typing as t
 from collections import OrderedDict
@@ -29,7 +30,7 @@ def _join_tokens(*tokens: str | None) -> str:
     :param tokens:
     :return:
     """
-    return ' '.join(token for token in tokens if token is not None)
+    return " ".join(token for token in tokens if token is not None)
 
 
 def compile_if_clause(compiler: Compiled, clause: t.Any) -> t.Any:
@@ -67,8 +68,13 @@ def visit_drop_constraint(drop_constraint: DropConstraint, compiler: Compiled, *
     table_name = compiler.preparer.format_table(constraint.table)
     constraint_name = compiler.preparer.quote(constraint.name)
     return _join_tokens(
-        "ALTER TABLE", table_name, "DROP CONSTRAINT", opt_if_exists,
-        constraint_name, opt_drop_behavior)
+        "ALTER TABLE",
+        table_name,
+        "DROP CONSTRAINT",
+        opt_if_exists,
+        constraint_name,
+        opt_drop_behavior,
+    )
 
 
 def _process(value: str | Selectable) -> str:
@@ -172,18 +178,29 @@ def visit_create_function(element: CreateFunction, compiler: Compiled, **kw: t.A
     Compile a CREATE FUNCTION DDL statement for PostgreSQL
     """
     func = element.function
-    opt_or_replace = 'OR REPLACE' if element.or_replace else None
+    opt_or_replace = "OR REPLACE" if element.or_replace else None
     volatility = func.volatility.upper()
     strictness = "STRICT" if func.strict else None
     leakproof = "LEAKPROOF" if func.leakproof else None
     quoted_definition = "${quote_tag}$\n{definition}\n${quote_tag}$".format(
-        quote_tag=func.quote_tag, definition=func.definition)
+        quote_tag=func.quote_tag, definition=func.definition
+    )
 
     function_name = func.build_quoted_identifier(quoter=compiler.preparer.quote)
     return _join_tokens(
-        "CREATE", opt_or_replace, "FUNCTION", function_name, "RETURNS",
-        func.rtype, volatility, strictness, leakproof, "LANGUAGE", func.language,
-        "AS", quoted_definition,
+        "CREATE",
+        opt_or_replace,
+        "FUNCTION",
+        function_name,
+        "RETURNS",
+        func.rtype,
+        volatility,
+        strictness,
+        leakproof,
+        "LANGUAGE",
+        func.language,
+        "AS",
+        quoted_definition,
     )
 
 
@@ -196,8 +213,7 @@ def visit_drop_function(element: DropFunction, compiler: Compiled, **kw: t.Any) 
     opt_if_exists = "IF EXISTS" if element.if_exists else None
     opt_drop_behavior = "CASCADE" if element.cascade else None
     function_name = element.function.build_quoted_identifier(quoter=compiler.preparer.quote)
-    return _join_tokens("DROP FUNCTION", opt_if_exists,
-                        function_name, opt_drop_behavior)
+    return _join_tokens("DROP FUNCTION", opt_if_exists, function_name, opt_drop_behavior)
 
 
 @dataclass
@@ -247,11 +263,9 @@ def visit_create_rule(element: CreateRule, compiler: Compiled, **kw: t.Any) -> s
     """
     rule = element.rule
     opt_or_replace = "OR REPLACE" if element.or_replace else None
-    where_clause = ("WHERE " + rule.condition if rule.condition is not None
-                    else None)
+    where_clause = "WHERE " + rule.condition if rule.condition is not None else None
     opt_instead = "INSTEAD" if rule.do_instead else None
-    compiled_commands = tuple(map(partial(compile_if_clause, compiler),
-                                  rule.commands))
+    compiled_commands = tuple(map(partial(compile_if_clause, compiler), rule.commands))
     if len(compiled_commands) == 1:
         commands = compiled_commands[0]
     else:
@@ -259,8 +273,19 @@ def visit_create_rule(element: CreateRule, compiler: Compiled, **kw: t.Any) -> s
     rule_name = compiler.preparer.quote(rule.name)
     table_name = compiler.preparer.format_table(rule.table)
     return _join_tokens(
-        "CREATE", opt_or_replace, "RULE", rule_name, "AS ON", rule.event, "TO",
-        table_name, where_clause, "DO", opt_instead, commands)
+        "CREATE",
+        opt_or_replace,
+        "RULE",
+        rule_name,
+        "AS ON",
+        rule.event,
+        "TO",
+        table_name,
+        where_clause,
+        "DO",
+        opt_instead,
+        commands,
+    )
 
 
 # noinspection PyUnusedLocal
@@ -274,9 +299,7 @@ def visit_drop_rule(element: DropRule, compiler: Compiled, **kw: t.Any) -> str:
     opt_drop_behavior = "CASCADE" if element.cascade else None
     rule_name = compiler.preparer.quote(rule.name)
     table_name = compiler.preparer.format_table(rule.table)
-    return _join_tokens(
-        "DROP RULE", opt_if_exists, rule_name, "ON", table_name,
-        opt_drop_behavior)
+    return _join_tokens("DROP RULE", opt_if_exists, rule_name, "ON", table_name, opt_drop_behavior)
 
 
 @dataclass
@@ -305,8 +328,7 @@ class ConstraintTrigger(Trigger):
 
     def __post_init__(self):
         if not self.deferrable and self.initially_deferred:
-            raise ValueError("Constraint declared INITIALLY DEFERRED must be "
-                             "DEFERRABLE.")
+            raise ValueError("Constraint declared INITIALLY DEFERRED must be DEFERRABLE.")
 
     @t.override
     def __hash__(self):
@@ -347,16 +369,23 @@ def create_add_constraint_trigger(
     Compile a CREATE CONSTRAINT TRIGGER DDL statement for PostgreSQL
     """
     trigger = element.constraint_trigger
-    events = ' OR '.join(trigger.events)
-    opt_deferrable = 'DEFERRABLE' if trigger.deferrable else None
-    opt_initially_deferred = ('INITIALLY DEFERRED' if trigger.initially_deferred
-                              else None)
+    events = " OR ".join(trigger.events)
+    opt_deferrable = "DEFERRABLE" if trigger.deferrable else None
+    opt_initially_deferred = "INITIALLY DEFERRED" if trigger.initially_deferred else None
     trigger_name = compiler.preparer.quote(trigger.name)
     table_name = compiler.preparer.format_table(trigger.table)
     return _join_tokens(
-        "CREATE CONSTRAINT TRIGGER", trigger_name, trigger.when, events, 'ON',
-        table_name, opt_deferrable, opt_initially_deferred,
-        "FOR EACH ROW EXECUTE PROCEDURE", trigger.function_call)
+        "CREATE CONSTRAINT TRIGGER",
+        trigger_name,
+        trigger.when,
+        events,
+        "ON",
+        table_name,
+        opt_deferrable,
+        opt_initially_deferred,
+        "FOR EACH ROW EXECUTE PROCEDURE",
+        trigger.function_call,
+    )
 
 
 # noinspection PyUnusedLocal
@@ -366,12 +395,19 @@ def create_add_trigger(element: CreateTrigger, compiler: Compiled, **kw: t.Any) 
     Compile a CREATE CONSTRAINT TRIGGER DDL statement for PostgreSQL
     """
     trigger = element.trigger
-    events = ' OR '.join(trigger.events)
+    events = " OR ".join(trigger.events)
     trigger_name = compiler.preparer.quote(trigger.name)
     table_name = compiler.preparer.format_table(trigger.table)
     return _join_tokens(
-        "CREATE TRIGGER", trigger_name, trigger.when, events, 'ON', table_name,
-        "FOR EACH ROW EXECUTE PROCEDURE", trigger.function_call)
+        "CREATE TRIGGER",
+        trigger_name,
+        trigger.when,
+        events,
+        "ON",
+        table_name,
+        "FOR EACH ROW EXECUTE PROCEDURE",
+        trigger.function_call,
+    )
 
 
 # noinspection PyUnusedLocal
@@ -386,8 +422,8 @@ def visit_drop_trigger(element: DropTrigger, compiler: Compiled, **kw: t.Any) ->
     trigger_name = compiler.preparer.quote(trigger.name)
     table_name = compiler.preparer.format_table(trigger.table)
     return _join_tokens(
-        "DROP TRIGGER", opt_if_exists, trigger_name, "ON", table_name,
-        opt_drop_behavior)
+        "DROP TRIGGER", opt_if_exists, trigger_name, "ON", table_name, opt_drop_behavior
+    )
 
 
 @dataclass
@@ -416,11 +452,9 @@ class View(schema.DDLElement):
             self.view_options = OrderedDict(self.view_options)
 
         if self.check_option not in (None, "local", "cascaded"):
-            raise ValueError("check_option must be either None, 'local', or "
-                             "'cascaded'")
+            raise ValueError("check_option must be either None, 'local', or 'cascaded'")
         if self.check_option is not None and "check_option" in self.view_options:
-            raise ValueError('Parameter "check_option" specified more than '
-                             'once')
+            raise ValueError('Parameter "check_option" specified more than once')
 
     def _init_table_columns(self):
         if self.column_names is not None:
@@ -473,21 +507,19 @@ def visit_create_view(element: CreateView, compiler: Compiled, **kw: t.Any) -> s
     opt_temporary = "TEMPORARY" if view.temporary else None
     if view.column_names is not None:
         quoted_column_names = map(compiler.preparer.quote, view.column_names)
-        opt_column_names = "({})".format(', '.join(quoted_column_names))
+        opt_column_names = "({})".format(", ".join(quoted_column_names))
     else:
         opt_column_names = None
     view_name = compiler.preparer.quote(view.name)
     if view.view_options:
         opt_view_options = "WITH ({})".format(
-            ', '.join(f"{name} = {value}"
-                      for name, value in view.view_options.items()))
+            ", ".join(f"{name} = {value}" for name, value in view.view_options.items())
+        )
     else:
         opt_view_options = None
-    compiled_query = compiler.sql_compiler.process(view.query,
-                                                   literal_binds=True)
+    compiled_query = compiler.sql_compiler.process(view.query, literal_binds=True)
     if view.check_option is not None:
-        opt_check_option = 'WITH {} CHECK OPTION'.format(
-            view.check_option.upper())
+        opt_check_option = f"WITH {view.check_option.upper()} CHECK OPTION"
     else:
         opt_check_option = None
 
@@ -495,9 +527,18 @@ def visit_create_view(element: CreateView, compiler: Compiled, **kw: t.Any) -> s
     opt_if_not_exists = "IF NOT EXISTS" if element.if_not_exists and view.materialized else None
 
     return _join_tokens(
-        "CREATE", opt_or_replace, opt_temporary, view_type, opt_if_not_exists, view_name,
-        opt_column_names, opt_view_options, "AS", compiled_query,
-        opt_check_option)
+        "CREATE",
+        opt_or_replace,
+        opt_temporary,
+        view_type,
+        opt_if_not_exists,
+        view_name,
+        opt_column_names,
+        opt_view_options,
+        "AS",
+        compiled_query,
+        opt_check_option,
+    )
 
 
 # noinspection PyUnusedLocal
@@ -509,9 +550,7 @@ def visit_drop_view(element: DropView, compiler: Compiled, **kw: t.Any) -> str:
     view_name = compiler.preparer.quote(view.name)
     view_type = "VIEW" if not view.materialized else "MATERIALIZED VIEW"
 
-    return _join_tokens(
-        "DROP", view_type, opt_if_exists, view_name, opt_drop_behavior
-    )
+    return _join_tokens("DROP", view_type, opt_if_exists, view_name, opt_drop_behavior)
 
 
 class DDLManager:
@@ -610,6 +649,6 @@ class DDLManager:
 
     def register(self) -> None:
         for target, create_ddl, _drop_ddl in self.objects:
-            sqla_event.listen(target, 'after_create', create_ddl)
+            sqla_event.listen(target, "after_create", create_ddl)
         for target, _create_ddl, drop_ddl in reversed(self.objects):
-            sqla_event.listen(target, 'before_drop', drop_ddl)
+            sqla_event.listen(target, "before_drop", drop_ddl)

@@ -57,7 +57,6 @@ def room(module_session) -> Room:
 
 
 class TestMailSelectWtihoutBulding:
-
     def test_mail_just_goup(self, session, config, build_map, user_no_room):
         session.flush()
         length = sum(len(v) for v in build_map.values()) + 1

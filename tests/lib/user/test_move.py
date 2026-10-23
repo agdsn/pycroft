@@ -25,7 +25,7 @@ class TestUserMove:
         return factories.UserFactory(
             with_host=True,
             room__patched_with_subnet=True,
-            room__patch_ports__switch_port__default_vlans__subnets=[subnet]
+            room__patch_ports__switch_port__default_vlans__subnets=[subnet],
         )
 
     @pytest.fixture(scope="class")
@@ -40,9 +40,7 @@ class TestUserMove:
             patch_ports__switch_port__default_vlans__subnets=[subnet],
         )
 
-    def test_move_scheduling(
-        self, session, utcnow, user, processor, new_room_other_building
-    ):
+    def test_move_scheduling(self, session, utcnow, user, processor, new_room_other_building):
         when = utcnow + timedelta(days=1)
         lib_user.move(
             user,
@@ -64,9 +62,7 @@ class TestUserMove:
     def test_moves_into_same_room(self, session, user, processor, mail_capture):
         old_room = user.room
         with pytest.raises(AssertionError):
-            lib_user.move(
-                user, old_room.building.id, old_room.level, old_room.number, processor
-            )
+            lib_user.move(user, old_room.building.id, old_room.level, old_room.number, processor)
 
         assert not mail_capture
 

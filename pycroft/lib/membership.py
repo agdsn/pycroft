@@ -33,9 +33,7 @@ from pycroft.model.user import Membership, Property, PropertyGroup, User
 
 def known_properties() -> set[str]:
     """Return a set of all known properties, granted or denied."""
-    return set(session.session.execute(
-        select(Property.name).distinct()
-    ).scalars())
+    return set(session.session.execute(select(Property.name).distinct()).scalars())
 
 
 @with_transaction
@@ -100,24 +98,24 @@ def make_member_of(
     """
 
     if group.permission_level > processor.permission_level:
-        raise PermissionError("cannot create a membership for a group with a"
-                              " higher permission level")
+        raise PermissionError(
+            "cannot create a membership for a group with a higher permission level"
+        )
 
     memberships: list[Membership] = [
-        m for m in user.active_memberships(when=during)
-        if m.group == group
+        m for m in user.active_memberships(when=during) if m.group == group
     ]
-    intervals = IntervalSet[DateTimeTz](
-        m.active_during.closure for m in memberships
-    ).union(during)
+    intervals = IntervalSet[DateTimeTz](m.active_during.closure for m in memberships).union(during)
     for m in memberships:
         session.session.delete(m)
     session.session.flush()
     session.session.add_all(Membership(active_during=i, user=user, group=group) for i in intervals)
     message = deferred_gettext("Added to group {group} during {during}.")
-    log_user_event(message=message.format(group=group.name,
-                                          during=during).to_json(),
-                   user=user, author=processor)
+    log_user_event(
+        message=message.format(group=group.name, during=during).to_json(),
+        user=user,
+        author=processor,
+    )
 
 
 @with_transaction
@@ -145,16 +143,16 @@ def remove_member_of(
     """
 
     if group.permission_level > processor.permission_level:
-        raise PermissionError("cannot delete a membership for a group with a"
-                              " higher permission level")
+        raise PermissionError(
+            "cannot delete a membership for a group with a higher permission level"
+        )
 
     memberships: list[Membership] = [
-        m for m in user.active_memberships(when=during)
-        if m.group == group
+        m for m in user.active_memberships(when=during) if m.group == group
     ]
-    intervals = IntervalSet[DateTimeTz](
-        m.active_during.closure for m in memberships
-    ).difference(during)
+    intervals = IntervalSet[DateTimeTz](m.active_during.closure for m in memberships).difference(
+        during
+    )
     for m in memberships:
         session.session.delete(m)
     # flush necessary because we otherwise don't have any control
@@ -163,9 +161,11 @@ def remove_member_of(
     session.session.add_all(Membership(active_during=i, user=user, group=group) for i in intervals)
 
     message = deferred_gettext("Removed from group {group} during {during}.")
-    log_user_event(message=message.format(group=group.name,
-                                          during=during).to_json(),
-                   user=user, author=processor)
+    log_user_event(
+        message=message.format(group=group.name, during=during).to_json(),
+        user=user,
+        author=processor,
+    )
 
 
 def delete_membership(
@@ -187,12 +187,14 @@ def delete_membership(
 def edit_property_group(
     group: PropertyGroup, name: str, permission_level: int, processor: User
 ) -> None:
-    message = deferred_gettext("Edited property group ({}, {}) -> ({}, {}).")\
-        .format(group.name, group.permission_level, name, permission_level)
+    message = deferred_gettext("Edited property group ({}, {}) -> ({}, {}).").format(
+        group.name, group.permission_level, name, permission_level
+    )
     log_event(message.to_json(), processor)
 
     group.name = name
     group.permission_level = permission_level
+
 
 @with_transaction
 def delete_property_group(group: PropertyGroup, processor: User) -> None:
@@ -283,4 +285,3 @@ def select_user_and_last_mem() -> Select[tuple[int, int, DateTimeTz]]:
 class _WindowArgs(t.TypedDict):
     partition_by: _ByArgument
     order_by: _ByArgument
-

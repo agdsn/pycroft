@@ -8,8 +8,7 @@ from hades_logs import HadesLogs
 from pycroft.model.logging import UserLogEntry, RoomLogEntry
 from pycroft.model.session import Session
 from pycroft.model.user import User
-from tests.factories import UserFactory, RoomLogEntryFactory, \
-    UserLogEntryFactory
+from tests.factories import UserFactory, RoomLogEntryFactory, UserLogEntryFactory
 from tests.assertions import assert_one
 from web import make_app, PycroftFlask
 from ..assertions import TestClient
@@ -29,9 +28,7 @@ def get_logs(user_id: int, client: TestClient, **kw) -> list[t.Any]:
 
     :returns: ``response.json['items']``
     """
-    response = client.assert_url_ok(
-        url_for("user.user_show_logs_json", user_id=user_id, **kw)
-    )
+    response = client.assert_url_ok(url_for("user.user_show_logs_json", user_id=user_id, **kw))
     assert "json" in response.content_type.lower()
     json = response.json
     assert json.get("items") is not None
@@ -70,9 +67,7 @@ class TestAppWithoutHadesLogs:
 
     @staticmethod
     def assert_hades_message(message: str):
-        assert re.search(
-            r"hadeslogs.*not configured.*logs cannot be displayed", message.lower()
-        )
+        assert re.search(r"hadeslogs.*not configured.*logs cannot be displayed", message.lower())
 
     def test_warning_log_tab_hades(self, logs: GetLogs):
         log = assert_one(logs(logtype="hades"))
@@ -101,15 +96,11 @@ class TestRoomAndUserLogDisplay:
         return UserFactory.create()
 
     @pytest.fixture(scope="class", autouse=True)
-    def room_log_entry(
-        self, admin: User, class_session: Session, user: User
-    ) -> RoomLogEntry:
+    def room_log_entry(self, admin: User, class_session: Session, user: User) -> RoomLogEntry:
         return RoomLogEntryFactory(author=admin, room=user.room)
 
     @pytest.fixture(scope="class", autouse=True)
-    def user_log_entry(
-        self, admin: User, class_session: Session, user: User
-    ) -> UserLogEntry:
+    def user_log_entry(self, admin: User, class_session: Session, user: User) -> UserLogEntry:
         return UserLogEntryFactory(author=admin, user=user)
 
     @pytest.fixture(scope="class")
@@ -122,8 +113,8 @@ class TestRoomAndUserLogDisplay:
     @staticmethod
     def assert_one_log(got_logs, expected_entry):
         item = assert_one(got_logs)
-        assert item['message'] == expected_entry.message
-        assert item['user']['title'] == expected_entry.author.name
+        assert item["message"] == expected_entry.message
+        assert item["user"]["title"] == expected_entry.author.name
 
     def test_room_log_exists(self, logs: GetLogs, room_log_entry: RoomLogEntry):
         items = logs(logtype="room")
@@ -135,13 +126,13 @@ class TestRoomAndUserLogDisplay:
 
     def test_no_hades_log_exists(self, logs: GetLogs):
         item = assert_one(logs(logtype="hades"))
-        assert " cannot be displayed" in item['message'].lower()
-        assert " connected room" in item['message'].lower()
+        assert " cannot be displayed" in item["message"].lower()
+        assert " connected room" in item["message"].lower()
 
 
 class TestDummyHadesLogs:
-    """Frontend Tests for the endpoints utilizing live Hades Logs
-    """
+    """Frontend Tests for the endpoints utilizing live Hades Logs"""
+
     @pytest.fixture(scope="class", autouse=True)
     def user(self, class_session):
         return UserFactory.create(with_host=True, patched=True)
@@ -182,10 +173,10 @@ class TestDummyHadesLogs:
     def test_hades_logs_are_returned(self, logs: GetLogs):
         assert len(logs := logs(logtype="hades")) == 4
         for log in logs:
-            if "rejected" in log['message'].lower():
+            if "rejected" in log["message"].lower():
                 continue
-            assert "– groups: " in log['message'].lower()
-            assert "tagged)" in log['message'].lower()
+            assert "– groups: " in log["message"].lower()
+            assert "tagged)" in log["message"].lower()
 
     @pytest.mark.hades_logs
     def test_disconnected_user_emits_warning(self, logs: GetLogs, other_user: User):

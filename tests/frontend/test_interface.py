@@ -32,14 +32,10 @@ pytestmark = pytest.mark.usefixtures("admin_logged_in")
 
 class TestInterfacesJson:
     def test_interfaces_nonexistent_host(self, client):
-        client.assert_url_response_code(
-            url_for("host.host_interfaces_json", host_id=999), code=404
-        )
+        client.assert_url_response_code(url_for("host.host_interfaces_json", host_id=999), code=404)
 
     def test_interfaces_json(self, client, interface):
-        resp = client.assert_url_ok(
-            url_for("host.host_interfaces_json", host_id=interface.host.id)
-        )
+        resp = client.assert_url_ok(url_for("host.host_interfaces_json", host_id=interface.host.id))
         item = assert_one(resp.json.get("items", []))
         assert item["id"] == interface.id
         assert len(item["actions"]) == 2
@@ -60,9 +56,7 @@ class TestInterfaceDelete:
 
     def test_delete_interface_get(self, client, interface):
         with client.renders_template("generic_form.html"):
-            client.assert_url_ok(
-                url_for("host.interface_delete", interface_id=interface.id)
-            )
+            client.assert_url_ok(url_for("host.interface_delete", interface_id=interface.id))
 
     def test_delete_interface_post(self, session, client, interface, host):
         with client.flashes_message("Interface.*gelöscht", category="success"):
@@ -77,15 +71,11 @@ class TestInterfaceDelete:
 @pytest.mark.usefixtures("session")
 class TestInterfaceEdit:
     def test_edit_nonexistent_interface(self, client):
-        client.assert_url_response_code(
-            url_for("host.interface_edit", interface_id=999), code=404
-        )
+        client.assert_url_response_code(url_for("host.interface_edit", interface_id=999), code=404)
 
     def test_edit_interface_get(self, client, interface):
         with client.renders_template("generic_form.html"):
-            client.assert_url_ok(
-                url_for("host.interface_edit", interface_id=interface.id)
-            )
+            client.assert_url_ok(url_for("host.interface_edit", interface_id=interface.id))
 
     def test_edit_interface_post_invalid_data(self, client, interface):
         with client.renders_template("generic_form.html"):
@@ -110,9 +100,7 @@ class TestInterfaceEdit:
 @pytest.mark.usefixtures("session")
 class TestInterfaceCreate:
     def test_create_interface_nonexistent_host(self, client, host):
-        client.assert_url_response_code(
-            url_for("host.interface_create", host_id=999), code=404
-        )
+        client.assert_url_response_code(url_for("host.interface_create", host_id=999), code=404)
 
     def test_create_interface_get(self, client, host):
         with client.renders_template("generic_form.html"):
@@ -142,9 +130,7 @@ class TestManufacturer:
         )
 
     def test_manufacturer_valid_mac(self, client, monkeypatch):
-        monkeypatch.setattr(
-            "web.blueprints.host.get_interface_manufacturer", lambda mac: "AG DSN"
-        )
+        monkeypatch.setattr("web.blueprints.host.get_interface_manufacturer", lambda mac: "AG DSN")
         resp = client.assert_url_ok(
             url_for("host.interface_manufacturer_json", mac="00:11:22:33:44:55")
         )

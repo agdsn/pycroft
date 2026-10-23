@@ -2,8 +2,13 @@ import re
 
 import pytest
 
-from web.table.table import Column, BootstrapTable, SplittedTable, \
-    BootstrapTableMeta, custom_formatter_column
+from web.table.table import (
+    Column,
+    BootstrapTable,
+    SplittedTable,
+    BootstrapTableMeta,
+    custom_formatter_column,
+)
 
 
 class TestColumn:
@@ -25,16 +30,16 @@ class TestColumn:
         assert c.title == "Test Title"
 
     def test_column_is_hidden(self):
-        c = Column("Test", name='test_col', hide_if=lambda: True)
+        c = Column("Test", name="test_col", hide_if=lambda: True)
         assert str(c) == "", "Column rendered in spite of hide_if"
 
     def test_column_is_not_hidden(self):
-        c = Column("Test", name='test_col', hide_if=lambda: False)
+        c = Column("Test", name="test_col", hide_if=lambda: False)
         assert str(c) != ""
 
 
 class TestInstantiatedColumn:
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def column(self):
         return Column(title="Test Column", name="test_col")
 
@@ -53,15 +58,19 @@ class TestInstantiatedColumn:
 
 
 class TestCustomizedColumn:
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def rendered_col(self):
-        return str(Column(title="Test Column", name="test_col",
-                          width=3, cell_style="customCellStyle"))
+        return str(
+            Column(title="Test Column", name="test_col", width=3, cell_style="customCellStyle")
+        )
 
-    @pytest.mark.parametrize('arg_string', [
-        'data-cell-style="customCellStyle"',
-        'class="col-sm-3"',
-    ])
+    @pytest.mark.parametrize(
+        "arg_string",
+        [
+            'data-cell-style="customCellStyle"',
+            'class="col-sm-3"',
+        ],
+    )
     def test_custom_arguments_set(self, rendered_col, arg_string):
         assert arg_string in rendered_col
 
@@ -79,20 +88,22 @@ class TestBootstrapTable:
 
 
 class TestInstantiatedBootstrapTable:
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def Table(self):
         class Table_(BootstrapTable):
             class Meta:
-                table_args = {'foo': "bar", 'data-cache': "true"}
+                table_args = {"foo": "bar", "data-cache": "true"}
+
             col1 = Column("Column 1")
             col2 = Column("Column 2")
+
         return Table_
 
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def table(self, Table):
         return Table(data_url="http://dummy")
 
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def header(self, table):
         return str(table.table_header)
 
@@ -106,57 +117,66 @@ class TestInstantiatedBootstrapTable:
             assert str(col) in header
 
     def test_table_args_passed(self, table):
-        assert table.table_args.get('data-cache') == "true"
-        assert table.table_args.get('foo') == "bar"
+        assert table.table_args.get("data-cache") == "true"
+        assert table.table_args.get("foo") == "bar"
 
     def test_table_args_parameter_take_precedence(self, Table):
-        table = Table(data_url="#", table_args={'foo': "new"})
-        assert table.table_args['foo'] == "new"
+        table = Table(data_url="#", table_args={"foo": "new"})
+        assert table.table_args["foo"] == "new"
 
     def test_custom_table_args_will_be_used(self, table):
-        table.table_args['special_arg'] = "someveryspecialargument"
+        table.table_args["special_arg"] = "someveryspecialargument"
         assert "someveryspecialargument" in table.render("some-id")
 
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def stub_table_render(self):
         class StubTable(BootstrapTable):
             def __init__(self):
                 super().__init__(data_url="http://dummy")
+
             table_header = "HEADER"
             table_footer = "FOOTER"
             toolbar = "TOOLBAR"
 
         return StubTable().render(table_id="TABLE_ID")
 
-    @pytest.mark.parametrize('pattern', [
-        r'<div .*role="toolbar".*>\s*TOOLBAR\s*</div>',  # toolbar
-        r'<table .*id="TABLE_ID".*>\s*HEADER\s*FOOTER\s*</table>',  # header
-    ])
+    @pytest.mark.parametrize(
+        "pattern",
+        [
+            r'<div .*role="toolbar".*>\s*TOOLBAR\s*</div>',  # toolbar
+            r'<table .*id="TABLE_ID".*>\s*HEADER\s*FOOTER\s*</table>',  # header
+        ],
+    )
     def test_toolbar_render_contains_pattern_pattern(self, pattern, stub_table_render):
         assert len(re.findall(pattern, stub_table_render)) == 1
 
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def rendered(self, table):
         return table.render("test_id")
 
-    @pytest.mark.parametrize('expected_needle', [
-        "Column 1", "Column 2",
-    ])
+    @pytest.mark.parametrize(
+        "expected_needle",
+        [
+            "Column 1",
+            "Column 2",
+        ],
+    )
     def test_columns_appear_in_header(self, rendered, expected_needle):
         assert expected_needle in rendered
 
 
 class TestDeclarativeTable:
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def table_cls(self):
         class Table(BootstrapTable):
             a = Column("Column 1")
-            b = Column("Column 2", name='bar')
+            b = Column("Column 2", name="bar")
 
             def toolbar(self):
                 yield "<span>"
                 yield "Hasta la vista, baby!"
                 yield "</span>"
+
         return Table
 
     def test_columns_are_collected(self, table_cls):
@@ -169,90 +189,97 @@ class TestDeclarativeTable:
 
 
 class TestInheritance:
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def A(self):
         class A_(BootstrapTable):
             a = Column("Foo")
             b = Column("Bar")
+
         return A_
 
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def B(self, A):
         class B_(A):
             a = Column("Shizzle")
             c = Column("Baz")
+
         return B_
 
     def test_inheritance_adds_columns_correctly(self, B):
         cols = B(data_url="#").columns
-        assert [(c.name, c.title) for c in cols] == [('a', "Shizzle"), ('b', "Bar"), ('c', "Baz")]
+        assert [(c.name, c.title) for c in cols] == [("a", "Shizzle"), ("b", "Bar"), ("c", "Baz")]
 
     def test_superclasses_columns_not_altered(self, A):
-        assert A.column_attrname_map == {'a': 'a', 'b': 'b'}
+        assert A.column_attrname_map == {"a": "a", "b": "b"}
+
 
 class TestEmptyTableDefaults:
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def EmptyTable(self) -> type[BootstrapTable]:
         class A(BootstrapTable):
             pass
+
         return A
 
     def test_table_args_set(self, EmptyTable):
-        assert hasattr(EmptyTable, '_table_args'), "Attribute _table_args not set after class creation"
+        assert hasattr(EmptyTable, "_table_args"), (
+            "Attribute _table_args not set after class creation"
+        )
         assert dict(EmptyTable._table_args) == {
-            'data-toggle': "table",
+            "data-toggle": "table",
             "data-icons-prefix": "fa",
         }
 
     def test_table_args_after_instantiation(self, EmptyTable):
         assert EmptyTable(data_url="#").table_args == {
-            'data-toggle': "table",
+            "data-toggle": "table",
             "data-icons-prefix": "fa",
-            'data-url': "#",
+            "data-url": "#",
         }
 
 
 class TestTableArgs:
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def A(self):
         # we only use the metaclass so we don't have to test the defaults again
         class A_(metaclass=BootstrapTableMeta):
             class Meta:
-                table_args = {'arg1': "Bar", 'arg2': "Value"}
+                table_args = {"arg1": "Bar", "arg2": "Value"}
+
         return A_
 
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def B(self, A):
         class B_(A):
             class Meta:
-                table_args = {'arg2': "Antoher value", 'arg3': "x"}
+                table_args = {"arg2": "Antoher value", "arg3": "x"}
 
         return B_
 
     def test_table_args_inherited(self, A, B):
-        assert hasattr(B, '_table_args'), "Attribute _table_args not set after class creation"
-        assert dict(B._table_args) == {'arg1': "Bar", 'arg2': "Antoher value", 'arg3': "x"}
+        assert hasattr(B, "_table_args"), "Attribute _table_args not set after class creation"
+        assert dict(B._table_args) == {"arg1": "Bar", "arg2": "Antoher value", "arg3": "x"}
 
     def test_table_args_of_superclass_untouched(self, A):
-        assert dict(A._table_args) == {'arg1': "Bar", 'arg2': "Value"}
+        assert dict(A._table_args) == {"arg1": "Bar", "arg2": "Value"}
 
     def test_meta_not_left_in_class(self, A, B):
-        assert not hasattr(A, 'Meta')
-        assert not hasattr(B, 'Meta')
+        assert not hasattr(A, "Meta")
+        assert not hasattr(B, "Meta")
 
 
 class TestEnforcedUrlParams:
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def A(self):
         class A_(BootstrapTable):
             class Meta:
-                enforced_url_params = {'inverted': 'yes'}
+                enforced_url_params = {"inverted": "yes"}
+
         return A_
 
     def test_url_param_is_added(self, A: type[BootstrapTable]):
         assert (
-            A(data_url="http://localhost/table").data_url
-            == "http://localhost/table?inverted=yes"
+            A(data_url="http://localhost/table").data_url == "http://localhost/table?inverted=yes"
         )
 
     def test_url_param_is_overridden(self, A: type[BootstrapTable]):
@@ -263,25 +290,29 @@ class TestEnforcedUrlParams:
 
 
 class TestSplittedTable:
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def table(self):
         class Table(SplittedTable):
-            splits = (('split1', "Split 1"), ('split2', "Split 2"))
+            splits = (("split1", "Split 1"), ("split2", "Split 2"))
             foo = Column("Foo")
             bar = Column("Bar")
 
         return Table(data_url="#")
 
     def test_table_correct_cols(self, table):
-        assert [c.name for c in table.columns] \
-            == ['split1_foo', 'split1_bar', 'split2_foo', 'split2_bar']
+        assert [c.name for c in table.columns] == [
+            "split1_foo",
+            "split1_bar",
+            "split2_foo",
+            "split2_bar",
+        ]
 
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def header(self, table):
         return str(table.table_header)
 
     def test_table_header_generation(self, header):
-        GLOBAL_RE = r'<thead><tr>(.*)</tr><tr>(.*)</tr></thead>'
+        GLOBAL_RE = r"<thead><tr>(.*)</tr><tr>(.*)</tr></thead>"
         match = re.fullmatch(GLOBAL_RE, header)
         assert match is not None
         first_row, second_row = match.groups()
@@ -289,7 +320,7 @@ class TestSplittedTable:
         BIG_COL_RE = r'<th.*?colspan="2".*?>\s*(.*?)\s*</th>'
         assert re.findall(BIG_COL_RE, first_row) == ["Split 1", "Split 2"]
 
-        SMALL_COL_RE = r'<th (.*?)>\?*(.*?)\s*</th>'
+        SMALL_COL_RE = r"<th (.*?)>\?*(.*?)\s*</th>"
         small_col_matches = re.findall(SMALL_COL_RE, second_row)
         # EXPECTED form of `small_col_matches`:
         # [(html_attr_string, 'Foo'), (…, 'Bar'), (…, 'Foo'), (…, # 'Bar')]
@@ -311,14 +342,16 @@ class TestSplittedTable:
 
 class TestFormattedColumn:
     def test_column_formatter_passed(self):
-        @custom_formatter_column('table.myFormatter')
+        @custom_formatter_column("table.myFormatter")
         class MyCol(Column):
             pass
-        assert MyCol("Title!").formatter == 'table.myFormatter', "Formatter not passed by decorator"
+
+        assert MyCol("Title!").formatter == "table.myFormatter", "Formatter not passed by decorator"
 
     def test_column_formatter_respects_init(self):
-        @custom_formatter_column('table.myFormatter')
+        @custom_formatter_column("table.myFormatter")
         class MyCol(Column):
             def __init__(self, *a, **kw):
                 super().__init__(*a, sortable=False, **kw)
+
         assert not MyCol("Title!").sortable

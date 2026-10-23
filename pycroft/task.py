@@ -7,6 +7,7 @@ This module defines celery tasks to run tasks
 by using implementations as defined in `pycroft.lib.task`
 (see :class:`TaskImpl <pycroft.lib.task.TaskImpl>`).
 """
+
 import logging
 import os
 import sys
@@ -42,7 +43,7 @@ from pycroft.model.swdd import swdd_vo, swdd_import, swdd_vv
 from pycroft.model.task import TaskStatus
 from scripts.connection import try_create_connection
 
-if dsn := os.getenv('PYCROFT_SENTRY_DSN'):
+if dsn := os.getenv("PYCROFT_SENTRY_DSN"):
     logging_integration = LoggingIntegration(
         level=logging.INFO,  # INFO / WARN create breadcrumbs, just as SQL queries
         event_level=logging.ERROR,  # errors and above create breadcrumbs
@@ -54,8 +55,11 @@ if dsn := os.getenv('PYCROFT_SENTRY_DSN'):
         traces_sample_rate=1.0,
     )
 
-app = Celery('tasks', backend=os.getenv('PYCROFT_CELERY_RESULT_BACKEND_URI'),
-             broker=os.getenv('PYCROFT_CELERY_BROKER_URI'))
+app = Celery(
+    "tasks",
+    backend=os.getenv("PYCROFT_CELERY_RESULT_BACKEND_URI"),
+    broker=os.getenv("PYCROFT_CELERY_BROKER_URI"),
+)
 
 logger = get_task_logger(__name__)
 
@@ -114,9 +118,7 @@ class DBTask(CeleryTask):
             connection_string, 5, logger=logging.getLogger("tasks"), echo=False
         )
 
-        set_scoped_session(
-            t.cast(Session, scoped_session(sessionmaker(bind=self.engine)))
-        )
+        set_scoped_session(t.cast(Session, scoped_session(sessionmaker(bind=self.engine))))
         _config_var.set(MailConfig.from_env())
 
     def __del__(self) -> None:
@@ -158,9 +160,7 @@ def execute_scheduled_tasks():
 
         try:
             write_task_message(
-                task,
-                f"Processed {task.type.name} task. Status: {task.status.name}",
-                log=True
+                task, f"Processed {task.type.name} task. Status: {task.status.name}", log=True
             )
         except ObjectDeletedError:
             logger.error("Task instance deleted (broken polymorphism?)", exc_info=True)
@@ -169,7 +169,7 @@ def execute_scheduled_tasks():
         session.session.commit()
 
         if task.status == TaskStatus.FAILED:
-            send_template_mails(['support@agdsn.de'], TaskFailedTemplate(), task=task)
+            send_template_mails(["support@agdsn.de"], TaskFailedTemplate(), task=task)
 
 
 @app.task(base=DBTask)
@@ -197,10 +197,12 @@ def mail_negative_members():
         negative_users = get_negative_members()
         user_send_mails(negative_users, MemberNegativeBalance())
     else:
-        mail = Mail("Finanzen",
-                    "finanzen@lists.agdsn.de",
-                    "Automatische Zahlungsrückstands-Mail fehlgeschlagen",
-                    body_plain="Der Import ist nicht aktuell genug.")
+        mail = Mail(
+            "Finanzen",
+            "finanzen@lists.agdsn.de",
+            "Automatische Zahlungsrückstands-Mail fehlgeschlagen",
+            body_plain="Der Import ist nicht aktuell genug.",
+        )
         send_mails_async.delay([mail])
 
 
@@ -223,28 +225,28 @@ def send_mails_async(self, mails: list[Mail]):
 
 app.conf.update(
     beat_schedule={
-        'execute-scheduled-tasks': {
-            'task': 'pycroft.task.execute_scheduled_tasks',
-            'schedule': timedelta(hours=1)
+        "execute-scheduled-tasks": {
+            "task": "pycroft.task.execute_scheduled_tasks",
+            "schedule": timedelta(hours=1),
         },
-        'remove-old-traffic-data': {
-            'task': 'pycroft.task.remove_old_traffic_data',
-            'schedule': timedelta(days=1)
+        "remove-old-traffic-data": {
+            "task": "pycroft.task.remove_old_traffic_data",
+            "schedule": timedelta(days=1),
         },
-        'refresh-swdd-views':{
-            'task': 'pycroft.task.refresh_swdd_views',
-            'schedule': timedelta(hours=3)
+        "refresh-swdd-views": {
+            "task": "pycroft.task.refresh_swdd_views",
+            "schedule": timedelta(hours=3),
         },
-        'mail-negative-members': {
-            'task': 'pycroft.task.mail_negative_members',
-            'schedule': crontab(0, 0, day_of_month=6)
-        }
+        "mail-negative-members": {
+            "task": "pycroft.task.mail_negative_members",
+            "schedule": crontab(0, 0, day_of_month=6),
+        },
     },
     enable_utc=True,
-    timezone='Europe/Berlin',
-    accept_content={'pickle'},
-    task_serializer='pickle',
-    result_serializer='pickle',
+    timezone="Europe/Berlin",
+    accept_content={"pickle"},
+    task_serializer="pickle",
+    result_serializer="pickle",
     broker_transport_options={
         "client_properties": {"connection_name": "pycroft celery worker"},
     },

@@ -17,8 +17,8 @@ from web.table.table import (
 
 
 class HostTable(BootstrapTable):
-    """A table for displaying hosts
-    """
+    """A table for displaying hosts"""
+
     name = Column("Name")
     switch = MultiLinkColumn("Switch")
     port = Column("SwitchPort")
@@ -29,12 +29,12 @@ class HostTable(BootstrapTable):
 
     @t.override
     def __init__(self, *, user_id: int | None = None, **kw: t.Any) -> None:
-        table_args = kw.pop('table_args', {})
-        table_args.setdefault('data-load-subtables', "true")
-        table_args.setdefault('data-detail-view', "true")
-        table_args.setdefault('data-detail-formatter', "table.hostDetailFormatter")
-        table_args.setdefault('data-response-handler', "table.userHostResponseHandler")
-        kw['table_args'] = table_args
+        table_args = kw.pop("table_args", {})
+        table_args.setdefault("data-load-subtables", "true")
+        table_args.setdefault("data-detail-view", "true")
+        table_args.setdefault("data-detail-formatter", "table.hostDetailFormatter")
+        table_args.setdefault("data-response-handler", "table.userHostResponseHandler")
+        kw["table_args"] = table_args
 
         super().__init__(**kw)
         self.user_id = user_id
@@ -62,8 +62,8 @@ class HostRow(BaseModel):
 
 
 class InterfaceTable(BootstrapTable):
-    """A table for displaying interfaces
-    """
+    """A table for displaying interfaces"""
+
     name = Column("Name")
     mac = Column("MAC")
     ips = Column("IPs")

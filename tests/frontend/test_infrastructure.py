@@ -72,9 +72,7 @@ class TestSwitch:
 
     def test_show_switch(self, client: TestClient, switch: Switch):
         with client.renders_template("infrastructure/switch_show.html"):
-            client.assert_url_ok(
-                url_for("infrastructure.switch_show", switch_id=switch.host_id)
-            )
+            client.assert_url_ok(url_for("infrastructure.switch_show", switch_id=switch.host_id))
 
     def test_show_nonexistent_switch_table(self, client: TestClient):
         client.assert_url_response_code(
@@ -265,9 +263,7 @@ class TestSwitchPortCreate:
                 method="POST",
             )
 
-    def test_create_port_already_patched(
-        self, client, switch, connected_patch_port, url
-    ):
+    def test_create_port_already_patched(self, client, switch, connected_patch_port, url):
         resp = client.assert_url_ok(
             url(connected_patch_port.switch_port.switch.host_id),
             data={

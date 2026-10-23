@@ -82,6 +82,7 @@ class BlueprintAccess:
             self.endpoint_properties_map[endpoint] = view_properties
             f.required_properties = view_properties  # ty: ignore[unresolved-attribute]
             return f
+
         return decorator
 
     def _check_access(self) -> Response | None:
@@ -89,8 +90,7 @@ class BlueprintAccess:
             app = t.cast("PycroftFlask", current_app)
             return t.cast(Response, app.login_manager.unauthorized())
         endpoint = request.endpoint
-        properties = chain(self.required_properties,
-                           self.endpoint_properties_map.get(endpoint, ()))
+        properties = chain(self.required_properties, self.endpoint_properties_map.get(endpoint, ()))
         if not _check_properties(properties):
             abort(403)
         return None
@@ -106,5 +106,4 @@ class BlueprintAccess:
         :param endpoint: A endpoint name
         """
         endpoint_specific = self.endpoint_properties_map.get(endpoint, ())
-        return _check_properties(chain(self.required_properties,
-                                       endpoint_specific))
+        return _check_properties(chain(self.required_properties, endpoint_specific))

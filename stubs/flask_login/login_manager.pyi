@@ -1,10 +1,35 @@
-
 from flask.typing import ResponseReturnValue
 
-from .config import AUTH_HEADER_NAME as AUTH_HEADER_NAME, COOKIE_DURATION as COOKIE_DURATION, COOKIE_HTTPONLY as COOKIE_HTTPONLY, COOKIE_NAME as COOKIE_NAME, COOKIE_SAMESITE as COOKIE_SAMESITE, COOKIE_SECURE as COOKIE_SECURE, ID_ATTRIBUTE as ID_ATTRIBUTE, LOGIN_MESSAGE as LOGIN_MESSAGE, LOGIN_MESSAGE_CATEGORY as LOGIN_MESSAGE_CATEGORY, REFRESH_MESSAGE as REFRESH_MESSAGE, REFRESH_MESSAGE_CATEGORY as REFRESH_MESSAGE_CATEGORY, SESSION_KEYS as SESSION_KEYS, USE_SESSION_FOR_NEXT as USE_SESSION_FOR_NEXT
+from .config import (
+    AUTH_HEADER_NAME as AUTH_HEADER_NAME,
+    COOKIE_DURATION as COOKIE_DURATION,
+    COOKIE_HTTPONLY as COOKIE_HTTPONLY,
+    COOKIE_NAME as COOKIE_NAME,
+    COOKIE_SAMESITE as COOKIE_SAMESITE,
+    COOKIE_SECURE as COOKIE_SECURE,
+    ID_ATTRIBUTE as ID_ATTRIBUTE,
+    LOGIN_MESSAGE as LOGIN_MESSAGE,
+    LOGIN_MESSAGE_CATEGORY as LOGIN_MESSAGE_CATEGORY,
+    REFRESH_MESSAGE as REFRESH_MESSAGE,
+    REFRESH_MESSAGE_CATEGORY as REFRESH_MESSAGE_CATEGORY,
+    SESSION_KEYS as SESSION_KEYS,
+    USE_SESSION_FOR_NEXT as USE_SESSION_FOR_NEXT,
+)
 from .mixins import AnonymousUserMixin as AnonymousUserMixin
-from .signals import session_protected as session_protected, user_accessed as user_accessed, user_loaded_from_cookie as user_loaded_from_cookie, user_loaded_from_request as user_loaded_from_request, user_needs_refresh as user_needs_refresh, user_unauthorized as user_unauthorized
-from .utils import decode_cookie as decode_cookie, encode_cookie as encode_cookie, expand_login_view as expand_login_view, make_next_param as make_next_param
+from .signals import (
+    session_protected as session_protected,
+    user_accessed as user_accessed,
+    user_loaded_from_cookie as user_loaded_from_cookie,
+    user_loaded_from_request as user_loaded_from_request,
+    user_needs_refresh as user_needs_refresh,
+    user_unauthorized as user_unauthorized,
+)
+from .utils import (
+    decode_cookie as decode_cookie,
+    encode_cookie as encode_cookie,
+    expand_login_view as expand_login_view,
+    make_next_param as make_next_param,
+)
 from _typeshed import Incomplete
 
 class LoginManager:

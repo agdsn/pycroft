@@ -5,20 +5,18 @@
 pycroft.lib.logging
 ~~~~~~~~~~~~~~~~~~~
 """
+
 import typing as t
 from datetime import datetime
 
 from pycroft.model import session
 from pycroft.model.facilities import Room
-from pycroft.model.logging import UserLogEntry, RoomLogEntry, LogEntry, \
-    TaskLogEntry
+from pycroft.model.logging import UserLogEntry, RoomLogEntry, LogEntry, TaskLogEntry
 from pycroft.model.task import Task
 from pycroft.model.user import User
 
 
-def _create_log_entry[
-    TLogEntry: LogEntry
-](
+def _create_log_entry[TLogEntry: LogEntry](
     class_: type[TLogEntry],
     message: str,
     author: User,
@@ -37,17 +35,15 @@ def _create_log_entry[
     :return: the newly created LogEntry.
     """
     if created_at is not None:
-        kwargs['created_at'] = created_at
-    kwargs['message'] = message
-    kwargs['author'] = author
+        kwargs["created_at"] = created_at
+    kwargs["message"] = message
+    kwargs["author"] = author
     entry = class_(**kwargs)
     session.session.add(entry)
     return entry
 
 
-def log_event(
-    message: str, author: User, created_at: datetime | None = None
-) -> LogEntry:
+def log_event(message: str, author: User, created_at: datetime | None = None) -> LogEntry:
     """
     This method will create a new LogEntry.
 
@@ -71,8 +67,7 @@ def log_task_event(
     :param created_at: Creation time of the entry. Defaults to current database time if None.
     :return: the newly created UserLogEntry.
     """
-    return _create_log_entry(TaskLogEntry, message, author, created_at,
-                             task=task)
+    return _create_log_entry(TaskLogEntry, message, author, created_at, task=task)
 
 
 def log_user_event(
@@ -87,8 +82,7 @@ def log_user_event(
     :param created_at: Creation time of the entry. Defaults to current database time if None.
     :return: the newly created UserLogEntry.
     """
-    return _create_log_entry(UserLogEntry, message, author, created_at,
-                             user=user)
+    return _create_log_entry(UserLogEntry, message, author, created_at, user=user)
 
 
 def log_room_event(
@@ -103,5 +97,4 @@ def log_room_event(
     :param created_at: Creation time of the entry. Defaults to current database time if None.
     :return: the newly created RoomLogEntry.
     """
-    return _create_log_entry(RoomLogEntry, message, author, created_at,
-                             room=room)
+    return _create_log_entry(RoomLogEntry, message, author, created_at, room=room)

@@ -17,27 +17,24 @@ class TestUserAddressChange(abc.ABC):
     @pytest.fixture(scope="class")
     def address_args(self) -> dict[str, str | None]:
         return {
-            'street': "Blahstraße",
-            'number': "5",
-            'addition': "Keller",
-            'zip_code': "01217",
-            'city': "Dresden",
-            'state': None,
-            'country': None,
+            "street": "Blahstraße",
+            "number": "5",
+            "addition": "Keller",
+            "zip_code": "01217",
+            "city": "Dresden",
+            "state": None,
+            "country": None,
         }
 
     @abc.abstractmethod
-    def user(self, class_session: Session) -> User:
-        ...
+    def user(self, class_session: Session) -> User: ...
 
     @pytest.fixture(scope="class", autouse=True)
     def edited_address(self, class_session, user, processor, address_args):
         assert not user.has_custom_address  # fixture sanity assertion
         edit_address(user, processor, **address_args)
 
-    def test_address_values_correct(
-        self, user: User, address_args: dict[str, str | None]
-    ):
+    def test_address_values_correct(self, user: User, address_args: dict[str, str | None]):
         address = user.address
         for key, val in address_args.items():
             if key == "country":

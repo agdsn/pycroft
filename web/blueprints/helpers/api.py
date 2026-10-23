@@ -9,5 +9,4 @@ from sqlalchemy.sql import func, literal_column, select
 
 
 def json_agg_core(selectable: SelectBase) -> Select[tuple[list[dict[str, t.Any]]]]:
-    return select(func.json_agg(literal_column("row"))) \
-        .select_from(selectable.alias("row"))
+    return select(func.json_agg(literal_column("row"))).select_from(selectable.alias("row"))

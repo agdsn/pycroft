@@ -10,7 +10,7 @@ from pycroft.lib.mail import MailConfig, _config_var
 from tests import factories
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def utcnow(module_session):
     return module_session.scalar(select(func.current_timestamp()))
 

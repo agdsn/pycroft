@@ -14,7 +14,7 @@ from pycroft.model.host import MulticastFlagException
 from pycroft.model.types import InvalidMACAddressException
 
 
-logger = logging.getLogger('web.exc')
+logger = logging.getLogger("web.exc")
 
 
 class UnexpectedException(PycroftException):
@@ -52,9 +52,7 @@ def flash_and_wrap_errors(
         yield
     except PycroftException as e:
         handlers = handler_map or {}
-        handler = next(
-            (h for type_, h in handlers.items() if isinstance(e, type_)), flash_handler
-        )
+        handler = next((h for type_, h in handlers.items() if isinstance(e, type_)), flash_handler)
         handler(e)
         raise
     except Exception as e:
@@ -70,9 +68,7 @@ ErrorHandlerMap = dict[type[PycroftException], ErrorHandler]
 @contextmanager
 # TODO rename to „wrap_errors“; `handle` suggests „I'll deal with everything“, which is incorrect
 def abort_on_error(
-    error_response: t.Callable[[], ResponseReturnValue]
-    | ResponseReturnValue
-    | None = None,
+    error_response: t.Callable[[], ResponseReturnValue] | ResponseReturnValue | None = None,
     handler_map: ErrorHandlerMap | None = None,
 ) -> t.Generator[None, None, None]:
     """Wraps errors as `PycroftErrors` and turns them into a flash message.
@@ -103,9 +99,7 @@ def abort_on_error(
     except PycroftException:
         # these shenanigans are necessary because a `ResponseReturnValue` can also be a callable,
         # see https://flask.palletsprojects.com/en/2.3.x/api/#flask.Flask.make_response
-        _is_nullary_lambda = (
-            callable(error_response) and not signature(error_response).parameters
-        )
+        _is_nullary_lambda = callable(error_response) and not signature(error_response).parameters
         resp: ResponseReturnValue | None
         if _is_nullary_lambda:
             resp = t.cast(t.Callable[[], ResponseReturnValue], error_response)()

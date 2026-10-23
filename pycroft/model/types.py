@@ -5,6 +5,7 @@
 pycroft.model.types
 ~~~~~~~~~~~~~~~~~~~
 """
+
 from datetime import datetime
 from decimal import Decimal
 from numbers import Number
@@ -24,6 +25,7 @@ from pycroft.model.exc import PycroftModelException
 # NOTES
 # In the type decorators below, `dialect` will be `sqlalchemy.dialects.postgresql.base.PGDialect`.
 
+
 class _IPType(TypeDecorator):
     impl = String(50)
     #:
@@ -31,7 +33,7 @@ class _IPType(TypeDecorator):
 
     def load_dialect_impl(self, dialect):
         """"""
-        if dialect.name == 'postgresql':
+        if dialect.name == "postgresql":
             return dialect.type_descriptor(INET)
         else:
             return dialect.type_descriptor(self.impl)
@@ -80,17 +82,18 @@ class MACAddress(TypeDecorator):
 
     def load_dialect_impl(self, dialect):
         """"""
-        if dialect.name == 'postgresql':
+        if dialect.name == "postgresql":
             return dialect.type_descriptor(MACADDR)
         else:
             return dialect.type_descriptor(self.impl)
 
     def process_result_value(self, value, dialect):
         """"""
-        if dialect.name == 'postgresql':
+        if dialect.name == "postgresql":
             return value
-        return "{}:{}:{}:{}:{}:{}".format(value[0:2], value[2:4], value[4:6],
-                                          value[6:8], value[8:10], value[10:12])
+        return "{}:{}:{}:{}:{}:{}".format(
+            value[0:2], value[2:4], value[4:6], value[6:8], value[8:10], value[10:12]
+        )
 
     def process_bind_param(self, value, dialect):
         """"""
@@ -100,8 +103,16 @@ class MACAddress(TypeDecorator):
         if m is None:
             raise ValueError(f'"{value}" is not a valid MAC address.')
         groups = m.groupdict()
-        return "".join((groups["byte1"], groups["byte2"], groups["byte3"],
-                        groups["byte4"], groups["byte5"], groups["byte6"]))
+        return "".join(
+            (
+                groups["byte1"],
+                groups["byte2"],
+                groups["byte3"],
+                groups["byte4"],
+                groups["byte5"],
+                groups["byte6"],
+            )
+        )
 
     def python_type(self):
         """"""
@@ -121,12 +132,10 @@ class Money(TypeDecorator):
     def process_bind_param(value, dialect):
         """"""
         if not isinstance(value, Number):
-            raise ValueError("{} is not a valid money amount".format(
-                repr(value)))
+            raise ValueError(f"{repr(value)} is not a valid money amount")
         cents = Decimal(value).scaleb(2)
         if int(cents) != cents:
-            raise ValueError("{} is not a valid money amount".format(
-                Decimal(value)))
+            raise ValueError(f"{Decimal(value)} is not a valid money amount")
         else:
             return int(cents)
 
@@ -158,15 +167,13 @@ class TsTzRange(TypeDecorator):
 
         return str(value)
 
-    def process_result_value(self, value: DateTimeTZRange | None, dialect)\
-            -> Interval | None:
+    def process_result_value(self, value: DateTimeTZRange | None, dialect) -> Interval | None:
         """"""
         if value is None:
             return None
         if isinstance(value, (Range, DateTimeTZRange)):
             return Interval.from_explicit_data(
-                value.lower, value.lower_inc,
-                value.upper, value.upper_inc
+                value.lower, value.lower_inc, value.upper, value.upper_inc
             )
 
         # see https://github.com/sqlalchemy/sqlalchemy/discussions/6942
@@ -188,26 +195,26 @@ class TsTzRange(TypeDecorator):
             If any `.contains()` call does not work, you can add support here.
             """
             if other is None:
-                raise PycroftModelException('You cannot use `.contains()` with `null` (`None`)!')
+                raise PycroftModelException("You cannot use `.contains()` with `null` (`None`)!")
 
-            op = self.op('@>', is_comparison=True)
+            op = self.op("@>", is_comparison=True)
             if isinstance(other, datetime):
                 if not other.tzinfo:
                     raise PycroftModelException(
-                        'You cannot use `.contains()` with a non-timezone-aware datetime'
-                        f' ({other})!'
+                        "You cannot use `.contains()` with a non-timezone-aware datetime"
+                        f" ({other})!"
                     )
                 return op(literal(other, type_=DateTimeTz))
 
             return op(other)
 
         def overlaps(self, other: Any, **kwargs):
-            """Provide the functionality of the `&&` operator for Intervals. """
+            """Provide the functionality of the `&&` operator for Intervals."""
             if other is None:
                 raise PycroftModelException(
-                    'You cannot use `.overlaps()`/`&` with `null` (`None`)!'
+                    "You cannot use `.overlaps()`/`&` with `null` (`None`)!"
                 )
-            return self.op('&&', is_comparison=True)(other)
+            return self.op("&&", is_comparison=True)(other)
 
         __and__ = overlaps
 
@@ -222,5 +229,6 @@ class DateTimeTz(DateTime):
     In other words, a `mapped_column(DateTimeTz)` produces python objects of type
     :class:`pycroft.helpers.utc.DateTimeTz`.
     """
+
     def __init__(self):
         super().__init__(timezone=True)

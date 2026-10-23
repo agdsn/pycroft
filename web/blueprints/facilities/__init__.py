@@ -2,12 +2,13 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
-    web.blueprints.facilities
-    ~~~~~~~~~~~~~~
+web.blueprints.facilities
+~~~~~~~~~~~~~~
 
-    This module defines view functions for /facilities
-    :copyright: (c) 2012 by AG DSN.
+This module defines view functions for /facilities
+:copyright: (c) 2012 by AG DSN.
 """
+
 from collections import defaultdict
 import typing as t
 
@@ -40,9 +41,12 @@ from pycroft.lib.facilities import (
     RoomAlreadyExistsException,
     suggest_room_address_data,
 )
-from pycroft.lib.infrastructure import create_patch_port, edit_patch_port, \
-    delete_patch_port, \
-    PatchPortAlreadyExistsException
+from pycroft.lib.infrastructure import (
+    create_patch_port,
+    edit_patch_port,
+    delete_patch_port,
+    PatchPortAlreadyExistsException,
+)
 from pycroft.model import session
 from pycroft.model.facilities import Room, Site, Building
 from pycroft.model.port import PatchPort
@@ -78,23 +82,26 @@ from ..helpers.exception import abort_on_error, ErrorHandlerMap, add_error_handl
 from ..helpers.log_tables import LogTableRow
 from ...template_filters import date_filter
 
-bp = Blueprint('facilities', __name__)
-access = BlueprintAccess(bp, required_properties=['facilities_show'])
-nav = BlueprintNavigation(bp, "Wohnheime", icon='fa-building', blueprint_access=access)
+bp = Blueprint("facilities", __name__)
+access = BlueprintAccess(bp, required_properties=["facilities_show"])
+nav = BlueprintNavigation(bp, "Wohnheime", icon="fa-building", blueprint_access=access)
 
-@bp.route('/')
+
+@bp.route("/")
 def root() -> ResponseReturnValue:
     return redirect(url_for(".overview"))
 
-@nav.navigate("Wohnheime", icon='fa-building')
-@bp.route('/sites/')
+
+@nav.navigate("Wohnheime", icon="fa-building")
+@bp.route("/sites/")
 def overview() -> ResponseReturnValue:
     return render_template(
-        'facilities/site_overview.html',
-        site_table=SiteTable(data_url=url_for('.overview_json')),
+        "facilities/site_overview.html",
+        site_table=SiteTable(data_url=url_for(".overview_json")),
     )
 
-@bp.route('/sites/json')
+
+@bp.route("/sites/json")
 def overview_json() -> ResponseReturnValue:
     return TableResponse[SiteRow](
         items=[
@@ -111,9 +118,7 @@ def overview_json() -> ResponseReturnValue:
                         ),
                         title=building.street_and_number,
                     )
-                    for building in pycroft.lib.facilities.sort_buildings(
-                        site.buildings
-                    )
+                    for building in pycroft.lib.facilities.sort_buildings(site.buildings)
                 ],
             )
             for site in Site.q.order_by(Site.name).all()
@@ -121,7 +126,7 @@ def overview_json() -> ResponseReturnValue:
     ).model_dump()
 
 
-@bp.route('/site/<int:site_id>')
+@bp.route("/site/<int:site_id>")
 def site_show(site_id: int) -> ResponseReturnValue:
     site = session.session.get(Site, site_id)
     if not site:
@@ -129,9 +134,9 @@ def site_show(site_id: int) -> ResponseReturnValue:
         abort(404)
 
     buildings_list = pycroft.lib.facilities.sort_buildings(site.buildings)
-    return render_template('facilities/site_show.html',
-        buildings=buildings_list,
-        page_title=site.name)
+    return render_template(
+        "facilities/site_show.html", buildings=buildings_list, page_title=site.name
+    )
 
 
 def determine_building_or_404(
@@ -152,8 +157,11 @@ def building_show(
 ) -> ResponseReturnValue:
     building = determine_building_or_404(id=building_id, shortname=building_shortname)
     rooms_list = building.rooms
-    return render_template('facilities/building_show.html',
-        page_title="Wohnheim " + building.short_name, rooms=rooms_list)
+    return render_template(
+        "facilities/building_show.html",
+        page_title="Wohnheim " + building.short_name,
+        rooms=rooms_list,
+    )
 
 
 # ToDo: Review this!
@@ -166,15 +174,16 @@ def building_levels(
     levels_list = list({room.level for room in building.rooms})
 
     return render_template(
-        'facilities/levels.html',
-        levels=levels_list, building=building,
+        "facilities/levels.html",
+        levels=levels_list,
+        building=building,
         page_title=f"Etagen Wohnheim {building.short_name}",
         suggested_address=suggest_room_address_data(building),
-   )
+    )
 
 
-@bp.route('/room/create', methods=['GET', 'POST'])
-@access.require('facilities_change')
+@bp.route("/room/create", methods=["GET", "POST"])
+@access.require("facilities_change")
 def room_create() -> ResponseReturnValue:
     building_id: int | None = request.args.get("building_id", type=int)
     building = None
@@ -223,16 +232,18 @@ def room_create() -> ResponseReturnValue:
     return redirect(url_for(".room_show", room_id=room.id))
 
 
-@bp.route('/room/<int:room_id>/create', methods=['GET', 'POST'])
-@access.require('facilities_change')
+@bp.route("/room/<int:room_id>/create", methods=["GET", "POST"])
+@access.require("facilities_change")
 def room_edit(room_id: int) -> ResponseReturnValue:
     room = get_room_or_404(room_id)
 
-    form = EditRoomForm(building=room.building.short_name,
-                        level=room.level,
-                        number=room.number,
-                        inhabitable=room.inhabitable,
-                        vo_suchname=room.swdd_vo_suchname)
+    form = EditRoomForm(
+        building=room.building.short_name,
+        level=room.level,
+        number=room.number,
+        inhabitable=room.inhabitable,
+        vo_suchname=room.swdd_vo_suchname,
+    )
 
     def default_response() -> ResponseReturnValue:
         if users := room.users_sharing_address:
@@ -301,10 +312,12 @@ def building_level_rooms(
     level_l0 = f"{level:02d}"
 
     room_table = BuildingLevelRoomTable(
-        data_url=url_for('.building_level_rooms_json',
-                         building_shortname=building.short_name, level=level))
+        data_url=url_for(
+            ".building_level_rooms_json", building_shortname=building.short_name, level=level
+        )
+    )
     return render_template(
-        'facilities/rooms.html',
+        "facilities/rooms.html",
         level=level_l0,
         building=building,
         page_title=f"Zimmer der Etage {level:d} des Wohnheims {building.short_name}",
@@ -321,7 +334,7 @@ def building_level_rooms_json(
 ) -> ResponseReturnValue:
     building = determine_building_or_404(id=building_id, shortname=building_shortname)
 
-    all_users = bool(request.args.get('all_users', 0, type=int))
+    all_users = bool(request.args.get("all_users", 0, type=int))
     # We need to alias User, otherwise sqlalchemy selects User.id as user_id,
     # which collides with the joined-loaded user.current_properties.user_id.
     user = aliased(User)
@@ -330,16 +343,23 @@ def building_level_rooms_json(
     if not all_users:
         user_join_condition = and_(
             user_join_condition,
-            exists(select(CurrentProperty).where(
-                and_(CurrentProperty.user_id == user.id,
-                     CurrentProperty.property_name == 'network_access')))
+            exists(
+                select(CurrentProperty).where(
+                    and_(
+                        CurrentProperty.user_id == user.id,
+                        CurrentProperty.property_name == "network_access",
+                    )
+                )
+            ),
         )
 
     # TODO remove mypy suppression below if moved to `select`
-    rooms_users_q = (session.session.query(Room, user)
-                     .options(joinedload(user.current_properties))
-                     .filter(and_(Room.building == building, Room.level == level))
-                     .outerjoin(user, user_join_condition))
+    rooms_users_q = (
+        session.session.query(Room, user)
+        .options(joinedload(user.current_properties))
+        .filter(and_(Room.building == building, Room.level == level))
+        .outerjoin(user, user_join_condition)
+    )
 
     level_inhabitants: dict[Room, list[User]] = defaultdict(list)
     for room, user in rooms_users_q.all():
@@ -374,21 +394,19 @@ def get_switch_room_or_redirect(switch_room_id: int) -> Room:
     return switch_room
 
 
-@bp.route('/room/<int:switch_room_id>/patch-port/create', methods=['GET', 'POST'])
-@access.require('infrastructure_change')
+@bp.route("/room/<int:switch_room_id>/patch-port/create", methods=["GET", "POST"])
+@access.require("infrastructure_change")
 def patch_port_create(switch_room_id: int) -> ResponseReturnValue:
     switch_room = get_switch_room_or_redirect(switch_room_id)
 
-    form = PatchPortForm(switch_room=switch_room.short_name,
-                         building=switch_room.building,
-                         level=switch_room.level)
+    form = PatchPortForm(
+        switch_room=switch_room.short_name, building=switch_room.building, level=switch_room.level
+    )
 
     def default_response() -> ResponseReturnValue:
         form_args = {
             "form": form,
-            "cancel_to": url_for(
-                ".room_show", room_id=switch_room_id, _anchor="patchpanel"
-            ),
+            "cancel_to": url_for(".room_show", room_id=switch_room_id, _anchor="patchpanel"),
         }
         return render_template(
             "generic_form.html", page_title="Patch-Port erstellen", form_args=form_args
@@ -420,9 +438,7 @@ def patch_port_create(switch_room_id: int) -> ResponseReturnValue:
     return redirect(url_for(".room_show", room_id=switch_room_id, _anchor="patchpanel"))
 
 
-def get_patch_port_or_redirect(
-    patch_port_id: int, in_switch_room: Room | None = None
-) -> PatchPort:
+def get_patch_port_or_redirect(patch_port_id: int, in_switch_room: Room | None = None) -> PatchPort:
     patch_port = session.session.get(PatchPort, patch_port_id)
     if patch_port is None:
         flash(f"Patch-Port mit ID {patch_port_id} nicht gefunden!", "error")
@@ -433,23 +449,23 @@ def get_patch_port_or_redirect(
     return patch_port
 
 
-@bp.route('/room/<int:switch_room_id>/patch-port/<int:patch_port_id>/edit', methods=['GET', 'POST'])
-@access.require('infrastructure_change')
+@bp.route("/room/<int:switch_room_id>/patch-port/<int:patch_port_id>/edit", methods=["GET", "POST"])
+@access.require("infrastructure_change")
 def patch_port_edit(switch_room_id: int, patch_port_id: int) -> ResponseReturnValue:
     switch_room = get_switch_room_or_redirect(switch_room_id)
     patch_port = get_patch_port_or_redirect(patch_port_id, in_switch_room=switch_room)
-    form = PatchPortForm(switch_room=switch_room.short_name,
-                         name=patch_port.name,
-                         building=patch_port.room.building,
-                         level=patch_port.room.level,
-                         room_number=patch_port.room.number)
+    form = PatchPortForm(
+        switch_room=switch_room.short_name,
+        name=patch_port.name,
+        building=patch_port.room.building,
+        level=patch_port.room.level,
+        room_number=patch_port.room.number,
+    )
 
     def default_response() -> ResponseReturnValue:
         form_args = {
             "form": form,
-            "cancel_to": url_for(
-                ".room_show", room_id=switch_room_id, _anchor="patchpanel"
-            ),
+            "cancel_to": url_for(".room_show", room_id=switch_room_id, _anchor="patchpanel"),
         }
         return render_template(
             "generic_form.html",
@@ -479,8 +495,10 @@ def patch_port_edit(switch_room_id: int, patch_port_id: int) -> ResponseReturnVa
     return redirect(url_for(".room_show", room_id=switch_room_id, _anchor="patchpanel"))
 
 
-@bp.route('/room/<int:switch_room_id>/patch-port/<int:patch_port_id>/delete', methods=['GET', 'POST'])
-@access.require('infrastructure_change')
+@bp.route(
+    "/room/<int:switch_room_id>/patch-port/<int:patch_port_id>/delete", methods=["GET", "POST"]
+)
+@access.require("infrastructure_change")
 def patch_port_delete(switch_room_id: int, patch_port_id: int) -> ResponseReturnValue:
     switch_room = get_switch_room_or_redirect(switch_room_id)
     patch_port = get_patch_port_or_redirect(patch_port_id, in_switch_room=switch_room)
@@ -490,9 +508,7 @@ def patch_port_delete(switch_room_id: int, patch_port_id: int) -> ResponseReturn
     def default_response() -> ResponseReturnValue:
         form_args = {
             "form": form,
-            "cancel_to": url_for(
-                ".room_show", room_id=switch_room_id, _anchor="patchpanel"
-            ),
+            "cancel_to": url_for(".room_show", room_id=switch_room_id, _anchor="patchpanel"),
             "submit_text": "Löschen",
             "actions_offset": 0,
         }
@@ -511,7 +527,6 @@ def patch_port_delete(switch_room_id: int, patch_port_id: int) -> ResponseReturn
     return redirect(url_for(".room_show", room_id=switch_room_id, _anchor="patchpanel"))
 
 
-
 def get_room_or_404(room_id: int) -> Room:
     room = session.session.get(Room, room_id)
     if room is None:
@@ -520,8 +535,7 @@ def get_room_or_404(room_id: int) -> Room:
     return room
 
 
-
-@bp.route('/room/<int:room_id>', methods=['GET', 'POST'])
+@bp.route("/room/<int:room_id>", methods=["GET", "POST"])
 def room_show(room_id: int) -> ResponseReturnValue:
     room = get_room_or_404(room_id)
     form = RoomLogEntry()
@@ -529,14 +543,14 @@ def room_show(room_id: int) -> ResponseReturnValue:
     if form.validate_on_submit():
         assert form.message.data is not None
         lib.logging.log_room_event(form.message.data, current_user, room)
-        flash('Kommentar hinzugefügt', 'success')
+        flash("Kommentar hinzugefügt", "success")
         session.session.commit()
 
-    room_log_table = RoomLogTable(
-        data_url=url_for(".room_logs_json", room_id=room.id))
+    room_log_table = RoomLogTable(data_url=url_for(".room_logs_json", room_id=room.id))
 
-    patch_port_table = PatchPortTable(data_url=url_for(".room_patchpanel_json", room_id=room.id),
-                                      room_id=room_id)
+    patch_port_table = PatchPortTable(
+        data_url=url_for(".room_patchpanel_json", room_id=room.id), room_id=room_id
+    )
 
     room_tenancies_table = RoomTenanciesTable(
         data_url=url_for(".room_tenancies_json", room_id=room.id),
@@ -564,7 +578,7 @@ def room_show(room_id: int) -> ResponseReturnValue:
     )
 
 
-@bp.route('/room/<int:room_id>/logs/json')
+@bp.route("/room/<int:room_id>/logs/json")
 def room_logs_json(room_id: int) -> ResponseReturnValue:
     room = get_room_or_404(room_id)
     return TableResponse[LogTableRow](
@@ -572,7 +586,7 @@ def room_logs_json(room_id: int) -> ResponseReturnValue:
     ).model_dump()
 
 
-@bp.route('/room/<int:room_id>/patchpanel/json')
+@bp.route("/room/<int:room_id>/patchpanel/json")
 def room_patchpanel_json(room_id: int) -> ResponseReturnValue:
     room = get_room_or_404(room_id)
     if not room.is_switch_room:
@@ -642,8 +656,8 @@ def room_tenancies_json(room_id: int) -> ResponseReturnValue:
     ).model_dump()
 
 
-@bp.route('/json/levels')
-@access.require('facilities_show')
+@bp.route("/json/levels")
+@access.require("facilities_show")
 def json_levels() -> ResponseReturnValue:
     """Endpoint for the room <select> field"""
     building_id = request.args.get("building", 0, type=int)
@@ -656,8 +670,8 @@ def json_levels() -> ResponseReturnValue:
     return {"items": [entry.level for entry in levels]}
 
 
-@bp.route('/json/rooms')
-@access.require('facilities_show')
+@bp.route("/json/rooms")
+@access.require("facilities_show")
 def json_rooms() -> ResponseReturnValue:
     """Endpoint for the room <select> field"""
     building_id = request.args.get("building", 0, type=int)
@@ -671,9 +685,9 @@ def json_rooms() -> ResponseReturnValue:
     return {"items": [entry.room_num for entry in rooms]}
 
 
-@bp.route('/overcrowded', defaults={'building_id': None})
-@bp.route('/overcrowded/<int:building_id>')
-@nav.navigate("Mehrfachbelegungen", icon='fa-people-arrows')
+@bp.route("/overcrowded", defaults={"building_id": None})
+@bp.route("/overcrowded/<int:building_id>")
+@nav.navigate("Mehrfachbelegungen", icon="fa-people-arrows")
 def overcrowded(building_id: int) -> ResponseReturnValue:
     page_title = "Mehrfachbelegungen"
     if building_id:
@@ -684,25 +698,26 @@ def overcrowded(building_id: int) -> ResponseReturnValue:
         "facilities/room_overcrowded.html",
         page_title=page_title,
         room_table=RoomOvercrowdedTable(
-            data_url=url_for('.overcrowded_json', building_id=building_id)),
+            data_url=url_for(".overcrowded_json", building_id=building_id)
+        ),
     )
 
-@bp.route('/overcrowded/json', defaults={'building_id': None})
-@bp.route('/overcrowded/<int:building_id>/json')
+
+@bp.route("/overcrowded/json", defaults={"building_id": None})
+@bp.route("/overcrowded/<int:building_id>/json")
 def overcrowded_json(building_id: int) -> ResponseReturnValue:
     return TableResponse[RoomOvercrowdedRow](
         items=[
             RoomOvercrowdedRow(
                 room=LinkColResponse(
                     title="{} / {:02d} / {}".format(
-                        (
-                            r := inhabitants[0].room
-                        ).building.short_name,  # ty: ignore[unresolved-attribute]
+                        (r := inhabitants[0].room).building.short_name,  # ty: ignore[unresolved-attribute]
                         r.level,  # ty: ignore[unresolved-attribute]
                         r.number,  # ty: ignore[unresolved-attribute]
                     ),
                     href=url_for(
-                        "facilities.room_show", room_id=r.id  # ty: ignore[unresolved-attribute]
+                        "facilities.room_show",
+                        room_id=r.id,  # ty: ignore[unresolved-attribute]
                     ),
                 ),
                 inhabitants=[user_button(user) for user in inhabitants],
@@ -712,15 +727,15 @@ def overcrowded_json(building_id: int) -> ResponseReturnValue:
     ).model_dump()
 
 
-@bp.route('address/<string:type>')
+@bp.route("address/<string:type>")
 def addresses(type: str) -> ResponseReturnValue:
     try:
         entity = get_address_entity(type)
     except ValueError as e:
         return {"errors": [e.args[0]]}, 404
 
-    query: str = request.args.get('query', '').replace('%', '%%')
-    limit: int = request.args.get('limit', 10, type=int)
+    query: str = request.args.get("query", "").replace("%", "%%")
+    limit: int = request.args.get("limit", 10, type=int)
 
     address_q = address_entity_search_query(query, entity, session.session, limit)
 

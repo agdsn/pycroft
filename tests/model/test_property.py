@@ -14,20 +14,23 @@ from tests import factories
 from tests.factories.property import MembershipFactory, PropertyGroupFactory
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def user(module_session):
     return factories.UserFactory()
 
-PROP1 = 'test1'
-PROP2 = 'test2'
 
-@pytest.fixture(scope='module')
+PROP1 = "test1"
+PROP2 = "test2"
+
+
+@pytest.fixture(scope="module")
 def property_group1(module_session):
     group = factories.PropertyGroupFactory(granted={PROP1})
     module_session.flush()
     return group
 
-@pytest.fixture(scope='module')
+
+@pytest.fixture(scope="module")
 def property_group2(module_session):
     group = factories.PropertyGroupFactory(granted={PROP1, PROP2})
     module_session.flush()
@@ -35,8 +38,7 @@ def property_group2(module_session):
 
 
 def test_fixtures_correct(session, user, property_group1, property_group2):
-    """simply test that fixtures work
-    """
+    """simply test that fixtures work"""
     assert session.scalar(func.count(Membership.id)) == 0
 
     assert not user.has_property(PROP1)
@@ -77,9 +79,7 @@ class Test_PropertyResolving:
         assert user.has_property(PROP1)
         assert user.has_property(PROP2)
 
-    def test_add_timed_membership(
-        self, session, utcnow, user, property_group1, property_group2
-    ):
+    def test_add_timed_membership(self, session, utcnow, user, property_group1, property_group2):
         session.add(
             Membership(
                 active_during=closedopen(utcnow, utcnow + timedelta(days=3)),
@@ -95,9 +95,7 @@ class Test_PropertyResolving:
         # add expired membership to group2
         session.add(
             Membership(
-                active_during=closedopen(
-                    utcnow - timedelta(hours=2), utcnow - timedelta(hours=1)
-                ),
+                active_during=closedopen(utcnow - timedelta(hours=2), utcnow - timedelta(hours=1)),
                 user=user,
                 group=property_group2,
             )
@@ -112,7 +110,7 @@ class Test_PropertyResolving:
         membership = Membership(
             active_during=starting_from(utcnow - timedelta(hours=2)),
             user=user,
-            group=property_group1
+            group=property_group1,
         )
         session.add(membership)
         session.flush()
@@ -141,7 +139,7 @@ class Test_PropertyResolving:
         membership = Membership(
             active_during=starting_from(utcnow - timedelta(hours=2)),
             user=user,
-            group=property_group2
+            group=property_group2,
         )
         session.add(membership)
         session.flush()
@@ -219,28 +217,30 @@ class Test_View_Only_Shortcut_Properties:
         assert len(user.active_property_groups()) == 1
 
         # test a join
-        res = session.query(
-            User, PropertyGroup.id
-        ).join(User.property_groups).filter(
-            User.id == user.id
-        ).distinct().count()
+        res = (
+            session.query(User, PropertyGroup.id)
+            .join(User.property_groups)
+            .filter(User.id == user.id)
+            .distinct()
+            .count()
+        )
         assert res == 2
 
         # reenable it - but with a deadline - both counts should be 2
-        p1.active_during = closedopen(
-            p1.active_during.begin, utcnow + timedelta(days=1)
-        )
+        p1.active_during = closedopen(p1.active_during.begin, utcnow + timedelta(days=1))
         session.flush()
         session.refresh(user)
         assert len(user.property_groups) == 2
         assert len(user.active_property_groups()) == 2
 
         # test a join
-        res = session.query(
-            User, PropertyGroup
-        ).join(User.property_groups).filter(
-            User.id == user.id
-        ).distinct().count()
+        res = (
+            session.query(User, PropertyGroup)
+            .join(User.property_groups)
+            .filter(User.id == user.id)
+            .distinct()
+            .count()
+        )
         assert res == 2
 
 
@@ -253,18 +253,19 @@ def d(x):
 
 
 class Test_Membership:
-    @pytest.mark.parametrize('rel_begin, rel_end, active_expected', [
-        (- h(2), None, True),
-        (+ h(2), None, False),
-        (- h(2), None, True),
-        (+ d(2), None, False),
-        (+ d(2), + d(3), False),
-        (- d(1), + d(3), True),
-    ])
+    @pytest.mark.parametrize(
+        "rel_begin, rel_end, active_expected",
+        [
+            (-h(2), None, True),
+            (+h(2), None, False),
+            (-h(2), None, True),
+            (+d(2), None, False),
+            (+d(2), +d(3), False),
+            (-d(1), +d(3), True),
+        ],
+    )
     def test_active_instance_property(
-        self,
-        rel_begin, rel_end, active_expected,
-        session, utcnow, user, property_group1
+        self, rel_begin, rel_end, active_expected, session, utcnow, user, property_group1
     ):
         interval = closedopen(utcnow + rel_begin, rel_end and utcnow + rel_end)
         mem = Membership(active_during=interval, user=user, group=property_group1)
@@ -291,7 +292,7 @@ class Test_Membership:
 
 
 class TestGroup:
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def membership(self, class_session, user, utcnow, property_group1):
         return Membership(
             # use ids to avoid cascades, which causes a warning because this object
@@ -306,6 +307,7 @@ class TestGroup:
         def _add_membership():
             session.add(membership)
             session.flush()
+
         return _add_membership
 
     def test_active_users(self, session, user, add_membership, property_group1):
@@ -317,13 +319,14 @@ class TestGroup:
     @pytest.fixture
     def create_active_users_query(self, session, property_group1):
         def _create_active_users_query():
-            active_users = Group.active_users().where(
-                Group.id == property_group1.id)
+            active_users = Group.active_users().where(Group.id == property_group1.id)
             return session.query(User).from_statement(active_users)
+
         return _create_active_users_query
 
-    def test_active_users_expression(self, session, user, property_group1,
-                                     create_active_users_query, add_membership):
+    def test_active_users_expression(
+        self, session, user, property_group1, create_active_users_query, add_membership
+    ):
         query = create_active_users_query()
         assert query.all() == []
         add_membership()
@@ -332,65 +335,75 @@ class TestGroup:
 
 
 class TestCurrentPropertyView:
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def groups(self, class_session):
         property_group_data = {
             # name, granted, denied
-            'active': ({'login', 'mail'}, set()),
-            'mail_only': ({'mail'}, set()),
-            'violation': (set(), {'login'}),
+            "active": ({"login", "mail"}, set()),
+            "mail_only": ({"mail"}, set()),
+            "violation": (set(), {"login"}),
         }
         return {
-            name: PropertyGroupFactory.create(
-                name=name, granted=granted, denied=denied
-            )
+            name: PropertyGroupFactory.create(name=name, granted=granted, denied=denied)
             for name, (granted, denied) in property_group_data.items()
         }
 
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def users(self, class_session):
         return {
-            key: factories.UserFactory.create(login=f'user-{key}')
-            for key in 'active mail violator former'.split()
+            key: factories.UserFactory.create(login=f"user-{key}")
+            for key in "active mail violator former".split()
         }
 
-    @pytest.fixture(scope='class', autouse=True)
+    @pytest.fixture(scope="class", autouse=True)
     def memberships(self, class_session, users, groups):
         mem_data = [
             # user, group, delta_days_start, delta_days_end
-            ('active', 'active', -1, None),
-            ('mail', 'mail_only', -1, +1),
-            ('mail', 'active', +2, None),
-            ('violator', 'active', -1, None),
-            ('violator', 'violation', -1, None),
-            ('former', 'active', -10, -1),
-            ('former', 'violation', -9, -5),
+            ("active", "active", -1, None),
+            ("mail", "mail_only", -1, +1),
+            ("mail", "active", +2, None),
+            ("violator", "active", -1, None),
+            ("violator", "violation", -1, None),
+            ("former", "active", -10, -1),
+            ("former", "violation", -9, -5),
         ]
-        memberships = [MembershipFactory.create(
-            user=users[username],
-            group=groups[groupname],
-            active_during=(closedopen(
-                (datetime.now() + timedelta(delta_days_start)
-                 if delta_days_start is not None else None),
-                (datetime.now() + timedelta(delta_days_end)
-                 if delta_days_end is not None else None),
-            )))
+        memberships = [
+            MembershipFactory.create(
+                user=users[username],
+                group=groups[groupname],
+                active_during=(
+                    closedopen(
+                        (
+                            datetime.now() + timedelta(delta_days_start)
+                            if delta_days_start is not None
+                            else None
+                        ),
+                        (
+                            datetime.now() + timedelta(delta_days_end)
+                            if delta_days_end is not None
+                            else None
+                        ),
+                    )
+                ),
+            )
             for username, groupname, delta_days_start, delta_days_end in mem_data
         ]
         return memberships
 
     def test_current_properties_of_user(self, session, users):
-        rows = (session.query(current_property.table.c.property_name)
-                .add_columns(User.login.label('login'))
-                .join(User.current_properties)
-                .all())
-        login = users['active'].login
+        rows = (
+            session.query(current_property.table.c.property_name)
+            .add_columns(User.login.label("login"))
+            .join(User.current_properties)
+            .all()
+        )
+        login = users["active"].login
         expected_results = [
             # name, granted, denied
-            ('active', ['mail', 'login'], []),
-            ('mail', ['mail'], ['login']),
-            ('former', [], ['mail', 'login']),
-            ('violator', ['mail'], ['login'])
+            ("active", ["mail", "login"], []),
+            ("mail", ["mail"], ["login"]),
+            ("former", [], ["mail", "login"]),
+            ("violator", ["mail"], ["login"]),
         ]
         for user_key, granted, denied in expected_results:
             login = users[user_key].login
@@ -400,57 +413,60 @@ class TestCurrentPropertyView:
                 assert (denied_prop, login) not in rows
 
     def test_current_granted_or_denied_properties_of_user(self, session, users):
-        rows = (session.query(current_property.table.c.property_name)
-                .add_columns(User.login.label('login'))
-                .join(User.current_properties_maybe_denied)
-                .all())
+        rows = (
+            session.query(current_property.table.c.property_name)
+            .add_columns(User.login.label("login"))
+            .join(User.current_properties_maybe_denied)
+            .all()
+        )
         # This checks that the violator's 'login' property is in the view as well
         # when ignoring the `denied` column
-        assert ('login', users['violator'].login) in rows
+        assert ("login", users["violator"].login) in rows
 
 
 def _iso(date):
-    return datetime.fromisoformat(f'{date}T00:00:00+00:00')
+    return datetime.fromisoformat(f"{date}T00:00:00+00:00")
 
 
 class TestEvaluateProperties:
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def groups(self, class_session):
         return [
-            PropertyGroupFactory(granted={'good', 'other'}),
-            PropertyGroupFactory(granted={'bad'}, denied={'good'}),
+            PropertyGroupFactory(granted={"good", "other"}),
+            PropertyGroupFactory(granted={"bad"}, denied={"good"}),
         ]
 
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def mem1(self, class_session, user, groups):
         # mem1: [2000-01-01 ---------------------- 2000-01-03)
         return MembershipFactory.create(
             user=user,
-            active_during=closedopen(_iso('2000-01-01'), _iso('2000-01-03')),
+            active_during=closedopen(_iso("2000-01-01"), _iso("2000-01-03")),
             group=groups[0],
         )
 
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def mem2(self, class_session, user, groups):
         # mem2:                  [2000-01-02 ---------------------- 2000-01-04)
         return MembershipFactory.create(
             user=user,
-            active_during=closedopen(_iso('2000-01-02'), _iso('2000-01-04')),
+            active_during=closedopen(_iso("2000-01-02"), _iso("2000-01-04")),
             group=groups[1],
         )
 
     @pytest.fixture
     def props_at(self, session, user):
         def _props_at(when) -> set:
-            props = evaluate_properties(when=when, name='props')
+            props = evaluate_properties(when=when, name="props")
             stmt = (
                 select(props.c.property_name, props.c.denied)
-                    .select_from(props)
-                    .join(User, onclause=User.id == props.c.user_id)
-                    .where(User.id == user.id)
+                .select_from(props)
+                .join(User, onclause=User.id == props.c.user_id)
+                .where(User.id == user.id)
             )
             rows = session.execute(stmt).all()
             return set(rows)
+
         return _props_at
 
     @pytest.fixture
@@ -458,29 +474,30 @@ class TestEvaluateProperties:
         def _mems_at(when):
             stmt = select(Membership).where(Membership.active_during.contains(when))
             return {m for m, *_ in session.execute(stmt).all()}
+
         return _mems_at
 
     def test_beginning(self, session, mems_at, props_at, mem1):
-        when = _iso('2000-01-01')
+        when = _iso("2000-01-01")
         assert mems_at(when) == {mem1}
-        assert props_at(when) \
-               == {('good', False), ('other', False)}
+        assert props_at(when) == {("good", False), ("other", False)}
 
     def test_right_at_new_membership(self, mems_at, props_at, mem1, mem2):
-        when = _iso('2000-01-02')
+        when = _iso("2000-01-02")
         assert mems_at(when) == {mem1, mem2}
-        assert props_at(when) \
-               == {('bad', False), ('other', False),
-                   ('good', True)}  # 'good' has beed denied
+        assert props_at(when) == {
+            ("bad", False),
+            ("other", False),
+            ("good", True),
+        }  # 'good' has beed denied
 
     def test_one_ended(self, mems_at, props_at, mem2):
-        when = _iso('2000-01-03')
+        when = _iso("2000-01-03")
         assert mems_at(when) == {mem2}
         # 'good' has beed denied – but never granted, so it does not show up in the list!
-        assert props_at(when) \
-               == {('bad', False)}
+        assert props_at(when) == {("bad", False)}
 
     def test_right_after(self, mems_at, props_at):
-        when = _iso('2000-01-04')
+        when = _iso("2000-01-04")
         assert mems_at(when) == set()
         assert props_at(when) == set()

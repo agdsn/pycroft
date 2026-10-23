@@ -15,9 +15,8 @@ from web.blueprints.helpers.user import no_membership_change
 
 
 class TaskTable(BootstrapTable):
-    """A table for displaying tasks
+    """A table for displaying tasks"""
 
-    """
     user = LinkColumn("User")
     name = Column("Name")
     due = DateColumn("Datum")
@@ -35,7 +34,7 @@ class TaskTable(BootstrapTable):
         *,
         hidden_columns: t.Container[str] | None = None,
         sort_order: str = "asc",
-        **kw: t.Any
+        **kw: t.Any,
     ):
         table_args = kw.pop("table_args", {})
         table_args.setdefault("data-detail-view", "true")
@@ -49,7 +48,7 @@ class TaskTable(BootstrapTable):
         else:
             self.user.hide_if = lambda: False
 
-        kw['table_args'] = table_args
+        kw["table_args"] = table_args
 
         super().__init__(**kw)
 

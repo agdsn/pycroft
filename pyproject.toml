@@ -91,7 +91,7 @@ dev = [
     "pytest-freezegun ~= 0.4.2",
     "pytest-timeout ~= 2.1.0",
     # required for pycharm „run with coverage“ reporting
-    "ruff ~= 0.3.2",
+    "ruff~=0.17.2",
     "sphinx ~= 7.3.7",
     "sphinx-autobuild ~= 2021.3.14",
     "sphinx-toolbox ~= 3.7.0",
@@ -138,9 +138,6 @@ executable = "ruff"
 options = "format REVISION_SCRIPT_FILENAME"
 
 # TOOLS
-[tool.black]
-line-length = 100
-
 [tool.ty.src]
 include = [
     "pycroft/helpers",
@@ -254,7 +251,6 @@ timeout = "10"
 
 [tool.ruff]
 line-length = 100
-target-version = "py310"
 exclude = [
     "deps/",
     "doc/",

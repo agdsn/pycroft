@@ -5,6 +5,7 @@
 ldap_sync.config
 ~~~~~~~~~~~~~~~~
 """
+
 from __future__ import annotations
 
 import os
@@ -41,7 +42,7 @@ def _strtobool(value: str) -> bool:
 
 def _from_environ_or_defaults(key: str, defaults: dict[str, str | None]) -> str | None:
     try:
-        return os.environ[f'PYCROFT_LDAP_{key.upper()}']
+        return os.environ[f"PYCROFT_LDAP_{key.upper()}"]
     except KeyError as e:
         if key not in defaults:
             print("defaults:", defaults)
@@ -61,7 +62,8 @@ def get_config(**defaults: str | None) -> SyncConfig:
     config_dict: dict[str, str | None] = {
         # e.g. 'host': 'PYCROFT_LDAP_HOST'
         key: _from_environ_or_defaults(key, defaults)
-        for key in SyncConfig._fields if key != 'db_uri'
+        for key in SyncConfig._fields
+        if key != "db_uri"
     }
 
     def _get_or_fail(dict: dict[str, str | None], key: str) -> str:

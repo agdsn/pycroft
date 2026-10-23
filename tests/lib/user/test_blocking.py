@@ -15,6 +15,7 @@ from tests import factories
 def config(module_session: Session) -> Config:
     return factories.ConfigFactory.create()
 
+
 class TestUserBlockingAndUnblocking:
     @pytest.fixture(scope="class")
     def user_to_block(self, class_session, config) -> User:
@@ -43,9 +44,7 @@ class TestUserBlockingAndUnblocking:
         assert not is_violator(when=closedopen(blockage, unblockage))
 
         # deferred blocking
-        blocked_user = block(
-            u, reason="test", processor=u, during=starting_from(blockage)
-        )
+        blocked_user = block(u, reason="test", processor=u, during=starting_from(blockage))
 
         blocked_during = closedopen(blockage, unblockage)
         assert u.latest_log_entry.author == blocked_user

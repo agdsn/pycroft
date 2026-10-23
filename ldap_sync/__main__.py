@@ -2,6 +2,7 @@
 ldap_sync.__main__
 ~~~~~~~~~~~~~~~~~~
 """
+
 import argparse
 import logging
 import os
@@ -34,8 +35,9 @@ from .sources.ldap import (
 
 def sync_production() -> None:
     logger.info("Starting the production sync. See --help for other options.")
-    config = get_config_or_exit(required_property='ldap', use_ssl='False',
-                                ca_certs_file=None, ca_certs_data=None)
+    config = get_config_or_exit(
+        required_property="ldap", use_ssl="False", ca_certs_file=None, ca_certs_data=None
+    )
     db_session = establish_and_return_session(config.db_uri)
     connection = establish_and_return_ldap_connection(config=config)
     fetch_and_sync(db_session, connection, config.base_dn, config.required_property)
@@ -44,9 +46,9 @@ def sync_production() -> None:
 def sync_fake() -> None:
     logger.info("Starting sync using a mocked LDAP backend. See --help for other options.")
     try:
-        db_uri = os.environ['PYCROFT_DB_URI']
+        db_uri = os.environ["PYCROFT_DB_URI"]
     except KeyError:
-        logger.critical('PYCROFT_DB_URI not set')
+        logger.critical("PYCROFT_DB_URI not set")
         exit()
 
     # noinspection PyUnboundLocalVariable
@@ -113,24 +115,41 @@ def fetch_and_sync(
 
 
 NAME_LEVEL_MAPPING: dict[str, int] = {
-    'debug': logging.DEBUG,
-    'info': logging.INFO,
-    'warning': logging.WARNING,
-    'error': logging.ERROR,
-    'critical': logging.CRITICAL,
+    "debug": logging.DEBUG,
+    "info": logging.INFO,
+    "warning": logging.WARNING,
+    "error": logging.ERROR,
+    "critical": logging.CRITICAL,
 }
 
 
 parser = argparse.ArgumentParser(description="Pycroft ldap syncer")
-parser.add_argument('--fake', dest='fake', action='store_true', default=False,
-                    help="Use a mocked LDAP backend")
-parser.add_argument("-l", "--log", dest='loglevel', type=str,
-                    choices=list(NAME_LEVEL_MAPPING.keys()), default='info',
-                    help="Set the loglevel")
-parser.add_argument("-d", "--debug", dest='loglevel', action='store_const',
-                    const='debug', help="Short for --log=debug")
-parser.add_argument("--test-sentry", action='store_true', default=False,
-                    help="Trigger exception/log message to test the sentry integration")
+parser.add_argument(
+    "--fake", dest="fake", action="store_true", default=False, help="Use a mocked LDAP backend"
+)
+parser.add_argument(
+    "-l",
+    "--log",
+    dest="loglevel",
+    type=str,
+    choices=list(NAME_LEVEL_MAPPING.keys()),
+    default="info",
+    help="Set the loglevel",
+)
+parser.add_argument(
+    "-d",
+    "--debug",
+    dest="loglevel",
+    action="store_const",
+    const="debug",
+    help="Short for --log=debug",
+)
+parser.add_argument(
+    "--test-sentry",
+    action="store_true",
+    default=False,
+    help="Trigger exception/log message to test the sentry integration",
+)
 
 
 def try_setup_sentry() -> None:
@@ -139,7 +158,7 @@ def try_setup_sentry() -> None:
     except ImportError:
         logger.info("Sentry not installed. Skipping setup.")
         return
-    if not (dsn := os.getenv('PYCROFT_SENTRY_DSN')):
+    if not (dsn := os.getenv("PYCROFT_SENTRY_DSN")):
         logger.info("Sentry DSN not set. Skipping setup.")
         return
 
@@ -192,6 +211,5 @@ def main() -> int:
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     exit(main())
-

@@ -18,7 +18,7 @@ class TaskFactory(BaseFactory):
     due = None
     parameters_json = None
     created = None
-    creator = factory.SubFactory('tests.factories.UserFactory')
+    creator = factory.SubFactory("tests.factories.UserFactory")
     status: TaskStatus = TaskStatus.OPEN
     errors = None
 
@@ -33,9 +33,7 @@ class UserTaskFactory(TaskFactory):
     class Meta:
         model = UserTask
 
-    user = factory.SubFactory('tests.factories.UserFactory')
+    user = factory.SubFactory("tests.factories.UserFactory")
 
     class Params:
-        self_created = factory.Trait(
-            creator=factory.SelfAttribute('user')
-        )
+        self_created = factory.Trait(creator=factory.SelfAttribute("user"))

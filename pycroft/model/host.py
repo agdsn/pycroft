@@ -5,6 +5,7 @@
 pycroft.model.host
 ~~~~~~~~~~~~~~~~~~
 """
+
 from __future__ import annotations
 import typing as t
 
@@ -70,9 +71,7 @@ class Switch(ModelBase):
     column, the primary key is `host_id`, a foreign key on a `Host`.
     """
 
-    host_id: Mapped[int] = mapped_column(
-        ForeignKey(Host.id), primary_key=True, index=True
-    )
+    host_id: Mapped[int] = mapped_column(ForeignKey(Host.id), primary_key=True, index=True)
     # TODO add a constraint that every switch should have a room
     host: Mapped[Host] = relationship(back_populates="switch")
     management_ip: Mapped[netaddr.IPAddress]
@@ -91,8 +90,9 @@ def _check_user_host_in_user_room(mapper, connection, userhost):
     if userhost.room is not userhost.owner.room:
         raise PycroftModelException("UserHost can only be in user's room")
 
-#event.listen(Host, "before_insert", _check_user_host_in_user_room)
-#event.listen(Host, "before_update", _check_user_host_in_user_room)
+
+# event.listen(Host, "before_insert", _check_user_host_in_user_room)
+# event.listen(Host, "before_update", _check_user_host_in_user_room)
 
 
 class MulticastFlagException(InvalidMACAddressException):
@@ -114,22 +114,18 @@ class Interface(IntegerIdModel):
     name: Mapped[str | None] = mapped_column(String, nullable=True)
     mac: Mapped[mac_address] = mapped_column(unique=True)
 
-    host_id: Mapped[int] = mapped_column(
-        ForeignKey(Host.id, ondelete="CASCADE"), index=True
-    )
+    host_id: Mapped[int] = mapped_column(ForeignKey(Host.id, ondelete="CASCADE"), index=True)
     host: Mapped[Host] = relationship(back_populates="interfaces")
 
     # backrefs
-    ips: Mapped[list[IP]] = relationship(
-        back_populates="interface", cascade="all, delete-orphan"
-    )
+    ips: Mapped[list[IP]] = relationship(back_populates="interface", cascade="all, delete-orphan")
     # /backrefs
 
-    @validates('mac')
+    @validates("mac")
     def validate_mac(self, _, mac_address):
         match = mac_regex.match(mac_address)
         if not match:
-            raise InvalidMACAddressException("MAC address '"+mac_address+"' is not valid")
+            raise InvalidMACAddressException("MAC address '" + mac_address + "' is not valid")
         if int(mac_address[0:2], base=16) & 1:
             raise MulticastFlagException("Multicast bit set in MAC address")
         return mac_address
@@ -137,11 +133,10 @@ class Interface(IntegerIdModel):
 
 # See the `SwitchPort.default_vlans` relationship
 switch_port_default_vlans = Table(
-    'switch_port_default_vlans', ModelBase.metadata,
-    Column('switch_port_id', Integer, ForeignKey('switch_port.id', ondelete='CASCADE'),
-           index=True),
-    Column('vlan_id', Integer, ForeignKey('vlan.id', ondelete='CASCADE'),
-           index=True),
+    "switch_port_default_vlans",
+    ModelBase.metadata,
+    Column("switch_port_id", Integer, ForeignKey("switch_port.id", ondelete="CASCADE"), index=True),
+    Column("vlan_id", Integer, ForeignKey("vlan.id", ondelete="CASCADE"), index=True),
 )
 
 
@@ -163,9 +158,7 @@ class SwitchPort(IntegerIdModel):
     )
 
     # backrefs
-    patch_port: Mapped[PatchPort | None] = relationship(
-        back_populates="switch_port", uselist=False
-    )
+    patch_port: Mapped[PatchPort | None] = relationship(back_populates="switch_port", uselist=False)
     # /backrefs
 
     def __str__(self):
@@ -176,14 +169,10 @@ class SwitchPort(IntegerIdModel):
 
 class IP(IntegerIdModel):
     address: Mapped[netaddr.IPAddress] = mapped_column(unique=True)
-    interface_id: Mapped[int] = mapped_column(
-        ForeignKey(Interface.id, ondelete="CASCADE")
-    )
+    interface_id: Mapped[int] = mapped_column(ForeignKey(Interface.id, ondelete="CASCADE"))
     interface: Mapped[Interface] = relationship(back_populates="ips")
 
-    subnet_id: Mapped[int] = mapped_column(
-        ForeignKey(Subnet.id, ondelete="CASCADE"), index=True
-    )
+    subnet_id: Mapped[int] = mapped_column(ForeignKey(Subnet.id, ondelete="CASCADE"), index=True)
     subnet: Mapped[Subnet] = relationship(Subnet, back_populates="ips", lazy="joined")
 
     # backrefs
@@ -204,13 +193,12 @@ class IP(IntegerIdModel):
         if address is None or subnet is None:
             return
         if address not in subnet:
-            message = (
-                gettext("IP address {} is not contained in its subnet {}")
-                .format(address, subnet)
+            message = gettext("IP address {} is not contained in its subnet {}").format(
+                address, subnet
             )
             raise ValueError(message)
 
-    @validates('subnet')
+    @validates("subnet")
     def validate_subnet(self, _, value):
         if value is None:
             return value

@@ -14,12 +14,11 @@ from .user import UserFactory
 class MembershipFactory(BaseFactory):
     class Meta:
         model = Membership
-        exclude = ('begins_at', 'ends_at')
+        exclude = ("begins_at", "ends_at")
+
     begins_at = datetime.now(timezone.utc)
     ends_at = None
-    active_during = factory.LazyAttribute(
-        lambda m: interval.closedopen(m.begins_at, m.ends_at)
-    )
+    active_during = factory.LazyAttribute(lambda m: interval.closedopen(m.begins_at, m.ends_at))
 
     user = factory.SubFactory(UserFactory)
     # note: group is non-nullable!
@@ -44,7 +43,8 @@ def _maybe_append_seq(n, prefix):
 class PropertyGroupFactory(BaseFactory):
     class Meta:
         model = PropertyGroup
-        exclude = ('granted', 'denied')
+        exclude = ("granted", "denied")
+
     granted = frozenset()
     denied = frozenset()
 
@@ -53,8 +53,7 @@ class PropertyGroupFactory(BaseFactory):
 
     @factory.lazy_attribute
     def property_grants(self):
-        return dict(chain(((k, True) for k in self.granted),
-                          ((k, False) for k in self.denied)))
+        return dict(chain(((k, True) for k in self.granted), ((k, False) for k in self.denied)))
 
 
 class AdminPropertyGroupFactory(PropertyGroupFactory):
@@ -79,16 +78,24 @@ class AdminPropertyGroupFactory(PropertyGroupFactory):
 
 class FinancePropertyGroupFactory(PropertyGroupFactory):
     name = factory.Sequence(partial(_maybe_append_seq, prefix="Finanzer-Gruppe"))
-    granted = frozenset(('finance_show', 'finance_change'))
+    granted = frozenset(("finance_show", "finance_change"))
     permission_level = 80
 
 
 class MemberPropertyGroupFactory(PropertyGroupFactory):
     name = factory.Sequence(partial(_maybe_append_seq, prefix="Mitglied-Gruppe"))
-    granted = frozenset((
-        'ldap', 'ldap_login_enabled', 'mail', 'member', 'membership_fee',
-        'network_access', 'userdb', 'userwww'
-    ))
+    granted = frozenset(
+        (
+            "ldap",
+            "ldap_login_enabled",
+            "mail",
+            "member",
+            "membership_fee",
+            "network_access",
+            "userdb",
+            "userwww",
+        )
+    )
 
 
 class ActiveMemberPropertyGroupFactory(PropertyGroupFactory):

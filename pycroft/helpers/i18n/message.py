@@ -5,6 +5,7 @@
 pycroft.helpers.i18n.message
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 """
+
 from __future__ import annotations
 
 import abc
@@ -40,9 +41,7 @@ class Message(abc.ABC):
         try:
             jsonschema.validate(obj, schema)
         except jsonschema.ValidationError as e:
-            return ErroneousMessage(
-                "Message validation failed: {} for " "message {}".format(e, json_string)
-            )
+            return ErroneousMessage(f"Message validation failed: {e} for message {json_string}")
         args = obj.get("args", ())
         kwargs = obj.get("kwargs", {})
         try:
@@ -51,14 +50,11 @@ class Message(abc.ABC):
         except (TypeError, ValueError) as e:
             error = "".join(traceback.format_exception_only(type(e), e))
             return ErroneousMessage(
-                "Parameter deserialization error: {} in "
-                "message: {}".format(error, json_string)
+                f"Parameter deserialization error: {error} in message: {json_string}"
             )
         m: Message
         if "plural" in obj:
-            m = NumericalMessage(
-                obj["singular"], obj["plural"], obj["n"], obj.get("domain")
-            )
+            m = NumericalMessage(obj["singular"], obj["plural"], obj["n"], obj.get("domain"))
         else:
             m = SimpleMessage(obj["message"], obj.get("domain"))
         m.args = args
@@ -71,12 +67,10 @@ class Message(abc.ABC):
         self.kwargs: dict[str, Serializable] = {}
 
     @abc.abstractmethod
-    def _base_dict(self) -> dict[str, typing.Any]:
-        ...
+    def _base_dict(self) -> dict[str, typing.Any]: ...
 
     @abc.abstractmethod
-    def _gettext(self) -> str:
-        ...
+    def _gettext(self) -> str: ...
 
     def to_json(self) -> str:
         obj = self._base_dict()
@@ -108,8 +102,7 @@ class Message(abc.ABC):
         except (TypeError, ValueError, IndexError, KeyError) as e:
             error = "".join(traceback.format_exception_only(type(e), e))
             return gettext(
-                'Could not format message "{message}" '
-                "(args={args}, kwargs={kwargs}): {error}"
+                'Could not format message "{message}" (args={args}, kwargs={kwargs}): {error}'
             ).format(message=msg, args=self.args, kwargs=self.kwargs, error=error)
 
 
@@ -205,9 +198,7 @@ schema = {
         "args": {"type": "array", "items": {"$ref": "#/definitions/param"}},
         "kwargs": {
             "type": "object",
-            "patternProperties": {
-                "^[a-zA-Z_][a-zA-Z0-9_]+": {"$ref": "#/definitions/param"}
-            },
+            "patternProperties": {"^[a-zA-Z_][a-zA-Z0-9_]+": {"$ref": "#/definitions/param"}},
             "additionalProperties": False,
         },
         "param": {

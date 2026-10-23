@@ -67,7 +67,7 @@ class TestUserMoveIn:
 
     def test_move_in_scheduling(self, session, utcnow, user, room, processor, config, mail_capture):
         processing_user = processor
-        test_mac = '00:de:ad:be:ef:00'
+        test_mac = "00:de:ad:be:ef:00"
         lib_user.move_in(
             user,
             building_id=room.building.id,

@@ -30,12 +30,13 @@ class TestTaskExecution:
     @pytest.fixture
     def task(self, class_session, user, new_room, processor):
         return UserTaskFactory(
-            user=user, type=TaskType.USER_MOVE,
+            user=user,
+            type=TaskType.USER_MOVE,
             created=datetime.datetime.now() - datetime.timedelta(days=1),
             due=datetime.datetime.now() + datetime.timedelta(days=7),
-            parameters=UserMoveParams(room_number=new_room.number,
-                                      level=new_room.level,
-                                      building_id=new_room.building_id),
+            parameters=UserMoveParams(
+                room_number=new_room.number, level=new_room.level, building_id=new_room.building_id
+            ),
             creator=processor,
         )
 
@@ -66,4 +67,3 @@ class TestTaskExecution:
         assert task.status == TaskStatus.OPEN
         assert task.due == new_due_date
         assert task.latest_log_entry.author == processor
-

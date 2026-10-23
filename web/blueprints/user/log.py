@@ -4,6 +4,7 @@ web.blueprints.user.log
 This module contains functions that provide certain types of logs for
 a user.
 """
+
 import logging
 import typing as t
 
@@ -18,11 +19,17 @@ from pycroft.model.host import SwitchPort, Switch
 from pycroft.model.port import PatchPort
 from pycroft.model.user import User
 from pycroft.model.facilities import Room
-from ..helpers.log import format_hades_log_entry, format_hades_disabled, \
-    format_user_not_connected, format_hades_error, format_hades_timeout
+from ..helpers.log import (
+    format_hades_log_entry,
+    format_hades_disabled,
+    format_user_not_connected,
+    format_hades_error,
+    format_hades_timeout,
+)
 from ..helpers.log_tables import LogTableRow
 
 logger = logging.getLogger(__name__)
+
 
 def iter_hades_switch_ports(room: Room) -> t.Sequence[Row[tuple[str, IPAddress]]]:
     """Return all tuples of (nasportid, nasipaddress) for a room.
@@ -54,14 +61,7 @@ def get_user_hades_logs(user: User) -> t.Iterator[tuple[SwitchPort, RadiusLogEnt
 
     do_fetch = hades_logs.fetch_logs
     q: Query[SwitchPort] = session.session.query(SwitchPort)
-    ports = (
-        q
-        .join(PatchPort)
-        .join(PatchPort.room)
-        .join(User)
-        .filter(User.id == user.id)
-        .distinct()
-     )
+    ports = q.join(PatchPort).join(PatchPort.room).join(User).filter(User.id == user.id).distinct()
     for port in ports:
         for log_entry in do_fetch(str(port.switch.management_ip), port.name):
             yield port, log_entry

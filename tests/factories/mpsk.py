@@ -22,5 +22,4 @@ class BareMPSKFactory(BaseFactory):
 
 
 class MPSKFactory(BareMPSKFactory):
-
     owner = factory.SubFactory(UserFactory)

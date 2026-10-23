@@ -2,6 +2,7 @@
 pycroft.model.swdd
 ~~~~~~~~~~~~~~~~~~
 """
+
 from __future__ import annotations
 import typing as t
 from datetime import date
@@ -33,16 +34,14 @@ class TenancyStatus(Enum):
 swdd_view_ddl = DDLManager()
 
 swdd_vo = View(
-    name='swdd_vo',
-    query=select(text('*')).select_from(text("swdd.swdd_vo")),
-    materialized=True
+    name="swdd_vo", query=select(text("*")).select_from(text("swdd.swdd_vo")), materialized=True
 )
 swdd_view_ddl.add_view(ModelBase.metadata, swdd_vo)
 
 
 class RentalObject(ModelBase):
-    __tablename__ = 'swdd_vo'
-    __table_args__ = {'info': dict(is_view=True)}
+    __tablename__ = "swdd_vo"
+    __table_args__ = {"info": dict(is_view=True)}
 
     vo_id: Mapped[int] = mapped_column(primary_key=True)
     suchname: Mapped[str]
@@ -63,16 +62,14 @@ class RentalObject(ModelBase):
 
 
 swdd_vv = View(
-    name='swdd_vv',
-    query=select(text('*')).select_from(text("swdd.swdd_vv")),
-    materialized=True
+    name="swdd_vv", query=select(text("*")).select_from(text("swdd.swdd_vv")), materialized=True
 )
 swdd_view_ddl.add_view(ModelBase.metadata, swdd_vv)
 
 
 class Tenancy(ModelBase):
-    __tablename__ = 'swdd_vv'
-    __table_args__ = {'info': dict(is_view=True)}
+    __tablename__ = "swdd_vv"
+    __table_args__ = {"info": dict(is_view=True)}
 
     persvv_id: Mapped[int] = mapped_column(primary_key=True)
     person_id: Mapped[int | None]
@@ -108,9 +105,9 @@ class Tenancy(ModelBase):
 
 
 swdd_import = View(
-    name='swdd_import',
-    query=select(text('*')).select_from(text("swdd.swdd_import")),
-    materialized=True
+    name="swdd_import",
+    query=select(text("*")).select_from(text("swdd.swdd_import")),
+    materialized=True,
 )
 swdd_view_ddl.add_view(ModelBase.metadata, swdd_import)
 

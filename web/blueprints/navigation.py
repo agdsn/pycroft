@@ -103,16 +103,19 @@ class BlueprintNavigation:
         """
 
         def decorator(f: TFun) -> TFun:
-            self._elements.append(NavigationItem(
-                endpoint=bake_endpoint(self.blueprint, f),
-                text=text,
-                description=description,
-                icon=icon,
-                weight=weight
-            ))
+            self._elements.append(
+                NavigationItem(
+                    endpoint=bake_endpoint(self.blueprint, f),
+                    text=text,
+                    description=description,
+                    icon=icon,
+                    weight=weight,
+                )
+            )
             self._elements.sort(key=lambda entry: entry.weight)
             # TODO: Sort this list
             return f
+
         return decorator
 
     def __iter__(self) -> t.Iterator[NavigationItem]:
@@ -178,7 +181,7 @@ class BlueprintNavigation:
 
         :return: A list of strings.
         """
-        classes = ['nav-item']
+        classes = ["nav-item"]
         if self.dropdown:
             classes.append("dropdown")
         if self.is_active:
@@ -199,15 +202,15 @@ class BlueprintNavigation:
         """
 
         if self.blueprint.name not in app.blueprints:
-            raise Exception("Blueprint {} is not registred in Flask app".format(
-                            self.blueprint.name))
+            raise Exception(f"Blueprint {self.blueprint.name} is not registred in Flask app")
         else:
-            assert app.blueprints[self.blueprint.name] is self.blueprint, \
-            "Blueprint resistred as {} in Flask app is not the one you " \
-            "register navigation for!"
+            assert app.blueprints[self.blueprint.name] is self.blueprint, (
+                "Blueprint resistred as {} in Flask app is not the one you register navigation for!"
+            )
 
-            app.config.setdefault('blueprint_navigation', SegmentedList())\
-                .append(self, right=self.push_right)
+            app.config.setdefault("blueprint_navigation", SegmentedList()).append(
+                self, right=self.push_right
+            )
         return
 
 

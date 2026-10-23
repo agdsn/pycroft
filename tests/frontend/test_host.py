@@ -177,9 +177,7 @@ def host_without_room(session):
 
 
 def test_user_host_without_room(client, host_without_room):
-    resp = client.assert_url_ok(
-        url_for("host.user_hosts_json", user_id=host_without_room.owner.id)
-    )
+    resp = client.assert_url_ok(url_for("host.user_hosts_json", user_id=host_without_room.owner.id))
     it = assert_one(resp.json.get("items", []))
     assert it["switch"] == []
     assert it["port"] is None

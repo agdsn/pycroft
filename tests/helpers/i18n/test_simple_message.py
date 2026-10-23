@@ -24,8 +24,7 @@ def test_simple_format_args():
     arg2 = datetime.datetime.utcnow()
     m = deferred_gettext(message).format(arg1, arg2)
     expected_result = message.format(arg1, format_datetime(arg2))
-    assertSimpleMessageCorrect(m, message,
-                               None, (arg1, arg2), {}, expected_result)
+    assertSimpleMessageCorrect(m, message, None, (arg1, arg2), {}, expected_result)
 
 
 def test_simple_format_kwargs():
@@ -34,5 +33,4 @@ def test_simple_format_kwargs():
     arg2 = datetime.datetime.utcnow()
     m = deferred_gettext(message).format(arg1=arg1, arg2=arg2)
     expected_result = message.format(arg1=arg1, arg2=format_datetime(arg2))
-    assertSimpleMessageCorrect(m, message,
-                               None, (), {"arg1": arg1, "arg2": arg2}, expected_result)
+    assertSimpleMessageCorrect(m, message, None, (), {"arg1": arg1, "arg2": arg2}, expected_result)

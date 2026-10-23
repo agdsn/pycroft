@@ -57,12 +57,8 @@ def simple_transaction(
     new_transaction = Transaction(
         description=description, author=author, valid_on=valid_on, confirmed=confirmed
     )
-    new_debit_split = Split(
-        amount=-amount, account=debit_account, transaction=new_transaction
-    )
-    new_credit_split = Split(
-        amount=amount, account=credit_account, transaction=new_transaction
-    )
+    new_debit_split = Split(amount=-amount, account=debit_account, transaction=new_transaction)
+    new_credit_split = Split(amount=amount, account=credit_account, transaction=new_transaction)
     session.session.add_all([new_transaction, new_debit_split, new_credit_split])
     return new_transaction
 
@@ -158,9 +154,7 @@ def build_transactions_query(
     stmt = select(Split).join(Transaction).filter(Split.account == account)
 
     # see #562
-    if not (
-        sort_by in Transaction.__table__.columns or sort_by in Split.__table__.columns
-    ):
+    if not (sort_by in Transaction.__table__.columns or sort_by in Split.__table__.columns):
         sort_by = "valid_on"
 
     descending = (sort_order == "desc") ^ (positive is False)

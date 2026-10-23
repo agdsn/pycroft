@@ -5,6 +5,7 @@
 pycroft.helpers.interval
 ~~~~~~~~~~~~~~~~~~~~~~~~
 """
+
 from __future__ import annotations
 
 import collections.abc
@@ -58,7 +59,7 @@ class Bound[T: Ord](tuple[TWithInfinity[T], bool]):
             # pycroft=# select tsrange '(,today)' - '[-infinity, today)';
             # ?column?
             # (,-infinity)
-            return ''
+            return ""
         return str(self.value)
 
     @t.override
@@ -113,9 +114,9 @@ class Bound[T: Ord](tuple[TWithInfinity[T], bool]):
 
     @t.override
     def __eq__(self, other: object) -> bool:
-        return (isinstance(other, Bound) and
-                self.value == other.value and
-                self.closed == other.closed)
+        return (
+            isinstance(other, Bound) and self.value == other.value and self.closed == other.closed
+        )
 
     def __sub__(self, other):
         return self.value - other.value
@@ -123,7 +124,8 @@ class Bound[T: Ord](tuple[TWithInfinity[T], bool]):
     @t.override
     def __repr__(self):
         return "{}.{}({!r}, {!r})".format(
-            self.__module__, self.__class__.__name__, self.value, self.closed)
+            self.__module__, self.__class__.__name__, self.value, self.closed
+        )
 
     @t.override
     def __str__(self):
@@ -163,6 +165,7 @@ class Interval[T: Ord](tuple[Bound[T], Bound[T]]):
         `Python 3.11 <https://docs.python.org/3.11/whatsnew/3.11.html#typing>`_
         for nicer typing behavior
     """
+
     __slots__ = ()
 
     def __new__(cls, lower_bound: Bound[T], upper_bound: Bound[T]) -> Interval[T]:
@@ -177,9 +180,7 @@ class Interval[T: Ord](tuple[Bound[T], Bound[T]]):
         :raises ValueError: if lower_bound greater than upper_bound
         """
         if lower_bound.__gt__(upper_bound):
-            raise ValueError(
-                f"lower_bound > upper_bound ({lower_bound} > {upper_bound})"
-            )
+            raise ValueError(f"lower_bound > upper_bound ({lower_bound} > {upper_bound})")
         # Unfortunately using namedtuple is not possible, because we have
         # field names starting with underscores
         return tuple.__new__(cls, (lower_bound, upper_bound))
@@ -187,11 +188,14 @@ class Interval[T: Ord](tuple[Bound[T], Bound[T]]):
     @classmethod
     def from_explicit_data(
         cls,
-        lower: T | None, lower_closed: bool,
-        upper: T | None, upper_closed: bool,
+        lower: T | None,
+        lower_closed: bool,
+        upper: T | None,
+        upper_closed: bool,
     ) -> t.Self:
-        return cls(Bound(_convert_begin(lower), lower_closed),
-                   Bound(_convert_end(upper), upper_closed))
+        return cls(
+            Bound(_convert_begin(lower), lower_closed), Bound(_convert_end(upper), upper_closed)
+        )
 
     @t.override
     def __hash__(self):
@@ -230,8 +234,9 @@ class Interval[T: Ord](tuple[Bound[T], Bound[T]]):
     @property
     def empty(self) -> bool:
         """Tests whether the interval is empty"""
-        return (self.lower_bound.value == self.upper_bound.value and
-                not (self.lower_bound.closed and self.upper_bound.closed))
+        return self.lower_bound.value == self.upper_bound.value and not (
+            self.lower_bound.closed and self.upper_bound.closed
+        )
 
     @property
     def length(self) -> t.Any:  # actually return type of `T.__sub__`
@@ -243,9 +248,11 @@ class Interval[T: Ord](tuple[Bound[T], Bound[T]]):
 
     @t.override
     def __eq__(self, other: object) -> bool:
-        return (isinstance(other, Interval) and
-                self.lower_bound == other.lower_bound and
-                self.upper_bound == other.upper_bound)
+        return (
+            isinstance(other, Interval)
+            and self.lower_bound == other.lower_bound
+            and self.upper_bound == other.upper_bound
+        )
 
     def __le__(self, other: Interval[T]) -> bool:  # type: ignore
         return operator.lt(self.lower_bound, other.lower_bound) or (
@@ -261,16 +268,15 @@ class Interval[T: Ord](tuple[Bound[T], Bound[T]]):
 
     def __contains__(self, point: T) -> bool:  # type: ignore
         bound = Bound[T](point, True)
-        return operator.le(self.lower_bound, bound) and operator.le(
-            bound, self.upper_bound
-        )  # ty: ignore[unsound-return-statement]
+        return operator.le(self.lower_bound, bound) and operator.le(bound, self.upper_bound)  # ty: ignore[unsound-return-statement]
 
     @t.override
     def __str__(self):
         return "{}{},{}{}".format(
-            '[' if self.lower_bound.closed else '(',
-            self.lower_bound.pg_identifier, self.upper_bound.pg_identifier,
-            ']' if self.upper_bound.closed else ')',
+            "[" if self.lower_bound.closed else "(",
+            self.lower_bound.pg_identifier,
+            self.upper_bound.pg_identifier,
+            "]" if self.upper_bound.closed else ")",
         )
 
     @t.override
@@ -290,7 +296,7 @@ class Interval[T: Ord](tuple[Bound[T], Bound[T]]):
             self.__class__.__name__,
             creator,
             self.lower_bound.value,
-            self.upper_bound.value
+            self.upper_bound.value,
         )
 
     def strictly_before(self, other: Interval[T]) -> bool:
@@ -302,9 +308,7 @@ class Interval[T: Ord](tuple[Bound[T], Bound[T]]):
 
         .. note:: This is not the same as ``self < other``.
         """
-        return operator.lt(
-            self.upper_bound, other.lower_bound
-        )  # ty: ignore[unsound-return-statement]
+        return operator.lt(self.upper_bound, other.lower_bound)  # ty: ignore[unsound-return-statement]
 
     def before(self, other: Interval[T]) -> bool:
         """
@@ -315,9 +319,7 @@ class Interval[T: Ord](tuple[Bound[T], Bound[T]]):
 
         .. note:: This is not the same as ``self <= other``.
         """
-        return operator.le(
-            self.upper_bound, other.lower_bound
-        )  # ty: ignore[unsound-return-statement]
+        return operator.le(self.upper_bound, other.lower_bound)  # ty: ignore[unsound-return-statement]
 
     def strictly_after(self, other: Interval[T]) -> bool:
         """
@@ -349,8 +351,9 @@ class Interval[T: Ord](tuple[Bound[T], Bound[T]]):
         begin of the second interval and at least one of the bounds is closed.
         This means that the intervals do not necessarily have to overlap.
         """
-        return (self.upper_bound.value == other.lower_bound.value and
-                (self.upper_bound.closed or self.lower_bound.closed))
+        return self.upper_bound.value == other.lower_bound.value and (
+            self.upper_bound.closed or self.lower_bound.closed
+        )
 
     def strictly_overlaps(self, other: Interval[T]) -> bool:
         """
@@ -447,15 +450,16 @@ class Interval[T: Ord](tuple[Bound[T], Bound[T]]):
         if not self.overlaps(other) and not self.meets(other):
             return None
         return Interval(
-            min(self.lower_bound, other.lower_bound),
-            max(self.upper_bound, other.upper_bound)
+            min(self.lower_bound, other.lower_bound), max(self.upper_bound, other.upper_bound)
         )
 
     @property
     def closure(self) -> Interval[T]:
         """Return a closed variant of this interval"""
-        return Interval(Bound(self.lower_bound.value, is_closed=True),
-                        Bound(self.upper_bound.value, is_closed=True))
+        return Interval(
+            Bound(self.lower_bound.value, is_closed=True),
+            Bound(self.upper_bound.value, is_closed=True),
+        )
 
     __or__ = join
     __add__ = join  # type: ignore
@@ -497,9 +501,11 @@ class Interval[T: Ord](tuple[Bound[T], Bound[T]]):
         :return: A new interval with f applied to its bounds
         """
         return Interval[U](
-            t.cast(Bound[U], l) if (l := self.lower_bound).unbounded
+            t.cast(Bound[U], l)
+            if (l := self.lower_bound).unbounded
             else Bound[U](f(t.cast(T, l.value)), l.closed),
-            t.cast(Bound[U], u) if (u := self.lower_bound).unbounded
+            t.cast(Bound[U], u)
+            if (u := self.lower_bound).unbounded
             else Bound[U](f(t.cast(T, u.value)), u.closed),
         )
 
@@ -621,7 +627,7 @@ class IntervalSet[T: Ord](collections.abc.Sequence[Interval[T]]):
         """
         return reduce(
             lambda a, b: None if a is None or b is None else a + b,
-            (i.length for i in self._intervals)
+            (i.length for i in self._intervals),
         )
 
     @t.override
@@ -634,15 +640,11 @@ class IntervalSet[T: Ord](collections.abc.Sequence[Interval[T]]):
 
     @t.override
     def __eq__(self, other):
-        return (isinstance(other, IntervalSet) and
-                self._intervals == other._intervals)
+        return isinstance(other, IntervalSet) and self._intervals == other._intervals
 
     @t.override
     def __repr__(self):
-        return "{}.{}({!r})".format(
-            self.__module__,
-            self.__class__.__name__,
-            self._intervals)
+        return f"{self.__module__}.{self.__class__.__name__}({self._intervals!r})"
 
     @t.override
     def __str__(self):
@@ -691,9 +693,11 @@ def _mangle_argument[T: Ord](arg: IntervalSetSource) -> tuple[Interval[T], ...]:
         return (arg,)
     if isinstance(arg, collections.abc.Iterable):
         return tuple(_join(sorted(arg)))
-    raise TypeError("Argument may be None, an IntervalSet, an Interval or an "
-                    "iterable of Intervals. "
-                    "Was {}.".format(type(arg).__name__))
+    raise TypeError(
+        "Argument may be None, an IntervalSet, an Interval or an "
+        "iterable of Intervals. "
+        "Was {}.".format(type(arg).__name__)
+    )
 
 
 def _create[T: Ord](intervals: t.Iterable[Interval[T]]) -> IntervalSet[T]:
@@ -703,9 +707,9 @@ def _create[T: Ord](intervals: t.Iterable[Interval[T]]) -> IntervalSet[T]:
     return interval_set
 
 
-def _chain_ordered[
-    T: Ord
-](left: t.Iterable[Interval[T]], right: t.Iterable[Interval[T]]) -> t.Iterator[Interval[T]]:
+def _chain_ordered[T: Ord](
+    left: t.Iterable[Interval[T]], right: t.Iterable[Interval[T]]
+) -> t.Iterator[Interval[T]]:
     left = iter(left)
     right = iter(right)
     a = next(left, None)
@@ -771,9 +775,9 @@ def _join[T: Ord](intervals: t.Iterable[Interval[T]]) -> t.Iterator[Interval[T]]
     yield top
 
 
-def _intersect[
-    T: Ord
-](left: t.Iterable[Interval[T]], right: t.Iterable[Interval[T]]) -> t.Iterator[Interval[T]]:
+def _intersect[T: Ord](
+    left: t.Iterable[Interval[T]], right: t.Iterable[Interval[T]]
+) -> t.Iterator[Interval[T]]:
     left = iter(left)
     right = iter(right)
     try:

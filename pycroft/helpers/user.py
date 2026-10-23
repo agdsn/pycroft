@@ -5,6 +5,7 @@
 pycroft.helpers.user
 ~~~~~~~~~~~~~~~~~~~~
 """
+
 import random
 import string
 from hashlib import sha512
@@ -15,10 +16,18 @@ from passlib.pwd import genword
 
 crypt_context: CryptContext = ldap_context.copy(
     default="ldap_sha512_crypt",
-    deprecated=["ldap_plaintext", "ldap_md5", "ldap_sha1", "ldap_salted_md5",
-                "ldap_des_crypt", "ldap_bsdi_crypt", "ldap_md5_crypt"])
+    deprecated=[
+        "ldap_plaintext",
+        "ldap_md5",
+        "ldap_sha1",
+        "ldap_salted_md5",
+        "ldap_des_crypt",
+        "ldap_bsdi_crypt",
+        "ldap_md5_crypt",
+    ],
+)
 
-clear_password_prefix = '{clear}'
+clear_password_prefix = "{clear}"
 
 
 def generate_password(length: int) -> str:
@@ -31,8 +40,7 @@ def generate_password(length: int) -> str:
     :param: length
     """
     # without hard to distinguish characters l/1 0/O
-    charset = "abcdefghijkmnopqrstuvwxyz!$%&()=.," \
-              ":;-_#+23456789ABCDEFGHIJKLMNPQRSTUVWXYZ"
+    charset = "abcdefghijkmnopqrstuvwxyz!$%&()=.,:;-_#+23456789ABCDEFGHIJKLMNPQRSTUVWXYZ"
     return genword(length=length, chars=charset)
 
 
@@ -76,7 +84,7 @@ def generate_random_str(length: int) -> str:
     Generates an aplhanumeric random string
 
     """
-    return ''.join(
+    return "".join(
         random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits)
         for _ in range(length)
     )

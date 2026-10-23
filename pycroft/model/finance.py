@@ -5,6 +5,7 @@
 pycroft.model.finance
 ~~~~~~~~~~~~~~~~~~~~~
 """
+
 from __future__ import annotations
 import datetime
 import typing as t
@@ -60,26 +61,21 @@ class MembershipFee(IntegerIdModel):
     def __contains__(self, date):
         return date in closed(self.begins_on, self.ends_on)
 
-    __table_args__ = (
-        CheckConstraint('begins_on <= ends_on'),
-    )
+    __table_args__ = (CheckConstraint("begins_on <= ends_on"),)
 
 
 class Semester(IntegerIdModel):
     name: Mapped[str]
-    registration_fee: Mapped[int] = mapped_column(
-        Money,
-        CheckConstraint('registration_fee >= 0')
-    )
+    registration_fee: Mapped[int] = mapped_column(Money, CheckConstraint("registration_fee >= 0"))
     regular_semester_fee: Mapped[int] = mapped_column(
         Money,
-        CheckConstraint('regular_semester_fee >= 0'),
+        CheckConstraint("regular_semester_fee >= 0"),
     )
     reduced_semester_fee: Mapped[int] = mapped_column(
         Money,
-        CheckConstraint('reduced_semester_fee >= 0'),
+        CheckConstraint("reduced_semester_fee >= 0"),
     )
-    late_fee: Mapped[int] = mapped_column(Money, CheckConstraint('late_fee >= 0'))
+    late_fee: Mapped[int] = mapped_column(Money, CheckConstraint("late_fee >= 0"))
     # Timedelta a person has to be member in a semester to be charged any
     # semester fee at all(grace period)
     grace_period: Mapped[timedelta]
@@ -93,7 +89,7 @@ class Semester(IntegerIdModel):
     # fee
     allowed_overdraft: Mapped[int] = mapped_column(
         Money,
-        CheckConstraint('allowed_overdraft >= 0'),
+        CheckConstraint("allowed_overdraft >= 0"),
     )
     begins_on: Mapped[date]
     ends_on: Mapped[date]
@@ -101,9 +97,7 @@ class Semester(IntegerIdModel):
     def __contains__(self, date):
         return date in closed(self.begins_on, self.ends_on)
 
-    __table_args__ = (
-        CheckConstraint('begins_on < ends_on'),
-    )
+    __table_args__ = (CheckConstraint("begins_on < ends_on"),)
 
 
 AccountType = t.Literal[
@@ -114,6 +108,7 @@ AccountType = t.Literal[
     "EXPENSE",  # Aufwandskonto
     "REVENUE",  # Ertragskonto
 ]
+
 
 class Account(IntegerIdModel):
     name: Mapped[str127]
@@ -126,9 +121,7 @@ class Account(IntegerIdModel):
     # backrefs
     splits: Mapped[list[Split]] = relationship(viewonly=True, back_populates="account")
     user: Mapped[User | None] = relationship(viewonly=True, back_populates="account")
-    building: Mapped[Building | None] = relationship(
-        back_populates="fee_account", uselist=False
-    )
+    building: Mapped[Building | None] = relationship(back_populates="fee_account", uselist=False)
     patterns: Mapped[list[AccountPattern]] = relationship(back_populates="account")
     transactions: Mapped[list[Transaction]] = relationship(
         secondary="split", back_populates="accounts", viewonly=True
@@ -141,18 +134,22 @@ class Account(IntegerIdModel):
 
     @_balance.expression
     def balance(cls) -> ColumnElement[int]:
-        return select(func.coalesce(func.sum(Split.amount), 0))\
-            .where(Split.account_id == cls.id)\
+        return (
+            select(func.coalesce(func.sum(Split.amount), 0))
+            .where(Split.account_id == cls.id)
             .label("balance")
+        )
 
     @property
     def in_default_days(self):
         first_overdue = False
         split_sum = 0
 
-        splits = Split.q.filter(Split.account_id == self.id) \
-                        .join(Transaction) \
-                        .order_by(Transaction.valid_on)
+        splits = (
+            Split.q.filter(Split.account_id == self.id)
+            .join(Transaction)
+            .order_by(Transaction.valid_on)
+        )
 
         for split in splits:
             split_sum += split.amount
@@ -172,10 +169,13 @@ class Account(IntegerIdModel):
 manager.add_function(
     Account.__table__,
     ddl.Function(
-        'account_is_type', ['integer', 'account_type'], 'boolean',
+        "account_is_type",
+        ["integer", "account_type"],
+        "boolean",
         "SELECT type = $2 FROM account WHERE id = $1 ",
-        volatility='stable', strict=True,
-    )
+        volatility="stable",
+        strict=True,
+    ),
 )
 
 
@@ -194,9 +194,7 @@ class Transaction(IntegerIdModel):
     # workaround, see sqlalchemy#9175
     posted_at: Mapped[datetime_tz_onupdate]
 
-    valid_on: Mapped[date] = mapped_column(
-        server_default=func.current_timestamp(), index=True
-    )
+    valid_on: Mapped[date] = mapped_column(server_default=func.current_timestamp(), index=True)
 
     confirmed: Mapped[bool] = mapped_column(default=True)
 
@@ -255,7 +253,9 @@ class Split(IntegerIdModel):
 manager.add_function(
     Split.__table__,
     ddl.Function(
-        'split_check_transaction_balanced', [], 'trigger',
+        "split_check_transaction_balanced",
+        [],
+        "trigger",
         """
         DECLARE
           s split;
@@ -286,23 +286,28 @@ manager.add_function(
           RETURN NULL;
         END;
         """,
-        volatility='stable', strict=True, language='plpgsql'
-    )
+        volatility="stable",
+        strict=True,
+        language="plpgsql",
+    ),
 )
 
 manager.add_constraint_trigger(
     Split.__table__,
     ddl.ConstraintTrigger(
-        'split_check_transaction_balanced_trigger',
-        Split.__table__, ('INSERT', 'UPDATE', 'DELETE'),
-        'split_check_transaction_balanced()',
-        deferrable=True, initially_deferred=True,
-    )
+        "split_check_transaction_balanced_trigger",
+        Split.__table__,
+        ("INSERT", "UPDATE", "DELETE"),
+        "split_check_transaction_balanced()",
+        deferrable=True,
+        initially_deferred=True,
+    ),
 )
 
 
 class IllegalTransactionError(PycroftModelException):
     """Indicates an attempt to persist an illegal Transaction."""
+
     pass
 
 
@@ -320,8 +325,7 @@ def check_transaction_on_save(mapper, connection, target):
     if not target.is_balanced:
         raise IllegalTransactionError(gettext("Transaction is not balanced."))
     if len(target.splits) < 2:
-        raise IllegalTransactionError(gettext("Transaction must consist "
-                                              "of at least two splits."))
+        raise IllegalTransactionError(gettext("Transaction must consist of at least two splits."))
 
 
 # noinspection PyUnusedLocal
@@ -362,10 +366,15 @@ class BankAccount(IntegerIdModel):
 
     @hybrid_property
     def _balance(self) -> Decimal:
-        return object_session(self).execute(
-            select(func.coalesce(func.sum(BankAccountActivity.amount), 0))
-                .where(BankAccountActivity.bank_account_id == self.id)
-        ).scalar()
+        return (
+            object_session(self)
+            .execute(
+                select(func.coalesce(func.sum(BankAccountActivity.amount), 0)).where(
+                    BankAccountActivity.bank_account_id == self.id
+                )
+            )
+            .scalar()
+        )
 
     @_balance.expression
     def balance(cls) -> Select[tuple[Decimal]]:
@@ -418,38 +427,40 @@ class BankAccountActivity(IntegerIdModel):
 
     # associations
     matching_patterns: Mapped[list[AccountPattern]] = relationship(
-        primaryjoin='foreign(BankAccountActivity.reference)'
-                    '.op("~*", is_comparison=True)(remote(AccountPattern.pattern))',
+        primaryjoin="foreign(BankAccountActivity.reference)"
+        '.op("~*", is_comparison=True)(remote(AccountPattern.pattern))',
         uselist=True,
-        viewonly=True
+        viewonly=True,
     )
     # associations
 
     __table_args__ = (
-        ForeignKeyConstraint((transaction_id, account_id),
-                             (Split.transaction_id, Split.account_id),
-                             onupdate='CASCADE',
-                             ondelete='SET NULL'),
+        ForeignKeyConstraint(
+            (transaction_id, account_id),
+            (Split.transaction_id, Split.account_id),
+            onupdate="CASCADE",
+            ondelete="SET NULL",
+        ),
         UniqueConstraint(transaction_id, account_id),
     )
-
 
 
 manager.add_constraint(
     BankAccount.__table__,
     CheckConstraint(
         "account_is_type(account_id, 'BANK_ASSET')",
-        name='bank_account_account_type_check',
+        name="bank_account_account_type_check",
         table=BankAccount.__table__,
     ),
-    dialect='postgresql'
+    dialect="postgresql",
 )
 
 manager.add_function(
     BankAccountActivity.__table__,
     ddl.Function(
-        'bank_account_activity_matches_referenced_split', [],
-        'trigger',
+        "bank_account_activity_matches_referenced_split",
+        [],
+        "trigger",
         """
         DECLARE
           v_activity bank_account_activity;
@@ -480,20 +491,23 @@ manager.add_function(
           RETURN NULL;
         END;
         """,
-        volatility='stable', strict=True, language='plpgsql'
-    )
+        volatility="stable",
+        strict=True,
+        language="plpgsql",
+    ),
 )
 
 
 manager.add_constraint_trigger(
     BankAccountActivity.__table__,
     ddl.ConstraintTrigger(
-        'bank_account_activity_matches_referenced_split_trigger',
+        "bank_account_activity_matches_referenced_split_trigger",
         BankAccountActivity.__table__,
-        ('INSERT', 'UPDATE', 'DELETE'),
-        'bank_account_activity_matches_referenced_split()',
-        deferrable=True, initially_deferred=True,
-    )
+        ("INSERT", "UPDATE", "DELETE"),
+        "bank_account_activity_matches_referenced_split()",
+        deferrable=True,
+        initially_deferred=True,
+    ),
 )
 
 manager.register()

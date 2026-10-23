@@ -17,6 +17,7 @@ from tests import factories
 def processor(module_session: Session) -> User:
     return factories.UserFactory.create(without_room=True)
 
+
 class TestCreateRoom:
     @pytest.fixture(scope="class")
     def building(self, class_session: Session) -> Building:
@@ -33,9 +34,7 @@ class TestCreateRoom:
         session.flush()
         assert inspect(room).persistent
 
-    def test_create_room_needs_address(
-        self, session: Session, building: Building, processor: User
-    ):
+    def test_create_room_needs_address(self, session: Session, building: Building, processor: User):
         with pytest.raises(IntegrityError):
             create_room(building, 1, "A1-01", processor, address=t.cast(Address, None))
 
@@ -49,9 +48,7 @@ class TestRoomEdit:
     def other_fixtures(self, class_session: Session, room):
         factories.UserFactory.create_batch(3, room=room)
 
-    def test_change_number_and_address(
-        self, session: Session, room: Room, processor: User
-    ):
+    def test_change_number_and_address(self, session: Session, room: Room, processor: User):
         new_address = get_or_create_address(
             street="Wundtstraße",
             number="5",

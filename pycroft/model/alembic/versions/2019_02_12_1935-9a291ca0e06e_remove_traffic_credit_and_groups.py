@@ -5,38 +5,40 @@ Revises: 7a6449f2489c
 Create Date: 2019-01-25 15:38:52.300698
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = '9a291ca0e06e'
-down_revision = '7a6449f2489c'
+revision = "9a291ca0e06e"
+down_revision = "7a6449f2489c"
 branch_labels = None
 depends_on = None
 
 
 def upgrade():
-    group = sa.table('group', sa.column('type', sa.String))
+    group = sa.table("group", sa.column("type", sa.String))
 
-    op.drop_index('ix_traffic_credit_user_id', table_name='traffic_credit')
+    op.drop_index("ix_traffic_credit_user_id", table_name="traffic_credit")
 
     op.execute("DROP VIEW IF EXISTS current_traffic_balance")
 
-    op.drop_index('ix_building_default_traffic_group_id', table_name='building')
-    op.drop_constraint('building_default_traffic_group_id_fkey', 'building',
-                       type_='foreignkey')
-    op.drop_column('building', 'default_traffic_group_id')
+    op.drop_index("ix_building_default_traffic_group_id", table_name="building")
+    op.drop_constraint("building_default_traffic_group_id_fkey", "building", type_="foreignkey")
+    op.drop_column("building", "default_traffic_group_id")
 
-    op.drop_table('traffic_credit')
-    op.drop_table('traffic_group')
-    op.drop_table('traffic_balance')
+    op.drop_table("traffic_credit")
+    op.drop_table("traffic_group")
+    op.drop_table("traffic_balance")
 
-    op.execute(group.delete().where(group.c.type == 'traffic_group'))
+    op.execute(group.delete().where(group.c.type == "traffic_group"))
 
-    op.execute("DROP FUNCTION IF EXISTS traffic_history (arg_user_id int, arg_start timestamptz, arg_interval interval, arg_step interval)")
+    op.execute(
+        "DROP FUNCTION IF EXISTS traffic_history (arg_user_id int, arg_start timestamptz, arg_interval interval, arg_step interval)"
+    )
 
-    op.execute('''
+    op.execute("""
         CREATE OR REPLACE FUNCTION traffic_history (arg_user_id int, arg_start timestamptz, arg_end timestamptz)  RETURNS TABLE ("timestamp" timestamptz, ingress numeric, egress numeric) STABLE LANGUAGE sql AS $$
         WITH anon_3 AS 
         (SELECT sum(traffic_volume.amount) AS amount, day, CAST(traffic_volume.type AS TEXT) AS type 
@@ -54,70 +56,77 @@ def upgrade():
          SELECT coalesce(anon_1.day, anon_2.day) AS timestamp, anon_1.amount AS ingress, anon_2.amount AS egress 
         FROM anon_1 FULL OUTER JOIN anon_2 ON anon_1.day = anon_2.day ORDER BY timestamp
         $$
-    ''')
+    """)
 
 
 def downgrade():
-    op.create_table('traffic_group',
-                    sa.Column('id', sa.INTEGER(), autoincrement=False,
-                              nullable=False),
-                    sa.Column('credit_limit', sa.BIGINT(), autoincrement=False,
-                              nullable=False),
-                    sa.Column('credit_interval', postgresql.INTERVAL(),
-                              autoincrement=False, nullable=False),
-                    sa.Column('credit_amount', sa.BIGINT(), autoincrement=False,
-                              nullable=False),
-                    sa.Column('initial_credit_amount', sa.BIGINT(),
-                              autoincrement=False, nullable=False),
-                    sa.ForeignKeyConstraint(['id'], ['group.id'],
-                                            name='traffic_group_id_fkey'),
-                    sa.PrimaryKeyConstraint('id', name='traffic_group_pkey'),
-                    postgresql_ignore_search_path=False
-                    )
+    op.create_table(
+        "traffic_group",
+        sa.Column("id", sa.INTEGER(), autoincrement=False, nullable=False),
+        sa.Column("credit_limit", sa.BIGINT(), autoincrement=False, nullable=False),
+        sa.Column("credit_interval", postgresql.INTERVAL(), autoincrement=False, nullable=False),
+        sa.Column("credit_amount", sa.BIGINT(), autoincrement=False, nullable=False),
+        sa.Column("initial_credit_amount", sa.BIGINT(), autoincrement=False, nullable=False),
+        sa.ForeignKeyConstraint(["id"], ["group.id"], name="traffic_group_id_fkey"),
+        sa.PrimaryKeyConstraint("id", name="traffic_group_pkey"),
+        postgresql_ignore_search_path=False,
+    )
 
-    op.add_column('building',
-                  sa.Column('default_traffic_group_id', sa.INTEGER(),
-                            autoincrement=False, nullable=True))
-    op.create_foreign_key('building_default_traffic_group_id_fkey', 'building',
-                          'traffic_group', ['default_traffic_group_id'], ['id'])
-    op.create_index('ix_building_default_traffic_group_id', 'building',
-                    ['default_traffic_group_id'], unique=False)
-    op.create_table('traffic_balance',
-                    sa.Column('user_id', sa.INTEGER(), autoincrement=False,
-                              nullable=False),
-                    sa.Column('amount', sa.BIGINT(), autoincrement=False,
-                              nullable=False),
-                    sa.Column('timestamp', postgresql.TIMESTAMP(timezone=True),
-                              server_default=sa.text('CURRENT_TIMESTAMP'),
-                              autoincrement=False, nullable=False),
-                    sa.ForeignKeyConstraint(['user_id'], ['user.id'],
-                                            name='traffic_balance_user_id_fkey',
-                                            ondelete='CASCADE'),
-                    sa.PrimaryKeyConstraint('user_id',
-                                            name='traffic_balance_pkey')
-                    )
+    op.add_column(
+        "building",
+        sa.Column("default_traffic_group_id", sa.INTEGER(), autoincrement=False, nullable=True),
+    )
+    op.create_foreign_key(
+        "building_default_traffic_group_id_fkey",
+        "building",
+        "traffic_group",
+        ["default_traffic_group_id"],
+        ["id"],
+    )
+    op.create_index(
+        "ix_building_default_traffic_group_id",
+        "building",
+        ["default_traffic_group_id"],
+        unique=False,
+    )
+    op.create_table(
+        "traffic_balance",
+        sa.Column("user_id", sa.INTEGER(), autoincrement=False, nullable=False),
+        sa.Column("amount", sa.BIGINT(), autoincrement=False, nullable=False),
+        sa.Column(
+            "timestamp",
+            postgresql.TIMESTAMP(timezone=True),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+            autoincrement=False,
+            nullable=False,
+        ),
+        sa.ForeignKeyConstraint(
+            ["user_id"], ["user.id"], name="traffic_balance_user_id_fkey", ondelete="CASCADE"
+        ),
+        sa.PrimaryKeyConstraint("user_id", name="traffic_balance_pkey"),
+    )
 
-    op.create_table('traffic_credit',
-                    sa.Column('id', sa.INTEGER(), autoincrement=True,
-                              nullable=False),
-                    sa.Column('timestamp', postgresql.TIMESTAMP(timezone=True),
-                              server_default=sa.text('CURRENT_TIMESTAMP'),
-                              autoincrement=False, nullable=False),
-                    sa.Column('amount', sa.BIGINT(), autoincrement=False,
-                              nullable=False),
-                    sa.Column('user_id', sa.INTEGER(), autoincrement=False,
-                              nullable=False),
-                    sa.CheckConstraint('amount >= 0',
-                                       name='traffic_credit_amount_check'),
-                    sa.ForeignKeyConstraint(['user_id'], ['user.id'],
-                                            name='traffic_credit_user_id_fkey',
-                                            ondelete='CASCADE'),
-                    sa.PrimaryKeyConstraint('id', name='traffic_credit_pkey')
-                    )
-    op.create_index('ix_traffic_credit_user_id', 'traffic_credit', ['user_id'],
-                    unique=False)
+    op.create_table(
+        "traffic_credit",
+        sa.Column("id", sa.INTEGER(), autoincrement=True, nullable=False),
+        sa.Column(
+            "timestamp",
+            postgresql.TIMESTAMP(timezone=True),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+            autoincrement=False,
+            nullable=False,
+        ),
+        sa.Column("amount", sa.BIGINT(), autoincrement=False, nullable=False),
+        sa.Column("user_id", sa.INTEGER(), autoincrement=False, nullable=False),
+        sa.CheckConstraint("amount >= 0", name="traffic_credit_amount_check"),
+        sa.ForeignKeyConstraint(
+            ["user_id"], ["user.id"], name="traffic_credit_user_id_fkey", ondelete="CASCADE"
+        ),
+        sa.PrimaryKeyConstraint("id", name="traffic_credit_pkey"),
+    )
+    op.create_index("ix_traffic_credit_user_id", "traffic_credit", ["user_id"], unique=False)
 
-    op.execute('''
+    op.execute("""
         CREATE OR REPLACE VIEW current_traffic_balance AS
  SELECT "user".id AS user_id,
     (((COALESCE(traffic_balance.amount, (0)::bigint))::numeric + COALESCE(recent_credit.amount, (0)::numeric)) - COALESCE(recent_volume.amount, (0)::numeric)) AS amount
@@ -129,11 +138,13 @@ def downgrade():
      LEFT JOIN LATERAL ( SELECT sum(traffic_volume.amount) AS amount
            FROM traffic_volume
           WHERE (("user".id = traffic_volume.user_id) AND ((traffic_balance.user_id IS NULL) OR (traffic_balance."timestamp" <= traffic_volume."timestamp")))) recent_volume ON (true));
-    ''')
+    """)
 
-    op.execute("DROP FUNCTION IF EXISTS traffic_history (arg_user_id int, arg_start timestamptz, arg_end timestamptz)")
+    op.execute(
+        "DROP FUNCTION IF EXISTS traffic_history (arg_user_id int, arg_start timestamptz, arg_end timestamptz)"
+    )
 
-    op.execute('''
+    op.execute("""
         CREATE OR REPLACE FUNCTION traffic_history (arg_user_id int, arg_start timestamptz, arg_interval interval, arg_step interval) RETURNS TABLE ("timestamp" timestamptz, credit numeric, ingress numeric, egress numeric, balance numeric) STABLE LANGUAGE sql AS $$
         WITH balance AS 
         (SELECT traffic_balance.amount AS amount, traffic_balance.timestamp AS timestamp 
@@ -172,4 +183,4 @@ def downgrade():
         FROM traffic_hist) AS agg_hist ORDER BY agg_hist.bucket 
          LIMIT ALL OFFSET 1
         $$
-    ''')
+    """)

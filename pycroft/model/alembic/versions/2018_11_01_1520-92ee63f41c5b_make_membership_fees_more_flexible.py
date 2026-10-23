@@ -5,6 +5,7 @@ Revises: 6f1a37baa574
 Create Date: 2018-11-01 14:57:25.498035
 
 """
+
 from datetime import timedelta
 
 import sqlalchemy as sa
@@ -12,37 +13,43 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = '92ee63f41c5b'
-down_revision = '6f1a37baa574'
+revision = "92ee63f41c5b"
+down_revision = "6f1a37baa574"
 branch_labels = None
 depends_on = None
 
 
 def upgrade():
-    op.add_column('membership_fee', sa.Column('booking_begin', sa.Interval(), nullable=True))
-    op.add_column('membership_fee', sa.Column('booking_end', sa.Interval(), nullable=True))
-    op.drop_column('membership_fee', 'grace_period')
+    op.add_column("membership_fee", sa.Column("booking_begin", sa.Interval(), nullable=True))
+    op.add_column("membership_fee", sa.Column("booking_end", sa.Interval(), nullable=True))
+    op.drop_column("membership_fee", "grace_period")
 
-    membership_fee = sa.table('membership_fee',
-                        sa.Column('booking_begin', sa.Interval(), nullable=False),
-                        sa.Column('booking_end', sa.Interval(), nullable=False))
+    membership_fee = sa.table(
+        "membership_fee",
+        sa.Column("booking_begin", sa.Interval(), nullable=False),
+        sa.Column("booking_end", sa.Interval(), nullable=False),
+    )
 
-    op.execute(membership_fee.update()
-               .values({'booking_begin': timedelta(days=2),
-                        'booking_end': timedelta(days=14)}))
+    op.execute(
+        membership_fee.update().values(
+            {"booking_begin": timedelta(days=2), "booking_end": timedelta(days=14)}
+        )
+    )
 
-    op.alter_column('membership_fee', sa.Column('booking_begin',nullable=False))
-    op.alter_column('membership_fee', sa.Column('booking_end', nullable=False))
+    op.alter_column("membership_fee", sa.Column("booking_begin", nullable=False))
+    op.alter_column("membership_fee", sa.Column("booking_end", nullable=False))
 
 
 def downgrade():
-    op.add_column('membership_fee', sa.Column('grace_period', postgresql.INTERVAL(), autoincrement=False, nullable=False))
-    op.drop_column('membership_fee', 'booking_end')
-    op.drop_column('membership_fee', 'booking_begin')
+    op.add_column(
+        "membership_fee",
+        sa.Column("grace_period", postgresql.INTERVAL(), autoincrement=False, nullable=False),
+    )
+    op.drop_column("membership_fee", "booking_end")
+    op.drop_column("membership_fee", "booking_begin")
 
-    membership_fee = sa.table('membership_fee',
-                              sa.Column('grace_period', sa.Interval(),
-                                        nullable=False))
+    membership_fee = sa.table(
+        "membership_fee", sa.Column("grace_period", sa.Interval(), nullable=False)
+    )
 
-    op.execute(membership_fee.update()
-               .values({'grace_period': timedelta(days=14)}))
+    op.execute(membership_fee.update().values({"grace_period": timedelta(days=14)}))

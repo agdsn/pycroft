@@ -9,8 +9,14 @@ from sqlalchemy import inspect, select
 from sqlalchemy.orm import Session
 
 from pycroft.helpers.interval import IntervalSet, UnboundedInterval, closed
-from pycroft.lib.membership import grant_property, deny_property, \
-    remove_property, make_member_of, remove_member_of, known_properties
+from pycroft.lib.membership import (
+    grant_property,
+    deny_property,
+    remove_property,
+    make_member_of,
+    remove_member_of,
+    known_properties,
+)
 from pycroft.model.user import Membership, PropertyGroup, User
 from tests.factories import PropertyGroupFactory, UserFactory
 
@@ -103,7 +109,7 @@ class TestProperty:
 
     @pytest.fixture(scope="class")
     def group(self, property_name: str, class_session: Session) -> PropertyGroup:
-        return PropertyGroupFactory(granted={property_name}, denied={'denied_property'})
+        return PropertyGroupFactory(granted={property_name}, denied={"denied_property"})
 
     def test_grant_property(self, group, property_name):
         prop = grant_property(group, property_name)
@@ -135,11 +141,11 @@ class TestProperty:
 @pytest.fixture
 def property_groups(session: Session):
     return [
-        PropertyGroupFactory.create(granted={'member', 'must_pay', 'network_access'}),
-        PropertyGroupFactory.create(granted={'violation'}, denied={'network_access'}),
+        PropertyGroupFactory.create(granted={"member", "must_pay", "network_access"}),
+        PropertyGroupFactory.create(granted={"violation"}, denied={"network_access"}),
     ]
 
 
 @pytest.mark.usefixtures("property_groups")
 def test_known_properties():
-    assert known_properties() == {'member', 'must_pay', 'network_access', 'violation'}
+    assert known_properties() == {"member", "must_pay", "network_access", "violation"}

@@ -10,7 +10,7 @@ class UserLogEntryFactory(BaseFactory):
     class Meta:
         model = UserLogEntry
 
-    message = factory.Faker('paragraph')
+    message = factory.Faker("paragraph")
     author = factory.SubFactory(UserFactory)
     user = factory.SubFactory(UserFactory)
     created_at = None
@@ -20,6 +20,6 @@ class RoomLogEntryFactory(BaseFactory):
     class Meta:
         model = RoomLogEntry
 
-    message = factory.Faker('paragraph')
+    message = factory.Faker("paragraph")
     author = factory.SubFactory(UserFactory)
     room = factory.SubFactory(RoomFactory)

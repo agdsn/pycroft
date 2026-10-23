@@ -11,22 +11,28 @@ from tests import factories
 THRESHOLD = 0.6
 
 
-@pytest.mark.parametrize("one,other", [
-    ("Hans", "Hans_"),
-    ("  Franz", "Franz"),
-    ("Tobias Fuenke", "Tobias Fünke"),
-    ("Tobias Fünke", "Tobias"),
-    ("Richard Paul Astley", "Rick Astley"),
-])
+@pytest.mark.parametrize(
+    "one,other",
+    [
+        ("Hans", "Hans_"),
+        ("  Franz", "Franz"),
+        ("Tobias Fuenke", "Tobias Fünke"),
+        ("Tobias Fünke", "Tobias"),
+        ("Richard Paul Astley", "Rick Astley"),
+    ],
+)
 def test_similar_names(one, other):
     assert UserHelper.are_names_similar(one, other, THRESHOLD)
 
 
-@pytest.mark.parametrize("one,other", [
-    ("Hans", "Definitiv ganz und gar nicht Hans"),
-    ("Tobias Fuenke", "Fünke Tobias"),
-    ("Lukas Juhrich der Große", "Lucas der geile Hecht"),
-])
+@pytest.mark.parametrize(
+    "one,other",
+    [
+        ("Hans", "Definitiv ganz und gar nicht Hans"),
+        ("Tobias Fuenke", "Fünke Tobias"),
+        ("Lukas Juhrich der Große", "Lucas der geile Hecht"),
+    ],
+)
 def test_nonsimilar_names(one, other):
     assert not UserHelper.are_names_similar(one, other, THRESHOLD)
 
@@ -47,9 +53,7 @@ class TestSimilarUsers:
     @pytest.fixture(scope="class", autouse=True)
     def similar_former_inhabitant(self, class_session, room, interval) -> User:
         user = factories.UserFactory(name="Tobias")
-        class_session.add(
-            RoomHistoryEntry(room=room, user=user, active_during=interval)
-        )
+        class_session.add(RoomHistoryEntry(room=room, user=user, active_during=interval))
         return user
 
     @pytest.fixture(scope="class", autouse=True)

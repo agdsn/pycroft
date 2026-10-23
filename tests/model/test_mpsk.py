@@ -14,7 +14,6 @@ from .. import factories
 
 
 class TestMPSKValidators:
-
     @pytest.mark.parametrize(
         "mac",
         [

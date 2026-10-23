@@ -8,10 +8,14 @@ from flask import url_for
 from flask_wtf import FlaskForm as Form
 from wtforms.validators import DataRequired, NumberRange, Optional
 from wtforms_widgets.base_form import BaseForm
-from wtforms_widgets.fields.core import TextField, BooleanField, TextAreaField, \
-    QuerySelectField, IntegerField
-from wtforms_widgets.fields.custom import LazyLoadSelectField, static, \
-    TypeaheadField
+from wtforms_widgets.fields.core import (
+    TextField,
+    BooleanField,
+    TextAreaField,
+    QuerySelectField,
+    IntegerField,
+)
+from wtforms_widgets.fields.custom import LazyLoadSelectField, static, TypeaheadField
 from wtforms_widgets.fields.filters import to_uppercase, empty_to_none
 
 from pycroft.lib.facilities import sort_buildings, RoomAddressSuggestion
@@ -50,19 +54,19 @@ class CreateAddressForm(BaseForm):
     address_addition = create_address_field(
         "Adresszusatz",
         type="addition",
-        description="Der Adresszusatz; oft die Raumnummer." " Optional.",
+        description="Der Adresszusatz; oft die Raumnummer. Optional.",
     )
-    address_zip_code = create_address_field(
-        "Postleitzahl", [DataRequired()], type="zip_code"
-    )
+    address_zip_code = create_address_field("Postleitzahl", [DataRequired()], type="zip_code")
     address_city = create_address_field("Stadt", type="city")
     address_state = create_address_field("Bundesstaat", type="state")
     address_country = create_address_field("Land", type="country")
 
     @property
     def address_kwargs(self) -> dict[str, str]:
-        return {key: getattr(self, f'address_{key}').data
-                for key in 'street number addition zip_code city state country'.split()}
+        return {
+            key: getattr(self, f"address_{key}").data
+            for key in "street number addition zip_code city state country".split()
+        }
 
     def set_address_fields(self, obj: RoomAddressSuggestion | Address | None) -> None:
         if not obj:
@@ -83,37 +87,44 @@ def building_query() -> list[Building]:
 
 
 class SelectRoomForm(BaseForm):
-    building = QuerySelectField("Wohnheim",
-                                [DataRequired(message="Wohnheim?")],
-                                get_label='short_name',
-                                query_factory=building_query)
-    level = LazyLoadSelectField("Etage",
-                                validators=[NumberRange(message="Etage?")],
-                                coerce=int,
-                                choices=[],
-                                conditions=["building"],
-                                data_endpoint="facilities.json_levels")
-    room_number = LazyLoadSelectField("Raumnummer",
-                                      validators=[
-                                          DataRequired(message="Raum?")],
-                                      coerce=str,
-                                      choices=[],
-                                      conditions=["building", "level"],
-                                      data_endpoint="facilities.json_rooms")
+    building = QuerySelectField(
+        "Wohnheim",
+        [DataRequired(message="Wohnheim?")],
+        get_label="short_name",
+        query_factory=building_query,
+    )
+    level = LazyLoadSelectField(
+        "Etage",
+        validators=[NumberRange(message="Etage?")],
+        coerce=int,
+        choices=[],
+        conditions=["building"],
+        data_endpoint="facilities.json_levels",
+    )
+    room_number = LazyLoadSelectField(
+        "Raumnummer",
+        validators=[DataRequired(message="Raum?")],
+        coerce=str,
+        choices=[],
+        conditions=["building", "level"],
+        data_endpoint="facilities.json_rooms",
+    )
 
 
 class CreateRoomForm(CreateAddressForm):
-    building = QuerySelectField("Wohnheim",
-                                get_label='short_name',
-                                query_factory=building_query)
+    building = QuerySelectField("Wohnheim", get_label="short_name", query_factory=building_query)
     level = IntegerField("Etage")
     number = TextField("Nummer")
     vo_suchname = TextField("VO Nummer", validators=[Optional()], filters=[empty_to_none])
     inhabitable = BooleanField("Bewohnbar", validators=[Optional()])
 
     _order = (
-        'building', 'level', 'number', 'vo_suchname', 'inhabitable',
-        *iter_prefixed_field_names(CreateAddressForm, 'address_'),
+        "building",
+        "level",
+        "number",
+        "vo_suchname",
+        "inhabitable",
+        *iter_prefixed_field_names(CreateAddressForm, "address_"),
     )
 
 
@@ -124,8 +135,12 @@ class EditRoomForm(CreateAddressForm):
     vo_suchname = TextField("VO Nummer", validators=[Optional()], filters=[empty_to_none])
     inhabitable = BooleanField("Bewohnbar", validators=[Optional()])
     _order = (
-        'building', 'level', 'number', 'vo_suchname', 'inhabitable',
-        *iter_prefixed_field_names(CreateAddressForm, 'address_')
+        "building",
+        "level",
+        "number",
+        "vo_suchname",
+        "inhabitable",
+        *iter_prefixed_field_names(CreateAddressForm, "address_"),
     )
 
 
@@ -137,4 +152,4 @@ class PatchPortForm(SelectRoomForm):
     name = TextField(label="Name", validators=[DataRequired()], filters=[to_uppercase])
     switch_room = static(TextField(label="Switchraum"))
 
-    _order = ("name","switch_room")
+    _order = ("name", "switch_room")

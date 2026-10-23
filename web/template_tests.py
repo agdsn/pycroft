@@ -14,13 +14,13 @@ def template_check[_T: t.Callable[..., t.Any]](name: str) -> t.Callable[[_T], _T
     def decorator(fn: _T) -> _T:
         _check_registry[name] = fn
         return fn
+
     return decorator
 
 
 @template_check("user_with_no_network_access")
 def no_network_access_check(user: User) -> bool:
-    """Tests if user has network access
-    """
+    """Tests if user has network access"""
     return not user.has_property("network_access")
 
 

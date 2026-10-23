@@ -20,8 +20,7 @@ def filled_iter[_T](iter: t.Iterable[_T], filler: _T) -> t.Iterator[_T]:
 
 class HasDunderStr(t.Protocol):
     @t.override
-    def __str__(self) -> str:
-        ...
+    def __str__(self) -> str: ...
 
 
 class LazilyJoined:
@@ -60,9 +59,11 @@ class LazilyJoined:
 
     def _mark_exhausted(self) -> None:
         if self.exhausted:
-            raise RuntimeError("LazyJoined object already exhausted!"
-                               " You may call __str__ or __iter__ only once."
-                               " For re-use, turn it into a list.")
+            raise RuntimeError(
+                "LazyJoined object already exhausted!"
+                " You may call __str__ or __iter__ only once."
+                " For re-use, turn it into a list."
+            )
         self.exhausted = True
 
 
@@ -76,13 +77,11 @@ type DecoratedOutType[**P] = Callable[P, LazilyJoined]
 
 
 @overload
-def lazy_join(func_or_glue: DecoratedInType) -> DecoratedOutType:
-    ...
+def lazy_join(func_or_glue: DecoratedInType) -> DecoratedOutType: ...
 
 
 @overload
-def lazy_join(func_or_glue: str) -> Callable[[DecoratedInType], DecoratedOutType]:
-    ...
+def lazy_join(func_or_glue: str) -> Callable[[DecoratedInType], DecoratedOutType]: ...
 
 
 def lazy_join[**P, Q](

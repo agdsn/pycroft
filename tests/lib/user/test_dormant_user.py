@@ -15,6 +15,7 @@ from tests.assertions import assert_unchanged, assert_one
 from tests.factories import RoomFactory, AddressFactory, UserFactory
 from tests.lib.user.task_helpers import create_task_and_execute
 
+
 @pytest.fixture(scope="module")
 def user(module_session, config):
     return UserFactory.create(
@@ -30,13 +31,9 @@ class TestMovedInUser:
         return RoomFactory.create()
 
     @pytest.fixture
-    def move_out(
-        self, session, processor, utcnow
-    ) -> t.Callable[[User, str | None], None]:
+    def move_out(self, session, processor, utcnow) -> t.Callable[[User, str | None], None]:
         def move_out(user: User, comment: str | None = None) -> None:
-            lib_user.move_out(
-                user, comment=comment or "", processor=processor, when=utcnow
-            )
+            lib_user.move_out(user, comment=comment or "", processor=processor, when=utcnow)
             session.refresh(user)
 
         return move_out
@@ -88,9 +85,7 @@ class TestMovedInUser:
         assert user.address == address
 
     @pytest.mark.parametrize("end_membership", (True, False))
-    def test_move_out_gets_scheduled(
-        self, end_membership, user, processor, session, utcnow
-    ):
+    def test_move_out_gets_scheduled(self, end_membership, user, processor, session, utcnow):
         old_room = user.room
         lib_user.move_out(
             user,
@@ -102,9 +97,7 @@ class TestMovedInUser:
         assert user.room == old_room
         task = assert_one(session.query(Task).all())
         assert task.type == TaskType.USER_MOVE_OUT
-        assert task.parameters == UserMoveOutParams(
-            comment="", end_membership=end_membership
-        )
+        assert task.parameters == UserMoveOutParams(comment="", end_membership=end_membership)
 
 
 class TestMoveOutImpl:
@@ -131,9 +124,7 @@ class TestMoveOutImpl:
             ({"end_membership": True}, "comment"),
         ),
     )
-    def test_move_out_bad_params(
-        self, session, user, utcnow, params: dict, error_needle: str
-    ):
+    def test_move_out_bad_params(self, session, user, utcnow, params: dict, error_needle: str):
         task = create_task_and_execute(TaskType.USER_MOVE_OUT, user, params)
         session.refresh(user)
 

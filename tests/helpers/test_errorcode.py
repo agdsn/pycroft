@@ -6,11 +6,14 @@ import pytest
 from pycroft.helpers.errorcode import digits, Type1Code, Type2Code, ErrorCode
 
 
-@pytest.mark.parametrize('number, expected_list', [
-    (0, [0]),
-    (1234, [4, 3, 2, 1]),
-    (-1234, [4, 3, 2, 1]),
-])
+@pytest.mark.parametrize(
+    "number, expected_list",
+    [
+        (0, [0]),
+        (1234, [4, 3, 2, 1]),
+        (-1234, [4, 3, 2, 1]),
+    ],
+)
 def test_digits(number: int, expected_list: list[int]):
     assert list(digits(number)) == expected_list
 
@@ -23,11 +26,11 @@ VALID_RESULTS = [
 ]
 
 
-@pytest.mark.parametrize('code, id, checksum', VALID_RESULTS)
+@pytest.mark.parametrize("code, id, checksum", VALID_RESULTS)
 def test_errorcode_calculation(code: ErrorCode, id: int, checksum: int):
     assert code.calculate(id) == checksum
 
 
-@pytest.mark.parametrize('code, id, checksum', VALID_RESULTS)
+@pytest.mark.parametrize("code, id, checksum", VALID_RESULTS)
 def test_errorcode_validity(code: ErrorCode, id: int, checksum: int):
     assert code.is_valid(id, checksum)

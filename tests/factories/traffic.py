@@ -14,8 +14,8 @@ class TrafficDataFactory(BaseFactory):
     class Meta:
         abstract = True
 
-    amount = FuzzyInteger(0, 60 * 1024 ** 3)
-    timestamp = factory.Faker('date_time')
+    amount = FuzzyInteger(0, 60 * 1024**3)
+    timestamp = factory.Faker("date_time")
     user = factory.SubFactory(UserFactory)
 
 
@@ -24,9 +24,9 @@ class TrafficVolumeFactory(TrafficDataFactory):
         model = TrafficVolume
 
     ip = factory.SubFactory(IPFactory)
-    type = FuzzyChoice(['Ingress', 'Egress'])
+    type = FuzzyChoice(["Ingress", "Egress"])
     packets = FuzzyInteger(0, 5000)
 
 
 class TrafficVolumeLastWeekFactory(TrafficVolumeFactory):
-    timestamp = factory.Faker('date_time_between', start_date='-1w', end_date='now')
+    timestamp = factory.Faker("date_time_between", start_date="-1w", end_date="now")

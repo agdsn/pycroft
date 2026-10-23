@@ -17,7 +17,7 @@ from web.table.table import (
 
 
 def no_inf_change() -> bool:
-    return not current_user.has_property('infrastructure_change')
+    return not current_user.has_property("infrastructure_change")
 
 
 class SubnetTable(BootstrapTable):
@@ -25,11 +25,15 @@ class SubnetTable(BootstrapTable):
     description = Column("Beschreibung")
     address = Column("IP")
     gateway = Column("Gateway")
-    reserved = Column("Reservierte Adressen", formatter='table.listFormatter',
-                      sortable=False, escape=False)
-    free_ips_formatted = Column("Freie IPs", col_args={
-        'data-sort-name': 'free_ips',
-    })
+    reserved = Column(
+        "Reservierte Adressen", formatter="table.listFormatter", sortable=False, escape=False
+    )
+    free_ips_formatted = Column(
+        "Freie IPs",
+        col_args={
+            "data-sort-name": "free_ips",
+        },
+    )
 
 
 class SubnetRow(BaseModel):
@@ -47,13 +51,13 @@ class SwitchTable(BootstrapTable):
     id = Column("#")
     name = LinkColumn("Name")
     ip = Column("Management IP")
-    edit_link = BtnColumn('Editieren', width=1, hide_if=no_inf_change)
-    delete_link = BtnColumn('Löschen', width=1, hide_if=no_inf_change)
+    edit_link = BtnColumn("Editieren", width=1, hide_if=no_inf_change)
+    delete_link = BtnColumn("Löschen", width=1, hide_if=no_inf_change)
 
     @property
     @t.override
     def toolbar(self) -> HasDunderStr | None:
-        if not current_user.has_property('infrastructure_change'):
+        if not current_user.has_property("infrastructure_change"):
             return None
 
         return button_toolbar("Switch", url_for(".switch_create"))
@@ -83,7 +87,7 @@ class VlanRow(BaseModel):
 class PortTable(BootstrapTable):
     class Meta:  # ty: ignore[invalid-attribute-override]
         table_args = {
-            'data-sort-name': 'switchport_name',
+            "data-sort-name": "switchport_name",
         }
 
     @t.override
@@ -94,11 +98,11 @@ class PortTable(BootstrapTable):
         self.switch_id = switch_id
         self.switch_room_id = switch_room_id
 
-    switchport_name = Column("Name", width=2, col_args={'data-sorter': 'table.sortPort'})
-    patchport_name = Column("→ Patchport", width=2, col_args={'data-sorter': 'table.sortPatchPort'})
+    switchport_name = Column("Name", width=2, col_args={"data-sorter": "table.sortPort"})
+    patchport_name = Column("→ Patchport", width=2, col_args={"data-sorter": "table.sortPatchPort"})
     room = LinkColumn("→ Raum", width=10)
-    edit_link = BtnColumn('Editieren', hide_if=no_inf_change)
-    delete_link = BtnColumn('Löschen', hide_if=no_inf_change)
+    edit_link = BtnColumn("Editieren", hide_if=no_inf_change)
+    delete_link = BtnColumn("Löschen", hide_if=no_inf_change)
 
     @property
     @lazy_join

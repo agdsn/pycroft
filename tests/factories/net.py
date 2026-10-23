@@ -9,12 +9,12 @@ class VLANFactory(BaseFactory):
     class Meta:
         model = VLAN
 
-    name = factory.Sequence(lambda n: f"vlan{n+1}")
-    vid = factory.Sequence(lambda n: n+1)
+    name = factory.Sequence(lambda n: f"vlan{n + 1}")
+    vid = factory.Sequence(lambda n: n + 1)
 
     class Params:
         create_subnet = factory.Trait(
-            subnets=factory.RelatedFactoryList('tests.factories.net.SubnetFactory', 'vlan', size=1)
+            subnets=factory.RelatedFactoryList("tests.factories.net.SubnetFactory", "vlan", size=1)
         )
 
 

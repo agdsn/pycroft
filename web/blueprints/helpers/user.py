@@ -28,40 +28,40 @@ def user_btn_style(user: User) -> tuple[BtnClass, list[IconClass], str]:
     tooltips = []
     props = {p.property_name for p in user.current_properties}
 
-    if 'network_access' not in props:
-        glyphicons.append('fa-times')
-        tooltips.append('Zugang gesperrt')
+    if "network_access" not in props:
+        glyphicons.append("fa-times")
+        tooltips.append("Zugang gesperrt")
 
-    if 'payment_in_default' in props:
-        glyphicons.append('fa-euro-sign')
-        btn_class = 'btn-warning'
-        tooltips.append('nicht bezahlt')
+    if "payment_in_default" in props:
+        glyphicons.append("fa-euro-sign")
+        btn_class = "btn-warning"
+        tooltips.append("nicht bezahlt")
 
-    if 'member' in props:
-        if 'traffic_limit_exceeded' in props:
-            glyphicons.append('fa-chart-area')
-            btn_class = 'btn-warning'
-            tooltips.append('Traffic')
-        if 'violation' in props:
-            glyphicons.append('fa-exclamation-triangle')
-            btn_class = 'btn-danger'
-            tooltips.append('Verstoß')
+    if "member" in props:
+        if "traffic_limit_exceeded" in props:
+            glyphicons.append("fa-chart-area")
+            btn_class = "btn-warning"
+            tooltips.append("Traffic")
+        if "violation" in props:
+            glyphicons.append("fa-exclamation-triangle")
+            btn_class = "btn-danger"
+            tooltips.append("Verstoß")
     else:
-        btn_class = 'btn-info'
-        tooltips.append('Kein Mitglied')
+        btn_class = "btn-info"
+        tooltips.append("Kein Mitglied")
 
-    glyphicons = glyphicons or ['fa-check']
-    btn_class = btn_class or 'btn-success'
+    glyphicons = glyphicons or ["fa-check"]
+    btn_class = btn_class or "btn-success"
 
-    if 'user_show' in props:
-        glyphicons.append('fa-wrench')
-        tooltips.append('Admin')
+    if "user_show" in props:
+        glyphicons.append("fa-wrench")
+        tooltips.append("Admin")
 
-    if 'member' not in props and 'ldap' in props:
-        glyphicons.append('fa-cloud')
-        tooltips.append('Eintrag im LDAP')
+    if "member" not in props and "ldap" in props:
+        glyphicons.append("fa-cloud")
+        tooltips.append("Eintrag im LDAP")
 
-    tooltip = ', '.join(tooltips)
+    tooltip = ", ".join(tooltips)
 
     return btn_class, glyphicons, tooltip
 
@@ -80,7 +80,7 @@ def user_button(user: User) -> BtnColResponse:
 def get_user_or_404(user_id: int | None) -> User:
     user = session.get(User, user_id)
     if user is None:
-        flash(f"Nutzer mit ID {user_id} existiert nicht!", 'error')
+        flash(f"Nutzer mit ID {user_id} existiert nicht!", "error")
         abort(404)
     return user
 
@@ -88,14 +88,14 @@ def get_user_or_404(user_id: int | None) -> User:
 def get_pre_member_or_404(prm_id: int | None) -> PreMember:
     prm = session.get(PreMember, prm_id)
     if prm is None:
-        flash(f"Mitgliedsanfrage mit ID {prm_id} existiert nicht!", 'error')
+        flash(f"Mitgliedsanfrage mit ID {prm_id} existiert nicht!", "error")
         abort(404)
     return prm
 
 
 def no_membership_change() -> bool:
-    return not current_user.has_property('groups_change_membership')
+    return not current_user.has_property("groups_change_membership")
 
 
 def no_hosts_change() -> bool:
-    return not current_user.has_property('hosts_change')
+    return not current_user.has_property("hosts_change")
