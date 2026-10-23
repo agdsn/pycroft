@@ -138,9 +138,6 @@ executable = "ruff"
 options = "format REVISION_SCRIPT_FILENAME"
 
 # TOOLS
-[tool.black]
-line-length = 100
-
 [tool.ty.src]
 include = [
     "pycroft/helpers",
@@ -254,7 +251,6 @@ timeout = "10"
 
 [tool.ruff]
 line-length = 100
-target-version = "py310"
 exclude = [
     "deps/",
     "doc/",
