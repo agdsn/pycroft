@@ -931,10 +931,7 @@ def account_toggle_legacy(account_id: int) -> ResponseReturnValue:
 def balance_json(account_id: int) -> ResponseReturnValue:
     invert = request.args.get("invert", "False") == "True"
 
-    sum_exp: ColumnElement[int] = t.cast(
-        Over[int],
-        func.sum(Split.amount).over(order_by=Transaction.valid_on),
-    )
+    sum_exp: ColumnElement[int] = func.sum(Split.amount).over(order_by=Transaction.valid_on)
 
     if invert:
         sum_exp = -sum_exp
@@ -1051,7 +1048,7 @@ def accounts_show_json(account_id: int) -> ResponseReturnValue:
         eagerload=True,
     )
 
-    def rows_from_query(query: Select[tuple[Split]]) -> list[dict[str, t.Any]]:
+    def rows_from_query(query: Select[Split]) -> list[dict[str, t.Any]]:
         # iterating over `query` executes it
         return [_format_row(split, style) for split in session.scalars(query)]
 
