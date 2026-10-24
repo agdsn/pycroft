@@ -36,8 +36,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         postgresql-client \
         strace \
         unzip \
-        vim \
-    && apt-get clean
+        vim
+
 # The test and dev containers bind-mount a checkout owned by the host user.
 # Git refuses that directory, versioningit treats the refusal as "not a
 # repository", and `uv sync` dies while building wtforms-widgets.
