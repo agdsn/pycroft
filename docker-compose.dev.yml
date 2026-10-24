@@ -149,6 +149,9 @@ services:
     extends:
       file: docker-compose.base.yml
       service: keycloak
+    environment:
+      KC_HOSTNAME: http://localhost:8080
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
     ports:
       - "8080:8080"
     healthcheck:
