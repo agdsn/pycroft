@@ -556,8 +556,9 @@ def bank_account_activities_edit(activity_id: int) -> ResponseReturnValue:
         )
 
         if form.validate_on_submit():
+            account_id = int(d) if (d := form.account_id.data) else None
             # TODO use `session.get`
-            debit_account = Account.q.filter(Account.id == form.account_id.data).one()
+            debit_account = session.query(Account).filter(Account.id == account_id).one()
             credit_account = activity.bank_account.account
 
             assert form.description.data is not None
@@ -1344,8 +1345,8 @@ def transactions_all() -> ResponseReturnValue:
 @access.require("finance_show")
 @bp.route("/transactions/json")
 def transactions_all_json() -> ResponseReturnValue:
-    lower = request.args.get("after", "")
-    upper = request.args.get("before", "")
+    lower = request.args.get("after", None)
+    upper = request.args.get("before", None)
     filter = request.args.get("filter", "nonuser")
     transactions: FromClause
     if filter == "nonuser":
@@ -1370,19 +1371,19 @@ def transactions_all_json() -> ResponseReturnValue:
         )
     )
 
-    try:
-        datetime.strptime(lower, "%Y-%m-%d").date()
-    except ValueError:
-        not lower or abort(422)
-    else:
-        q = q.where(Transaction.valid_on >= lower)
+    if lower is not None:
+        try:
+            parsed_lower = datetime.strptime(lower, "%Y-%m-%d").date()
+            q = q.where(Transaction.valid_on >= parsed_lower)
+        except ValueError as e:
+            abort(422, e)
 
-    try:
-        datetime.strptime(upper, "%Y-%m-%d").date()
-    except ValueError:
-        not upper or abort(422)
-    else:
-        q = q.where(Transaction.valid_on <= upper)
+    if upper is not None:
+        try:
+            parsed_upper = datetime.strptime(upper, "%Y-%m-%d").date()
+            q = q.where(Transaction.valid_on <= parsed_upper)
+        except ValueError:
+            abort(422)
 
     res = session.scalar(json_agg_core(q))
     return {"items": res or []}
