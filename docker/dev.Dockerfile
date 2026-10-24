@@ -7,9 +7,9 @@ RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
     apk add unzip curl
 RUN <<EOF ash
     set -euo pipefail
-    curl -sSfLO https://github.com/oven-sh/bun/releases/download/bun-v1.1.26/bun-linux-x64-baseline.zip
+    curl -sSfLO https://github.com/oven-sh/bun/releases/download/bun-v1.4.4/bun-linux-x64-baseline.zip
     unzip -j bun-linux-x64-baseline.zip bun-linux-x64-baseline/bun -d /opt
-    echo "610bf0daf21cbb7a80be18b2bdb67c0cdcb9e83c680afa082e70a970db78f895  /opt/bun" \
+    echo "10702245766b225e70bbf6235fd6b47214fd94b4760d00ffaed8ab0df57ac235  /opt/bun" \
         | sha256sum -c -
 EOF
 
