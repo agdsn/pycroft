@@ -7,9 +7,11 @@
 import $ from 'jquery';
 import * as dc from 'dc';
 import crossfilter from 'crossfilter';
+import * as d3 from 'd3';
 
 $(() => {
-    const dateFormat = d3.time.format('%Y-%m-%d');
+    const dateFormat = d3.timeFormat('%Y-%m-%d');
+    const dateParse = d3.timeParse('%Y-%m-%d');
     const parent = d3.select('[data-chart="transactions-overview"]');
 
     //todo custom reduce functions for server-side stuff
@@ -22,8 +24,8 @@ $(() => {
     const transactionTable = dc.dataTable('#transaction-table');
     const transactionCount = dc.dataCount(".dc-data-count");
     const params = (new URL(document.location)).searchParams;
-    const dateMin = dateFormat.parse(params.get('after'));
-    const dateMax = dateFormat.parse(params.get('before'));
+    const dateMin = params.has('after') ? dateParse(params.get('after')) : null;
+    const dateMax = params.has('before') ? dateParse(params.get('before')) : null;
 
     $("#reset-all").click(() => {
         dc.filterAll();
@@ -36,12 +38,12 @@ $(() => {
         return false;
     });
 
-    d3.json(parent.attr("data-url"), resp => {
+    d3.json(parent.attr("data-url")).then(resp => {
 
         const data = resp.items;
         data.forEach(d => {
-            d.dd = dateFormat.parse(d.valid_on);
-            d.month = d3.time.month(d.dd);
+            d.dd = dateParse(d.valid_on);
+            d.month = d3.timeMonth(d.dd);
         });
 
         const ndx = crossfilter(data);
@@ -83,7 +85,7 @@ $(() => {
             .dimension(account)
             .group(accountGroup)
             .cap(10)
-            .x(d3.scale.linear().range([1, 100]))
+            .x(d3.scaleLinear().range([1, 100]))
             .label(d => {
                 const format_func = acc_id => `acc-${acc_id}`;
                 const action_func = (acc_id, replacement) => {
@@ -104,7 +106,7 @@ $(() => {
             .dimension(accountType)
             .group(accountTypeGroup)
             .cap(10)
-            .x(d3.scale.linear().range([1, 100]))
+            .x(d3.scaleLinear().range([1, 100]))
             .label(d => `${d.key} (${d.value})`)
             .renderLabel(true)
             .xAxis().tickValues([]);
@@ -129,9 +131,9 @@ $(() => {
             .height(100)
             .dimension(monthDimension)
             .group(monthGroup)
-            .x(d3.time.scale().domain(dateExtent))
+            .x(d3.scaleTime().domain(dateExtent))
             .gap(0) // gap(0) has overlaps for some reason
-            .xUnits(d3.time.months) //seems to be buggy, so we can't set bar width :(
+            .xUnits(d3.timeMonths) //seems to be buggy, so we can't set bar width :(
             // logscale would also be nice, but that too is buggy
             .elasticY(true)
             .margins({top: 0, left: 70, right: 70, bottom: 25})
@@ -167,8 +169,8 @@ $(() => {
             .width(700)
             .height(200)
             .dimension(monthDimension)
-            .x(d3.time.scale().domain(dateExtent))
-            .xUnits(d3.time.months)
+            .x(d3.scaleTime().domain(dateExtent))
+            .xUnits(d3.timeMonths)
             .elasticY(true)
             .brushOn(false)
             .margins({top: 0, left: 70, right: 70, bottom: 25})
@@ -215,7 +217,7 @@ $(() => {
                 } else {
                     desc = descCache[d.id];
                 }
-                const date = d3.time.format("%Y-%m-%d")(d.dd);
+                const date = d3.timeFormat("%Y-%m-%d")(d.dd);
 
                 const link = `<a id="transaction-link" href="${href}">${desc}</a>`;
                 return `${date} ${link}`;
@@ -227,5 +229,5 @@ $(() => {
         //TODO total value transacted chart (count vs value)
 
         dc.renderAll();
-    });
+    }).catch(console.error);
 });
