@@ -19,7 +19,7 @@ validator = jsonschema.Draft4Validator(schema)
 def assertValidJSON(json_string):
     try:
         obj = json.loads(json_string)
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         pytest.fail()
     try:
         validator.validate(obj)

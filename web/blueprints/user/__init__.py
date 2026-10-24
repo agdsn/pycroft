@@ -265,7 +265,7 @@ def json_search() -> ResponseReturnValue:
         email = g("email")
         person_id = and_then(coalesce_none(g("person_id"), ""), int)
         query = g("query")
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return abort(400)
     ip_invalid = ip_address and not re.match(ip_regex, ip_address)
     mac_invalid = mac and not re.match(mac_regex, mac)
