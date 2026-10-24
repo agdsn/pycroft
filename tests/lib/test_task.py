@@ -61,7 +61,9 @@ class TestTaskExecution:
         assert assert_one(task.log_entries).author == processor
 
     def test_task_reschedule(self, task, processor, old_room, user):
-        new_due_date = utc.ensure_tz(datetime.datetime.utcnow() + datetime.timedelta(days=5))
+        new_due_date = utc.ensure_tz(
+            datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=5)
+        )
         reschedule_task(task, new_due_date, processor=processor)
         assert user.room == old_room
         assert task.status == TaskStatus.OPEN

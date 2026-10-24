@@ -1,5 +1,5 @@
 # TODO: Tests for traffic history
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 
 import pytest
 from sqlalchemy.orm import Session
@@ -25,7 +25,7 @@ def interface(module_session: Session):
 )
 def test_traffic_volume_cleanup(session, interface: Interface, age_days: int, old: bool):
     f.TrafficVolumeFactory(
-        timestamp=datetime.utcnow() - timedelta(age_days),
+        timestamp=datetime.now(UTC) - timedelta(age_days),
         ip__interface=interface,
     )
     session.flush()

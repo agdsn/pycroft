@@ -21,7 +21,7 @@ def test_simple_with_domain():
 def test_simple_format_args():
     message = "test {} at {}"
     arg1 = "arg1"
-    arg2 = datetime.datetime.utcnow()
+    arg2 = datetime.datetime.now(datetime.UTC)
     m = deferred_gettext(message).format(arg1, arg2)
     expected_result = message.format(arg1, format_datetime(arg2))
     assertSimpleMessageCorrect(m, message, None, (arg1, arg2), {}, expected_result)
@@ -30,7 +30,7 @@ def test_simple_format_args():
 def test_simple_format_kwargs():
     message = "test {arg1} at {arg2}"
     arg1 = "arg1"
-    arg2 = datetime.datetime.utcnow()
+    arg2 = datetime.datetime.now(datetime.UTC)
     m = deferred_gettext(message).format(arg1=arg1, arg2=arg2)
     expected_result = message.format(arg1=arg1, arg2=format_datetime(arg2))
     assertSimpleMessageCorrect(m, message, None, (), {"arg1": arg1, "arg2": arg2}, expected_result)

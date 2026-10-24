@@ -10,7 +10,7 @@ from pycroft.helpers.i18n.serde import serialize_param, deserialize_param
 from pycroft.helpers.i18n.message import Message, ErroneousMessage
 from pycroft.helpers.interval import UnboundedInterval, closed, closedopen, openclosed, open
 
-now = datetime.datetime.utcnow()
+now = datetime.datetime.now(datetime.UTC)
 then = now + datetime.timedelta(days=1)
 
 
@@ -23,10 +23,10 @@ then = now + datetime.timedelta(days=1)
         0.5,
         Decimal("3.8e2"),
         Money(Decimal(20.0), "EUR"),
-        datetime.datetime.utcnow(),
+        datetime.datetime.now(datetime.UTC),
         datetime.date.today(),
         datetime.timedelta(1),
-        datetime.datetime.utcnow().time(),
+        datetime.datetime.now(datetime.UTC).time(),
         UnboundedInterval,
         closed(now, then),
         closedopen(now, then),
