@@ -16,7 +16,7 @@ from email.header import Header
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import make_msgid, formatdate
-from functools import lru_cache
+from functools import cache
 
 import jinja2
 from werkzeug.local import LocalProxy
@@ -70,7 +70,7 @@ class MailTemplate:
         return _get_template(self.template)
 
 
-@lru_cache(maxsize=None)
+@cache
 def _get_template(template_location: str) -> jinja2.Template:
     if config is None:
         raise RuntimeError("`mail.config` not set up!")

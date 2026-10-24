@@ -7,7 +7,7 @@ from typing import overload
 from collections.abc import Generator, Callable
 
 
-def filled_iter[_T](iter: t.Iterable[_T], filler: _T) -> t.Iterator[_T]:
+def filled_iter[T](iter: t.Iterable[T], filler: T) -> t.Iterator[T]:
     """Inbetween every iteration, yield a constant filler."""
     first = True
     for elem in iter:
@@ -69,9 +69,7 @@ class LazilyJoined:
 
 type DecoratedInType[**P] = Callable[
     P,
-    Generator[HasDunderStr | None, None, None]
-    | t.Iterable[HasDunderStr | None]
-    | t.Iterable[HasDunderStr],
+    Generator[HasDunderStr | None] | t.Iterable[HasDunderStr | None] | t.Iterable[HasDunderStr],
 ]
 type DecoratedOutType[**P] = Callable[P, LazilyJoined]
 

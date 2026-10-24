@@ -76,7 +76,7 @@ def get_overcrowded_rooms(building_id: int | None = None) -> dict[int, list[User
 
 def similar_rooms_query(
     number: str, level: int, building: Building, vo_suchname: str | None = None
-) -> Select[tuple[Room]]:
+) -> Select[Room]:
     return (
         select()
         .select_from(Room)

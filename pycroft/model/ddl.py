@@ -13,11 +13,20 @@ from collections.abc import Iterable
 from dataclasses import dataclass, field
 from functools import partial
 
-from sqlalchemy import event as sqla_event, schema, table, text, Constraint, Table
+from sqlalchemy import (
+    event as sqla_event,
+    schema,
+    table,
+    text,
+    Column,
+    Constraint,
+    Table,
+    TableClause,
+)
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.engine import Dialect
 from sqlalchemy.ext.compiler import compiles
-from sqlalchemy.sql import ClauseElement, Selectable, ColumnCollection
+from sqlalchemy.sql import ClauseElement, Selectable
 from sqlalchemy.sql.compiler import Compiled
 from sqlalchemy.sql.selectable import SelectBase
 
@@ -66,7 +75,7 @@ def visit_drop_constraint(drop_constraint: DropConstraint, compiler: Compiled, *
     opt_if_exists = "IF EXISTS" if drop_constraint.if_exists else None
     opt_drop_behavior = "CASCADE" if drop_constraint.cascade else None
     table_name = compiler.preparer.format_table(constraint.table)
-    constraint_name = compiler.preparer.quote(constraint.name)
+    constraint_name = compiler.preparer.quote(n) if isinstance(n := constraint.name, str) else None
     return _join_tokens(
         "ALTER TABLE",
         table_name,
@@ -88,14 +97,14 @@ def _process(value: str | Selectable) -> str:
                 compile_kwargs={"literal_binds": True},
             )
         )
-        raise ValueError(f"Definition must be str or Selectable, not {type(value)}")
+    raise ValueError(f"Definition must be str or Selectable, not {type(value)}")
 
 
 class LazilyComiledDefDescriptor:
     def __set_name__(self, owner, name):
         self._name = f"_{name}"
 
-    def __get__(self, obj, type) -> str:
+    def __get__(self, obj, type) -> str | None:
         # TODO cache this thing
         if obj is None:
             # this is interpreted as the default by the `dataclass` decorator
@@ -182,9 +191,7 @@ def visit_create_function(element: CreateFunction, compiler: Compiled, **kw: t.A
     volatility = func.volatility.upper()
     strictness = "STRICT" if func.strict else None
     leakproof = "LEAKPROOF" if func.leakproof else None
-    quoted_definition = "${quote_tag}$\n{definition}\n${quote_tag}$".format(
-        quote_tag=func.quote_tag, definition=func.definition
-    )
+    quoted_definition = f"${func.quote_tag}$\n{func.definition}\n${func.quote_tag}$"
 
     function_name = func.build_quoted_identifier(quoter=compiler.preparer.quote)
     return _join_tokens(
@@ -432,18 +439,19 @@ class View(schema.DDLElement):
     name: str
     #: the query it represents
     query: SelectBase
-    column_names: t.Sequence[str] = None
+    column_names: t.Sequence[str] | None = None
     temporary: bool = False
     #: Must be something that can be passed to OrderedDict, so a simple dict suffices.
-    view_options: t.Mapping[str, t.Any] = None
+    view_options: t.Mapping[str, t.Any] | None = None
     #: Must be one of ``None``, ``'local'``, ``'cascaded'``.
     check_option: t.Literal["local", "cascaded"] | None = None
     #: Is materialized view
     materialized: bool = False
 
-    table: Table = field(init=False)
+    table: TableClause = field(init=False)
 
     def __post_init__(self) -> None:
+        # NOTE: we could directly infer the names from the columns and omit the sync check.
         self.table = table(self.name)
         self._init_table_columns()
         if self.view_options is None:
@@ -458,18 +466,18 @@ class View(schema.DDLElement):
 
     def _init_table_columns(self):
         if self.column_names is not None:
-            query_column_names = set(self.query.c.keys())
+            query_column_names = set(self.query.selected_columns.keys())
             my_column_names = set(self.column_names)
             if my_column_names != query_column_names:
                 raise ValueError(
                     "The given column_names must coincide with the implicit columns of the query:"
                     f" {my_column_names!r} != {query_column_names!r}"
                 )
-        for c in t.cast(ColumnCollection, self.query.selected_columns):
+
+        for name, c in self.query.selected_columns.items():
             # _make_proxy doesn't attach the column to the selectable (`self.table`) anymore
             # since sqla commit:aceefb508ccd0911f52ff0e50324b3fefeaa3f16 (before 1.4.0)
-            key, col = c._make_proxy(self.table)
-            self.table._columns.add(col, key=key)  # type: ignore
+            self.table.append_column(Column(name, c.type))
 
     @with_transaction
     def refresh(self, concurrently=False):
@@ -581,8 +589,8 @@ class DDLManager:
         dialect: str | None = None,
     ):
         if dialect:
-            create_ddl = t.cast(schema.DDLElement, create_ddl.execute_if(dialect=dialect))
-            drop_ddl = t.cast(schema.DDLElement, drop_ddl.execute_if(dialect=dialect))
+            create_ddl = create_ddl.execute_if(dialect=dialect)
+            drop_ddl = drop_ddl.execute_if(dialect=dialect)
         self.objects.append((target, create_ddl, drop_ddl))
 
     def add_constraint(

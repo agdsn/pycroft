@@ -6,19 +6,19 @@ pycroft.model.types
 ~~~~~~~~~~~~~~~~~~~
 """
 
+import typing as t
 from datetime import datetime
 from decimal import Decimal
 from numbers import Number
 from typing import Any
 
 import netaddr
-from psycopg2._range import DateTimeTZRange
-from sqlalchemy import String, TypeDecorator, Integer, DateTime, literal
-from sqlalchemy.dialects.postgresql import MACADDR, INET, Range
+from sqlalchemy import TypeDecorator, Integer, DateTime, literal, ColumnElement
+from sqlalchemy.dialects.postgresql import INET, Range
 from sqlalchemy.dialects.postgresql.ranges import TSTZRANGE
+from sqlalchemy.sql.type_api import _ComparatorFactory
 
 from pycroft.helpers.interval import Interval
-from pycroft.helpers.net import mac_regex
 from pycroft.model.exc import PycroftModelException
 
 
@@ -26,17 +26,9 @@ from pycroft.model.exc import PycroftModelException
 # In the type decorators below, `dialect` will be `sqlalchemy.dialects.postgresql.base.PGDialect`.
 
 
-class _IPType(TypeDecorator):
-    impl = String(50)
-    #:
+class _IPType[T](TypeDecorator[T]):
+    impl = INET
     cache_ok = True
-
-    def load_dialect_impl(self, dialect):
-        """"""
-        if dialect.name == "postgresql":
-            return dialect.type_descriptor(INET)
-        else:
-            return dialect.type_descriptor(self.impl)
 
     def process_bind_param(self, value, dialect):
         """"""
@@ -45,10 +37,12 @@ class _IPType(TypeDecorator):
         return str(value)
 
 
-class IPAddress(_IPType):
+class IPAddress(_IPType[netaddr.IPAddress]):
     #:
     cache_ok = True
 
+    @property
+    @t.override
     def python_type(self):
         """"""
         return netaddr.IPAddress
@@ -57,13 +51,15 @@ class IPAddress(_IPType):
         """"""
         if value is None:
             return value
-        return netaddr.IPAddress(value)
+        return netaddr.IPAddress(str(value))
 
 
-class IPNetwork(_IPType):
+class IPNetwork(_IPType[netaddr.IPNetwork]):
     #:
     cache_ok = True
 
+    @property
+    @t.override
     def python_type(self):
         """"""
         return netaddr.IPNetwork
@@ -72,58 +68,16 @@ class IPNetwork(_IPType):
         """"""
         if value is None:
             return value
-        return netaddr.IPNetwork(value)
+        return netaddr.IPNetwork(str(value))
 
 
-class MACAddress(TypeDecorator):
-    impl = String(10)
-    #:
-    cache_ok = True
-
-    def load_dialect_impl(self, dialect):
-        """"""
-        if dialect.name == "postgresql":
-            return dialect.type_descriptor(MACADDR)
-        else:
-            return dialect.type_descriptor(self.impl)
-
-    def process_result_value(self, value, dialect):
-        """"""
-        if dialect.name == "postgresql":
-            return value
-        return "{}:{}:{}:{}:{}:{}".format(
-            value[0:2], value[2:4], value[4:6], value[6:8], value[8:10], value[10:12]
-        )
-
-    def process_bind_param(self, value, dialect):
-        """"""
-        if not value:
-            return None
-        m = mac_regex.match(value)
-        if m is None:
-            raise ValueError(f'"{value}" is not a valid MAC address.')
-        groups = m.groupdict()
-        return "".join(
-            (
-                groups["byte1"],
-                groups["byte2"],
-                groups["byte3"],
-                groups["byte4"],
-                groups["byte5"],
-                groups["byte6"],
-            )
-        )
-
-    def python_type(self):
-        """"""
-        return str
-
-
-class Money(TypeDecorator):
+class Money(TypeDecorator[Decimal]):
     impl = Integer
     #:
     cache_ok = True
 
+    @property
+    @t.override
     def python_type(self):
         """"""
         return Decimal
@@ -145,34 +99,40 @@ class Money(TypeDecorator):
         return Decimal(value).scaleb(-2)
 
 
-class TsTzRange(TypeDecorator):
+# TODO actually this is _tz-aware datetime_
+class TsTzRange(TypeDecorator[Interval[datetime]]):
     impl = TSTZRANGE
     #:
     cache_ok = True
 
+    @property
+    @t.override
     def python_type(self):
         """"""
         return Interval
 
+    @t.override
     def process_literal_param(self, value, dialect):
         """"""
         if value is None:
             return None
         return f"'{str(value)}'"
 
-    def process_bind_param(self, value: Interval | None, dialect) -> str | None:
+    def process_bind_param(self, value: Interval[datetime] | None, dialect) -> str | None:
         """gets PY TYPE, returns DB TYPE"""
         if value is None:
             return None
 
         return str(value)
 
-    def process_result_value(self, value: DateTimeTZRange | None, dialect) -> Interval | None:
+    def process_result_value(
+        self, value: Range[datetime] | None, dialect
+    ) -> Interval[datetime] | None:
         """"""
         if value is None:
             return None
-        if isinstance(value, (Range, DateTimeTZRange)):
-            return Interval.from_explicit_data(
+        if isinstance(value, Range):
+            return Interval[datetime].from_explicit_data(
                 value.lower, value.lower_inc, value.upper, value.upper_inc
             )
 
@@ -185,8 +145,8 @@ class TsTzRange(TypeDecorator):
             " of the return type –– even if you specified the type in `literal()` already!"
         )
 
-    class comparator_factory(TSTZRANGE.Comparator):
-        def contains(self, other: Any, **kwargs) -> None:
+    class _Comparator(TSTZRANGE.comparator_factory):
+        def contains(self, other: Any, **kwargs) -> ColumnElement[bool]:
             """Provide the functionality of the `@>` operator for Intervals.
 
             :param other: can be an interval, a tz-aware datetime,
@@ -197,16 +157,15 @@ class TsTzRange(TypeDecorator):
             if other is None:
                 raise PycroftModelException("You cannot use `.contains()` with `null` (`None`)!")
 
-            op = self.op("@>", is_comparison=True)
             if isinstance(other, datetime):
-                if not other.tzinfo:
+                if other.utcoffset() is None:
                     raise PycroftModelException(
                         "You cannot use `.contains()` with a non-timezone-aware datetime"
                         f" ({other})!"
                     )
-                return op(literal(other, type_=DateTimeTz))
+                return super().contains(literal(other, type_=DateTimeTz), **kwargs)
 
-            return op(other)
+            return super().contains(other, **kwargs)
 
         def overlaps(self, other: Any, **kwargs):
             """Provide the functionality of the `&&` operator for Intervals."""
@@ -214,9 +173,11 @@ class TsTzRange(TypeDecorator):
                 raise PycroftModelException(
                     "You cannot use `.overlaps()`/`&` with `null` (`None`)!"
                 )
-            return self.op("&&", is_comparison=True)(other)
+            return super().overlaps(other, **kwargs)
 
         __and__ = overlaps
+
+    comparator_factory: _ComparatorFactory[t.Any] = _Comparator
 
 
 class InvalidMACAddressException(PycroftModelException, ValueError):

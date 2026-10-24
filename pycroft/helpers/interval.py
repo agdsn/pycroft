@@ -123,9 +123,7 @@ class Bound[T: Ord](tuple[TWithInfinity[T], bool]):
 
     @t.override
     def __repr__(self):
-        return "{}.{}({!r}, {!r})".format(
-            self.__module__, self.__class__.__name__, self.value, self.closed
-        )
+        return f"{self.__module__}.{self.__class__.__name__}({self.value!r}, {self.closed!r})"
 
     @t.override
     def __str__(self):
@@ -291,13 +289,7 @@ class Interval[T: Ord](tuple[Bound[T], Bound[T]]):
                 creator = "openclosed"
             else:
                 creator = "open"
-        return "{}.{}.{}({!r}, {!r})".format(
-            self.__module__,
-            self.__class__.__name__,
-            creator,
-            self.lower_bound.value,
-            self.upper_bound.value,
-        )
+        return f"{self.__module__}.{self.__class__.__name__}.{creator}({self.lower_bound.value!r}, {self.upper_bound.value!r})"
 
     def strictly_before(self, other: Interval[T]) -> bool:
         """
@@ -648,10 +640,10 @@ class IntervalSet[T: Ord](collections.abc.Sequence[Interval[T]]):
 
     @t.override
     def __str__(self):
-        return "{{{0}}}".format(", ".join(str(i) for i in self._intervals))
+        return "{{{}}}".format(", ".join(str(i) for i in self._intervals))
 
     def __unicode__(self):
-        return "{{{0}}}".format(", ".join(str(i) for i in self._intervals))
+        return "{{{}}}".format(", ".join(str(i) for i in self._intervals))
 
     def complement(self):
         return _create(_complement(self._intervals))
@@ -696,7 +688,7 @@ def _mangle_argument[T: Ord](arg: IntervalSetSource) -> tuple[Interval[T], ...]:
     raise TypeError(
         "Argument may be None, an IntervalSet, an Interval or an "
         "iterable of Intervals. "
-        "Was {}.".format(type(arg).__name__)
+        f"Was {type(arg).__name__}."
     )
 
 

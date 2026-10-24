@@ -387,7 +387,7 @@ from contextlib import contextmanager
 
 
 @contextmanager
-def flash_fints_errors() -> t.Generator[None, None, None]:
+def flash_fints_errors() -> t.Generator[None]:
     try:
         yield
     except (FinTSDialogError, FinTSClientPINError) as e:
@@ -556,8 +556,9 @@ def bank_account_activities_edit(activity_id: int) -> ResponseReturnValue:
         )
 
         if form.validate_on_submit():
+            account_id = int(d) if (d := form.account_id.data) else None
             # TODO use `session.get`
-            debit_account = Account.q.filter(Account.id == form.account_id.data).one()
+            debit_account = session.query(Account).filter(Account.id == account_id).one()
             credit_account = activity.bank_account.account
 
             assert form.description.data is not None
@@ -755,7 +756,7 @@ class TeamMatch(t.TypedDict):
     amount: Decimal | int
 
 
-BooleanFieldList = list[t.Tuple[str, BooleanField]]
+BooleanFieldList = list[tuple[str, BooleanField]]
 
 
 @t.overload
@@ -835,9 +836,7 @@ def _create_field_list(
             (
                 str(activity.id),
                 BooleanField(
-                    "{} ({}€) -> {} ({})".format(
-                        activity.reference, activity.amount, entity.name, entity.id
-                    )
+                    f"{activity.reference} ({activity.amount}€) -> {entity.name} ({entity.id})"
                 ),
             )
         )
@@ -931,10 +930,7 @@ def account_toggle_legacy(account_id: int) -> ResponseReturnValue:
 def balance_json(account_id: int) -> ResponseReturnValue:
     invert = request.args.get("invert", "False") == "True"
 
-    sum_exp: ColumnElement[int] = t.cast(
-        Over[int],
-        func.sum(Split.amount).over(order_by=Transaction.valid_on),
-    )
+    sum_exp: ColumnElement[int] = func.sum(Split.amount).over(order_by=Transaction.valid_on)
 
     if invert:
         sum_exp = -sum_exp
@@ -1051,7 +1047,7 @@ def accounts_show_json(account_id: int) -> ResponseReturnValue:
         eagerload=True,
     )
 
-    def rows_from_query(query: Select[tuple[Split]]) -> list[dict[str, t.Any]]:
+    def rows_from_query(query: Select[Split]) -> list[dict[str, t.Any]]:
         # iterating over `query` executes it
         return [_format_row(split, style) for split in session.scalars(query)]
 
@@ -1170,10 +1166,7 @@ def _format_transaction_row(
         user=(
             LinkColResponse(
                 href=url_for("user.user_show", user_id=user_account.user.id),
-                title="{} ({})".format(
-                    user_account.user.name,
-                    encode_type2_user_id(user_account.user.id),
-                ),
+                title=f"{user_account.user.name} ({encode_type2_user_id(user_account.user.id)})",
                 new_tab=True,
             )
             if user_account and user_account.user
@@ -1347,8 +1340,8 @@ def transactions_all() -> ResponseReturnValue:
 @access.require("finance_show")
 @bp.route("/transactions/json")
 def transactions_all_json() -> ResponseReturnValue:
-    lower = request.args.get("after", "")
-    upper = request.args.get("before", "")
+    lower = request.args.get("after", None)
+    upper = request.args.get("before", None)
     filter = request.args.get("filter", "nonuser")
     transactions: FromClause
     if filter == "nonuser":
@@ -1373,19 +1366,19 @@ def transactions_all_json() -> ResponseReturnValue:
         )
     )
 
-    try:
-        datetime.strptime(lower, "%Y-%m-%d").date()
-    except ValueError:
-        not lower or abort(422)
-    else:
-        q = q.where(Transaction.valid_on >= lower)
+    if lower is not None:
+        try:
+            parsed_lower = datetime.strptime(lower, "%Y-%m-%d").date()
+            q = q.where(Transaction.valid_on >= parsed_lower)
+        except ValueError as e:
+            abort(422, e)
 
-    try:
-        datetime.strptime(upper, "%Y-%m-%d").date()
-    except ValueError:
-        not upper or abort(422)
-    else:
-        q = q.where(Transaction.valid_on <= upper)
+    if upper is not None:
+        try:
+            parsed_upper = datetime.strptime(upper, "%Y-%m-%d").date()
+            q = q.where(Transaction.valid_on <= parsed_upper)
+        except ValueError:
+            abort(422)
 
     res = session.scalar(json_agg_core(q))
     return {"items": res or []}
@@ -1560,7 +1553,7 @@ def membership_fee_create() -> ResponseReturnValue:
             day=(next_month - timedelta(days=next_month.day)).day
         )
 
-        name_default = str(begins_on_default.year) + "-" + "%02d" % begins_on_default.month
+        name_default = f"{begins_on_default.year}-{begins_on_default.month:02d}"
 
         form = MembershipFeeCreateForm(
             name=name_default,

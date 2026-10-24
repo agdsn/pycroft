@@ -70,7 +70,7 @@ def verify_password(plaintext_password: str, hash: str) -> bool:
     try:
         return crypt_context.verify(plaintext_password, hash)
     # TypeError is required for user entries not having a hash
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return False
 
 

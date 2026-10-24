@@ -38,7 +38,7 @@ def test_valid_serialization(value):
     s = serialize_param(value)
     try:
         json.dumps(s)
-    except (ValueError, TypeError):  # pragma: no cover
+    except ValueError, TypeError:  # pragma: no cover
         pytest.fail(f"Param {value} cannot be serialized to JSON.")
     assert deserialize_param(s) == value
 

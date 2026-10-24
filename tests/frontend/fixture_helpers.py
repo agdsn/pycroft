@@ -30,7 +30,7 @@ def login_context(test_client: TestClient, app, login: str):
     test_client.get("/logout")
 
 
-BlueprintUrls: t.TypeAlias = t.Callable[[str], list[str, str]]
+type BlueprintUrls = t.Callable[[str], list[str, str]]
 _argument_creator_map = {
     IntegerConverter: lambda c: 1,
     UnicodeConverter: lambda c: "test",
