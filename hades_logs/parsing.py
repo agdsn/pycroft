@@ -1,3 +1,4 @@
+import typing as t
 from collections import defaultdict, namedtuple
 from datetime import datetime, timezone
 from functools import partial
@@ -66,7 +67,7 @@ class RadiusLogEntry(_radius_log_entry):
         """Evaluates to :py:prop:`self.accepted`"""
         return self.accepted
 
-    def effectively_equal(self, other):
+    def effectively_equal(self, other) -> bool:
         relevant_attributes = set(_radius_log_entry._fields) - {"timestamp"}
         try:
             return all(getattr(self, a) == getattr(other, a) for a in relevant_attributes)
@@ -78,7 +79,9 @@ def _eq(a, b):
     return a == b
 
 
-def reduce_to_first_occurrence(iterable, comparator=_eq):
+def reduce_to_first_occurrence[T](
+    iterable: t.Iterable[T], comparator: t.Callable[[T, T], bool] = _eq
+) -> t.Generator[T]:
     """Reduces equivalent blocks of an iterable to the first occurence
 
     :param iterable: Any iterable of homogeneous type with respect to

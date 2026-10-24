@@ -156,7 +156,7 @@ class TestCorrectURIsConfigured:
     """Provides ``HadesLogs`` with syntactically correct URIs"""
 
     @pytest.fixture(scope="class")
-    def hades_logs(self):
+    def hades_logs(self) -> HadesLogs:
         app = Flask("test")
         app.config.update(
             {
@@ -174,7 +174,7 @@ class TestCorrectURIsConfigured:
         with pytest.raises(OperationalError):
             hades_logs.celery.signature("").apply_async().wait()
 
-    def test_fetch_logs_logs_and_raises_connection_refused(self, hades_logs, caplog):
+    def test_fetch_logs_logs_and_raises_connection_refused(self, hades_logs: HadesLogs, caplog):
         with (
             pytest.raises(HadesOperationalError),
             caplog.at_level(logging.INFO, logger="hades_logs"),
