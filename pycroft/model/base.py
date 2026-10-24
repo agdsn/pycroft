@@ -10,6 +10,8 @@ This module contains base stuff for all models.
 :copyright: (c) 2011 by AG DSN.
 """
 
+from sqlalchemy.dialects.postgresql import MACADDR
+
 import re
 import typing as t
 
@@ -28,7 +30,7 @@ from pycroft.helpers import utc
 from pycroft.model.session import session
 from pycroft.model.type_aliases import str50, str255, str40, mac_address
 from . import types as pycroft_sqla_types
-from pycroft.model.types import IPAddress, MACAddress, IPNetwork
+from pycroft.model.types import IPAddress, IPNetwork
 
 
 class _ModelMeta(type(DeclarativeBase)):
@@ -55,7 +57,7 @@ class ModelBase(DeclarativeBase, metaclass=_ModelMeta):
         utc.DateTimeTz: pycroft_sqla_types.DateTimeTz,
         netaddr.IPAddress: IPAddress,
         netaddr.IPNetwork: IPNetwork,
-        mac_address: MACAddress,
+        mac_address: MACADDR,
     }
 
     @classmethod
