@@ -364,7 +364,7 @@ def building_level_rooms_json(
     level_inhabitants: dict[Room, list[User]] = defaultdict(list)
     for room, user in rooms_users_q.all():
         if user is not None:
-            level_inhabitants[room].append(t.cast(User, user))
+            level_inhabitants[room].append(user)
         else:
             # Ensure room is in level_inhabitants
             level_inhabitants[room]
