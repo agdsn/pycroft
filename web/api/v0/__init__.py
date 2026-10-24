@@ -941,8 +941,8 @@ class UserActiveResource(Resource):
     @use_kwargs(
         {
             "name": fields.Str(required=True),
-            "fname": fields.Str(required=False, missing=None),
-            "byear": fields.Int(required=False, missing=None),
+            "fname": fields.Str(required=False, load_default=None),
+            "byear": fields.Int(required=False, load_default=None),
             "uid": fields.Int(required=True),
         },
         location="form",
