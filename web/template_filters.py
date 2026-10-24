@@ -30,8 +30,8 @@ from pycroft.model import session
 _filter_registry: dict[str, t.Callable[..., t.Any]] = {}
 
 
-def template_filter[_TF: t.Callable[..., t.Any]](name: str) -> t.Callable[[_TF], _TF]:
-    def decorator(fn: _TF) -> _TF:
+def template_filter[TF: t.Callable[..., t.Any]](name: str) -> t.Callable[[TF], TF]:
+    def decorator(fn: TF) -> TF:
         _filter_registry[name] = fn
         return fn
 

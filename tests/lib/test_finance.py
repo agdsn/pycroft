@@ -2,7 +2,7 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import dataclasses
-from datetime import date, timedelta, datetime, timezone
+from datetime import date, timedelta, datetime, UTC
 from decimal import Decimal
 
 import pytest
@@ -662,7 +662,7 @@ class TestLastImportedAt:
             imported_at=datetime(2020, 1, 1),
         )
         session.flush()
-        assert finance.get_last_import_date(session) == datetime(2020, 1, 1, tzinfo=timezone.utc)
+        assert finance.get_last_import_date(session) == datetime(2020, 1, 1, tzinfo=UTC)
 
 
 class TestReturnNonAttributable:

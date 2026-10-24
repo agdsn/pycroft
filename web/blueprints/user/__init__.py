@@ -606,9 +606,7 @@ def end_membership(user_id: int, membership_id: int) -> ResponseReturnValue:
         return render_template(
             "generic_form.html",
             page_title=(
-                "Mitgliedschaft {} für {} beenden?".format(
-                    membership.group.name, membership.user.name
-                )
+                f"Mitgliedschaft {membership.group.name} für {membership.user.name} beenden?"
             ),
             membership_id=membership_id,
             user=membership.user,
@@ -845,9 +843,7 @@ def membership_delete(user_id: int, membership_id: int) -> ResponseReturnValue:
         return render_template(
             "generic_form.html",
             page_title=(
-                "Mitgliedschaft {} für {} löschen".format(
-                    membership.group.name, membership.user.name
-                )
+                f"Mitgliedschaft {membership.group.name} für {membership.user.name} löschen"
             ),
             membership_id=membership_id,
             user=membership.user,
@@ -914,9 +910,7 @@ def edit_membership(user_id: int, membership_id: int) -> ResponseReturnValue:
     return render_template(
         "user/user_edit_membership.html",
         page_title=(
-            "Mitgliedschaft {} für {} bearbeiten".format(
-                membership.group.name, membership.user.name
-            )
+            f"Mitgliedschaft {membership.group.name} für {membership.user.name} bearbeiten"
         ),
         membership_id=membership_id,
         user=membership.user,

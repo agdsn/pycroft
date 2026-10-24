@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 
 import pytest
 
@@ -41,7 +41,7 @@ def test_accepted(entry):
 
 
 def test_time(entry, raw_entry):
-    assert entry.time == datetime.fromtimestamp(raw_entry[-1], tz=timezone.utc)
+    assert entry.time == datetime.fromtimestamp(raw_entry[-1], tz=UTC)
 
 
 def test_groups(entry):

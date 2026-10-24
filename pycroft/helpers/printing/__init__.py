@@ -68,7 +68,7 @@ class User(t.Protocol):
     hosts: t.Iterable[Host]
 
 
-def suppress_resource_warning[_TRet, **_P](f: t.Callable[_P, _TRet]) -> t.Callable[_P, _TRet]:
+def suppress_resource_warning[TRet, **P](f: t.Callable[P, TRet]) -> t.Callable[P, TRet]:
     """Suppress warnings related to incomplete :class:`reportlab.platypus.flowables.Image <Image>`
     cleanup
 
@@ -86,7 +86,7 @@ def suppress_resource_warning[_TRet, **_P](f: t.Callable[_P, _TRet]) -> t.Callab
     """
 
     @functools.wraps(f)
-    def _f(*a: _P.args, **kw: _P.kwargs) -> _TRet:
+    def _f(*a: P.args, **kw: P.kwargs) -> TRet:
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=ResourceWarning, message="unclosed file .*")
             return f(*a, **kw)
@@ -151,12 +151,7 @@ def generate_user_sheet(
     if new_user is True:
         if user.room:
             shortinfo = Paragraph(
-                "{dorm}<br/>{name}<br/>{level}/{room}".format(
-                    dorm=str(user.room.building.short_name),
-                    name=user.name,
-                    level=str(user.room.level),
-                    room=str(user.room.number),
-                ),
+                f"{str(user.room.building.short_name)}<br/>{user.name}<br/>{str(user.room.level)}/{str(user.room.number)}",
                 style["RightText"],
             )
         else:
@@ -312,10 +307,10 @@ def generate_user_sheet(
         contribution = 700  # monthly membership contribution in EUR
         story.append(
             Paragraph(
-                """<b>Payment details:</b> As a member, you have to transfer a monthly contribution of {:1.2f}€ to our bank account.
+                f"""<b>Payment details:</b> As a member, you have to transfer a monthly contribution of {contribution / 100:1.2f}€ to our bank account.
             Paying cash is not possible. The contribution is due at the end of each month. You can pay as much in advance as you want, we will simply subtract
             the monthly contribution at the end of each month. We recommend that you pay at the beginning of each semester in advance, meaning you transact
-            six monthly contributions at once.""".format(contribution / 100),
+            six monthly contributions at once.""",
                 style["JustifyText"],
             )
         )
@@ -323,13 +318,7 @@ def generate_user_sheet(
         recipient = bank_account.owner
 
         if user.room:
-            purpose = "{id}, {name}, {dorm} {level} {room}".format(
-                id=user_id,
-                name=user.name,
-                dorm=str(user.room.building.short_name),
-                level=str(user.room.level),
-                room=str(user.room.number),
-            )
+            purpose = f"{user_id}, {user.name}, {str(user.room.building.short_name)} {str(user.room.level)} {str(user.room.number)}"
         else:
             purpose = f"{user_id}, {user.name}"
 
@@ -381,9 +370,7 @@ def generate_user_sheet(
             generation_purpose = f" ({generation_purpose})"
         story.append(
             Paragraph(
-                "<i>Generated on {date}{purpose}</i>".format(
-                    date=datetime.date.today(), purpose=generation_purpose
-                ),
+                f"<i>Generated on {datetime.date.today()}{generation_purpose}</i>",
                 ParagraphStyle(
                     name="SmallRightText",
                     parent=style["Normal"],
@@ -402,12 +389,7 @@ def generate_user_sheet(
         # add a page with the wifi credentials
         if user.room:
             shortinfo = Paragraph(
-                "{dorm}<br/>{name}<br/>{level}/{room}".format(
-                    dorm=str(user.room.building.short_name),
-                    name=user.name,
-                    level=str(user.room.level),
-                    room=str(user.room.number),
-                ),
+                f"{str(user.room.building.short_name)}<br/>{user.name}<br/>{str(user.room.level)}/{str(user.room.number)}",
                 style["RightText"],
             )
         else:
@@ -437,13 +419,13 @@ def generate_user_sheet(
         )
 
         welcome = Paragraph(
-            "Hello {},<br/>"
+            f"Hello {user.name},<br/>"
             "In some dormitories we're providing Wi-Fi as an adition to the wired connection. "
             "All of our members can use this Wi-Fi in all of our dormitories, independently "
             "from their residence. "
             " "
             "If you spot any coverage problems, it would be nice if you could inform us "
-            "on support@agdsn.de. ".format(user.name),
+            "on support@agdsn.de. ",
             style["BodyText"],
         )
 
@@ -568,9 +550,7 @@ def generate_user_sheet(
 
         story.append(
             Paragraph(
-                "<i>Generated on {date}</i>".format(
-                    date=datetime.date.today(),
-                ),
+                f"<i>Generated on {datetime.date.today()}</i>",
                 ParagraphStyle(
                     name="SmallRightText",
                     parent=style["Normal"],
