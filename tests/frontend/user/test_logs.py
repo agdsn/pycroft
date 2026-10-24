@@ -35,7 +35,7 @@ def get_logs(user_id: int, client: TestClient, **kw) -> list[t.Any]:
     return json["items"]
 
 
-GetLogs: t.TypeAlias = t.Callable[..., list[t.Any]]
+type GetLogs = t.Callable[..., list[t.Any]]
 
 
 class TestAppWithoutHadesLogs:

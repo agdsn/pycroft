@@ -10,8 +10,8 @@ from pycroft.model.user import User
 _check_registry: dict[str, t.Callable[..., t.Any]] = {}
 
 
-def template_check[_T: t.Callable[..., t.Any]](name: str) -> t.Callable[[_T], _T]:
-    def decorator(fn: _T) -> _T:
+def template_check[T: t.Callable[..., t.Any]](name: str) -> t.Callable[[T], T]:
+    def decorator(fn: T) -> T:
         _check_registry[name] = fn
         return fn
 

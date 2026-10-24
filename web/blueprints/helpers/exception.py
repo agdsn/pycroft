@@ -39,7 +39,7 @@ def add_error_handler(field: Field, error: str) -> ErrorHandler:
 @contextmanager
 def flash_and_wrap_errors(
     handler_map: dict[type[PycroftException], ErrorHandler] | None = None,
-) -> t.Generator[None, None, None]:
+) -> t.Generator[None]:
     """Flash a message, roll back the session, and wrap unknown errors in a ``PycroftException``
 
     :param handler_map: specifies what to do with exception types.
@@ -70,7 +70,7 @@ ErrorHandlerMap = dict[type[PycroftException], ErrorHandler]
 def abort_on_error(
     error_response: t.Callable[[], ResponseReturnValue] | ResponseReturnValue | None = None,
     handler_map: ErrorHandlerMap | None = None,
-) -> t.Generator[None, None, None]:
+) -> t.Generator[None]:
     """Wraps errors as `PycroftErrors` and turns them into a flash message.
 
     Example:

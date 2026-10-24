@@ -13,7 +13,7 @@ class UnicastMacProvider(BaseProvider):
     def unicast_mac_address(self):
         mac = [self.generator.random.randint(0x00, 0xFF) for i in range(0, 6)]
         mac[0] = mac[0] & 0xFE
-        return ":".join("%02x" % x for x in mac)
+        return ":".join(f"{x:02x}" for x in mac)
 
 
 factory.Faker.add_provider(UnicastMacProvider)

@@ -387,7 +387,7 @@ from contextlib import contextmanager
 
 
 @contextmanager
-def flash_fints_errors() -> t.Generator[None, None, None]:
+def flash_fints_errors() -> t.Generator[None]:
     try:
         yield
     except (FinTSDialogError, FinTSClientPINError) as e:
@@ -756,7 +756,7 @@ class TeamMatch(t.TypedDict):
     amount: Decimal | int
 
 
-BooleanFieldList = list[t.Tuple[str, BooleanField]]
+BooleanFieldList = list[tuple[str, BooleanField]]
 
 
 @t.overload
@@ -836,9 +836,7 @@ def _create_field_list(
             (
                 str(activity.id),
                 BooleanField(
-                    "{} ({}€) -> {} ({})".format(
-                        activity.reference, activity.amount, entity.name, entity.id
-                    )
+                    f"{activity.reference} ({activity.amount}€) -> {entity.name} ({entity.id})"
                 ),
             )
         )
@@ -1168,10 +1166,7 @@ def _format_transaction_row(
         user=(
             LinkColResponse(
                 href=url_for("user.user_show", user_id=user_account.user.id),
-                title="{} ({})".format(
-                    user_account.user.name,
-                    encode_type2_user_id(user_account.user.id),
-                ),
+                title=f"{user_account.user.name} ({encode_type2_user_id(user_account.user.id)})",
                 new_tab=True,
             )
             if user_account and user_account.user
@@ -1558,7 +1553,7 @@ def membership_fee_create() -> ResponseReturnValue:
             day=(next_month - timedelta(days=next_month.day)).day
         )
 
-        name_default = str(begins_on_default.year) + "-" + "%02d" % begins_on_default.month
+        name_default = f"{begins_on_default.year}-{begins_on_default.month:02d}"
 
         form = MembershipFeeCreateForm(
             name=name_default,

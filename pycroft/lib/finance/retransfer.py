@@ -1,6 +1,6 @@
 import typing as t
 from collections.abc import Sequence
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 from decimal import Decimal
 
 from schwifty import IBAN, BIC
@@ -23,10 +23,7 @@ def get_activities_to_return(session: Session) -> Sequence[BankAccountActivity]:
         .filter(BankAccountActivity.transaction_id.is_(None))
         .filter(BankAccountActivity.other_account_number != "")
         .filter(BankAccountActivity.amount > 0)
-        .filter(
-            BankAccountActivity.imported_at
-            < ensure_tz(datetime.now(timezone.utc) - timedelta(days=14))
-        )
+        .filter(BankAccountActivity.imported_at < ensure_tz(datetime.now(UTC) - timedelta(days=14)))
     )
 
     return session.scalars(statement).all()

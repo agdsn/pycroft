@@ -3,7 +3,7 @@ pycroft.helpers.utc
 ~~~~~~~~~~~~~~~~~~~
 """
 
-from datetime import datetime, time, timezone, date
+from datetime import datetime, time, date, UTC
 from typing import NewType
 
 #: A time with timezone information
@@ -15,25 +15,25 @@ DateTimeNoTz = NewType("DateTimeNoTz", datetime)
 
 
 def time_min() -> TimeTz:
-    return TimeTz(time.min.replace(tzinfo=timezone.utc))
+    return TimeTz(time.min.replace(tzinfo=UTC))
 
 
 def time_max() -> TimeTz:
-    return TimeTz(time.max.replace(tzinfo=timezone.utc))
+    return TimeTz(time.max.replace(tzinfo=UTC))
 
 
 def datetime_min() -> DateTimeTz:
-    return DateTimeTz(datetime.min.replace(tzinfo=timezone.utc))
+    return DateTimeTz(datetime.min.replace(tzinfo=UTC))
 
 
 def datetime_max() -> DateTimeTz:
-    return DateTimeTz(datetime.max.replace(tzinfo=timezone.utc))
+    return DateTimeTz(datetime.max.replace(tzinfo=UTC))
 
 
 def ensure_tz(d: datetime) -> DateTimeTz:
     if d.tzinfo is not None:
         return DateTimeTz(d)
-    return DateTimeTz(d.replace(tzinfo=timezone.utc))
+    return DateTimeTz(d.replace(tzinfo=UTC))
 
 
 def with_min_time(d: date) -> DateTimeTz:
@@ -52,7 +52,7 @@ def safe_combine(d: date, t: TimeTz) -> DateTimeTz:
 def ensure_tzinfo(t: time) -> TimeTz:
     if t.tzinfo is not None:
         return TimeTz(t)
-    return TimeTz(t.replace(tzinfo=timezone.utc))
+    return TimeTz(t.replace(tzinfo=UTC))
 
 
 def combine_ensure_tzinfo(d: date, t: time) -> DateTimeTz:

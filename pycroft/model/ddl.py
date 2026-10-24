@@ -191,9 +191,7 @@ def visit_create_function(element: CreateFunction, compiler: Compiled, **kw: t.A
     volatility = func.volatility.upper()
     strictness = "STRICT" if func.strict else None
     leakproof = "LEAKPROOF" if func.leakproof else None
-    quoted_definition = "${quote_tag}$\n{definition}\n${quote_tag}$".format(
-        quote_tag=func.quote_tag, definition=func.definition
-    )
+    quoted_definition = f"${func.quote_tag}$\n{func.definition}\n${func.quote_tag}$"
 
     function_name = func.build_quoted_identifier(quoter=compiler.preparer.quote)
     return _join_tokens(
