@@ -26,7 +26,7 @@
     </div>
     {{ forms.simple_form(form, '', url_for('.user_show', user_id=user_id)  ) }}
   </div>
-  {% if tenancy_table is not None %}
+  {% if tenancy_table is not none %}
   <div class="row">
     <h3>{{ _("Mietverträge") }}</h3>
     {{ tenancy_table.render("tenancy_table") }}
