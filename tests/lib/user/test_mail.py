@@ -38,17 +38,15 @@ def building_list(module_session) -> list[Building]:
 
 @pytest.fixture(scope="module")
 def build_map(module_session, config, building_list) -> dict:
-    out = {}
-    for building in building_list:
-        out[building] = []
-        for _ in range(5):
-            user = UserFactory.create(
-                room=RoomFactory(building=building),
-                membership__group=config.member_group,
-                with_membership=True,
-            )
-            out[building].append(user)
-    return out
+    return {
+        building: UserFactory.create_batch(
+            5,
+            room__building=building,
+            membership__group=config.member_group,
+            with_membership=True,
+        )
+        for building in building_list
+    }
 
 
 @pytest.fixture(scope="module")
