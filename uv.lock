@@ -943,6 +943,15 @@ wheels = [
 ]
 
 [[package]]
+name = "legacycrypt"
+version = "0.3"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/75/b0/2cc025864c9f43cabfff2b116b6db1431e6c5d1ca67f29a97cd2b1a41ba4/legacycrypt-0.3.tar.gz", hash = "sha256:e76e7fd25666a451428b20d5afbbecf3654565b2e11511b53226be955c4d2292", size = 9147, upload-time = "2019-05-28T09:07:12.086Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c9/05/3ba583d3551c562e11377558f7fd92dbb7a2abcff85ccf2d8aa2b908726a/legacycrypt-0.3-py3-none-any.whl", hash = "sha256:b5e373506ccb442f8d715e29fa75f53a11bbec3ca0d7b63445f4dbb656555218", size = 22281, upload-time = "2019-05-28T09:07:04.992Z" },
+]
+
+[[package]]
 name = "livereload"
 version = "2.7.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1380,6 +1389,7 @@ dependencies = [
     { name = "jinja2" },
     { name = "jsonschema" },
     { name = "ldap3" },
+    { name = "legacycrypt" },
     { name = "mac-vendor-lookup" },
     { name = "markupsafe" },
     { name = "marshmallow" },
@@ -1462,6 +1472,7 @@ requires-dist = [
     { name = "jinja2", specifier = "~=3.1.4" },
     { name = "jsonschema", specifier = "~=4.26.0" },
     { name = "ldap3", specifier = "~=2.5.1" },
+    { name = "legacycrypt", specifier = "~=0.3" },
     { name = "mac-vendor-lookup", specifier = "~=0.1.11" },
     { name = "markupsafe", specifier = "~=2.0" },
     { name = "marshmallow", specifier = "~=4.3.1" },

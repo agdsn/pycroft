@@ -68,6 +68,7 @@ dependencies = [
     "sepaxml ~= 2.7.0",
     "typing-extensions>=4.16",
     "psycopg[binary]>=3.3.6",
+    "legacycrypt~=0.3",
 ]
 
 [dependency-groups]

@@ -10,6 +10,8 @@ import random
 import string
 from hashlib import sha512
 
+import pycroft.crypt_compat  # noqa: F401  — before passlib (PEP 594)
+
 from passlib.apps import ldap_context
 from passlib.context import CryptContext
 from passlib.pwd import genword
