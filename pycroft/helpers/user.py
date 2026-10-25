@@ -10,6 +10,7 @@ import random
 import string
 from hashlib import sha512
 
+# ast-grep-ignore: dont-use-models-in-helpers
 import pycroft.crypt_compat  # noqa: F401  — before passlib (PEP 594)
 
 from passlib.apps import ldap_context
