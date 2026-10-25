@@ -106,7 +106,9 @@ class BaseUser(IntegerIdModel):
 
     login: Mapped[str40] = mapped_column(unique=True)
     #: Auto-generated sha512 hash of :attr:`login`.
-    login_hash: Mapped[bytes] = Column(LargeBinary(512), Computed("digest(login, 'sha512')"))
+    login_hash: Mapped[bytes] = Column(
+        LargeBinary(512), Computed("digest(login, 'sha512')", persisted=True)
+    )
     name: Mapped[str255]
     registered_at: Mapped[utc.DateTimeTz]
     passwd_hash: Mapped[str_deferred | None]
