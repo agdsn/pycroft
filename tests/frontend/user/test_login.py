@@ -21,7 +21,8 @@ def client(module_test_client: TestClient) -> TestClient:
 @pytest.mark.usefixtures("session")
 class TestUserOidcLogin:
     @pytest.fixture(scope="class")
-    def user(self, class_session: Session):
+    @classmethod
+    def user(cls, class_session: Session):
         user = UserFactory(
             login="agdsn",
         )

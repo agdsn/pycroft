@@ -5,11 +5,13 @@ from hades_logs import RadiusLogEntry
 
 class TestEffectiveEquality:
     @pytest.fixture(scope="class")
-    def timestamp(self):
+    @classmethod
+    def timestamp(cls):
         return 1501623826.391414
 
     @pytest.fixture(scope="class")
-    def entry(self, timestamp):
+    @classmethod
+    def entry(cls, timestamp):
         return RadiusLogEntry(
             "00:de:ad:be:ef:00",
             "Access-Accept",

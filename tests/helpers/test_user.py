@@ -23,7 +23,8 @@ class TestPasswordGeneration:
 
 class TestHashing:
     @pytest.fixture(scope="class")
-    def pw(self) -> str:
+    @classmethod
+    def pw(cls) -> str:
         return generate_password(8)
 
     @pytest.mark.slow

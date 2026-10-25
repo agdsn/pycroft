@@ -9,7 +9,8 @@ from . import validate_attribute_type, get_all_objects
 
 class TestAddAction:
     @pytest.fixture(scope="class")
-    def attributes(self):
+    @classmethod
+    def attributes(cls):
         return {
             "objectClass": UserRecord.LDAP_OBJECTCLASSES,
             "mail": ["bas"],
@@ -17,7 +18,8 @@ class TestAddAction:
         }
 
     @pytest.fixture(scope="class")
-    def objects(self, connection, attributes, uid, dn, base):
+    @classmethod
+    def objects(cls, connection, attributes, uid, dn, base):
         """Objects after executing an AddAction"""
         action = AddAction(record=UserRecord(dn=dn, attrs=attributes))
         execute_real(action, connection)
@@ -44,7 +46,8 @@ class TestAddAction:
 
 class TestDeleteAction:
     @pytest.fixture(scope="class")
-    def objects(self, dn, connection, base):
+    @classmethod
+    def objects(cls, dn, connection, base):
         connection.add(dn, UserRecord.LDAP_OBJECTCLASSES)
         record = UserRecord(dn=dn, attrs={})
         execute_real(DeleteAction(record_dn=record.dn), connection)
@@ -56,7 +59,8 @@ class TestDeleteAction:
 
 class TestModifyAction:
     @pytest.fixture(scope="class")
-    def objects(self, dn, connection: ldap3.Connection, base):
+    @classmethod
+    def objects(cls, dn, connection: ldap3.Connection, base):
         connection.add(dn, UserRecord.LDAP_OBJECTCLASSES)
         record = UserRecord(dn=dn, attrs={})
         action = ModifyAction(record_dn=record.dn, modifications={"mail": "new@shizzle.de"})

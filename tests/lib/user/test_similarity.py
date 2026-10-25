@@ -39,25 +39,30 @@ def test_nonsimilar_names(one, other):
 
 class TestSimilarUsers:
     @pytest.fixture(scope="class")
-    def room(self, class_session) -> Room:
+    @classmethod
+    def room(cls, class_session) -> Room:
         return factories.RoomFactory()
 
     @pytest.fixture(scope="class")
-    def inhabitant(self, class_session, room) -> User:
+    @classmethod
+    def inhabitant(cls, class_session, room) -> User:
         return factories.UserFactory(room=room, name="Tobias Fuenke")
 
     @pytest.fixture(scope="class")
-    def interval(self, utcnow) -> Interval[DateTimeTz]:
+    @classmethod
+    def interval(cls, utcnow) -> Interval[DateTimeTz]:
         return starting_from(utcnow)
 
     @pytest.fixture(scope="class", autouse=True)
-    def similar_former_inhabitant(self, class_session, room, interval) -> User:
+    @classmethod
+    def similar_former_inhabitant(cls, class_session, room, interval) -> User:
         user = factories.UserFactory(name="Tobias")
         class_session.add(RoomHistoryEntry(room=room, user=user, active_during=interval))
         return user
 
     @pytest.fixture(scope="class", autouse=True)
-    def nonsimilar_former_inhabitants(self, class_session, room, interval) -> None:
+    @classmethod
+    def nonsimilar_former_inhabitants(cls, class_session, room, interval) -> None:
         factories.UserFactory(room=room, name="Other dude")
         class_session.add(
             RoomHistoryEntry(

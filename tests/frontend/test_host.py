@@ -34,7 +34,8 @@ def host(module_session, owner) -> Host:
 @pytest.mark.usefixtures("admin_logged_in")
 class TestHostDelete:
     @pytest.fixture(scope="class")
-    def url(self) -> t.Callable[[int], str]:
+    @classmethod
+    def url(cls) -> t.Callable[[int], str]:
         def _url(host_id: int) -> str:
             return url_for("host.host_delete", host_id=host_id)
 
@@ -66,7 +67,8 @@ class TestHostDelete:
 @pytest.mark.usefixtures("admin_logged_in")
 class TestHostEdit:
     @pytest.fixture(scope="class")
-    def url(self) -> t.Callable[[int], str]:
+    @classmethod
+    def url(cls) -> t.Callable[[int], str]:
         def _url(host_id: int) -> str:
             return url_for("host.host_edit", host_id=host_id)
 
@@ -115,7 +117,8 @@ class TestHostEdit:
 @pytest.mark.usefixtures("admin_logged_in")
 class TestHostCreate:
     @pytest.fixture(scope="class")
-    def url(self) -> t.Callable[[int], str]:
+    @classmethod
+    def url(cls) -> t.Callable[[int], str]:
         def _url(user_id: int) -> str:
             return url_for("host.host_create", user_id=user_id)
 

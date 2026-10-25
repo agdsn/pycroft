@@ -48,7 +48,8 @@ class TestUserViewingPages:
 @pytest.mark.usefixtures("session")
 class TestInhabitingUser:
     @pytest.fixture(scope="class")
-    def user(self, class_session: Session, config: Config) -> User:
+    @classmethod
+    def user(cls, class_session: Session, config: Config) -> User:
         user = UserFactory.create(
             with_host=True,
             with_membership=True,
@@ -115,7 +116,8 @@ class TestInhabitingUser:
 @pytest.mark.usefixtures("session")
 class TestUserMovedOut:
     @pytest.fixture(scope="class")
-    def user(self, class_session: Session) -> User:
+    @classmethod
+    def user(cls, class_session: Session) -> User:
         user = UserFactory.create(room=None, address=AddressFactory())
         class_session.flush()
         return user
@@ -156,7 +158,8 @@ class TestUserMovedOut:
 @pytest.mark.usefixtures("session")
 class TestUserEndMembership:
     @pytest.fixture(scope="class")
-    def user(self, class_session: Session, config: Config) -> User:
+    @classmethod
+    def user(cls, class_session: Session, config: Config) -> User:
         user = UserFactory.create(
             room=None,
             address=AddressFactory(),
@@ -254,7 +257,8 @@ class TestNewUserDatasheet:
         return "00:de:ad:be:ef:00"
 
     @pytest.fixture(scope="class")
-    def other_user(self, class_session, mac) -> User:
+    @classmethod
+    def other_user(cls, class_session, mac) -> User:
         other_user = UserFactory(with_host=True, host__interface__mac=mac)
         class_session.flush()
         # assert len(other_user.hosts) == 1

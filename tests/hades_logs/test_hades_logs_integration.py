@@ -47,11 +47,13 @@ class TestConfiguredHadesLogs:
 
 class TestSpecificLogs:
     @pytest.fixture(scope="class")
-    def logs(self, hades_logs, valid_kwargs):
+    @classmethod
+    def logs(cls, hades_logs, valid_kwargs):
         return list(hades_logs.fetch_logs(**valid_kwargs))
 
     @pytest.fixture(scope="class")
-    def accepted_logs(self, logs):
+    @classmethod
+    def accepted_logs(cls, logs):
         return [e for e in logs if e.accepted]
 
     def test_logs_have_correct_instances(self, logs):

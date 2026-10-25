@@ -18,7 +18,8 @@ def config(module_session: Session) -> Config:
 
 class TestUserBlockingAndUnblocking:
     @pytest.fixture(scope="class")
-    def user_to_block(self, class_session, config) -> User:
+    @classmethod
+    def user_to_block(cls, class_session, config) -> User:
         return factories.UserFactory.create(
             with_membership=True,
             membership__includes_today=True,
@@ -26,7 +27,8 @@ class TestUserBlockingAndUnblocking:
         )
 
     @pytest.fixture(scope="class", autouse=True)
-    def _sanity(self, user_to_block, config):
+    @classmethod
+    def _sanity(cls, user_to_block, config):
         assert config.violation_group not in user_to_block.active_property_groups()
 
     @pytest.fixture

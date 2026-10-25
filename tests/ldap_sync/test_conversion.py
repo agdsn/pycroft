@@ -9,7 +9,8 @@ from ldap_sync.concepts.types import DN
 
 class TestRecordFromOrm:
     @pytest.fixture(scope="class")
-    def attrs(self):
+    @classmethod
+    def attrs(cls):
         class complete_user:
             name = "foo bar shizzle"
             login = "shizzle"

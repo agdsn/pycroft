@@ -15,15 +15,18 @@ from tests.factories import UserFactory, UserTaskFactory, RoomFactory
 
 class TestTaskExecution:
     @pytest.fixture(scope="class")
-    def old_room(self, class_session):
+    @classmethod
+    def old_room(cls, class_session):
         return RoomFactory()
 
     @pytest.fixture(scope="class")
-    def new_room(self, class_session):
+    @classmethod
+    def new_room(cls, class_session):
         return RoomFactory()
 
     @pytest.fixture(scope="class")
-    def user(self, class_session, old_room):
+    @classmethod
+    def user(cls, class_session, old_room):
         return UserFactory(room=old_room)
 
     # not `class` scoped because it changes its `Task.status`

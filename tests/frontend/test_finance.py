@@ -111,7 +111,8 @@ def account(module_session: Session) -> Account:
 
 class TestActivityEdit:
     @pytest.fixture(scope="class")
-    def transaction(self, class_session, bank_account, account, activity) -> Transaction:
+    @classmethod
+    def transaction(cls, class_session, bank_account, account, activity) -> Transaction:
         transaction = f.TransactionFactory(bank_account_activities=[activity])
         activity.split = Split(account=bank_account.account, transaction=transaction, amount=100)
         Split(account=account, transaction=transaction, amount=-100)
@@ -169,12 +170,14 @@ class TestActivityEdit:
 
 class TestAccount:
     @pytest.fixture(scope="class")
-    def member_account(self, treasurer) -> Account:
+    @classmethod
+    def member_account(cls, treasurer) -> Account:
         return treasurer.account
 
     @pytest.fixture(scope="class", autouse=True)
+    @classmethod
     def member_account_transactions(
-        self, member_account, class_session, bank_account, config, treasurer
+        cls, member_account, class_session, bank_account, config, treasurer
     ) -> tuple[Transaction, Transaction]:
         kw = {"author": treasurer, "valid_on": date.today(), "amount": Decimal(100)}
         t1 = simple_transaction(
@@ -261,7 +264,8 @@ class TestAccount:
 
 class TestAccountToggleLegacy:
     @pytest.fixture(scope="class")
-    def legacy_account(self, class_session: Session) -> Account:
+    @classmethod
+    def legacy_account(cls, class_session: Session) -> Account:
         account = f.AccountFactory(type="ASSET", legacy=True)
         class_session.flush()
         return account
@@ -357,7 +361,8 @@ class TestPaymentReminderMail:
 
 class TestTransactionsShow:
     @pytest.fixture(scope="class")
-    def transaction(self, class_session) -> Transaction:
+    @classmethod
+    def transaction(cls, class_session) -> Transaction:
         t = f.TransactionFactory()
         class_session.flush()
         return t
@@ -478,7 +483,8 @@ class TestConfirmation:
 
 class TestTransactionDelete:
     @pytest.fixture(scope="class", autouse=True)
-    def transaction(self, class_session) -> Transaction:
+    @classmethod
+    def transaction(cls, class_session) -> Transaction:
         t = f.TransactionFactory(confirmed=False)
         class_session.flush()
         return t
@@ -522,11 +528,13 @@ class TestTransactionCreate:
             client.assert_ok("finance.transactions_create")
 
     @pytest.fixture(scope="class")
-    def account1(self, class_session):
+    @classmethod
+    def account1(cls, class_session):
         return f.AccountFactory()
 
     @pytest.fixture(scope="class")
-    def account2(self, class_session):
+    @classmethod
+    def account2(cls, class_session):
         return f.AccountFactory()
 
     def test_transaction_create_post(
@@ -653,7 +661,8 @@ class MembershipFeeTest:
 
 class TestMembershipFeeCreate(MembershipFeeTest):
     @pytest.fixture(scope="class", params=[0, 1, 2])
-    def previous_fees(self, class_session, request):
+    @classmethod
+    def previous_fees(cls, class_session, request):
         f.finance.MembershipFeeFactory.create_batch(request.param)
 
     def test_get(self, client: TestClient):

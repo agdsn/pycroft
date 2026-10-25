@@ -12,7 +12,8 @@ from ... import factories
 @pytest.mark.usefixtures("config")
 class TestUserMoveOut:
     @pytest.fixture(scope="class")
-    def user(self, class_session) -> User:
+    @classmethod
+    def user(cls, class_session) -> User:
         return factories.UserFactory(
             with_host=True,
             room__patched_with_subnet=True,

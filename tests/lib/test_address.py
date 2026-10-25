@@ -10,7 +10,8 @@ from tests.factories.address import AddressFactory
 
 class TestAddress:
     @pytest.fixture(scope="class")
-    def known_address(self, class_session: Session) -> Address:
+    @classmethod
+    def known_address(cls, class_session: Session) -> Address:
         return AddressFactory.create()
 
     @staticmethod

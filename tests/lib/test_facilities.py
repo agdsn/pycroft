@@ -20,11 +20,13 @@ def processor(module_session: Session) -> User:
 
 class TestCreateRoom:
     @pytest.fixture(scope="class")
-    def building(self, class_session: Session) -> Building:
+    @classmethod
+    def building(cls, class_session: Session) -> Building:
         return factories.BuildingFactory.create()
 
     @pytest.fixture(scope="class")
-    def address(self, class_session: Session) -> Address:
+    @classmethod
+    def address(cls, class_session: Session) -> Address:
         return factories.AddressFactory.create()
 
     def test_create_room(
@@ -41,11 +43,13 @@ class TestCreateRoom:
 
 class TestRoomEdit:
     @pytest.fixture(scope="class")
-    def room(self, class_session: Session) -> Room:
+    @classmethod
+    def room(cls, class_session: Session) -> Room:
         return factories.RoomFactory.create()
 
     @pytest.fixture(scope="class", autouse=True)
-    def other_fixtures(self, class_session: Session, room):
+    @classmethod
+    def other_fixtures(cls, class_session: Session, room):
         factories.UserFactory.create_batch(3, room=room)
 
     def test_change_number_and_address(self, session: Session, room: Room, processor: User):

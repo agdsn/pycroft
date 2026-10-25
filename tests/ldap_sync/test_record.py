@@ -36,7 +36,8 @@ class TestRecordSubclassing:
 
 class TestRecordDirectInit:
     @pytest.fixture(scope="class")
-    def record(self):
+    @classmethod
+    def record(cls):
         return UserRecord(
             dn=DN("test"),
             attrs={"userPassword": "{CRYPT}**shizzle", "mail": None, "cn": "User", "uid": 50},
@@ -57,7 +58,8 @@ class TestRecordDirectInit:
 
 class TestRecord:
     @pytest.fixture(scope="class")
-    def record(self):
+    @classmethod
+    def record(cls):
         return UserRecord(dn=DN("test"), attrs={"mail": "shizzle"})
 
     def test_record_equality(self, record):
@@ -83,7 +85,8 @@ class TestRecord:
 
 class TestRecordValidation:
     @pytest.fixture(scope="class")
-    def validate(self) -> typing.Callable[[types.Attributes], None]:
+    @classmethod
+    def validate(cls) -> typing.Callable[[types.Attributes], None]:
         class RecordWithOneSyncedAttribute(Record):
             SYNCED_ATTRIBUTES = frozenset({"a"})
 
@@ -103,7 +106,8 @@ class TestRecordValidation:
 
 class TestEmptyAttributeRecord:
     @pytest.fixture(scope="class")
-    def record(self):
+    @classmethod
+    def record(cls):
         return UserRecord(dn=DN("test"), attrs={"mail": None})
 
     def test_attribute_is_empty_list(self, record):
@@ -128,7 +132,8 @@ def test_canonicalization(value, expected):
 
 class TestRecordState:
     @pytest.fixture(scope="class")
-    def record(self):
+    @classmethod
+    def record(cls):
         return UserRecord(dn=DN("test"), attrs={})
 
     def test_equality_both_none(self):

@@ -45,15 +45,18 @@ from tests.factories.user import UserFactory
 @pytest.mark.usefixtures("session", "processor")
 class TestBankAccount:
     @pytest.fixture(scope="class")
-    def fee_account(self, class_session) -> Account:
+    @classmethod
+    def fee_account(cls, class_session) -> Account:
         return AccountFactory.create(name="Membership Fees", type="REVENUE")
 
     @pytest.fixture(scope="class")
-    def user(self, class_session):
+    @classmethod
+    def user(cls, class_session):
         return UserFactory.create(name="Dummy User", account__name="Dummy User")
 
     @pytest.fixture(scope="class")
-    def user_account(self, user):
+    @classmethod
+    def user_account(cls, user):
         return user.account
 
     # TODO move && expand.
@@ -76,21 +79,25 @@ class TestMembershipFeePosting:
     """Test membership fee booking via `post_transactions_for_membership_fee`"""
 
     @pytest.fixture(scope="class")
-    def last_month_last(self, class_session, utcnow) -> datetime:
+    @classmethod
+    def last_month_last(cls, class_session, utcnow) -> datetime:
         return utcnow.replace(day=1) - timedelta(1)
 
     @pytest.fixture(scope="class")
-    def last_month_last_date(self, last_month_last) -> date:
+    @classmethod
+    def last_month_last_date(cls, last_month_last) -> date:
         return last_month_last.date()
 
     @pytest.fixture(scope="class")
-    def membership_fee_last(self, last_month_last_date):
+    @classmethod
+    def membership_fee_last(cls, last_month_last_date):
         return MembershipFeeFactory.create(
             begins_on=last_month_last_date.replace(day=1), ends_on=last_month_last_date
         )
 
     @pytest.fixture(scope="class")
-    def fees(self, utcnow, class_session) -> Fees:
+    @classmethod
+    def fees(cls, utcnow, class_session) -> Fees:
         payment_deadline = timedelta(14)
         payment_deadline_final = timedelta(62)
 
@@ -515,12 +522,14 @@ def config(module_session: Session):
 @pytest.mark.usefixtures("session")
 class TestBalanceEstimation:
     @pytest.fixture(scope="class", autouse=True)
-    def user(self, class_session: Session, config: Config) -> User:
+    @classmethod
+    def user(cls, class_session: Session, config: Config) -> User:
         return UserFactory.create()
 
     @pytest.fixture(scope="class", autouse=True)
+    @classmethod
     def user_membership(
-        self, user: User, class_session: Session, utcnow, config: Config
+        cls, user: User, class_session: Session, utcnow, config: Config
     ) -> Membership:
         return MembershipFactory.create(
             active_during=starting_from(utcnow - timedelta(weeks=52)),
@@ -529,11 +538,13 @@ class TestBalanceEstimation:
         )
 
     @pytest.fixture(scope="class", autouse=True)
-    def membership_fee_current(self, class_session: Session) -> MembershipFee:
+    @classmethod
+    def membership_fee_current(cls, class_session: Session) -> MembershipFee:
         return MembershipFeeFactory.create()
 
     @pytest.fixture(scope="class", autouse=True)
-    def membership_fee_last(self, class_session: Session, utcnow):
+    @classmethod
+    def membership_fee_last(cls, class_session: Session, utcnow):
         last_month_last = utcnow.date().replace(day=1) - timedelta(1)
         return MembershipFeeFactory.create(
             begins_on=last_month_last.replace(day=1),

@@ -17,11 +17,13 @@ from .assertions import assert_mail_reasonable
 
 class TestUserMove:
     @pytest.fixture(scope="class")
-    def subnet(self, class_session):
+    @classmethod
+    def subnet(cls, class_session):
         return factories.SubnetFactory.create()
 
     @pytest.fixture(scope="class")
-    def user(self, class_session, subnet) -> User:
+    @classmethod
+    def user(cls, class_session, subnet) -> User:
         return factories.UserFactory(
             with_host=True,
             room__patched_with_subnet=True,
@@ -29,11 +31,13 @@ class TestUserMove:
         )
 
     @pytest.fixture(scope="class")
-    def new_room_other_building(self, class_session) -> Room:
+    @classmethod
+    def new_room_other_building(cls, class_session) -> Room:
         return factories.RoomFactory(patched_with_subnet=True)
 
     @pytest.fixture(scope="class")
-    def new_room_same_building(self, class_session, user, subnet) -> Room:
+    @classmethod
+    def new_room_same_building(cls, class_session, user, subnet) -> Room:
         return factories.RoomFactory(
             building=user.building,
             patched_with_subnet=True,
@@ -85,7 +89,8 @@ class TestUserMove:
 
 class TestMoveImpl:
     @pytest.fixture(scope="class")
-    def user(self, class_session, config) -> User:
+    @classmethod
+    def user(cls, class_session, config) -> User:
         return factories.UserFactory.create(
             with_membership=True,
             membership__group=config.member_group,
@@ -93,17 +98,20 @@ class TestMoveImpl:
         )
 
     @pytest.fixture(scope="class")
-    def old_room(self, user):
+    @classmethod
+    def old_room(cls, user):
         return user.room
 
     @pytest.fixture(scope="class")
-    def new_room(self, class_session) -> Room:
+    @classmethod
+    def new_room(cls, class_session) -> Room:
         room = factories.RoomFactory.create()
         class_session.flush()
         return room
 
     @pytest.fixture(scope="class")
-    def full_params(self, new_room) -> dict[str]:
+    @classmethod
+    def full_params(cls, new_room) -> dict[str]:
         return {
             "level": new_room.level,
             "building_id": new_room.building_id,

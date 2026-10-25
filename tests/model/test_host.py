@@ -16,7 +16,8 @@ from .. import factories
 
 class TestInterfaceValidators:
     @pytest.fixture(scope="class")
-    def host(self, class_session):
+    @classmethod
+    def host(cls, class_session):
         return factories.HostFactory()
 
     @pytest.mark.parametrize(
@@ -56,19 +57,23 @@ class TestInterfaceValidators:
 
 class TestIpModel:
     @pytest.fixture(scope="class")
-    def subnet(self, class_session):
+    @classmethod
+    def subnet(cls, class_session):
         return factories.SubnetFactory.create()
 
     @pytest.fixture(scope="class")
-    def subnet2(self, class_session):
+    @classmethod
+    def subnet2(cls, class_session):
         return factories.SubnetFactory.create()
 
     @pytest.fixture(scope="class")
-    def interface(self, class_session):
+    @classmethod
+    def interface(cls, class_session):
         return factories.InterfaceFactory()
 
     @pytest.fixture(scope="class")
-    def ip_addr(self, class_session, subnet, interface):
+    @classmethod
+    def ip_addr(cls, class_session, subnet, interface):
         ip, _ = get_free_ip((subnet,))
         addr = IP(interface=interface, address=ip, subnet=subnet)
         class_session.add(addr)
@@ -127,21 +132,25 @@ class TestIpModel:
 
 class TestVariousCascades:
     @pytest.fixture(scope="class")
-    def user(self, class_session):
+    @classmethod
+    def user(cls, class_session):
         user = factories.UserFactory.build(with_host=True)
         class_session.add(user)
         return user
 
     @pytest.fixture(scope="class")
-    def host(self, user):
+    @classmethod
+    def host(cls, user):
         return user.hosts[0]
 
     @pytest.fixture(scope="class")
-    def interface(self, host):
+    @classmethod
+    def interface(cls, host):
         return host.interfaces[0]
 
     @pytest.fixture(scope="class")
-    def ips(self, class_session, interface):
+    @classmethod
+    def ips(cls, class_session, interface):
         ips = factories.IPFactory.create_batch(3, interface=interface)
         # there's probably a better way to do this, e.g. by introducing an `IpWithTrafficFactory`
         for ip in ips:
@@ -149,7 +158,8 @@ class TestVariousCascades:
         return ips
 
     @pytest.fixture(scope="class")
-    def ip(self, ips):
+    @classmethod
+    def ip(cls, ips):
         return ips[0]
 
     def test_traffic_volume_cascade_on_delete_ip(self, ip, session):
@@ -188,20 +198,24 @@ class TestVariousCascades:
 
 class TestDefaultVlanCascades:
     @pytest.fixture(scope="class")
-    def vlans(self, class_session):
+    @classmethod
+    def vlans(cls, class_session):
         return factories.VLANFactory.create_batch(2)
 
     @pytest.fixture(scope="class")
-    def vlan(self, vlans):
+    @classmethod
+    def vlan(cls, vlans):
         return vlans[0]
 
     # autouse because this provides the `default_vlans`
     @pytest.fixture(scope="class", autouse=True)
-    def ports(self, vlans):
+    @classmethod
+    def ports(cls, vlans):
         return factories.SwitchPortFactory.create_batch(2, default_vlans=vlans)
 
     @pytest.fixture(scope="class")
-    def port(self, ports):
+    @classmethod
+    def port(cls, ports):
         return ports[0]
 
     def test_default_vlan_associations_cascade_on_delete_vlan(self, session, vlan):

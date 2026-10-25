@@ -103,7 +103,8 @@ def constraints_deferred(session: Session, constraints: t.LiteralString = "all")
 
 class TestUserUnixAccountTombstoneConsistency:
     @pytest.fixture(scope="class")
-    def user(self, class_session) -> User:
+    @classmethod
+    def user(cls, class_session) -> User:
         user = f.UserFactory(with_unix_account=True)
         class_session.flush()
         return user
@@ -185,7 +186,8 @@ class TestUserUnixAccountTombstoneConsistency:
 
 class TestUserNoUnixAccount:
     @pytest.fixture(scope="class")
-    def user(self, class_session) -> User:
+    @classmethod
+    def user(cls, class_session) -> User:
         user = f.UserFactory()
         class_session.flush()
         return user
@@ -202,7 +204,8 @@ class TestUserNoUnixAccount:
 
 class TestUnixAccountNoUser:
     @pytest.fixture(scope="class")
-    def unix_account(self, class_session) -> UnixAccount:
+    @classmethod
+    def unix_account(cls, class_session) -> UnixAccount:
         ua = f.UnixAccountFactory()
         class_session.flush()
         return ua
@@ -220,7 +223,8 @@ class TestUnixAccountNoUser:
 
 class TestTombstoneLifeCycle:
     @pytest.fixture(scope="class")
-    def tombstone(self, class_session):
+    @classmethod
+    def tombstone(cls, class_session):
         tombstone = UnixTombstone(uid=999, login_hash=L_HASH)
         class_session.add(tombstone)
         return tombstone

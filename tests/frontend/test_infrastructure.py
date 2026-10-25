@@ -33,7 +33,8 @@ def client(module_test_client: TestClient) -> TestClient:
 @pytest.mark.usefixtures("admin_logged_in", "session")
 class TestSubnets:
     @pytest.fixture(scope="class", autouse=True)
-    def subnets(self, class_session: Session) -> list[Subnet]:
+    @classmethod
+    def subnets(cls, class_session: Session) -> list[Subnet]:
         return f.SubnetFactory.create_batch(3) + [
             f.SubnetFactory(reserved_addresses_bottom=1, reserved_addresses_top=5),
             f.SubnetFactory(reserved_addresses_bottom=5, reserved_addresses_top=1),
@@ -90,11 +91,13 @@ class TestSwitch:
 @pytest.mark.usefixtures("admin_logged_in", "session")
 class TestCreateSwitch:
     @pytest.fixture(scope="class")
-    def url(self) -> str:
+    @classmethod
+    def url(cls) -> str:
         return url_for("infrastructure.switch_create")
 
     @pytest.fixture(scope="class")
-    def room(self, class_session: Session) -> Room:
+    @classmethod
+    def room(cls, class_session: Session) -> Room:
         return f.RoomFactory()
 
     def test_create_switch_get(self, client):
@@ -141,7 +144,8 @@ class TestCreateSwitch:
 @pytest.mark.usefixtures("admin_logged_in", "session")
 class TestSwitchEdit:
     @pytest.fixture(scope="class")
-    def url(self) -> t.Callable[[int], str]:
+    @classmethod
+    def url(cls) -> t.Callable[[int], str]:
         def _url(switch_id):
             return url_for("infrastructure.switch_edit", switch_id=switch_id)
 
@@ -191,7 +195,8 @@ class TestSwitchEdit:
 @pytest.mark.usefixtures("admin_logged_in", "session")
 class TestSwitchDelete:
     @pytest.fixture(scope="class")
-    def url(self) -> t.Callable[[int], str]:
+    @classmethod
+    def url(cls) -> t.Callable[[int], str]:
         def _url(switch_id):
             return url_for("infrastructure.switch_delete", switch_id=switch_id)
 
@@ -213,18 +218,21 @@ class TestSwitchDelete:
 @pytest.mark.usefixtures("admin_logged_in", "session")
 class TestSwitchPortCreate:
     @pytest.fixture(scope="class")
-    def url(self) -> t.Callable[[int], str]:
+    @classmethod
+    def url(cls) -> t.Callable[[int], str]:
         def _url(switch_id):
             return url_for("infrastructure.switch_port_create", switch_id=switch_id)
 
         return _url
 
     @pytest.fixture(scope="class")
-    def patch_port(self, class_session, switch) -> PatchPort:
+    @classmethod
+    def patch_port(cls, class_session, switch) -> PatchPort:
         return f.PatchPortFactory(switch_room=switch.host.room)
 
     @pytest.fixture(scope="class")
-    def connected_patch_port(self, class_session) -> PatchPort:
+    @classmethod
+    def connected_patch_port(cls, class_session) -> PatchPort:
         # patch_port = f.PatchPortFactory(switch_room=switch.host.room, switch_port=sp)
         return f.PatchPortFactory(patched=True)
 
@@ -279,7 +287,8 @@ class TestSwitchPortCreate:
 @pytest.mark.usefixtures("admin_logged_in", "session")
 class TestSwitchPortEdit:
     @pytest.fixture(scope="class")
-    def url(self) -> t.Callable[[int, int], str]:
+    @classmethod
+    def url(cls) -> t.Callable[[int, int], str]:
         def _url(switch_id: int, switch_port_id: int) -> str:
             return url_for(
                 "infrastructure.switch_port_edit",
@@ -290,15 +299,18 @@ class TestSwitchPortEdit:
         return _url
 
     @pytest.fixture(scope="class")
-    def connected_patch_port(self, class_session, switch) -> PatchPort:
+    @classmethod
+    def connected_patch_port(cls, class_session, switch) -> PatchPort:
         return f.PatchPortFactory(patched=True, switch_port__switch=switch)
 
     @pytest.fixture(scope="class")
-    def switch_port(self, class_session, connected_patch_port) -> SwitchPort:
+    @classmethod
+    def switch_port(cls, class_session, connected_patch_port) -> SwitchPort:
         return connected_patch_port.switch_port
 
     @pytest.fixture(scope="class")
-    def switch_port_2(self, class_session, switch) -> SwitchPort:
+    @classmethod
+    def switch_port_2(cls, class_session, switch) -> SwitchPort:
         return f.SwitchPortFactory(switch__host__room=switch.host.room)
 
     def test_get_nonexistent_switch(self, client, url):
@@ -360,7 +372,8 @@ class TestSwitchPortEdit:
 @pytest.mark.usefixtures("admin_logged_in", "session")
 class TestSwitchPortDelete:
     @pytest.fixture(scope="class")
-    def url(self) -> t.Callable[[int, int], str]:
+    @classmethod
+    def url(cls) -> t.Callable[[int, int], str]:
         def _url(switch_id: int, switch_port_id: int) -> str:
             return url_for(
                 "infrastructure.switch_port_delete",
@@ -371,11 +384,13 @@ class TestSwitchPortDelete:
         return _url
 
     @pytest.fixture(scope="class")
-    def switch_port(self, class_session, switch):
+    @classmethod
+    def switch_port(cls, class_session, switch):
         return f.SwitchPortFactory(switch=switch)
 
     @pytest.fixture(scope="class")
-    def switch_port_2(self, class_session, switch) -> SwitchPort:
+    @classmethod
+    def switch_port_2(cls, class_session, switch) -> SwitchPort:
         return f.SwitchPortFactory(switch__host__room=switch.host.room)
 
     def test_delete_nonexistent_switch(self, client, url):

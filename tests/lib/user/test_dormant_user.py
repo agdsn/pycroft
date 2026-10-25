@@ -27,7 +27,8 @@ def user(module_session, config):
 
 class TestMovedInUser:
     @pytest.fixture(scope="class")
-    def other_room(self, class_session) -> Room:
+    @classmethod
+    def other_room(cls, class_session) -> Room:
         return RoomFactory.create()
 
     @pytest.fixture

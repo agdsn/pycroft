@@ -10,11 +10,13 @@ from tests.factories import TrafficVolumeLastWeekFactory, UserFactory
 
 class TestTrafficHistory:
     @pytest.fixture(scope="class")
-    def user(self, class_session) -> User:
+    @classmethod
+    def user(cls, class_session) -> User:
         return UserFactory(with_host=True)
 
     @pytest.fixture(scope="class", autouse=True)
-    def traffic(self, class_session, user) -> None:
+    @classmethod
+    def traffic(cls, class_session, user) -> None:
         TrafficVolumeLastWeekFactory.create_batch(
             7, ip=assert_one(assert_one(user.hosts).ips), user=user
         )

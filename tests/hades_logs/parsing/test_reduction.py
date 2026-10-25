@@ -28,7 +28,8 @@ def test_nontrivial_equivalence_gives_first_representative(elements, func):
 
 class TestRadiusLogsWorkAsWell:
     @pytest.fixture(scope="class")
-    def entries(self):
+    @classmethod
+    def entries(cls):
         timestamp = 1501623826.391414
         return [
             RadiusLogEntry(*e)
@@ -58,7 +59,8 @@ class TestRadiusLogsWorkAsWell:
         ]
 
     @pytest.fixture(scope="class")
-    def reduced(self, entries, func):
+    @classmethod
+    def reduced(cls, entries, func):
         return list(func(entries, comparator=RadiusLogEntry.effectively_equal))
 
     def test_length(self, reduced):
