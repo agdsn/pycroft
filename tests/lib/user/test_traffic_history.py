@@ -20,7 +20,6 @@ class TestTrafficHistory:
         TrafficVolumeLastWeekFactory.create_batch(
             7, ip=assert_one(assert_one(user.hosts).ips), user=user
         )
-        class_session.flush()
 
     def test_get_traffic_history(self, user, utcnow):
         history = traffic_history(user.id, utcnow - timedelta(7), utcnow)

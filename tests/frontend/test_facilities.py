@@ -58,7 +58,6 @@ class TestBuilding:
     def room(cls, class_session, admin) -> Room:
         room = RoomFactory()
         f.RoomLogEntryFactory(room=room, author=admin)
-        class_session.flush()
         return room
 
     @pytest.fixture(scope="class")
@@ -441,9 +440,7 @@ class TestPatchPortEdit:
     @pytest.fixture(scope="class")
     @classmethod
     def patch_port(cls, class_session, room) -> PatchPort:
-        patch_port = f.PatchPortFactory(name="A01", switch_room=room)
-        class_session.flush()
-        return patch_port
+        return f.PatchPortFactory(name="A01", switch_room=room)
 
     @pytest.fixture(scope="class")
     @classmethod
@@ -506,7 +503,6 @@ class TestPatchPortDelete:
     def patch_port(cls, class_session) -> PatchPort:
         switch = f.SwitchFactory()
         patch_port = f.PatchPortFactory(switch_room=switch.host.room)
-        class_session.flush()
         return patch_port
 
     @pytest.fixture(scope="class")
@@ -530,7 +526,6 @@ class TestPatchPanelJson:
         switch = f.SwitchFactory()
         sp = f.SwitchPortFactory(switch=switch)
         f.PatchPortFactory(switch_room=switch.host.room, switch_port=sp)
-        class_session.flush()
         return switch.host.room
 
     @pytest.fixture(scope="class")

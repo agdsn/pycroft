@@ -11,9 +11,7 @@ from tests import factories as f
 
 @pytest.fixture(scope="module")
 def interface(module_session: Session):
-    i = f.InterfaceFactory()
-    module_session.flush()
-    return i
+    return f.InterfaceFactory()
 
 
 @pytest.mark.parametrize(
@@ -28,7 +26,6 @@ def test_traffic_volume_cleanup(session, interface: Interface, age_days: int, ol
         timestamp=datetime.now(UTC) - timedelta(age_days),
         ip__interface=interface,
     )
-    session.flush()
     num_deleted = delete_old_traffic_data(session)
     assert 0 <= num_deleted <= 1
     got_deleted = num_deleted == 1

@@ -22,10 +22,7 @@ pytestmark = pytest.mark.usefixtures("admin_logged_in")
 
 @pytest.fixture(scope="module")
 def room(module_session: Session) -> Room:
-    room = RoomFactory.create(patched_with_subnet=True)
-    module_session.add(room)
-    module_session.flush()
-    return room
+    return RoomFactory(patched_with_subnet=True)
 
 
 @pytest.fixture(scope="module")
@@ -50,14 +47,12 @@ class TestInhabitingUser:
     @pytest.fixture(scope="class")
     @classmethod
     def user(cls, class_session: Session, config: Config) -> User:
-        user = UserFactory.create(
+        return UserFactory(
             with_host=True,
             with_membership=True,
             membership__includes_today=True,
             membership__group=config.member_group,
         )
-        class_session.flush()
-        return user
 
     def test_blocking_and_unblocking_works(self, client: TestClient, user: User):
         user_show_endpoint = url_for("user.user_show", user_id=user.id)
@@ -118,9 +113,7 @@ class TestUserMovedOut:
     @pytest.fixture(scope="class")
     @classmethod
     def user(cls, class_session: Session) -> User:
-        user = UserFactory.create(room=None, address=AddressFactory())
-        class_session.flush()
-        return user
+        return UserFactory(room=None, address=AddressFactory())
 
     def test_user_cannot_be_moved_out(self, client: TestClient, user: User):
         # user.room = None  # ???
@@ -160,15 +153,13 @@ class TestUserEndMembership:
     @pytest.fixture(scope="class")
     @classmethod
     def user(cls, class_session: Session, config: Config) -> User:
-        user = UserFactory.create(
+        return UserFactory(
             room=None,
             address=AddressFactory(),
             with_membership=True,
             membership__includes_today=True,
             membership__group=config.member_group,
         )
-        class_session.flush()
-        return user
 
     def test_user_not_found(self, client: TestClient):
         # with client.flashes_message(
@@ -260,7 +251,6 @@ class TestNewUserDatasheet:
     @classmethod
     def other_user(cls, class_session, mac) -> User:
         other_user = UserFactory(with_host=True, host__interface__mac=mac)
-        class_session.flush()
         # assert len(other_user.hosts) == 1
         return other_user
 

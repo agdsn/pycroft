@@ -58,9 +58,7 @@ class TestAppWithoutHadesLogs:
     @pytest.fixture(scope="class")
     @classmethod
     def user(cls, class_session: Session):
-        user = UserFactory.create(with_host=True, patched=True)
-        class_session.flush()
-        return user
+        return UserFactory(with_host=True, patched=True)
 
     @pytest.fixture(scope="class")
     @classmethod
@@ -158,7 +156,6 @@ class TestDummyHadesLogs:
     def user_and_log_entries(cls, class_session: Session, admin: User, user: User) -> None:
         RoomLogEntryFactory.create(author=admin, room=user.room)
         UserLogEntryFactory.create(author=admin, user=user)
-        class_session.flush()
 
     @pytest.fixture(scope="class")
     @classmethod

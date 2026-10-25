@@ -20,9 +20,7 @@ from .assertions import TestClient
 
 @pytest.fixture(scope="module")
 def switch(module_session: Session) -> Switch:
-    switch = f.SwitchFactory()
-    module_session.flush()
-    return switch
+    return f.SwitchFactory()
 
 
 @pytest.fixture(scope="module")
@@ -345,7 +343,6 @@ class TestSwitchPortEdit:
     def test_edit_switch_port_new_port(self, client, session, switch, switch_port, url):
         URL = url(switch.host_id, switch_port.id)
         new_port = f.PatchPortFactory(switch_room=switch.host.room)
-        session.flush()
         good_data = {
             "name": "Test Port",
             "patch_port": str(new_port.id),

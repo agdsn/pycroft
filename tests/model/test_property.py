@@ -25,16 +25,12 @@ PROP2 = "test2"
 
 @pytest.fixture(scope="module")
 def property_group1(module_session):
-    group = factories.PropertyGroupFactory(granted={PROP1})
-    module_session.flush()
-    return group
+    return factories.PropertyGroupFactory(granted={PROP1})
 
 
 @pytest.fixture(scope="module")
 def property_group2(module_session):
-    group = factories.PropertyGroupFactory(granted={PROP1, PROP2})
-    module_session.flush()
-    return group
+    return factories.PropertyGroupFactory(granted={PROP1, PROP2})
 
 
 def test_fixtures_correct(session, user, property_group1, property_group2):

@@ -70,9 +70,7 @@ class TestUnixAccountUidFKey:
     @staticmethod
     @pytest.fixture(scope="class")
     def unix_account(class_session):
-        account = f.UnixAccountFactory()
-        class_session.flush()
-        return account
+        return f.UnixAccountFactory()
 
     @staticmethod
     def test_unix_account_has_tombstone(unix_account):
@@ -105,9 +103,7 @@ class TestUserUnixAccountTombstoneConsistency:
     @pytest.fixture(scope="class")
     @classmethod
     def user(cls, class_session) -> User:
-        user = f.UserFactory(with_unix_account=True)
-        class_session.flush()
-        return user
+        return f.UserFactory(with_unix_account=True)
 
     def test_user_login_change_fails(self, session, user):
         # changing `user.login` does not work due to custom validator
@@ -188,9 +184,7 @@ class TestUserNoUnixAccount:
     @pytest.fixture(scope="class")
     @classmethod
     def user(cls, class_session) -> User:
-        user = f.UserFactory()
-        class_session.flush()
-        return user
+        return f.UserFactory()
 
     def test_add_new_unix_account_to_user(self, session, user):
         # should also not throw an error.
@@ -206,9 +200,7 @@ class TestUnixAccountNoUser:
     @pytest.fixture(scope="class")
     @classmethod
     def unix_account(cls, class_session) -> UnixAccount:
-        ua = f.UnixAccountFactory()
-        class_session.flush()
-        return ua
+        return f.UnixAccountFactory()
 
     def test_create_user_with_existing_unix_account(self, session, unix_account):
         # this should not throw an error,

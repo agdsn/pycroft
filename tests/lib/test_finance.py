@@ -145,14 +145,12 @@ class TestMembershipFeePosting:
     @pytest.fixture
     def user_from1y_active_member(self, session, utcnow):
         reg_date = utcnow - timedelta(weeks=52)
-        user = UserFactory(
+        return UserFactory(
             registered_at=reg_date,
             with_membership=True,
             membership__active_during=starting_from(reg_date),
             membership__group=SubFactory(ActiveMemberPropertyGroupFactory),
         )
-        session.flush()
-        return user
 
     @pytest.fixture
     def user_move_in_grace(self, session, config, last_month_last, membership_fee_last) -> User:
@@ -553,22 +551,18 @@ class TestBalanceEstimation:
 
     @pytest.fixture
     def transaction_current(self, session, membership_fee_current, user):
-        t = TransactionFactory.create(
+        return TransactionFactory(
             valid_on=membership_fee_current.ends_on,
             splits__account=Iterator([user.account, AccountFactory.create()]),
         )
-        session.flush()
-        return t
 
     @pytest.fixture
     def transaction_last(self, session, membership_fee_last, user):
         # Membership fee booking for last month
-        t = TransactionFactory.create(
+        return TransactionFactory(
             valid_on=membership_fee_last.ends_on,
             splits__account=Iterator([user.account, AccountFactory.create()]),
         )
-        session.flush()
-        return t
 
     @pytest.fixture
     def check_current_and_next_month(
@@ -668,11 +662,10 @@ class TestMatching:
 
 class TestLastImportedAt:
     def test_last_imported_at(self, session: Session):
-        BankAccountActivityFactory.create(
+        BankAccountActivityFactory(
             reference="Test transaction",
             imported_at=datetime(2020, 1, 1),
         )
-        session.flush()
         assert finance.get_last_import_date(session) == datetime(2020, 1, 1, tzinfo=UTC)
 
 

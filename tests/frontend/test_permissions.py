@@ -103,7 +103,6 @@ class TestPermissionsUser:
             membership__group=config.member_group,
             membership__includes_today=True,
         )
-        class_session.flush()
         with login_context(client, app, "member"):
             yield
 

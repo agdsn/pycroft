@@ -105,9 +105,7 @@ class TestMoveImpl:
     @pytest.fixture(scope="class")
     @classmethod
     def new_room(cls, class_session) -> Room:
-        room = factories.RoomFactory.create()
-        class_session.flush()
-        return room
+        return factories.RoomFactory()
 
     @pytest.fixture(scope="class")
     @classmethod

@@ -62,14 +62,12 @@ class TestActive:
 
 @pytest.fixture(scope="module")
 def user(module_session, config) -> User:
-    user = f.UserFactory(
+    return f.UserFactory(
         birthdate=datetime.now(),
         with_membership=True,
         membership__group=SubFactory(ActiveMemberPropertyGroupFactory),
         membership__includes_today=True,
     )
-    module_session.flush()
-    return user
 
 
 @pytest.fixture(scope="module")
