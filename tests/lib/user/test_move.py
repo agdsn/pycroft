@@ -27,7 +27,7 @@ class TestUserMove:
         return factories.UserFactory(
             with_host=True,
             room__patched_with_subnet=True,
-            room__patch_ports__switch_port__default_vlans__subnets=[subnet],
+            room__patch_ports__switch_port__default_vlans__0__subnets=[subnet],
         )
 
     @pytest.fixture(scope="class")
@@ -41,7 +41,7 @@ class TestUserMove:
         return factories.RoomFactory(
             building=user.building,
             patched_with_subnet=True,
-            patch_ports__switch_port__default_vlans__subnets=[subnet],
+            patch_ports__switch_port__default_vlans__0__subnets=[subnet],
         )
 
     def test_move_scheduling(self, session, utcnow, user, processor, new_room_other_building):

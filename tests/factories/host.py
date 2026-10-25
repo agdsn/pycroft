@@ -69,17 +69,7 @@ class SwitchPortFactory(BaseFactory[SwitchPort]):
 
     switch = factory.SubFactory(SwitchFactory)
     name = factory.Sequence(lambda n: f"SwitchPort {n}")
+    default_vlans = factory.List([factory.SubFactory(VLANFactory)])
 
-    @factory.post_generation
-    def default_vlans(self, create, extracted, **kwargs):
-        if not create:
-            # Simple build, do nothing.
-            return
-
-        if extracted:
-            # A list of groups were passed in, use them
-            for vlan in extracted:
-                self.default_vlans.append(vlan)
-        else:
-            # Create a default vlan
-            self.default_vlans.append(VLANFactory(**kwargs))
+    class Params:
+        with_subnet = factory.Trait(default_vlans__0__create_subnet=True)

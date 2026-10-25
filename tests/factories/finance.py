@@ -83,9 +83,15 @@ class MembershipFeeFactory(BaseFactory[MembershipFee]):
     ends_on = LazyAttribute(lambda o: last_day_of_month(session.utcnow()))
 
 
-class SplitFactory(BaseFactory[Split]):
+# do not use directly, as transactions and splits must be persisted together.
+class _SplitFactory(BaseFactory[Split]):
     class Meta:
         model = Split
+
+    @classmethod
+    def _create(cls, model_class, *a, **kw):
+        """Disable persistence by default, move responsibility to TransactionFactory"""
+        return model_class(*a, **kw)
 
     # Required
     amount = 0
@@ -100,6 +106,18 @@ class TransactionFactory(BaseFactory[Transaction]):
     class Meta:
         model = Transaction
 
+    @classmethod
+    def _create(cls, model_class, *a, **kw):
+        """Defer persistence to `_after_postgeneration`"""
+        return model_class(*a, **kw)
+
+    @classmethod
+    def _after_postgeneration(cls, obj, create, results):
+        if create:
+            session = cls._meta.sqlalchemy_session
+            session.add(obj)
+            session.flush()
+
     description = Faker("word")
     author = SubFactory("tests.factories.user.UserFactory")
 
@@ -109,5 +127,5 @@ class TransactionFactory(BaseFactory[Transaction]):
     confirmed = True
 
     splits = RelatedFactoryList(
-        SplitFactory, factory_related_name="transaction", size=2, amount=Iterator([5, -5])
+        _SplitFactory, factory_related_name="transaction", size=2, amount=Iterator([5, -5])
     )

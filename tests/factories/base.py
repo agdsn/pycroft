@@ -11,8 +11,10 @@ from pycroft.model.session import session
 class BaseFactory[T](Factory):
     class Meta:
         sqlalchemy_session = session
+        sqlalchemy_session_persistence = "flush"
 
     if t.TYPE_CHECKING:
+
         def __new__(cls, **kwargs: t.Any) -> T: ...
 
         @classmethod
