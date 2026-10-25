@@ -45,11 +45,13 @@ class MembershipFixture:
 @pytest.mark.usefixtures("session")
 class TestMembership:
     @pytest.fixture(scope="class")
-    def group(self, class_session: Session) -> PropertyGroup:
+    @classmethod
+    def group(cls, class_session: Session) -> PropertyGroup:
         return PropertyGroupFactory.create()
 
     @pytest.fixture(scope="class")
-    def user(self, class_session: Session) -> User:
+    @classmethod
+    def user(cls, class_session: Session) -> User:
         return UserFactory.create()
 
     @pytest.fixture(name="mf")
@@ -104,11 +106,13 @@ class TestMembership:
 @pytest.mark.usefixtures("session")
 class TestProperty:
     @pytest.fixture(scope="class")
-    def property_name(self):
+    @classmethod
+    def property_name(cls):
         return "granted_property"
 
     @pytest.fixture(scope="class")
-    def group(self, property_name: str, class_session: Session) -> PropertyGroup:
+    @classmethod
+    def group(cls, property_name: str, class_session: Session) -> PropertyGroup:
         return PropertyGroupFactory(granted={property_name}, denied={"denied_property"})
 
     def test_grant_property(self, group, property_name):

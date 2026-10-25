@@ -183,15 +183,18 @@ def mac_from_host(host: Host):
 
 class TestFinanceBlocking:
     @pytest.fixture(scope="class")
-    def bad_group(self, payment_in_default_group):
+    @classmethod
+    def bad_group(cls, payment_in_default_group):
         return payment_in_default_group
 
     @pytest.fixture(scope="class")
-    def radius_group_name(self) -> str:
+    @classmethod
+    def radius_group_name(cls) -> str:
         return "pid"
 
     @pytest.fixture(scope="class", autouse=True)
-    def bad_membership(self, now, class_session, user, bad_group):
+    @classmethod
+    def bad_membership(cls, now, class_session, user, bad_group):
         return MembershipFactory.create(
             user=user, group=bad_group, begins_at=now + timedelta(-1), ends_at=now + timedelta(1)
         )
@@ -225,17 +228,20 @@ class TestFinanceBlocking:
 
 class TestTrafficBlocking(TestFinanceBlocking):
     @pytest.fixture(scope="class")
-    def bad_group(self, traffic_limit_exceeded_group):
+    @classmethod
+    def bad_group(cls, traffic_limit_exceeded_group):
         return traffic_limit_exceeded_group
 
     @pytest.fixture(scope="class")
-    def radius_group_name(self) -> str:
+    @classmethod
+    def radius_group_name(cls) -> str:
         return "traffic"
 
 
 class TestNonBlockingGroup:
     @pytest.fixture(scope="class", autouse=True)
-    def non_blocking_membership(self, class_session, user, non_blocking_group, now):
+    @classmethod
+    def non_blocking_membership(cls, class_session, user, non_blocking_group, now):
         return MembershipFactory.create(
             user=user,
             group=non_blocking_group,

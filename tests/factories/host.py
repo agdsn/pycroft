@@ -13,13 +13,13 @@ class UnicastMacProvider(BaseProvider):
     def unicast_mac_address(self):
         mac = [self.generator.random.randint(0x00, 0xFF) for i in range(0, 6)]
         mac[0] = mac[0] & 0xFE
-        return ":".join("%02x" % x for x in mac)
+        return ":".join(f"{x:02x}" for x in mac)
 
 
 factory.Faker.add_provider(UnicastMacProvider)
 
 
-class IPFactory(BaseFactory):
+class IPFactory(BaseFactory[IP]):
     class Meta:
         model = IP
         exclude = ("str_address",)
@@ -31,7 +31,7 @@ class IPFactory(BaseFactory):
     subnet = factory.SubFactory(SubnetFactory, address=IPNetwork("0.0.0.0/0"))
 
 
-class InterfaceFactory(BaseFactory):
+class InterfaceFactory(BaseFactory[Interface]):
     class Meta:
         model = Interface
 
@@ -40,7 +40,7 @@ class InterfaceFactory(BaseFactory):
     ip = factory.RelatedFactory(IPFactory, "interface")
 
 
-class BareHostFactory(BaseFactory):
+class BareHostFactory(BaseFactory[Host]):
     """A host without owner or interface."""
 
     class Meta:
@@ -54,7 +54,7 @@ class HostFactory(BareHostFactory):
     interface = factory.RelatedFactory(InterfaceFactory, "host")
 
 
-class SwitchFactory(BaseFactory):
+class SwitchFactory(BaseFactory[Switch]):
     class Meta:
         model = Switch
 
@@ -63,23 +63,13 @@ class SwitchFactory(BaseFactory):
     switch_port = factory.RelatedFactory("tests.factories.host.SwitchPortFactory", "switch")
 
 
-class SwitchPortFactory(BaseFactory):
+class SwitchPortFactory(BaseFactory[SwitchPort]):
     class Meta:
         model = SwitchPort
 
     switch = factory.SubFactory(SwitchFactory)
     name = factory.Sequence(lambda n: f"SwitchPort {n}")
+    default_vlans = factory.List([factory.SubFactory(VLANFactory)])
 
-    @factory.post_generation
-    def default_vlans(self, create, extracted, **kwargs):
-        if not create:
-            # Simple build, do nothing.
-            return
-
-        if extracted:
-            # A list of groups were passed in, use them
-            for vlan in extracted:
-                self.default_vlans.append(vlan)
-        else:
-            # Create a default vlan
-            self.default_vlans.append(VLANFactory(**kwargs))
+    class Params:
+        with_subnet = factory.Trait(default_vlans__0__create_subnet=True)

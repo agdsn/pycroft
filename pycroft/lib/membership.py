@@ -205,7 +205,7 @@ def delete_property_group(group: PropertyGroup, processor: User) -> None:
 
 def user_memberships_query(
     user_id: int, active_groups_only: bool = False
-) -> Result[tuple[Membership, list[str], list[str]]]:
+) -> Result[Membership, t.Sequence[list[str]], t.Sequence[list[str]]]:
     memberships = select(Membership).filter(Membership.user_id == user_id)
     if active_groups_only:
         memberships = memberships.filter(
@@ -248,7 +248,7 @@ def change_membership_active_during(
     log_user_event(message, processor, membership.user)
 
 
-def select_user_and_last_mem() -> Select[tuple[int, int, DateTimeTz]]:
+def select_user_and_last_mem() -> Select[int, int, DateTimeTz]:
     """Select users with their last membership of a user in the ``member`` group.
 
     :returns: a select statement with columns ``user_id``, ``mem_id``, ``mem_end``.

@@ -132,7 +132,7 @@ def build_transactions_query(
     limit: int | None = None,
     positive: bool | None = None,
     eagerload: bool = False,
-) -> Select[tuple[Split]]:
+) -> Select[Split]:
     """Build a query returning the Splits for a finance account
 
     :param account: The finance Account to filter by
@@ -176,7 +176,7 @@ def build_transactions_query(
     return stmt
 
 
-def _similar_activity_stmt(activity: BankAccountActivity) -> Select[tuple[BankAccountActivity]]:
+def _similar_activity_stmt(activity: BankAccountActivity) -> Select[BankAccountActivity]:
     return (
         select()
         .select_from(BankAccountActivity)

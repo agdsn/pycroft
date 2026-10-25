@@ -2,6 +2,7 @@
 #  This file is part of the Pycroft project and licensed under the terms of
 #  the Apache License, Version 2.0. See the LICENSE file for details
 import pytest
+import factory
 
 from pycroft.lib.user import get_active_users_with_building
 from pycroft.model.facilities import Room, Building
@@ -38,17 +39,16 @@ def building_list(module_session) -> list[Building]:
 
 @pytest.fixture(scope="module")
 def build_map(module_session, config, building_list) -> dict:
-    out = {}
-    for building in building_list:
-        out[building] = []
-        for _ in range(5):
-            user = UserFactory.create(
-                room=RoomFactory(building=building),
-                membership__group=config.member_group,
-                with_membership=True,
-            )
-            out[building].append(user)
-    return out
+    return {
+        building: UserFactory.create_batch(
+            5,
+            login=factory.Sequence(lambda i: f"user{i}"),
+            room__building=building,
+            membership__group=config.member_group,
+            with_membership=True,
+        )
+        for building in building_list
+    }
 
 
 @pytest.fixture(scope="module")

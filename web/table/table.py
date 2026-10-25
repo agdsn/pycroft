@@ -4,7 +4,7 @@ import typing as t
 from collections import OrderedDict
 from copy import copy
 from dataclasses import dataclass
-from datetime import date, datetime, time, timezone
+from datetime import date, datetime, time, UTC
 from operator import methodcaller
 from typing import Any
 from collections.abc import Iterable, Callable
@@ -75,11 +75,7 @@ class Column:
 
     @t.override
     def __repr__(self) -> str:
-        return "<{cls} {name!r} title={title!r}>".format(
-            cls=type(self).__name__,
-            name=self.name,
-            title=self.title,
-        )
+        return f"<{type(self).__name__} {self.name!r} title={self.title!r}>"
 
     def build_col_args(self, **kwargs: HtmlParamValue) -> str:
         """Build th html-style attribute string for this column.
@@ -134,8 +130,8 @@ class custom_formatter_column:
         return cls
 
 
-BtnClass: t.TypeAlias = t.Annotated[str, Predicate(methodcaller("startswith", "btn-"))]
-IconClass: t.TypeAlias = t.Annotated[str, Predicate(methodcaller("startswith", "fa-"))]
+type BtnClass = t.Annotated[str, Predicate(methodcaller("startswith", "btn-"))]
+type IconClass = t.Annotated[str, Predicate(methodcaller("startswith", "fa-"))]
 
 
 class BtnColResponse(BaseModel):
@@ -350,11 +346,7 @@ class BootstrapTable(metaclass=BootstrapTableMeta):
 
     @t.override
     def __repr__(self) -> str:
-        return "<{cls} cols={numcols} data_url={data_url!r}>".format(
-            cls=type(self).__name__,
-            numcols=len(self.columns),
-            data_url=self.data_url,
-        )
+        return f"<{type(self).__name__} cols={len(self.columns)} data_url={self.data_url!r}>"
 
     def _init_table_args(self) -> None:
         """Set the defaults of :py:attr:`table_args`"""
@@ -486,7 +478,7 @@ def date_format(
         )
     return DateColResponse(
         formatted=formatter(dt),
-        timestamp=int(datetime.combine(dt, time.min.replace(tzinfo=timezone.utc)).timestamp()),
+        timestamp=int(datetime.combine(dt, time.min.replace(tzinfo=UTC)).timestamp()),
     )
 
 

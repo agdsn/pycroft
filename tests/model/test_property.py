@@ -25,16 +25,12 @@ PROP2 = "test2"
 
 @pytest.fixture(scope="module")
 def property_group1(module_session):
-    group = factories.PropertyGroupFactory(granted={PROP1})
-    module_session.flush()
-    return group
+    return factories.PropertyGroupFactory(granted={PROP1})
 
 
 @pytest.fixture(scope="module")
 def property_group2(module_session):
-    group = factories.PropertyGroupFactory(granted={PROP1, PROP2})
-    module_session.flush()
-    return group
+    return factories.PropertyGroupFactory(granted={PROP1, PROP2})
 
 
 def test_fixtures_correct(session, user, property_group1, property_group2):
@@ -293,7 +289,8 @@ class Test_Membership:
 
 class TestGroup:
     @pytest.fixture(scope="class")
-    def membership(self, class_session, user, utcnow, property_group1):
+    @classmethod
+    def membership(cls, class_session, user, utcnow, property_group1):
         return Membership(
             # use ids to avoid cascades, which causes a warning because this object
             # is not attached to a session
@@ -336,7 +333,8 @@ class TestGroup:
 
 class TestCurrentPropertyView:
     @pytest.fixture(scope="class")
-    def groups(self, class_session):
+    @classmethod
+    def groups(cls, class_session):
         property_group_data = {
             # name, granted, denied
             "active": ({"login", "mail"}, set()),
@@ -349,14 +347,16 @@ class TestCurrentPropertyView:
         }
 
     @pytest.fixture(scope="class")
-    def users(self, class_session):
+    @classmethod
+    def users(cls, class_session):
         return {
             key: factories.UserFactory.create(login=f"user-{key}")
             for key in "active mail violator former".split()
         }
 
     @pytest.fixture(scope="class", autouse=True)
-    def memberships(self, class_session, users, groups):
+    @classmethod
+    def memberships(cls, class_session, users, groups):
         mem_data = [
             # user, group, delta_days_start, delta_days_end
             ("active", "active", -1, None),
@@ -430,14 +430,16 @@ def _iso(date):
 
 class TestEvaluateProperties:
     @pytest.fixture(scope="class")
-    def groups(self, class_session):
+    @classmethod
+    def groups(cls, class_session):
         return [
             PropertyGroupFactory(granted={"good", "other"}),
             PropertyGroupFactory(granted={"bad"}, denied={"good"}),
         ]
 
     @pytest.fixture(scope="class")
-    def mem1(self, class_session, user, groups):
+    @classmethod
+    def mem1(cls, class_session, user, groups):
         # mem1: [2000-01-01 ---------------------- 2000-01-03)
         return MembershipFactory.create(
             user=user,
@@ -446,7 +448,8 @@ class TestEvaluateProperties:
         )
 
     @pytest.fixture(scope="class")
-    def mem2(self, class_session, user, groups):
+    @classmethod
+    def mem2(cls, class_session, user, groups):
         # mem2:                  [2000-01-02 ---------------------- 2000-01-04)
         return MembershipFactory.create(
             user=user,

@@ -8,7 +8,7 @@ sources of logs to a dict.  The latter represents a valid table row to
 """
 
 import typing as t
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from functools import partial
 
 from flask import url_for
@@ -91,7 +91,7 @@ def format_hades_log_entry(interface: SupportsFormat, entry: RadiusLogEntry) -> 
 
 
 def format_custom_hades_message(message: str) -> LogTableRow:
-    date = datetime.now(tz=timezone.utc)
+    date = datetime.now(tz=UTC)
     return LogTableRow(
         created_at=datetime_format(date, formatter=datetime_filter),
         user=UserColResponsePlain(title="Radius"),

@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 from functools import partial
 from itertools import chain
 
@@ -11,12 +11,12 @@ from .base import BaseFactory
 from .user import UserFactory
 
 
-class MembershipFactory(BaseFactory):
+class MembershipFactory(BaseFactory[Membership]):
     class Meta:
         model = Membership
         exclude = ("begins_at", "ends_at")
 
-    begins_at = datetime.now(timezone.utc)
+    begins_at = datetime.now(UTC)
     ends_at = None
     active_during = factory.LazyAttribute(lambda m: interval.closedopen(m.begins_at, m.ends_at))
 
@@ -27,8 +27,8 @@ class MembershipFactory(BaseFactory):
     class Params:
         includes_today = factory.Trait(
             active_during=interval.closedopen(
-                datetime.now(timezone.utc) - timedelta(1),
-                datetime.now(timezone.utc) + timedelta(1),
+                datetime.now(UTC) - timedelta(1),
+                datetime.now(UTC) + timedelta(1),
             ),
         )
 
@@ -40,7 +40,7 @@ def _maybe_append_seq(n, prefix):
     return f"{prefix} {n}"
 
 
-class PropertyGroupFactory(BaseFactory):
+class PropertyGroupFactory(BaseFactory[PropertyGroup]):
     class Meta:
         model = PropertyGroup
         exclude = ("granted", "denied")
@@ -48,7 +48,7 @@ class PropertyGroupFactory(BaseFactory):
     granted = frozenset()
     denied = frozenset()
 
-    name = factory.Sequence(lambda n: "Property group %s" % n)
+    name = factory.Sequence(lambda n: f"Property group {n}")
     permission_level = factory.LazyAttribute(lambda _: 0)
 
     @factory.lazy_attribute

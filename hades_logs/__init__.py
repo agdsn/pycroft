@@ -114,7 +114,7 @@ class HadesLogs:
 
     def fetch_logs(
         self, nasipaddress: str, nasportid: str, limit: int = 100, reduced: bool = True
-    ) -> t.Iterator[RadiusLogEntry]:
+    ) -> t.Iterable[RadiusLogEntry]:
         """Fetch the auth logs of the given port
 
         :param nasipaddress: The IP address of the NAS.
@@ -130,7 +130,7 @@ class HadesLogs:
             reductor = reduce_radius_logs
         else:
 
-            def reductor(x):
+            def reductor(x: t.Iterable[RadiusLogEntry]) -> t.Iterable[RadiusLogEntry]:
                 return x
 
         task = self.create_task(

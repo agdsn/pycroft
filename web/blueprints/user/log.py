@@ -31,7 +31,7 @@ from ..helpers.log_tables import LogTableRow
 logger = logging.getLogger(__name__)
 
 
-def iter_hades_switch_ports(room: Room) -> t.Sequence[Row[tuple[str, IPAddress]]]:
+def iter_hades_switch_ports(room: Room) -> t.Sequence[Row[str, IPAddress]]:
     """Return all tuples of (nasportid, nasipaddress) for a room.
 
     :param room: The room to filter by

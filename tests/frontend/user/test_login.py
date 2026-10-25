@@ -21,12 +21,11 @@ def client(module_test_client: TestClient) -> TestClient:
 @pytest.mark.usefixtures("session")
 class TestUserOidcLogin:
     @pytest.fixture(scope="class")
-    def user(self, class_session: Session):
-        user = UserFactory(
+    @classmethod
+    def user(cls, class_session: Session):
+        return UserFactory(
             login="agdsn",
         )
-        class_session.flush()
-        return user
 
     def test_disabled_login(self, client: TestClient, app: PycroftFlask, user: UserFactory):
         app.config["OIDC_ENABLED"] = False

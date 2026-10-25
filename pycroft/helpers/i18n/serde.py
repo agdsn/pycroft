@@ -136,9 +136,7 @@ def serialize_param(param):
         type_, serializer = next(serializers)
     except StopIteration:
         raise TypeError(
-            "No serialization available for type {} or anysupertype".format(
-                qualified_typename(concrete_type)
-            )
+            f"No serialization available for type {qualified_typename(concrete_type)} or anysupertype"
         ) from None
     return {"type": qualified_typename(type_), "value": serializer(param)}
 

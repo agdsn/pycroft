@@ -15,7 +15,8 @@ class TestUserAddressChange(abc.ABC):
     __test__ = False
 
     @pytest.fixture(scope="class")
-    def address_args(self) -> dict[str, str | None]:
+    @classmethod
+    def address_args(cls) -> dict[str, str | None]:
         return {
             "street": "Blahstraße",
             "number": "5",
@@ -30,7 +31,8 @@ class TestUserAddressChange(abc.ABC):
     def user(self, class_session: Session) -> User: ...
 
     @pytest.fixture(scope="class", autouse=True)
-    def edited_address(self, class_session, user, processor, address_args):
+    @classmethod
+    def edited_address(cls, class_session, user, processor, address_args):
         assert not user.has_custom_address  # fixture sanity assertion
         edit_address(user, processor, **address_args)
 
@@ -60,7 +62,8 @@ class TestUserWithRoomAddressChange(TestUserAddressChange):
     __test__ = True
 
     @pytest.fixture(scope="class")
-    def user(self, class_session: Session) -> User:
+    @classmethod
+    def user(cls, class_session: Session) -> User:
         return UserFactory()
 
     def test_user_has_custom_address(self, user):
@@ -71,7 +74,8 @@ class TestUserWithoutRoomAddressChange(TestUserAddressChange):
     __test__ = True
 
     @pytest.fixture(scope="class")
-    def user(self, class_session: Session) -> User:
+    @classmethod
+    def user(cls, class_session: Session) -> User:
         return UserFactory.create(without_room=True)
 
     def test_user_has_no_custom_address(self, user):

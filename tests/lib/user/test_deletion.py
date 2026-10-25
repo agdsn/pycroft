@@ -70,15 +70,18 @@ class TestArchivableUserSelection:
         scope="class",
         params=[date(2020, 3, 1), date(2020, 1, 1), date(2020, 12, 15)],
     )
-    def end_date(self, request):
+    @classmethod
+    def end_date(cls, request):
         return request.param
 
     @pytest.fixture(scope="class")
-    def do_not_archive_group(self, class_session):
+    @classmethod
+    def do_not_archive_group(cls, class_session):
         return PropertyGroupFactory(granted={"do-not-archive"})
 
     @pytest.fixture(scope="class")
-    def old_user(self, class_session, config, do_not_archive_group, end_date) -> User:
+    @classmethod
+    def old_user(cls, class_session, config, do_not_archive_group, end_date) -> User:
         user = UserFactory.create(
             registered_at=datetime(2000, 1, 1),
             with_membership=True,
@@ -95,7 +98,8 @@ class TestArchivableUserSelection:
         return user
 
     @pytest.fixture(scope="class", autouse=True)
-    def other_users(self, class_session):
+    @classmethod
+    def other_users(cls, class_session):
         return UserFactory.create_batch(5)
 
     @pytest.fixture

@@ -3,6 +3,8 @@
 #  the Apache License, Version 2.0. See the LICENSE file for details
 from typing import cast
 
+import pycroft.crypt_compat  # noqa: F401  — before passlib (PEP 594)
+
 import pytest
 from coverage.annotate import os
 from sqlalchemy import event, select, func, text

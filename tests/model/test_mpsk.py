@@ -81,11 +81,13 @@ class TestMPSKValidators:
                 session.flush()
 
     @pytest.fixture(scope="class")
-    def user(self, class_session):
+    @classmethod
+    def user(cls, class_session):
         user = factories.UserFactory.build(with_host=True)
         class_session.add(user)
         return user
 
     @pytest.fixture(scope="class")
-    def mpsk_client(self):
+    @classmethod
+    def mpsk_client(cls):
         return factories.MPSKFactory()

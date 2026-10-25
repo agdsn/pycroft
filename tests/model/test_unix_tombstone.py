@@ -70,9 +70,7 @@ class TestUnixAccountUidFKey:
     @staticmethod
     @pytest.fixture(scope="class")
     def unix_account(class_session):
-        account = f.UnixAccountFactory()
-        class_session.flush()
-        return account
+        return f.UnixAccountFactory()
 
     @staticmethod
     def test_unix_account_has_tombstone(unix_account):
@@ -103,10 +101,9 @@ def constraints_deferred(session: Session, constraints: t.LiteralString = "all")
 
 class TestUserUnixAccountTombstoneConsistency:
     @pytest.fixture(scope="class")
-    def user(self, class_session) -> User:
-        user = f.UserFactory(with_unix_account=True)
-        class_session.flush()
-        return user
+    @classmethod
+    def user(cls, class_session) -> User:
+        return f.UserFactory(with_unix_account=True)
 
     def test_user_login_change_fails(self, session, user):
         # changing `user.login` does not work due to custom validator
@@ -185,10 +182,9 @@ class TestUserUnixAccountTombstoneConsistency:
 
 class TestUserNoUnixAccount:
     @pytest.fixture(scope="class")
-    def user(self, class_session) -> User:
-        user = f.UserFactory()
-        class_session.flush()
-        return user
+    @classmethod
+    def user(cls, class_session) -> User:
+        return f.UserFactory()
 
     def test_add_new_unix_account_to_user(self, session, user):
         # should also not throw an error.
@@ -202,10 +198,9 @@ class TestUserNoUnixAccount:
 
 class TestUnixAccountNoUser:
     @pytest.fixture(scope="class")
-    def unix_account(self, class_session) -> UnixAccount:
-        ua = f.UnixAccountFactory()
-        class_session.flush()
-        return ua
+    @classmethod
+    def unix_account(cls, class_session) -> UnixAccount:
+        return f.UnixAccountFactory()
 
     def test_create_user_with_existing_unix_account(self, session, unix_account):
         # this should not throw an error,
@@ -220,7 +215,8 @@ class TestUnixAccountNoUser:
 
 class TestTombstoneLifeCycle:
     @pytest.fixture(scope="class")
-    def tombstone(self, class_session):
+    @classmethod
+    def tombstone(cls, class_session):
         tombstone = UnixTombstone(uid=999, login_hash=L_HASH)
         class_session.add(tombstone)
         return tombstone

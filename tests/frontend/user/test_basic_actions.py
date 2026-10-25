@@ -22,10 +22,7 @@ pytestmark = pytest.mark.usefixtures("admin_logged_in")
 
 @pytest.fixture(scope="module")
 def room(module_session: Session) -> Room:
-    room = RoomFactory.create(patched_with_subnet=True)
-    module_session.add(room)
-    module_session.flush()
-    return room
+    return RoomFactory(patched_with_subnet=True)
 
 
 @pytest.fixture(scope="module")
@@ -48,15 +45,14 @@ class TestUserViewingPages:
 @pytest.mark.usefixtures("session")
 class TestInhabitingUser:
     @pytest.fixture(scope="class")
-    def user(self, class_session: Session, config: Config) -> User:
-        user = UserFactory.create(
+    @classmethod
+    def user(cls, class_session: Session, config: Config) -> User:
+        return UserFactory(
             with_host=True,
             with_membership=True,
             membership__includes_today=True,
             membership__group=config.member_group,
         )
-        class_session.flush()
-        return user
 
     def test_blocking_and_unblocking_works(self, client: TestClient, user: User):
         user_show_endpoint = url_for("user.user_show", user_id=user.id)
@@ -115,10 +111,9 @@ class TestInhabitingUser:
 @pytest.mark.usefixtures("session")
 class TestUserMovedOut:
     @pytest.fixture(scope="class")
-    def user(self, class_session: Session) -> User:
-        user = UserFactory.create(room=None, address=AddressFactory())
-        class_session.flush()
-        return user
+    @classmethod
+    def user(cls, class_session: Session) -> User:
+        return UserFactory(room=None, address=AddressFactory())
 
     def test_user_cannot_be_moved_out(self, client: TestClient, user: User):
         # user.room = None  # ???
@@ -156,16 +151,15 @@ class TestUserMovedOut:
 @pytest.mark.usefixtures("session")
 class TestUserEndMembership:
     @pytest.fixture(scope="class")
-    def user(self, class_session: Session, config: Config) -> User:
-        user = UserFactory.create(
+    @classmethod
+    def user(cls, class_session: Session, config: Config) -> User:
+        return UserFactory(
             room=None,
             address=AddressFactory(),
             with_membership=True,
             membership__includes_today=True,
             membership__group=config.member_group,
         )
-        class_session.flush()
-        return user
 
     def test_user_not_found(self, client: TestClient):
         # with client.flashes_message(
@@ -254,9 +248,9 @@ class TestNewUserDatasheet:
         return "00:de:ad:be:ef:00"
 
     @pytest.fixture(scope="class")
-    def other_user(self, class_session, mac) -> User:
+    @classmethod
+    def other_user(cls, class_session, mac) -> User:
         other_user = UserFactory(with_host=True, host__interface__mac=mac)
-        class_session.flush()
         # assert len(other_user.hosts) == 1
         return other_user
 

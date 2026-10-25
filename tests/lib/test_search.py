@@ -24,11 +24,13 @@ def other_user(module_session: Session) -> User:
 @pytest.mark.usefixtures("session")
 class TestSearchUserBaseData:
     @pytest.fixture(scope="class", autouse=True)
-    def property_group(self, class_session) -> PropertyGroup:
+    @classmethod
+    def property_group(cls, class_session) -> PropertyGroup:
         return PropertyGroupFactory.create()
 
     @pytest.fixture(scope="class")
-    def user(self, class_session) -> User:
+    @classmethod
+    def user(cls, class_session) -> User:
         return UserFactory.create(
             with_host=True,
             name="Hans Müller",
@@ -57,15 +59,18 @@ class TestSearchUserBaseData:
 
 class TestUser:
     @pytest.fixture(scope="class", autouse=True)
-    def group(self, class_session):
+    @classmethod
+    def group(cls, class_session):
         return PropertyGroupFactory.create()
 
     @pytest.fixture(scope="class", autouse=True)
-    def old_group(self, class_session):
+    @classmethod
+    def old_group(cls, class_session):
         return PropertyGroupFactory.create()
 
     @pytest.fixture(scope="class", autouse=True)
-    def user(self, class_session, group, old_group):
+    @classmethod
+    def user(cls, class_session, group, old_group):
         user = UserFactory.create(
             with_host=True,
             host__interface__mac="00:de:ad:be:ef:00",

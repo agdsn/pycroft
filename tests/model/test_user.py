@@ -14,7 +14,8 @@ from tests import factories
 
 class Test_User_Passwords:
     @pytest.fixture(scope="class")
-    def user(self, class_session):
+    @classmethod
+    def user(cls, class_session):
         return factories.UserFactory()
 
     def test_get(self, user, session):
@@ -67,12 +68,14 @@ class Test_User_Passwords:
 
 class Test_User_Login:
     @pytest.fixture(scope="class")
-    def user(self, class_session):
+    @classmethod
+    def user(cls, class_session):
         """A persistent user (i.e., in the db)"""
         return factories.UserFactory()
 
     @pytest.fixture(scope="class")
-    def transient_user(self):
+    @classmethod
+    def transient_user(cls):
         """A user not yet in the db"""
         return factories.UserFactory.build()
 
@@ -209,19 +212,23 @@ class Test_User_Login:
 
 class TestUnixAccounts:
     @pytest.fixture(scope="class")
-    def ldap_user(self, class_session):
+    @classmethod
+    def ldap_user(cls, class_session):
         return factories.UserFactory(with_unix_account=True)
 
     @pytest.fixture(scope="class")
-    def dummy_user(self, class_session):
+    @classmethod
+    def dummy_user(cls, class_session):
         return factories.UserFactory()
 
     @pytest.fixture(scope="class")
-    def custom_account(self, class_session):
+    @classmethod
+    def custom_account(cls, class_session):
         return factories.UnixAccountFactory(gid=27)
 
     @pytest.fixture(scope="class")
-    def dummy_account(self, class_session):
+    @classmethod
+    def dummy_account(cls, class_session):
         return factories.UnixAccountFactory()
 
     @pytest.fixture(autouse=True)
@@ -244,11 +251,13 @@ class TestUnixAccounts:
 
 class TestActiveHybridMethods:
     @pytest.fixture(scope="class")
-    def user(self, class_session):
+    @classmethod
+    def user(cls, class_session):
         return factories.UserFactory()
 
     @pytest.fixture(scope="class")
-    def property_group(self, class_session):
+    @classmethod
+    def property_group(cls, class_session):
         return factories.PropertyGroupFactory()
 
     @pytest.fixture
@@ -348,14 +357,14 @@ class Test_has_property:
     DENIED_NAME = "denied"
 
     @pytest.fixture(scope="class")
-    def user(self, class_session):
+    @classmethod
+    def user(cls, class_session):
         return factories.UserFactory()
 
     @pytest.fixture(scope="class", autouse=True)
-    def membership(self, class_session, user):
-        group = factories.PropertyGroupFactory(
-            granted={self.GRANTED_NAME}, denied={self.DENIED_NAME}
-        )
+    @classmethod
+    def membership(cls, class_session, user):
+        group = factories.PropertyGroupFactory(granted={cls.GRANTED_NAME}, denied={cls.DENIED_NAME})
         return factories.MembershipFactory(group=group, user=user, includes_today=True)
 
     @pytest.mark.parametrize(

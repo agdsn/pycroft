@@ -1,5 +1,5 @@
 # TODO: Tests for traffic history
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 
 import pytest
 from sqlalchemy.orm import Session
@@ -11,9 +11,7 @@ from tests import factories as f
 
 @pytest.fixture(scope="module")
 def interface(module_session: Session):
-    i = f.InterfaceFactory()
-    module_session.flush()
-    return i
+    return f.InterfaceFactory()
 
 
 @pytest.mark.parametrize(
@@ -25,10 +23,9 @@ def interface(module_session: Session):
 )
 def test_traffic_volume_cleanup(session, interface: Interface, age_days: int, old: bool):
     f.TrafficVolumeFactory(
-        timestamp=datetime.utcnow() - timedelta(age_days),
+        timestamp=datetime.now(UTC) - timedelta(age_days),
         ip__interface=interface,
     )
-    session.flush()
     num_deleted = delete_old_traffic_data(session)
     assert 0 <= num_deleted <= 1
     got_deleted = num_deleted == 1

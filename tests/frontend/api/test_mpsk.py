@@ -284,23 +284,19 @@ def user_non_member2(module_session) -> User:
 
 @pytest.fixture
 def user_without_wifi_pw(module_session, config) -> User:
-    user = f.UserFactory(
+    return f.UserFactory(
         wifi_passwd_hash=None,
         with_membership=True,
         membership__group=config.member_group,
         membership__includes_today=True,
     )
-    module_session.flush()
-    return user
 
 
 @pytest.fixture
 def user_with_encrypted_wifi(module_session, config) -> User:
-    user = f.UserFactory(
+    return f.UserFactory(
         wifi_passwd_hash="{somecryptprefix}garbledpasswordhash",
         with_membership=True,
         membership__group=config.member_group,
         membership__includes_today=True,
     )
-    module_session.flush()
-    return user

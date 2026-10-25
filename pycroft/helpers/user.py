@@ -10,6 +10,9 @@ import random
 import string
 from hashlib import sha512
 
+# ast-grep-ignore: dont-use-models-in-helpers
+import pycroft.crypt_compat  # noqa: F401  — before passlib (PEP 594)
+
 from passlib.apps import ldap_context
 from passlib.context import CryptContext
 from passlib.pwd import genword
@@ -70,7 +73,7 @@ def verify_password(plaintext_password: str, hash: str) -> bool:
     try:
         return crypt_context.verify(plaintext_password, hash)
     # TypeError is required for user entries not having a hash
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return False
 
 

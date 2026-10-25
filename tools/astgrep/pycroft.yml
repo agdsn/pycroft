@@ -1,0 +1,240 @@
+# Conversion from tools/semgrep.yml for ast-grep 0.45.3.
+# Rules are separated with YAML document markers (---).
+# Note: auto-fixes do not perform name resolution or import management.
+
+id: format-in-deferred-gettext
+language: Python
+severity: error
+message: "Don't format inside deferred_gettext"
+rule:
+  pattern: '$GETTEXT_FN($MESSAGE.format($$$ARGS))'
+constraints:
+  GETTEXT_FN:
+    regex: '^(pycroft\.helpers\.i18n\.)?deferred_gettext$'
+fix: '$GETTEXT_FN($MESSAGE).format($$$ARGS).to_json()'
+
+---
+id: format-in-gettext
+language: Python
+severity: error
+message: "Don't format inside gettext"
+rule:
+  pattern: '$GETTEXT_FN($MESSAGE.format($$$ARGS))'
+constraints:
+  GETTEXT_FN:
+    regex: '^(pycroft\.helpers\.i18n\.)?gettext$'
+fix: '$GETTEXT_FN($MESSAGE).format($$$ARGS)'
+
+---
+id: log-event-with-format
+language: Python
+severity: error
+message: "Don't pass preformatted string literals to log_*event; use deferred_gettext"
+rule:
+  all:
+    - pattern: '$MESSAGE.format($$$ARGS)'
+    - inside:
+        pattern: '$LOG_FN($$$CALL_ARGS)'
+        stopBy: end
+constraints:
+  MESSAGE:
+    kind: string
+  LOG_FN:
+    regex: '^log_.*event$'
+fix: 'deferred_gettext($MESSAGE).format($$$ARGS).to_json()'
+
+---
+id: use-format-instead-of-strftime
+language: Python
+severity: warning
+message: "Use a datetime f-string format instead of strftime"
+rule:
+  pattern: '$DT.strftime($FORMAT)'
+constraints:
+  FORMAT:
+    kind: string
+    regex: '^["\x27][^"\x27]*["\x27]$'
+transform:
+  SPEC:
+    substring:
+      source: $FORMAT
+      startChar: 1
+      endChar: -1
+fix: 'f"{$DT:$SPEC}"'
+
+---
+id: do-not-call-get-with-keywords
+language: Python
+severity: error
+message: "Don't use a keyword argument to pycroft.model.*.get(id=...)"
+rule:
+  pattern: '$MODEL.get(id=$ARG)'
+constraints:
+  MODEL:
+    regex: '^pycroft\.model\.(?:[A-Za-z_]\w*\.)?[A-Za-z_]\w*$'
+fix: '$MODEL.get($ARG)'
+
+---
+id: secure-name-for-password-fields
+language: Python
+severity: error
+message: 'PasswordField requires password or secret in the field name'
+rule:
+  all:
+    - pattern: '$FIELD = $CLASS($$$ARGS)'
+    - inside:
+        kind: class_definition
+        stopBy: end
+constraints:
+  FIELD:
+    all:
+      - kind: identifier
+      - not:
+          regex: '(password|secret)'
+  CLASS:
+    regex: '^(wtforms_widgets\.fields\.core\.|wtforms\.fields\.)?PasswordField$'
+fix: 'secret_$FIELD = $CLASS($$$ARGS)'
+
+---
+id: dont-use-datetimetz-in-migrations
+language: Python
+severity: error
+message: "Use SQLAlchemy's DateTime(timezone=True), not the app's DateTimeTz, in migrations"
+files:
+  - '**/alembic/versions/**/*.py'
+rule:
+  pattern: 'pycroft.model.types.DateTimeTz()'
+fix: 'sa.types.DateTime(timezone=True)'
+
+---
+id: dont-use-models-in-migrations
+language: Python
+severity: error
+message: "Migrations must not import pycroft code; use stable SQLAlchemy types"
+files:
+  - '**/alembic/versions/**/*.py'
+rule:
+  any:
+    - all:
+        - kind: import_statement
+        - regex: '\bpycroft(?:\.[A-Za-z_]\w*)*\b'
+    - all:
+        - kind: import_from_statement
+        - regex: '^from\s+pycroft(?:\.|\s+import\b)'
+
+---
+id: dont-use-models-in-helpers
+language: Python
+severity: error
+message: "pycroft.helpers must not import application code"
+files:
+  - 'pycroft/helpers/**/*.py'
+rule:
+  any:
+    - all:
+        - kind: import_statement
+        - regex: '\bpycroft(?:\.[A-Za-z_]\w*)*\b'
+    - all:
+        - kind: import_from_statement
+        - regex: '^from\s+pycroft(?:\.|\s+import\b)'
+
+---
+id: dont-commit-session-in-tests
+language: Python
+severity: error
+message: "Don't commit the shared test session; flush instead"
+files:
+  - 'tests/**/*.py'
+  - '**/tests/**/*.py'
+rule:
+  pattern: 'session.commit()'
+fix: 'session.flush()'
+
+---
+id: prefer-back-populates-over-backref
+language: Python
+severity: error
+message: "Define the reverse relationship explicitly with back_populates instead of backref"
+files:
+  - 'pycroft/model/**/*.py'
+rule:
+  pattern: 'relationship($$$BEFORE, backref=sqlalchemy.orm.backref($$$ARGS), $$$AFTER)'
+
+---
+id: pydantic-models-set-default-for-optional
+language: Python
+severity: error
+message: "Set = None for optional fields in Pydantic models"
+files:
+  - 'web/**/*.py'
+rule:
+  all:
+    - pattern: '$FIELD: $TYPE | None'
+    - inside:
+        pattern: |
+          class $CLASS(pydantic.BaseModel):
+              $$$BODY
+        stopBy: end
+fix: '$FIELD: $TYPE | None = None'
+
+---
+id: commit-in-context-manager
+language: Python
+severity: error
+message: "Don't commit a session inside its begin_nested() context manager"
+files:
+  - 'web/**/*.py'
+  - 'pycroft/**/*.py'
+rule:
+  all:
+    - pattern: '$SESS.commit()'
+    - inside:
+        pattern: |
+          with $SESS.begin_nested():
+              $$$BODY
+        stopBy: end
+
+---
+id: untyped-flask-endpount
+language: Python
+severity: error
+message: 'Flask route functions should be annotated with ResponseReturnValue'
+files:
+  - 'web/**/*.py'
+rule:
+  all:
+    - kind: function_definition
+    - not:
+        has:
+          field: return_type
+          regex: '.'
+    - inside:
+        kind: decorated_definition
+        has:
+          pattern: '$APP.route($$$ROUTEARGS)'
+          stopBy: end
+
+---
+id: no-plain-a-tags-in-mails
+language: Html
+severity: error
+message: "Use link.render_link(...) and link.render_link_list() instead of raw <a href=...> in mail templates"
+files:
+  - 'pycroft/templates/mail/*.html'
+ignores:
+  - 'pycroft/templates/mail/macros/link.html'
+rule:
+  all:
+    - kind: element
+    - has:
+        kind: start_tag
+        has:
+          kind: tag_name
+          regex: '^a$'
+    - has:
+        kind: start_tag
+        has:
+          kind: attribute
+          has:
+            kind: attribute_name
+            regex: '^href$'

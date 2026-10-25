@@ -5,7 +5,7 @@ from pycroft.model.net import VLAN, Subnet
 from tests.factories.base import BaseFactory
 
 
-class VLANFactory(BaseFactory):
+class VLANFactory(BaseFactory[VLAN]):
     class Meta:
         model = VLAN
 
@@ -18,7 +18,7 @@ class VLANFactory(BaseFactory):
         )
 
 
-class SubnetFactory(BaseFactory):
+class SubnetFactory(BaseFactory[Subnet]):
     class Meta:
         model = Subnet
 

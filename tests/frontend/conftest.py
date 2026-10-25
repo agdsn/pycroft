@@ -66,9 +66,7 @@ def class_test_client(app: PycroftFlask) -> t.Iterator[TestClient]:
 
 @pytest.fixture(scope="module")
 def config(module_session: Session) -> Config:
-    config = ConfigFactory.create()
-    module_session.flush()
-    return config
+    return ConfigFactory()
 
 
 @pytest.fixture(scope="session")
@@ -94,14 +92,12 @@ def admin_group(module_session) -> PropertyGroup:
 
 @pytest.fixture(scope="module")
 def admin(module_session: Session, admin_group, config: Config) -> User:
-    admin = UserFactory.create(
+    return UserFactory(
         login="testadmin2",
         with_membership=True,
         membership__group=AdminPropertyGroupFactory.create(),
         membership__includes_today=True,
     )
-    module_session.flush()
-    return admin
 
 
 @pytest.fixture(scope="module")
@@ -113,7 +109,6 @@ def treasurer(module_session: Session, admin_group: PropertyGroup) -> User:
         membership__includes_today=True,
     )
     MembershipFactory.create(user=treasurer, group=admin_group, includes_today=True)
-    module_session.flush()
     return treasurer
 
 

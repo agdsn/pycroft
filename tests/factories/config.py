@@ -9,7 +9,7 @@ from .finance import AccountFactory, BankAccountFactory
 from .property import PropertyGroupFactory, MemberPropertyGroupFactory
 
 
-class ConfigFactory(BaseFactory):
+class ConfigFactory(BaseFactory[Config]):
     """This is a dummy Config factory, Referencing PropertyGroups with
     no a-priori property relationships and arbitrary Accounts.
     """

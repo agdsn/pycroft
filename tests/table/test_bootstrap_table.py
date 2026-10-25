@@ -40,7 +40,8 @@ class TestColumn:
 
 class TestInstantiatedColumn:
     @pytest.fixture(scope="class")
-    def column(self):
+    @classmethod
+    def column(cls):
         return Column(title="Test Column", name="test_col")
 
     def test_col_args(self, column):
@@ -59,7 +60,8 @@ class TestInstantiatedColumn:
 
 class TestCustomizedColumn:
     @pytest.fixture(scope="class")
-    def rendered_col(self):
+    @classmethod
+    def rendered_col(cls):
         return str(
             Column(title="Test Column", name="test_col", width=3, cell_style="customCellStyle")
         )
@@ -89,7 +91,8 @@ class TestBootstrapTable:
 
 class TestInstantiatedBootstrapTable:
     @pytest.fixture(scope="class")
-    def Table(self):
+    @classmethod
+    def Table(cls):
         class Table_(BootstrapTable):
             class Meta:
                 table_args = {"foo": "bar", "data-cache": "true"}
@@ -100,11 +103,13 @@ class TestInstantiatedBootstrapTable:
         return Table_
 
     @pytest.fixture(scope="class")
-    def table(self, Table):
+    @classmethod
+    def table(cls, Table):
         return Table(data_url="http://dummy")
 
     @pytest.fixture(scope="class")
-    def header(self, table):
+    @classmethod
+    def header(cls, table):
         return str(table.table_header)
 
     def test_header_tags(self, header):
@@ -129,7 +134,8 @@ class TestInstantiatedBootstrapTable:
         assert "someveryspecialargument" in table.render("some-id")
 
     @pytest.fixture(scope="class")
-    def stub_table_render(self):
+    @classmethod
+    def stub_table_render(cls):
         class StubTable(BootstrapTable):
             def __init__(self):
                 super().__init__(data_url="http://dummy")
@@ -151,7 +157,8 @@ class TestInstantiatedBootstrapTable:
         assert len(re.findall(pattern, stub_table_render)) == 1
 
     @pytest.fixture(scope="class")
-    def rendered(self, table):
+    @classmethod
+    def rendered(cls, table):
         return table.render("test_id")
 
     @pytest.mark.parametrize(
@@ -167,7 +174,8 @@ class TestInstantiatedBootstrapTable:
 
 class TestDeclarativeTable:
     @pytest.fixture(scope="class")
-    def table_cls(self):
+    @classmethod
+    def table_cls(cls):
         class Table(BootstrapTable):
             a = Column("Column 1")
             b = Column("Column 2", name="bar")
@@ -190,7 +198,8 @@ class TestDeclarativeTable:
 
 class TestInheritance:
     @pytest.fixture(scope="class")
-    def A(self):
+    @classmethod
+    def A(cls):
         class A_(BootstrapTable):
             a = Column("Foo")
             b = Column("Bar")
@@ -198,7 +207,8 @@ class TestInheritance:
         return A_
 
     @pytest.fixture(scope="class")
-    def B(self, A):
+    @classmethod
+    def B(cls, A):
         class B_(A):
             a = Column("Shizzle")
             c = Column("Baz")
@@ -215,7 +225,8 @@ class TestInheritance:
 
 class TestEmptyTableDefaults:
     @pytest.fixture(scope="class")
-    def EmptyTable(self) -> type[BootstrapTable]:
+    @classmethod
+    def EmptyTable(cls) -> type[BootstrapTable]:
         class A(BootstrapTable):
             pass
 
@@ -240,7 +251,8 @@ class TestEmptyTableDefaults:
 
 class TestTableArgs:
     @pytest.fixture(scope="class")
-    def A(self):
+    @classmethod
+    def A(cls):
         # we only use the metaclass so we don't have to test the defaults again
         class A_(metaclass=BootstrapTableMeta):
             class Meta:
@@ -249,7 +261,8 @@ class TestTableArgs:
         return A_
 
     @pytest.fixture(scope="class")
-    def B(self, A):
+    @classmethod
+    def B(cls, A):
         class B_(A):
             class Meta:
                 table_args = {"arg2": "Antoher value", "arg3": "x"}
@@ -270,7 +283,8 @@ class TestTableArgs:
 
 class TestEnforcedUrlParams:
     @pytest.fixture(scope="class")
-    def A(self):
+    @classmethod
+    def A(cls):
         class A_(BootstrapTable):
             class Meta:
                 enforced_url_params = {"inverted": "yes"}
@@ -291,7 +305,8 @@ class TestEnforcedUrlParams:
 
 class TestSplittedTable:
     @pytest.fixture(scope="class")
-    def table(self):
+    @classmethod
+    def table(cls):
         class Table(SplittedTable):
             splits = (("split1", "Split 1"), ("split2", "Split 2"))
             foo = Column("Foo")
@@ -308,7 +323,8 @@ class TestSplittedTable:
         ]
 
     @pytest.fixture(scope="class")
-    def header(self, table):
+    @classmethod
+    def header(cls, table):
         return str(table.table_header)
 
     def test_table_header_generation(self, header):

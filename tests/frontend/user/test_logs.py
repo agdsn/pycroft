@@ -35,31 +35,34 @@ def get_logs(user_id: int, client: TestClient, **kw) -> list[t.Any]:
     return json["items"]
 
 
-GetLogs: t.TypeAlias = t.Callable[..., list[t.Any]]
+type GetLogs = t.Callable[..., list[t.Any]]
 
 
 class TestAppWithoutHadesLogs:
     @pytest.fixture(scope="class")
-    def app(self) -> PycroftFlask:
+    @classmethod
+    def app(cls) -> PycroftFlask:
         return prepare_app_for_testing(make_app(hades_logs=False))
 
     @pytest.fixture(scope="class")
-    def client(self, class_test_client: TestClient) -> TestClient:
+    @classmethod
+    def client(cls, class_test_client: TestClient) -> TestClient:
         return class_test_client
 
     @pytest.fixture(scope="class", autouse=True)
-    def admin_logged_in(self, admin: User, client: TestClient, app: PycroftFlask):
+    @classmethod
+    def admin_logged_in(cls, admin: User, client: TestClient, app: PycroftFlask):
         with login_context(client, app, admin.login):
             yield
 
     @pytest.fixture(scope="class")
-    def user(self, class_session: Session):
-        user = UserFactory.create(with_host=True, patched=True)
-        class_session.flush()
-        return user
+    @classmethod
+    def user(cls, class_session: Session):
+        return UserFactory(with_host=True, patched=True)
 
     @pytest.fixture(scope="class")
-    def logs(self, user: User, client: TestClient) -> GetLogs:
+    @classmethod
+    def logs(cls, user: User, client: TestClient) -> GetLogs:
         def _logs(**kwargs) -> list[t.Any]:
             return get_logs(user.id, client, **kwargs)
 
@@ -87,24 +90,29 @@ class TestAppWithoutHadesLogs:
 @pytest.mark.usefixtures("admin")
 class TestRoomAndUserLogDisplay:
     @pytest.fixture(scope="class", autouse=True)
-    def admin_logged_in(self, admin, class_test_client: TestClient, app: PycroftFlask):
+    @classmethod
+    def admin_logged_in(cls, admin, class_test_client: TestClient, app: PycroftFlask):
         with login_context(class_test_client, app, admin.login):
             yield
 
     @pytest.fixture(scope="class")
-    def user(self, class_session: Session) -> User:
+    @classmethod
+    def user(cls, class_session: Session) -> User:
         return UserFactory.create()
 
     @pytest.fixture(scope="class", autouse=True)
-    def room_log_entry(self, admin: User, class_session: Session, user: User) -> RoomLogEntry:
+    @classmethod
+    def room_log_entry(cls, admin: User, class_session: Session, user: User) -> RoomLogEntry:
         return RoomLogEntryFactory(author=admin, room=user.room)
 
     @pytest.fixture(scope="class", autouse=True)
-    def user_log_entry(self, admin: User, class_session: Session, user: User) -> UserLogEntry:
+    @classmethod
+    def user_log_entry(cls, admin: User, class_session: Session, user: User) -> UserLogEntry:
         return UserLogEntryFactory(author=admin, user=user)
 
     @pytest.fixture(scope="class")
-    def logs(self, user, class_test_client: TestClient) -> GetLogs:
+    @classmethod
+    def logs(cls, user, class_test_client: TestClient) -> GetLogs:
         def _logs(**kwargs) -> list[t.Any]:
             return get_logs(user.id, class_test_client, **kwargs)
 
@@ -134,21 +142,24 @@ class TestDummyHadesLogs:
     """Frontend Tests for the endpoints utilizing live Hades Logs"""
 
     @pytest.fixture(scope="class", autouse=True)
-    def user(self, class_session):
+    @classmethod
+    def user(cls, class_session):
         return UserFactory.create(with_host=True, patched=True)
 
     @pytest.fixture(scope="class")
-    def other_user(self, class_session):
+    @classmethod
+    def other_user(cls, class_session):
         return UserFactory.create()
 
     @pytest.fixture(scope="class", autouse=True)
-    def user_and_log_entries(self, class_session: Session, admin: User, user: User) -> None:
+    @classmethod
+    def user_and_log_entries(cls, class_session: Session, admin: User, user: User) -> None:
         RoomLogEntryFactory.create(author=admin, room=user.room)
         UserLogEntryFactory.create(author=admin, user=user)
-        class_session.flush()
 
     @pytest.fixture(scope="class")
-    def app(self) -> PycroftFlask:
+    @classmethod
+    def app(cls) -> PycroftFlask:
         """Overridden flask app with `HadesLogs` pointing at stub RPC instance"""
         app = prepare_app_for_testing(make_app(hades_logs=False))
         dummy_config = get_hades_logs_config()
@@ -157,12 +168,14 @@ class TestDummyHadesLogs:
         return app
 
     @pytest.fixture(scope="class", autouse=True)
-    def admin_logged_in(self, admin: User, class_test_client: TestClient, app: PycroftFlask):
+    @classmethod
+    def admin_logged_in(cls, admin: User, class_test_client: TestClient, app: PycroftFlask):
         with login_context(class_test_client, app, admin.login):
             yield
 
     @pytest.fixture(scope="class")
-    def logs(self, user: User, class_test_client: TestClient) -> GetLogs:
+    @classmethod
+    def logs(cls, user: User, class_test_client: TestClient) -> GetLogs:
         def _logs(**kwargs) -> list[t.Any]:
             user_id = kwargs.pop("user_id", None) or user.id
             return get_logs(user_id, class_test_client, **kwargs)

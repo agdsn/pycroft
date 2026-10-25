@@ -364,7 +364,7 @@ def building_level_rooms_json(
     level_inhabitants: dict[Room, list[User]] = defaultdict(list)
     for room, user in rooms_users_q.all():
         if user is not None:
-            level_inhabitants[room].append(t.cast(User, user))
+            level_inhabitants[room].append(user)
         else:
             # Ensure room is in level_inhabitants
             level_inhabitants[room]
@@ -710,14 +710,10 @@ def overcrowded_json(building_id: int) -> ResponseReturnValue:
         items=[
             RoomOvercrowdedRow(
                 room=LinkColResponse(
-                    title="{} / {:02d} / {}".format(
-                        (r := inhabitants[0].room).building.short_name,  # ty: ignore[unresolved-attribute]
-                        r.level,  # ty: ignore[unresolved-attribute]
-                        r.number,  # ty: ignore[unresolved-attribute]
-                    ),
+                    title=f"{(r := t.cast(Room, inhabitants[0].room)).building.short_name} / {r.level:02d} / {r.number}",
                     href=url_for(
                         "facilities.room_show",
-                        room_id=r.id,  # ty: ignore[unresolved-attribute]
+                        room_id=r.id,
                     ),
                 ),
                 inhabitants=[user_button(user) for user in inhabitants],

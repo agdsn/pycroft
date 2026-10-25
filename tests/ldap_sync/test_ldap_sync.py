@@ -41,14 +41,16 @@ from tests.ldap_sync import _cleanup_conn
 
 class TestEmptyLdap:
     @pytest.fixture(scope="class")
-    def desired_user(self):
+    @classmethod
+    def desired_user(cls):
         return UserRecord(dn=types.DN("user"), attrs={})
 
 
 @pytest.mark.usefixtures("muted_ldap_logger")
 class TestEmptyDatabase:
     @pytest.fixture(scope="class", autouse=True)
-    def users(self, class_session):
+    @classmethod
+    def users(cls, class_session):
         return UserFactory.create_batch(5)
 
     def test_no_users_fetched(self, session):
@@ -59,13 +61,15 @@ class TestOneUserFetch:
     PROPNAME = "mail"
 
     @pytest.fixture(scope="class")
-    def propgroup(self, class_session) -> PropertyGroup:
+    @classmethod
+    def propgroup(cls, class_session) -> PropertyGroup:
         return PropertyGroupFactory.create(
-            name="my propgroup", granted={self.PROPNAME, "ldap_login_enabled"}
+            name="my propgroup", granted={cls.PROPNAME, "ldap_login_enabled"}
         )
 
     @pytest.fixture(scope="class", autouse=True)
-    def user(self, class_session, propgroup) -> User:
+    @classmethod
+    def user(cls, class_session, propgroup) -> User:
         return UserFactory.create(
             name="Hans Wurst",
             login="hans",
@@ -93,14 +97,16 @@ class TestOneUserFetch:
 
 class TestMultipleUsersFilter:
     @pytest.fixture(scope="class")
-    def propgroup(self, class_session) -> PropertyGroup:
+    @classmethod
+    def propgroup(cls, class_session) -> PropertyGroup:
         return PropertyGroupFactory.create(
             name="my property group",
             granted={"mail", "ldap_login_enabled"},
         )
 
     @pytest.fixture(scope="class")
-    def users(self, class_session, propgroup) -> tuple[User, User]:
+    @classmethod
+    def users(cls, class_session, propgroup) -> tuple[User, User]:
         return UserFactory.create_batch(
             2,
             with_membership=True,
@@ -133,7 +139,8 @@ def test_adding_an_entry_works(conn, clean_ldap_base, sync_config):
 @pytest.mark.usefixtures("clean_ldap_base")
 class LdapSyncerTestBase:
     @pytest.fixture(scope="class", autouse=True)
-    def users(self, class_session):
+    @classmethod
+    def users(cls, class_session):
         u1, u2 = UserFactory.create_batch(2, with_unix_account=True)
         inconsistent = UserFactory.create(with_unix_account=True, email=None)
 
@@ -155,23 +162,27 @@ class LdapSyncerTestBase:
         )
 
     @pytest.fixture(scope="class")
-    def class_conn(self, get_connection) -> ldap3.Connection:
+    @classmethod
+    def class_conn(cls, get_connection) -> ldap3.Connection:
         with get_connection() as conn:
             yield conn
         _cleanup_conn(conn)
 
     @pytest.fixture(scope="class")
-    def user_records_to_sync(self, class_session, sync_config, users) -> list[UserRecord]:
+    @classmethod
+    def user_records_to_sync(cls, class_session, sync_config, users) -> list[UserRecord]:
         return list(
             fetch_db_users(class_session, sync_config.user_base_dn, sync_config.required_property)
         )
 
     @pytest.fixture(scope="class")
-    def initial_ldap_user_records(self, class_conn, sync_config) -> list[UserRecord]:
+    @classmethod
+    def initial_ldap_user_records(cls, class_conn, sync_config) -> list[UserRecord]:
         return list(fetch_ldap_users(class_conn, base_dn=sync_config.user_base_dn))
 
     @pytest.fixture(scope="class")
-    def group_records_to_sync(self, class_session, sync_config, users) -> list[GroupRecord]:
+    @classmethod
+    def group_records_to_sync(cls, class_session, sync_config, users) -> list[GroupRecord]:
         return list(
             fetch_db_groups(
                 class_session,
@@ -181,11 +192,13 @@ class LdapSyncerTestBase:
         )
 
     @pytest.fixture(scope="class")
-    def initial_ldap_group_records(self, class_conn, sync_config) -> list[GroupRecord]:
+    @classmethod
+    def initial_ldap_group_records(cls, class_conn, sync_config) -> list[GroupRecord]:
         return list(fetch_ldap_groups(class_conn, base_dn=sync_config.group_base_dn))
 
     @pytest.fixture(scope="class")
-    def property_records_to_sync(self, class_session, sync_config, users) -> list[GroupRecord]:
+    @classmethod
+    def property_records_to_sync(cls, class_session, sync_config, users) -> list[GroupRecord]:
         return list(
             fetch_db_properties(
                 session=class_session,
@@ -195,12 +208,14 @@ class LdapSyncerTestBase:
         )
 
     @pytest.fixture(scope="class")
-    def initial_ldap_property_records(self, class_conn, sync_config) -> list[GroupRecord]:
+    @classmethod
+    def initial_ldap_property_records(cls, class_conn, sync_config) -> list[GroupRecord]:
         return list(fetch_ldap_properties(class_conn, base_dn=sync_config.property_base_dn))
 
     @pytest.fixture(scope="class")
+    @classmethod
     def actions(
-        self,
+        cls,
         initial_ldap_user_records,
         initial_ldap_group_records,
         initial_ldap_property_records,
@@ -215,7 +230,8 @@ class LdapSyncerTestBase:
         ]
 
     @pytest.fixture(scope="class")
-    def sync_all(self, actions):
+    @classmethod
+    def sync_all(cls, actions):
         def sync_all(conn: ldap3.Connection):
             # TODO this is broken.
             #  In this sort of integration test, we want `sync_all` to fetch and sync,
@@ -340,7 +356,8 @@ class TestLdapSyncerOnceSynced(LdapSyncerTestBase):
             assert_attributes_equal(records[ldap_record.dn], ldap_record)
 
     @pytest.fixture(scope="class")
-    def filter_members(self, user_records_to_sync):
+    @classmethod
+    def filter_members(cls, user_records_to_sync):
         def filter_members(members):
             """Remove users that are not exported."""
             return [m for m in members if any(u.attrs["uid"] == m for u in user_records_to_sync)]
@@ -348,7 +365,8 @@ class TestLdapSyncerOnceSynced(LdapSyncerTestBase):
         return filter_members
 
     @pytest.fixture(scope="class")
-    def with_members_filtered(self, filter_members):
+    @classmethod
+    def with_members_filtered(cls, filter_members):
         def with_members_filtered(record):
             record.attrs["member"] = filter_members(record.attrs["member"])
             return record

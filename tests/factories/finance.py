@@ -20,7 +20,7 @@ from pycroft.model.finance import (
 from .base import BaseFactory
 
 
-class AccountFactory(BaseFactory):
+class AccountFactory(BaseFactory[Account]):
     class Meta:
         model = Account
 
@@ -38,7 +38,7 @@ class AccountFactory(BaseFactory):
     )
 
 
-class BankAccountFactory(BaseFactory):
+class BankAccountFactory(BaseFactory[BankAccount]):
     class Meta:
         model = BankAccount
 
@@ -53,7 +53,7 @@ class BankAccountFactory(BaseFactory):
     account = SubFactory(AccountFactory, type="BANK_ASSET")
 
 
-class BankAccountActivityFactory(BaseFactory):
+class BankAccountActivityFactory(BaseFactory[BankAccountActivity]):
     class Meta:
         model = BankAccountActivity
 
@@ -69,7 +69,7 @@ class BankAccountActivityFactory(BaseFactory):
     # transaction, account both None
 
 
-class MembershipFeeFactory(BaseFactory):
+class MembershipFeeFactory(BaseFactory[MembershipFee]):
     class Meta:
         model = MembershipFee
 
@@ -83,9 +83,15 @@ class MembershipFeeFactory(BaseFactory):
     ends_on = LazyAttribute(lambda o: last_day_of_month(session.utcnow()))
 
 
-class SplitFactory(BaseFactory):
+# do not use directly, as transactions and splits must be persisted together.
+class _SplitFactory(BaseFactory[Split]):
     class Meta:
         model = Split
+
+    @classmethod
+    def _create(cls, model_class, *a, **kw):
+        """Disable persistence by default, move responsibility to TransactionFactory"""
+        return model_class(*a, **kw)
 
     # Required
     amount = 0
@@ -96,9 +102,21 @@ class SplitFactory(BaseFactory):
     transaction = None
 
 
-class TransactionFactory(BaseFactory):
+class TransactionFactory(BaseFactory[Transaction]):
     class Meta:
         model = Transaction
+
+    @classmethod
+    def _create(cls, model_class, *a, **kw):
+        """Defer persistence to `_after_postgeneration`"""
+        return model_class(*a, **kw)
+
+    @classmethod
+    def _after_postgeneration(cls, obj, create, results):
+        if create:
+            session = cls._meta.sqlalchemy_session
+            session.add(obj)
+            session.flush()
 
     description = Faker("word")
     author = SubFactory("tests.factories.user.UserFactory")
@@ -109,5 +127,5 @@ class TransactionFactory(BaseFactory):
     confirmed = True
 
     splits = RelatedFactoryList(
-        SplitFactory, factory_related_name="transaction", size=2, amount=Iterator([5, -5])
+        _SplitFactory, factory_related_name="transaction", size=2, amount=Iterator([5, -5])
     )

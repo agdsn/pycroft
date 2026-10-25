@@ -31,7 +31,8 @@ def test_plain_init_works():
 
 class TestUnconfiguredInitialization:
     @pytest.fixture(scope="class")
-    def app(self):
+    @classmethod
+    def app(cls):
         return Flask("test")
 
     def test_init_initializes_app(self, app, caplog):
@@ -98,7 +99,8 @@ class TestRegisteredExtension(ConfiguredFlaskAppTestBase):
     """``HadesLogs`` is now registered to the app"""
 
     @pytest.fixture(scope="class")
-    def hades_logs(self, app):
+    @classmethod
+    def hades_logs(cls, app):
         return HadesLogs(app)
 
     def test_celery_app_name_passed(self, hades_logs, app):
@@ -119,7 +121,8 @@ class TestManualTimeoutConfigured(ConfiguredFlaskAppTestBase):
     """Configure a manual timeout and see it was passed"""
 
     @pytest.fixture(scope="class")
-    def hades_logs(self, app):
+    @classmethod
+    def hades_logs(cls, app):
         app.config["HADES_TIMEOUT"] = 10
         return HadesLogs(app)
 
@@ -131,11 +134,13 @@ class TestTaskCreated(ConfiguredFlaskAppTestBase):
     """Provide a task created by :py:meth`create_task`"""
 
     @pytest.fixture(scope="class")
-    def hades_logs(self, app):
+    @classmethod
+    def hades_logs(cls, app):
         return HadesLogs(app)
 
     @pytest.fixture(scope="class")
-    def task(self, hades_logs):
+    @classmethod
+    def task(cls, hades_logs):
         return hades_logs.create_task("taskname", "foo", bar="baz")
 
     def test_task_bound_to_app(self, task, hades_logs):
@@ -156,7 +161,8 @@ class TestCorrectURIsConfigured:
     """Provides ``HadesLogs`` with syntactically correct URIs"""
 
     @pytest.fixture(scope="class")
-    def hades_logs(self):
+    @classmethod
+    def hades_logs(cls) -> HadesLogs:
         app = Flask("test")
         app.config.update(
             {
@@ -174,7 +180,7 @@ class TestCorrectURIsConfigured:
         with pytest.raises(OperationalError):
             hades_logs.celery.signature("").apply_async().wait()
 
-    def test_fetch_logs_logs_and_raises_connection_refused(self, hades_logs, caplog):
+    def test_fetch_logs_logs_and_raises_connection_refused(self, hades_logs: HadesLogs, caplog):
         with (
             pytest.raises(HadesOperationalError),
             caplog.at_level(logging.INFO, logger="hades_logs"),

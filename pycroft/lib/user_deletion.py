@@ -41,7 +41,7 @@ class ArchivableMemberInfo(Protocol):
 def select_archivable_members(
     current_year: int,
     years_following_eom: int,
-) -> tuple[Select[tuple[User, int, datetime]], CTE]:
+) -> tuple[Select[User, int, datetime], CTE]:
     """Get all members whose year(end of last membership) + 1 + years_following_eom <= current year.
 
     legal grounds:
@@ -60,7 +60,7 @@ def select_archivable_members(
     last_mem = select_user_and_last_mem().cte("last_mem").prefix_with("materialized")
     return (
         t.cast(
-            Select[tuple[User, int, datetime]],
+            Select[User, int, datetime],
             select()
             .select_from(last_mem)
             # Join the granted `do-not-archive` property, if existent
@@ -130,7 +130,7 @@ def get_archivable_members(
     )
 
 
-def scrubbable_mails_stmt(year: int) -> Select[tuple[User]]:
+def scrubbable_mails_stmt(year: int) -> Select[User]:
     """Users whose mails can be scrubbed
 
     Definition:
@@ -157,7 +157,7 @@ def scrubbable_mails(session: Session) -> ScalarResult[User]:
 
 def scrubbable_mails_count(session: Session, year: int) -> int | None:
     stmt = scrubbable_mails_stmt(year)
-    return session.scalar(t.cast(Select[tuple[int]], stmt.with_only_columns(func.count())))
+    return session.scalar(stmt.with_only_columns(func.count()))
 
 
 def scrub_mail(session: Session, user: User, author: User) -> None:
@@ -175,7 +175,7 @@ def scrub_mail(session: Session, user: User, author: User) -> None:
 def scrub_all_mails(
     session: Session,
     author: User,
-    user_filter: t.Callable[[Select[tuple[User]]], Select[tuple[User]]] | None = None,
+    user_filter: t.Callable[[Select[User]], Select[User]] | None = None,
 ) -> ScalarResult[int]:
     return session.scalars(scrub_all_mails_stmt(utcnow().year, author.id, user_filter))
 
@@ -183,8 +183,8 @@ def scrub_all_mails(
 def scrub_all_mails_stmt(
     year: int,
     author_id: int,
-    user_filter: t.Callable[[Select[tuple[User]]], Select[tuple[User]]] | None = None,
-) -> Select[tuple[int]]:
+    user_filter: t.Callable[[Select[User]], Select[User]] | None = None,
+) -> Select[int]:
     users_with_mail = (user_filter or identity)(scrubbable_mails_stmt(year))
     ids_subq = users_with_mail.with_only_columns(User.id).scalar_subquery()
     removed_mail_user_ids = (
@@ -271,7 +271,7 @@ def scrub_all_mails_stmt(
     )
 
 
-def scrubbable_hosts_stmt(year: int) -> Select[tuple[Host]]:
+def scrubbable_hosts_stmt(year: int) -> Select[Host]:
     """All the hosts we can delete.
 
     Deleting them will delete interfaces and assigned IPs by cascade.
@@ -288,7 +288,7 @@ def scrubbable_hosts_stmt(year: int) -> Select[tuple[Host]]:
     return stmt.join(Host).with_only_columns(Host).distinct()
 
 
-def scrubbable_dates_of_birth_stmt(year: int) -> Select[tuple[User]]:
+def scrubbable_dates_of_birth_stmt(year: int) -> Select[User]:
     """All the users whose date of birth we can delete.
 
     Definition:
@@ -304,7 +304,7 @@ def scrubbable_dates_of_birth_stmt(year: int) -> Select[tuple[User]]:
     return stmt.filter(User.birthdate.is_not(None)).with_only_columns(User).distinct()
 
 
-def scrubbable_swdd_person_ids(year: int) -> Select[tuple[User]]:
+def scrubbable_swdd_person_ids(year: int) -> Select[User]:
     """All the users whose ``swdd_person_id`` (“Debitorennummer”) we can delete
 
     .. epigraph::
@@ -320,7 +320,7 @@ def scrubbable_swdd_person_ids(year: int) -> Select[tuple[User]]:
     return stmt.filter(User.swdd_person_id.is_not(None)).with_only_columns(User).distinct()
 
 
-def scrubbable_room_history_entries(year: int) -> Select[tuple[RoomHistoryEntry]]:
+def scrubbable_room_history_entries(year: int) -> Select[RoomHistoryEntry]:
     """All the room history entries we can delete
 
     .. epigraph::
@@ -333,7 +333,7 @@ def scrubbable_room_history_entries(year: int) -> Select[tuple[RoomHistoryEntry]
     return stmt.join(User.room_history_entries).with_only_columns(RoomHistoryEntry).distinct()
 
 
-def scrubbable_name(year: int) -> Select[tuple[User]]:
+def scrubbable_name(year: int) -> Select[User]:
     """All the users whose ``name`` can be deleted
 
     .. epigraph::
@@ -346,7 +346,7 @@ def scrubbable_name(year: int) -> Select[tuple[User]]:
     return stmt.filter(User.name.is_not(None)).with_only_columns(User).distinct()
 
 
-def scrubbable_address(year: int) -> Select[tuple[User]]:
+def scrubbable_address(year: int) -> Select[User]:
     """All the users whose ``address_id`` can be deleted
 
     .. epigraph::

@@ -1,7 +1,8 @@
 # Copyright (c) 2016 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from factory import SubFactory, LazyAttribute, Sequence, Trait, RelatedFactoryList, post_generation
+from factory.declarations import Maybe, SelfAttribute
+from factory import SubFactory, LazyAttribute, Sequence, Trait, RelatedFactoryList
 from factory.faker import Faker
 
 from pycroft.model.facilities import Site, Building, Room
@@ -11,14 +12,14 @@ from .base import BaseFactory
 from .address import AddressFactory
 
 
-class SiteFactory(BaseFactory):
+class SiteFactory(BaseFactory[Site]):
     class Meta:
         model = Site
 
     name = Faker("street_name")
 
 
-class BuildingFactory(BaseFactory):
+class BuildingFactory(BaseFactory[Building]):
     class Meta:
         model = Building
 
@@ -30,7 +31,7 @@ class BuildingFactory(BaseFactory):
     fee_account = SubFactory(AccountFactory, type="REVENUE")
 
 
-class RoomFactory(BaseFactory):
+class RoomFactory(BaseFactory[Room]):
     class Meta:
         model = Room
 
@@ -51,30 +52,23 @@ class RoomFactory(BaseFactory):
                 "room",
                 size=1,
                 patched=True,
-                switch_port__default_vlans__create_subnet=True,
+                switch_port__with_subnet=True,
             )
         )
 
 
-class PatchPortFactory(BaseFactory):
+class PatchPortFactory(BaseFactory[PatchPort]):
     class Meta:
         model = PatchPort
 
     room = SubFactory(RoomFactory)
-    switch_room = None
     name = "??"
-    switch_port = None
+    switch_port = None  # goal: if set, dictates switch_room!
+    switch_room = Maybe(
+        decider="switch_port",
+        yes_declaration=SelfAttribute("switch_port.switch.host.room"),
+        no_declaration=SubFactory(RoomFactory),
+    )
 
     class Params:
         patched = Trait(switch_port=SubFactory("tests.factories.host.SwitchPortFactory"))
-
-    # noinspection PyMethodParameters
-    @post_generation
-    def post(obj: PatchPort, create, extracted, **kwargs):
-        # Ensure that patched ports terminate in the switch room
-        if obj.switch_room:
-            return  # customly set
-        if obj.switch_port:
-            obj.switch_room = obj.switch_port.switch.host.room
-        else:
-            obj.switch_room = RoomFactory.build()
