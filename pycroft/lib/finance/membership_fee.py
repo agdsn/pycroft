@@ -1,8 +1,8 @@
 #  Copyright (c) 2023. The Pycroft Authors. See the AUTHORS file.
 #  This file is part of the Pycroft project and licensed under the terms of
 #  the Apache License, Version 2.0. See the LICENSE file for details
+from sqlalchemy.dialects.postgresql import distinct_on
 
-import typing
 import typing as t
 from datetime import date, timedelta
 from decimal import Decimal
@@ -74,7 +74,7 @@ def get_first_applied_membership_fee() -> MembershipFee | None:
 membership_fee_description = deferred_gettext("Mitgliedsbeitrag {fee_name}")
 
 
-@typing.no_type_check
+@t.no_type_check
 # this „2.0-style select“ is only completely supported on a typing level when we have the v2.0
 #  typing infrastructure (post-mypy plugin).
 #  See https://docs.sqlalchemy.org/en/14/orm/extensions/mypy.html#mypy-pep-484-support-for-orm-mappings
@@ -87,7 +87,7 @@ def users_eligible_for_fee_query(membership_fee: MembershipFee) -> CTE:
     rhe_begin = RoomHistoryEntry.__table__.alias()
 
     fee_account_ids_stmt = union(
-        select(Account.id).join(Building).distinct(Account.id),
+        select(Account.id).join(Building).ext(distinct_on(Account.id)),
         select(Config.membership_fee_account_id),
     )
     fee_accounts_ids = set(session.session.scalars(fee_account_ids_stmt))
@@ -197,7 +197,7 @@ def users_eligible_for_fee_query(membership_fee: MembershipFee) -> CTE:
         )
         # Only those users who had the `membership_fee` property on `booking_begin` or
         # `booking_end`
-        .where(or_(fee_prop_beginning.column.is_not(None), fee_prop_end.column.is_not(None)))
+        .where(or_(fee_prop_beginning.c.user_id.is_not(None), fee_prop_end.c.user_id.is_not(None)))
         .distinct()
         .cte("membership_fee_users")
     )
