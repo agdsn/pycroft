@@ -93,6 +93,7 @@ class TestBankAccount:
                     "bank": bank_account.bank,
                     "account_number": bank_account.account_number,
                     "routing_number": bank_account.routing_number,
+                    "owner": "LMAO",
                     "iban": bank_account.iban,
                     "bic": bank_account.bic,
                     "fints": bank_account.fints_endpoint,
