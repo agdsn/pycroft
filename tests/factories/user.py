@@ -19,7 +19,7 @@ from .finance import AccountFactory
 PASSWORD = "{SHA}W6ph5Mm5Pz8GgiULbPgzG37mj9g="
 
 
-class UserFactory(BaseFactory):
+class UserFactory(BaseFactory[User]):
     class Meta:
         model = User
 
@@ -98,7 +98,7 @@ class UserFactory(BaseFactory):
                 setattr(rhe, key, value)
 
 
-class UnixAccountFactory(BaseFactory):
+class UnixAccountFactory(BaseFactory[UnixAccount]):
     class Meta:
         model = UnixAccount
 

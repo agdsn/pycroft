@@ -20,7 +20,7 @@ from pycroft.model.finance import (
 from .base import BaseFactory
 
 
-class AccountFactory(BaseFactory):
+class AccountFactory(BaseFactory[Account]):
     class Meta:
         model = Account
 
@@ -38,7 +38,7 @@ class AccountFactory(BaseFactory):
     )
 
 
-class BankAccountFactory(BaseFactory):
+class BankAccountFactory(BaseFactory[BankAccount]):
     class Meta:
         model = BankAccount
 
@@ -53,7 +53,7 @@ class BankAccountFactory(BaseFactory):
     account = SubFactory(AccountFactory, type="BANK_ASSET")
 
 
-class BankAccountActivityFactory(BaseFactory):
+class BankAccountActivityFactory(BaseFactory[BankAccountActivity]):
     class Meta:
         model = BankAccountActivity
 
@@ -69,7 +69,7 @@ class BankAccountActivityFactory(BaseFactory):
     # transaction, account both None
 
 
-class MembershipFeeFactory(BaseFactory):
+class MembershipFeeFactory(BaseFactory[MembershipFee]):
     class Meta:
         model = MembershipFee
 
@@ -83,7 +83,7 @@ class MembershipFeeFactory(BaseFactory):
     ends_on = LazyAttribute(lambda o: last_day_of_month(session.utcnow()))
 
 
-class SplitFactory(BaseFactory):
+class SplitFactory(BaseFactory[Split]):
     class Meta:
         model = Split
 
@@ -96,7 +96,7 @@ class SplitFactory(BaseFactory):
     transaction = None
 
 
-class TransactionFactory(BaseFactory):
+class TransactionFactory(BaseFactory[Transaction]):
     class Meta:
         model = Transaction
 

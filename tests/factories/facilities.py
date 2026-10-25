@@ -11,14 +11,14 @@ from .base import BaseFactory
 from .address import AddressFactory
 
 
-class SiteFactory(BaseFactory):
+class SiteFactory(BaseFactory[Site]):
     class Meta:
         model = Site
 
     name = Faker("street_name")
 
 
-class BuildingFactory(BaseFactory):
+class BuildingFactory(BaseFactory[Building]):
     class Meta:
         model = Building
 
@@ -30,7 +30,7 @@ class BuildingFactory(BaseFactory):
     fee_account = SubFactory(AccountFactory, type="REVENUE")
 
 
-class RoomFactory(BaseFactory):
+class RoomFactory(BaseFactory[Room]):
     class Meta:
         model = Room
 
@@ -56,7 +56,7 @@ class RoomFactory(BaseFactory):
         )
 
 
-class PatchPortFactory(BaseFactory):
+class PatchPortFactory(BaseFactory[PatchPort]):
     class Meta:
         model = PatchPort
 

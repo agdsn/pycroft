@@ -19,7 +19,7 @@ class UnicastMacProvider(BaseProvider):
 factory.Faker.add_provider(UnicastMacProvider)
 
 
-class IPFactory(BaseFactory):
+class IPFactory(BaseFactory[IP]):
     class Meta:
         model = IP
         exclude = ("str_address",)
@@ -31,7 +31,7 @@ class IPFactory(BaseFactory):
     subnet = factory.SubFactory(SubnetFactory, address=IPNetwork("0.0.0.0/0"))
 
 
-class InterfaceFactory(BaseFactory):
+class InterfaceFactory(BaseFactory[Interface]):
     class Meta:
         model = Interface
 
@@ -40,7 +40,7 @@ class InterfaceFactory(BaseFactory):
     ip = factory.RelatedFactory(IPFactory, "interface")
 
 
-class BareHostFactory(BaseFactory):
+class BareHostFactory(BaseFactory[Host]):
     """A host without owner or interface."""
 
     class Meta:
@@ -54,7 +54,7 @@ class HostFactory(BareHostFactory):
     interface = factory.RelatedFactory(InterfaceFactory, "host")
 
 
-class SwitchFactory(BaseFactory):
+class SwitchFactory(BaseFactory[Switch]):
     class Meta:
         model = Switch
 
@@ -63,7 +63,7 @@ class SwitchFactory(BaseFactory):
     switch_port = factory.RelatedFactory("tests.factories.host.SwitchPortFactory", "switch")
 
 
-class SwitchPortFactory(BaseFactory):
+class SwitchPortFactory(BaseFactory[SwitchPort]):
     class Meta:
         model = SwitchPort
 

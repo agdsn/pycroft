@@ -6,7 +6,7 @@ from .facilities import RoomFactory
 from .user import UserFactory
 
 
-class UserLogEntryFactory(BaseFactory):
+class UserLogEntryFactory(BaseFactory[UserLogEntry]):
     class Meta:
         model = UserLogEntry
 
@@ -16,7 +16,7 @@ class UserLogEntryFactory(BaseFactory):
     created_at = None
 
 
-class RoomLogEntryFactory(BaseFactory):
+class RoomLogEntryFactory(BaseFactory[RoomLogEntry]):
     class Meta:
         model = RoomLogEntry
 

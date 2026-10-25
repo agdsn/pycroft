@@ -11,7 +11,7 @@ from .base import BaseFactory
 from .user import UserFactory
 
 
-class MembershipFactory(BaseFactory):
+class MembershipFactory(BaseFactory[Membership]):
     class Meta:
         model = Membership
         exclude = ("begins_at", "ends_at")
@@ -40,7 +40,7 @@ def _maybe_append_seq(n, prefix):
     return f"{prefix} {n}"
 
 
-class PropertyGroupFactory(BaseFactory):
+class PropertyGroupFactory(BaseFactory[PropertyGroup]):
     class Meta:
         model = PropertyGroup
         exclude = ("granted", "denied")

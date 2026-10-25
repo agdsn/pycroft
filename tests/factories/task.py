@@ -10,7 +10,7 @@ def yesterday():
     return datetime.datetime.today() - datetime.timedelta(days=1)
 
 
-class TaskFactory(BaseFactory):
+class TaskFactory(BaseFactory[Task]):
     class Meta:
         model = Task
 
