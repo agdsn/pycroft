@@ -19,7 +19,6 @@ from wtforms_widgets.fields.core import (
     TextAreaField,
     BooleanField,
     QuerySelectField,
-    FormField,
     QuerySelectMultipleField,
     DateField,
     IntegerField,
