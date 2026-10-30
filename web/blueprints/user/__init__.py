@@ -546,12 +546,12 @@ def add_membership(user_id: int) -> ResponseReturnValue:
     form = UserAddGroupMembership()
 
     if form.validate_on_submit():
-        if (d := form.begins_at.data) and t.cast(datetime, d).date():
-            begins_at = utc.with_min_time(t.cast(datetime, d).date())
+        if d := form.begins_at.data:
+            begins_at = utc.with_min_time(d)
         else:
             begins_at = session.utcnow()
-        if not form.ends_at.unlimited.data:
-            ends_at = utc.with_min_time(form.ends_at.date.data)
+        if form.ends_at.data:
+            ends_at = utc.with_min_time(form.ends_at.data)
         else:
             ends_at = None
 

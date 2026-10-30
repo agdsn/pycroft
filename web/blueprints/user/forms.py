@@ -3,8 +3,6 @@ from __future__ import annotations
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 
-import typing as t
-from datetime import datetime
 
 from flask import url_for
 from flask_wtf import FlaskForm as Form
@@ -30,7 +28,6 @@ from wtforms_widgets.fields.core import (
 from wtforms_widgets.fields.custom import MacField
 from wtforms_widgets.fields.filters import empty_to_none, to_lowercase
 from wtforms_widgets.fields.validators import OptionalIf, MacAddress
-from wtforms_widgets.widgets import BootstrapFormControlDecorator, BootstrapStandardDecorator
 
 from pycroft.helpers import utc
 from pycroft.lib.user import find_similar_users
@@ -40,6 +37,7 @@ from pycroft.model.user import PropertyGroup, User
 from web.blueprints.facilities.forms import building_query, SelectRoomForm, CreateAddressForm
 from web.blueprints.helpers.host import UniqueMac
 from web.blueprints.properties.forms import property_group_query, property_group_user_create_query
+from web.form.fields import DateOrDefaultField
 from web.form.widgets import UserIDField
 from ..helpers.form import confirmable_div, ConfirmCheckboxField, iter_prefixed_field_names
 
@@ -331,52 +329,18 @@ class OptionallyUnlimitedEndDateForm(Form):
     date = DateField("Ende", [OptionalIf("unlimited")])
 
 
-# a Widget is just Field → Args → Markup
-
-
-class TypedField[TData](Field):
-    data: TData
-    widget: t.Callable[..., Markup]
-
-
-@BootstrapFormControlDecorator
-@BootstrapStandardDecorator
-def render_datetime_or_now(field: DateTimeOrNowField[...], **kwargs) -> Markup:
-    content = field.data or ""
-    return Markup(f"""
-                  <div class="input-group">
-                  <button class="btn btn-outline-secondary" data-bs-toggle="button">Sofort</button>
-
-                  <input class="form-control" data-date-format="yyy-mm-dd" data-date-language="de"
-                      data-provide="datepicker"
-
-                  >{content}</input>
-
-                  </div>
-                  """)
-
-
-class DateTimeOrNowField[**P](TypedField[datetime | None]):
-    widget = render_datetime_or_now
-
-    @t.override
-    def process_data(self, value: t.Any):
-        assert isinstance(value, datetime | None)
-        self.data = value
-
-    @t.override
-    def process_formdata(self, valuelist: list[str]):
-        match valuelist:
-            case ["None"]:
-                self.data = None
-            case [timestamp]:
-                self.data = datetime.fromisoformat(timestamp)
-
-
 class UserAddGroupMembership(Form):
     group = QuerySelectField("Gruppe", get_label="name", query_factory=group_query)
-    begins_at = DateTimeOrNowField()
-    ends_at = FormField(OptionallyUnlimitedEndDateForm)
+    begins_at = DateOrDefaultField(
+        "Beginn",
+        default_label=Markup("Sofort"),
+        date_label=Markup('<i class="fa-regular fa-calendar fa-sm mx-1"></i> Am…'),
+    )
+    ends_at = DateOrDefaultField(
+        "Ende",
+        default_label=Markup("Unbegrenzt"),
+        date_label=Markup('<i class="fa fa-right-to-bracket fa-sm mx-1"></i> Zum…'),
+    )
 
 
 class UserEditGroupMembership(Form):
