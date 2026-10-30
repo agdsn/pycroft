@@ -13,68 +13,82 @@ from wtforms import Field
 from wtforms_widgets.widgets import BootstrapStandardDecorator
 
 
-class DateOrDefaultWidget:
+DEFAULT_SENTINEL = "__default__"
+
+
+@BootstrapStandardDecorator
+def render_date_or_default(field: DateOrDefaultField, **kwargs: t.Any) -> Markup:
     """Toggle between a caller-defined default and an explicit date.
 
     Requires Datastar on the page for the toggle reactivity.
     """
+    s = field.label.field_id
 
-    def __call__(self, field: DateOrDefaultField, **kwargs: t.Any) -> Markup:
-        s = field.label.field_id
-        date_iso = field.data.isoformat() if field.data else ""
+    if field.raw_data is not None:
+        # error recovery
+        raw = field.raw_data[0] if field.raw_data else ""
+        use_default = raw == "__default__"
+        date_iso = "" if use_default else raw
+    else:
+        # Initial rendering
         use_default = field.data is None
-        signals = escape(json.dumps({s: {"default": use_default, "date": date_iso}}))
-        default_label = escape(field.default_label)
-        date_label = escape(field.date_label)
-        name = escape(field.name)
-        field_id = escape(kwargs.get("id", field.id))
-        posted = "" if use_default else date_iso
+        date_iso = field.data.isoformat() if field.data else ""
 
-        return Markup(
-            dedent(f"""
-                <div data-signals="{signals}">
-                  <div class="d-flex align-items-center gap-1"
-                       role="group"
-                       aria-label="{escape(field.label.text) if field.label else ""}"
-                  >
-                    <button type="button"
-                            class="btn border border-secondary-subtle rounded-1
-                                   flex-shrink-0 focus-ring focus-ring-primary"
-                            data-class:bg-secondary-subtle="${s}.default"
-                            data-class:text-body-emphasis="${s}.default"
-                            data-class:text-body-secondary="!${s}.default"
-                            data-on:click="${s}.default = true"
-                            data-attr:aria-pressed="${s}.default">
-                      {default_label}
-                    </button>
+    # date_iso = field.data.isoformat() if field.data else ""
+    # use_default = field.data is None
+    signals = escape(json.dumps({s: {"default": use_default, "date": date_iso}}))
+    default_label = escape(field.default_label)
+    date_label = escape(field.date_label)
+    name = escape(field.name)
+    field_id = escape(kwargs.get("id", field.id))
+    posted = "" if use_default else date_iso
 
-                    <button type="button"
-                            class="btn border border-secondary-subtle rounded-1
-                                   flex-shrink-0 focus-ring focus-ring-primary"
-                            data-class:bg-secondary-subtle="!${s}.default"
-                            data-class:text-body-emphasis="!${s}.default"
-                            data-class:text-body-secondary="${s}.default"
-                            data-on:click="${s}.default = false"
-                            data-attr:aria-pressed="!${s}.default">
-                      {date_label}
-                    </button>
-                    <input type="text" class="form-control" id="{field_id}"
-                           value="{escape(date_iso)}"
-                           data-date-format="yyyy-mm-dd"
-                           data-date-language="de"
-                           data-show="!${s}.default"
-                           data-bind:{s}.date
-                           data-on:change="${s}.date = evt.target.value"
-                           data-on:input="${s}.date = evt.target.value"
-                           data-provide="datepicker" />
+    return Markup(
+        dedent(f"""
+            <div data-signals="{signals}">
+              <div class="d-flex align-items-center gap-1"
+                   role="group"
+                   aria-label="{escape(field.label.text) if field.label else ""}"
+              >
+                <button type="button"
+                        class="btn border border-secondary-subtle rounded-1
+                               flex-shrink-0 focus-ring focus-ring-primary"
+                        data-class:bg-secondary-subtle="${s}.default"
+                        data-class:text-body-emphasis="${s}.default"
+                        data-class:text-body-secondary="!${s}.default"
+                        data-on:click="${s}.default = true"
+                        data-attr:aria-pressed="${s}.default">
+                  {default_label}
+                </button>
 
-                    <input type="hidden" name="{name}"
-                           value="{escape(posted)}"
-                           data-attr:value="${s}.default ? '' : ${s}.date" />
-                  </div>
-                </div>
-            """)
-        )
+                <button type="button"
+                        class="btn border border-secondary-subtle rounded-1
+                               flex-shrink-0 focus-ring focus-ring-primary"
+                        data-class:bg-secondary-subtle="!${s}.default"
+                        data-class:text-body-emphasis="!${s}.default"
+                        data-class:text-body-secondary="${s}.default"
+                        data-on:click="${s}.default = false"
+                        data-attr:aria-pressed="!${s}.default">
+                  {date_label}
+                </button>
+                <input type="text" class="form-control" id="{field_id}"
+                       value="{escape(date_iso)}"
+                       data-date-format="yyyy-mm-dd"
+                       data-date-language="de"
+                       data-provide="datepicker"
+                       data-show="!${s}.default"
+                       data-bind:{s}.date
+                       data-on:change="${s}.date = evt.target.value"
+                       data-on:input="${s}.date = evt.target.value"
+                       />
+
+                <input type="hidden" name="{name}"
+                       value="{escape(posted)}"
+                       data-attr:value="${s}.default ? '{DEFAULT_SENTINEL}' : ${s}.date" />
+              </div>
+            </div>
+        """)
+    )
 
 
 class DateOrDefaultField(Field):
@@ -84,7 +98,7 @@ class DateOrDefaultField(Field):
     default_label: Markup | str
     date_label: Markup | str
 
-    widget = BootstrapStandardDecorator(DateOrDefaultWidget())
+    widget = render_date_or_default
 
     def __init__(
         self,
@@ -112,7 +126,9 @@ class DateOrDefaultField(Field):
 
     @t.override
     def process_formdata(self, valuelist: list[str]) -> None:
-        if not valuelist or valuelist[0] == "":
+        if not valuelist or not valuelist[0]:
+            raise ValueError("Date must be set.")
+        if valuelist[0] == DEFAULT_SENTINEL:
             self.data = None
             return
         try:
