@@ -884,10 +884,7 @@ def edit_membership(user_id: int, membership_id: int) -> ResponseReturnValue:
     if request.method == "GET":
         membership_data = {
             "begins_at": (beg := membership.active_during.begin) and beg.date(),
-            "ends_at": {
-                "unlimited": membership.active_during.end is None,
-                "date": (end := membership.active_during.end) and end.date(),
-            },
+            "ends_at": membership.active_during.end,
         }
 
     form = UserEditGroupMembership(**membership_data)
@@ -898,9 +895,7 @@ def edit_membership(user_id: int, membership_id: int) -> ResponseReturnValue:
             session=session.session,
             membership_id=membership_id,
             begins_at=utc.with_min_time(form.begins_at.data),
-            ends_at=(
-                None if form.ends_at.unlimited.data else utc.with_min_time(form.ends_at.date.data)
-            ),
+            ends_at=utc.with_min_time(e) if (e := form.ends_at.data) else None,
             processor=current_user,
         )
         session.session.commit()
@@ -1096,12 +1091,7 @@ def block(user_id: int) -> ResponseReturnValue:
     form = UserSuspendForm()
     myUser = get_user_or_404(user_id)
     if form.validate_on_submit():
-        if form.ends_at.unlimited.data:
-            ends_at = None
-        else:
-            ends_at = utc.with_min_time(
-                form.ends_at.date.data,
-            )
+        ends_at = utc.with_min_time(e) if (e := form.ends_at.data) else None
 
         assert form.reason.data is not None
         try:
@@ -1158,11 +1148,7 @@ def move_out(user_id: int) -> ResponseReturnValue:
     if not form.validate():
         return default_response()
 
-    if form.now.data:
-        when = session.utcnow()
-    else:
-        assert (date := form.when.data) is not None
-        when = utc.with_min_time(date)
+    when = utc.with_min_time(w) if (w := form.when.data) else session.utcnow()
 
     with abort_on_error(default_response), session.session.begin_nested():
         lib.user.move_out(

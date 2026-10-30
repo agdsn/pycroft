@@ -324,17 +324,12 @@ class OptionallyDirectBeginDateForm(Form):
     date = DateField("Beginn", [OptionalIf("now")])
 
 
-class OptionallyUnlimitedEndDateForm(Form):
-    unlimited = BooleanField("Unbegrenzte Dauer", default=False)
-    date = DateField("Ende", [OptionalIf("unlimited")])
-
-
 class UserAddGroupMembership(Form):
     group = QuerySelectField("Gruppe", get_label="name", query_factory=group_query)
     begins_at = DateOrDefaultField(
         "Beginn",
         default_label=Markup("Sofort"),
-        date_label=Markup('<i class="fa-regular fa-calendar fa-sm mx-1"></i> Am…'),
+        date_label=Markup('<i class="fa fa-right-from-bracket fa-sm mx-1"></i> Am…'),
     )
     ends_at = DateOrDefaultField(
         "Ende",
@@ -345,18 +340,29 @@ class UserAddGroupMembership(Form):
 
 class UserEditGroupMembership(Form):
     begins_at = DateField("Beginn", [DataRequired()])
-    ends_at = FormField(OptionallyUnlimitedEndDateForm)
+    ends_at = DateOrDefaultField(
+        "Ende",
+        default_label=Markup("Unbegrenzt"),
+        date_label=Markup('<i class="fa fa-right-to-bracket fa-sm mx-1"></i> Zum…'),
+    )
 
 
 class UserSuspendForm(Form):
-    ends_at = FormField(OptionallyUnlimitedEndDateForm)
+    ends_at = DateOrDefaultField(
+        "Ende",
+        default_label=Markup("Unbegrenzt"),
+        date_label=Markup('<i class="fa fa-right-to-bracket fa-sm mx-1"></i> Zum…'),
+    )
     reason = TextAreaField("Grund", [DataRequired()])
     violation = BooleanField("Verstoß")
 
 
 class UserMoveOutForm(Form):
-    now = BooleanField("Sofort", default=False)
-    when = DateField("Auszug am", [OptionalIf("now")])
+    when = DateOrDefaultField(
+        "Auszug am",
+        default_label="Sofort",
+        date_label=Markup('<i class="fa-regular fa-calendar fa-sm mx-1"></i> Zum…'),
+    )
     comment = TextAreaField("Kommentar")
     end_membership = BooleanField("Mitgliedschaft/Extern beenden", [Optional()])
 
