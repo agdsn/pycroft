@@ -1,6 +1,8 @@
+from __future__ import annotations
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+
 
 from flask import url_for
 from flask_wtf import FlaskForm as Form
@@ -35,6 +37,7 @@ from pycroft.model.user import PropertyGroup, User
 from web.blueprints.facilities.forms import building_query, SelectRoomForm, CreateAddressForm
 from web.blueprints.helpers.host import UniqueMac
 from web.blueprints.properties.forms import property_group_query, property_group_user_create_query
+from web.form.fields import DateOrDefaultField
 from web.form.widgets import UserIDField
 from ..helpers.form import confirmable_div, ConfirmCheckboxField, iter_prefixed_field_names
 
@@ -321,31 +324,45 @@ class OptionallyDirectBeginDateForm(Form):
     date = DateField("Beginn", [OptionalIf("now")])
 
 
-class OptionallyUnlimitedEndDateForm(Form):
-    unlimited = BooleanField("Unbegrenzte Dauer", default=False)
-    date = DateField("Ende", [OptionalIf("unlimited")])
-
-
 class UserAddGroupMembership(Form):
     group = QuerySelectField("Gruppe", get_label="name", query_factory=group_query)
-    begins_at = FormField(OptionallyDirectBeginDateForm)
-    ends_at = FormField(OptionallyUnlimitedEndDateForm)
+    begins_at = DateOrDefaultField(
+        "Beginn",
+        default_label=Markup("Sofort"),
+        date_label=Markup('<i class="fa fa-right-from-bracket fa-sm mx-1"></i> Am…'),
+    )
+    ends_at = DateOrDefaultField(
+        "Ende",
+        default_label=Markup("Unbegrenzt"),
+        date_label=Markup('<i class="fa fa-right-to-bracket fa-sm mx-1"></i> Zum…'),
+    )
 
 
 class UserEditGroupMembership(Form):
     begins_at = DateField("Beginn", [DataRequired()])
-    ends_at = FormField(OptionallyUnlimitedEndDateForm)
+    ends_at = DateOrDefaultField(
+        "Ende",
+        default_label=Markup("Unbegrenzt"),
+        date_label=Markup('<i class="fa fa-right-to-bracket fa-sm mx-1"></i> Zum…'),
+    )
 
 
 class UserSuspendForm(Form):
-    ends_at = FormField(OptionallyUnlimitedEndDateForm)
+    ends_at = DateOrDefaultField(
+        "Ende",
+        default_label=Markup("Unbegrenzt"),
+        date_label=Markup('<i class="fa fa-right-to-bracket fa-sm mx-1"></i> Zum…'),
+    )
     reason = TextAreaField("Grund", [DataRequired()])
     violation = BooleanField("Verstoß")
 
 
 class UserMoveOutForm(Form):
-    now = BooleanField("Sofort", default=False)
-    when = DateField("Auszug am", [OptionalIf("now")])
+    when = DateOrDefaultField(
+        "Auszug am",
+        default_label="Sofort",
+        date_label=Markup('<i class="fa-regular fa-calendar fa-sm mx-1"></i> Zum…'),
+    )
     comment = TextAreaField("Kommentar")
     end_membership = BooleanField("Mitgliedschaft/Extern beenden", [Optional()])
 
