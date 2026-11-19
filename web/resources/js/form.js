@@ -136,3 +136,12 @@ export function pycroftIntervalPicker(IntervalField) {
     $('#' + IntervalField + 'PickerI').val(data[8]);
     $('#' + IntervalField + 'PickerS').val(data[10]);
 }
+
+/*
+* Prevents the multiple submission of a form
+*/
+for (const form of document.getElementsByTagName("form")) {
+    form.addEventListener("submit", (event) => {
+        event.submitter.disabled = true;
+    });
+}
