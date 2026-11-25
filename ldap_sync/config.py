@@ -5,11 +5,11 @@
 ldap_sync.config
 ~~~~~~~~~~~~~~~~
 """
+
 from __future__ import annotations
 
 import os
 from typing import NamedTuple
-from distutils.util import strtobool
 
 from . import logger
 from .concepts import types
@@ -30,9 +30,19 @@ class SyncConfig(NamedTuple):
     required_property: str
 
 
+def _strtobool(value: str) -> bool:
+    """Subset of distutils.util.strtobool (removed in Python 3.12+)."""
+    value = value.lower()
+    if value in ("y", "yes", "t", "true", "on", "1"):
+        return True
+    if value in ("n", "no", "f", "false", "off", "0"):
+        return False
+    raise ValueError(f"invalid truth value {value!r}")
+
+
 def _from_environ_or_defaults(key: str, defaults: dict[str, str | None]) -> str | None:
     try:
-        return os.environ[f'PYCROFT_LDAP_{key.upper()}']
+        return os.environ[f"PYCROFT_LDAP_{key.upper()}"]
     except KeyError as e:
         if key not in defaults:
             print("defaults:", defaults)
@@ -52,7 +62,8 @@ def get_config(**defaults: str | None) -> SyncConfig:
     config_dict: dict[str, str | None] = {
         # e.g. 'host': 'PYCROFT_LDAP_HOST'
         key: _from_environ_or_defaults(key, defaults)
-        for key in SyncConfig._fields if key != 'db_uri'
+        for key in SyncConfig._fields
+        if key != "db_uri"
     }
 
     def _get_or_fail(dict: dict[str, str | None], key: str) -> str:
@@ -61,17 +72,21 @@ def get_config(**defaults: str | None) -> SyncConfig:
         return str_value
 
     port = int(_get_or_fail(config_dict, "port"))
-    use_ssl = bool(strtobool(_get_or_fail(config_dict, "use_ssl")))
+    use_ssl = _strtobool(_get_or_fail(config_dict, "use_ssl"))
     bind_dn = types.DN(_get_or_fail(config_dict, "bind_dn"))
     base_dn = types.DN(_get_or_fail(config_dict, "base_dn"))
 
     return SyncConfig(
         db_uri=db_uri,
+        host=_get_or_fail(config_dict, "host"),
         port=port,
         use_ssl=use_ssl,
+        ca_certs_file=config_dict.pop("ca_certs_file"),
+        ca_certs_data=config_dict.pop("ca_certs_data"),
         bind_dn=bind_dn,
+        bind_pw=_get_or_fail(config_dict, "bind_pw"),
         base_dn=base_dn,
-        **config_dict,
+        required_property=_get_or_fail(config_dict, "required_property"),
     )
 
 

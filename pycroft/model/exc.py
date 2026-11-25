@@ -5,6 +5,7 @@
 pycroft.model.exc
 ~~~~~~~~~~~~~~~~~
 """
+
 from pycroft.exc import PycroftException
 
 

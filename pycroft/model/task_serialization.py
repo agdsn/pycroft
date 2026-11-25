@@ -2,6 +2,7 @@
 pycroft.model.task_serialization
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 """
+
 from dataclasses import dataclass
 from datetime import date
 
@@ -36,7 +37,7 @@ class UserMoveOutSchema(Schema):
 
 @dataclass
 class UserMoveOutParams(TaskParams):
-    comment: str
+    comment: str | None
     end_membership: bool
 
 

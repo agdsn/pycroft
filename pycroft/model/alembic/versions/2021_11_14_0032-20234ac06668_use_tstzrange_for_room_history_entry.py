@@ -13,12 +13,12 @@ from sqlalchemy.dialects import postgresql
 # revision identifiers, used by Alembic.
 from sqlalchemy.dialects.postgresql import TSTZRANGE
 
-revision = '20234ac06668'
-down_revision = 'f138079b24c5'
+revision = "20234ac06668"
+down_revision = "f138079b24c5"
 branch_labels = None
 depends_on = None
 
-RHE = 'room_history_entry'
+RHE = "room_history_entry"
 
 
 def upgrade():
@@ -53,18 +53,22 @@ CREATE OR REPLACE FUNCTION user_room_change_update_history() RETURNS trigger
     ###
 
     # +ACTIVE_DURING
-    op.add_column(RHE,
-                  sa.Column('active_during', TSTZRANGE, nullable=True))
+    op.add_column(RHE, sa.Column("active_during", TSTZRANGE, nullable=True))
     op.execute("update room_history_entry set active_during = tstzrange(begins_at, ends_at, '[)')")
-    op.alter_column('membership', 'active_during', nullable=False)
+    op.alter_column("membership", "active_during", nullable=False)
 
-    op.create_index('ix_room_history_entry_active_during', RHE, ['active_during'],
-                    unique=False, postgresql_using='gist')
+    op.create_index(
+        "ix_room_history_entry_active_during",
+        RHE,
+        ["active_during"],
+        unique=False,
+        postgresql_using="gist",
+    )
     op.execute("create extension if not exists btree_gist")
     op.execute(
-        'alter table room_history_entry '
+        "alter table room_history_entry "
         'add constraint "room_history_entry_room_id_user_id_active_during_excl" '
-        'EXCLUDE USING gist (room_id WITH =, user_id WITH =, active_during WITH &&);'
+        "EXCLUDE USING gist (room_id WITH =, user_id WITH =, active_during WITH &&);"
     )
     ###
 
@@ -73,35 +77,42 @@ CREATE OR REPLACE FUNCTION user_room_change_update_history() RETURNS trigger
     # also deletes the trigger
     ###
 
-    op.drop_constraint('room_history_entry_check', table_name=RHE)
-    op.drop_column(RHE, 'begins_at')
-    op.drop_column(RHE, 'ends_at')
+    op.drop_constraint("room_history_entry_check", table_name=RHE)
+    op.drop_column(RHE, "begins_at")
+    op.drop_column(RHE, "ends_at")
 
 
 def downgrade():
     # +BEGINS_AT
-    op.add_column(RHE, sa.Column(
-        'begins_at', postgresql.TIMESTAMP(timezone=True),
-        server_default=sa.text('CURRENT_TIMESTAMP'),
-        autoincrement=False, nullable=False
-    ))
-    op.execute('update room_history_entry set begins_at = lower(active_during)')
-    op.alter_column(RHE, 'begins_at', nullable=False)
-    op.create_index('ix_room_history_entry_begins_at', RHE, ['begins_at'],
-                    unique=False)
+    op.add_column(
+        RHE,
+        sa.Column(
+            "begins_at",
+            postgresql.TIMESTAMP(timezone=True),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+            autoincrement=False,
+            nullable=False,
+        ),
+    )
+    op.execute("update room_history_entry set begins_at = lower(active_during)")
+    op.alter_column(RHE, "begins_at", nullable=False)
+    op.create_index("ix_room_history_entry_begins_at", RHE, ["begins_at"], unique=False)
     ###
 
     # +ENDS_AT
-    op.add_column(RHE,
-                  sa.Column('ends_at', postgresql.TIMESTAMP(timezone=True), autoincrement=False,
-                            nullable=True))
-    op.execute('update room_history_entry set ends_at = upper(active_during)')
-    op.create_index('ix_room_history_entry_ends_at', RHE, ['ends_at'],
-                    unique=False)
+    op.add_column(
+        RHE,
+        sa.Column(
+            "ends_at", postgresql.TIMESTAMP(timezone=True), autoincrement=False, nullable=True
+        ),
+    )
+    op.execute("update room_history_entry set ends_at = upper(active_during)")
+    op.create_index("ix_room_history_entry_ends_at", RHE, ["ends_at"], unique=False)
     ###
 
     op.create_check_constraint(
-        "room_history_entry_check", RHE,
+        "room_history_entry_check",
+        RHE,
         "ends_at is null or begins_at <= ends_at",
     )
 
@@ -144,12 +155,11 @@ CREATE FUNCTION room_history_entry_uniqueness() RETURNS trigger
 
     # -ACTIVE_DURING
     op.drop_constraint(
-        constraint_name='room_history_entry_room_id_user_id_active_during_excl',
+        constraint_name="room_history_entry_room_id_user_id_active_during_excl",
         table_name=RHE,
     )
-    op.drop_index('ix_room_history_entry_active_during', table_name=RHE,
-                  postgresql_using='gist')
-    op.drop_column(RHE, 'active_during')
+    op.drop_index("ix_room_history_entry_active_during", table_name=RHE, postgresql_using="gist")
+    op.drop_column(RHE, "active_during")
     ###
 
     # +UPDATE_FUNCTION

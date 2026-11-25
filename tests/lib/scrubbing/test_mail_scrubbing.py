@@ -44,12 +44,12 @@ def test_bulk_scrubbing_scrubs_mail(
     scrub_all_mails(session, author=processor)
     for u in chain(users_archivable, users_do_not_archive):
         session.refresh(u)
-    assert all(
-        u.email is None for u in users_archivable
-    ), "mails should have been None for prepared users"
-    assert all(
-        u.email is not None for u in users_do_not_archive
-    ), "mails should not have been scrubbed for do-not-archive users"
+    assert all(u.email is None for u in users_archivable), (
+        "mails should have been None for prepared users"
+    )
+    assert all(u.email is not None for u in users_do_not_archive), (
+        "mails should not have been scrubbed for do-not-archive users"
+    )
     scrub_logs = session.scalars(select(ScrubLog).where(ScrubLog.scrubber == "mail")).all()
 
     user_ids_archived = {u.id for u in users_archivable}
@@ -62,4 +62,3 @@ def test_bulk_scrubbing_scrubs_mail(
         le = assert_one(log_entries)
         assert "scrubbed" in le.message.lower()
         assert "mail" in le.message.lower()
-

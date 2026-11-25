@@ -11,13 +11,12 @@ from .form import confirmable_div
 
 
 class UniqueMac:
-
     """Validates whether the mac is unique.
 
     :param annex_field: the name of the “I want to annex that host/interface” checkbox
     """
 
-    def __init__(self, annex_field: str | None = 'annex'):
+    def __init__(self, annex_field: str | None = "annex"):
         self.annex_field = annex_field
 
     def annex_set(self, form: Form) -> bool:
@@ -29,7 +28,7 @@ class UniqueMac:
         if self.annex_set(form):
             return
 
-        current_mac = getattr(form.meta, "current_mac", None)
+        current_mac = getattr(form, "current_mac", None)
         ci = get_conflicting_interface(session.session, field.data, current_mac)
         if ci is None:
             return

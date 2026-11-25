@@ -34,7 +34,8 @@ def host(module_session, owner) -> Host:
 @pytest.mark.usefixtures("admin_logged_in")
 class TestHostDelete:
     @pytest.fixture(scope="class")
-    def url(self) -> t.Callable[[int], str]:
+    @classmethod
+    def url(cls) -> t.Callable[[int], str]:
         def _url(host_id: int) -> str:
             return url_for("host.host_delete", host_id=host_id)
 
@@ -66,7 +67,8 @@ class TestHostDelete:
 @pytest.mark.usefixtures("admin_logged_in")
 class TestHostEdit:
     @pytest.fixture(scope="class")
-    def url(self) -> t.Callable[[int], str]:
+    @classmethod
+    def url(cls) -> t.Callable[[int], str]:
         def _url(host_id: int) -> str:
             return url_for("host.host_edit", host_id=host_id)
 
@@ -115,7 +117,8 @@ class TestHostEdit:
 @pytest.mark.usefixtures("admin_logged_in")
 class TestHostCreate:
     @pytest.fixture(scope="class")
-    def url(self) -> t.Callable[[int], str]:
+    @classmethod
+    def url(cls) -> t.Callable[[int], str]:
         def _url(user_id: int) -> str:
             return url_for("host.host_create", user_id=user_id)
 
@@ -177,9 +180,7 @@ def host_without_room(session):
 
 
 def test_user_host_without_room(client, host_without_room):
-    resp = client.assert_url_ok(
-        url_for("host.user_hosts_json", user_id=host_without_room.owner.id)
-    )
+    resp = client.assert_url_ok(url_for("host.user_hosts_json", user_id=host_without_room.owner.id))
     it = assert_one(resp.json.get("items", []))
     assert it["switch"] == []
     assert it["port"] is None

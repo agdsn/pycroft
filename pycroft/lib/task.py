@@ -2,6 +2,7 @@
 pycroft.lib.task
 ~~~~~~~~~~~~~~~~
 """
+
 import logging
 import typing
 import typing as t
@@ -19,34 +20,35 @@ from pycroft.lib.logging import log_task_event
 from pycroft.model import session
 from pycroft.model.session import with_transaction
 from pycroft.model.task import UserTask, Task, TaskType, TaskStatus
-from pycroft.model.task_serialization import UserMoveOutParams, UserMoveParams, UserMoveInParams, \
-    TaskParams
+from pycroft.model.task_serialization import (
+    UserMoveOutParams,
+    UserMoveParams,
+    UserMoveInParams,
+    TaskParams,
+)
 from pycroft.model.user import User
 
 
-logger = logging.getLogger('pycroft.task')
+logger = logging.getLogger("pycroft.task")
 
 
 # the generic parameters don't actually matter because
 # to determine the type parameter at construction we would need
 # dependent types, so we're always just instantiating
 # `TaskImpl = TaskImpl[Any, Any]`, anyway.
-class TaskImpl[TTask: Task, TParams: TaskParams](ABC):
+class TaskImpl[TTask: Task[t.Any, t.Any], TParams: TaskParams](ABC):
     name: str
 
     @t.override
     def __init_subclass__(cls, **kwargs: t.Any) -> None:
         _abc_in_bases = any(base == ABC for base in cls.__bases__)
         if not _abc_in_bases and not hasattr(cls, "name"):
-            raise TypeError(
-                f"{cls.__name__} as a TaskImpl subclass needs a `name` attribute"
-            )
+            raise TypeError(f"{cls.__name__} as a TaskImpl subclass needs a `name` attribute")
         super().__init_subclass__(**kwargs)
 
     @property
     @abstractmethod
-    def type(self) -> TaskType:
-        ...
+    def type(self) -> TaskType: ...
 
     new_status: TaskStatus | None = None
     errors: list[str] = list()
@@ -60,13 +62,12 @@ class TaskImpl[TTask: Task, TParams: TaskParams](ABC):
             parameters: TParams = typing.cast(TParams, task.parameters)
         except ValidationError as e:
             self.errors.append(f"Failed to parse parameters: {e.messages}")
-            logger.error('Failed to deserialize parameters', exc_info=True)
+            logger.error("Failed to deserialize parameters", exc_info=True)
         else:
             self._execute(task, parameters)
 
     @abstractmethod
-    def _execute(self, task: TTask, parameters: TParams) -> None:
-        ...
+    def _execute(self, task: TTask, parameters: TParams) -> None: ...
 
 
 class UserTaskImpl[TParams: TaskParams](TaskImpl[UserTask, TParams], ABC):
@@ -76,11 +77,9 @@ class UserTaskImpl[TParams: TaskParams](TaskImpl[UserTask, TParams], ABC):
         if due < session.utcnow():
             raise ValueError("the due date must be in the future")
 
-        task = UserTask(type=self.type,
-                        due=due,
-                        creator=processor,
-                        created=session.utcnow(),
-                        user=user)
+        task = UserTask(
+            type=self.type, due=due, creator=processor, created=session.utcnow(), user=user
+        )
 
         task.parameters = parameters
 
@@ -94,15 +93,18 @@ class UserMoveOutTaskImpl(UserTaskImpl[UserMoveOutParams]):
     @t.override
     def _execute(self, task: UserTask, parameters: UserMoveOutParams) -> None:
         from pycroft.lib import user as lib_user
+
         if task.user.room is None:
             self.errors.append("Tried to move out user, but user was not living in a dormitory")
             return
 
-        lib_user.move_out(user=task.user,
-                          comment=parameters.comment,
-                          processor=task.creator,
-                          when=session.utcnow(),
-                          end_membership=parameters.end_membership)
+        lib_user.move_out(
+            user=task.user,
+            comment=parameters.comment,
+            processor=task.creator,
+            when=session.utcnow(),
+            end_membership=parameters.end_membership,
+        )
 
         self.new_status = TaskStatus.EXECUTED
 
@@ -115,9 +117,9 @@ class UserMoveTaskImpl(UserTaskImpl[UserMoveParams]):
     def _execute(self, task: UserTask, parameters: UserMoveParams) -> None:
         from pycroft.lib import user as lib_user
         from pycroft.lib.facilities import get_room
+
         if task.user.room is None:
-            self.errors.append("Tried to move in user, "
-                               "but user was already living in a dormitory.")
+            self.errors.append("Tried to move in user, but user was already living in a dormitory.")
             return
 
         room = get_room(
@@ -142,7 +144,7 @@ class UserMoveTaskImpl(UserTaskImpl[UserMoveParams]):
         self.new_status = TaskStatus.EXECUTED
 
 
-class UserMoveInTaskImpl(UserTaskImpl):
+class UserMoveInTaskImpl(UserTaskImpl[UserMoveInParams]):
     name = "Einzug"
     type = TaskType.USER_MOVE_IN
 
@@ -152,8 +154,7 @@ class UserMoveInTaskImpl(UserTaskImpl):
         from pycroft.lib.facilities import get_room
 
         if task.user.room is not None:
-            self.errors.append("Tried to move in user, "
-                               "but user was already living in a dormitory.")
+            self.errors.append("Tried to move in user, but user was already living in a dormitory.")
             return
 
         room = get_room(
@@ -163,33 +164,39 @@ class UserMoveInTaskImpl(UserTaskImpl):
         )
 
         if room is None:
-            self.errors.append(
-                "Tried to move in user, but target room did not exist.")
+            self.errors.append("Tried to move in user, but target room did not exist.")
             return
 
-        lib_user.move_in(user=task.user,
-                         building_id=room.building.id,
-                         level=room.level,
-                         room_number=room.number,
-                         mac=parameters.mac,
-                         processor=task.creator,
-                         birthdate=parameters.birthdate,
-                         host_annex=parameters.host_annex,
-                         begin_membership=parameters.begin_membership,
-                         )
+        lib_user.move_in(
+            user=task.user,
+            building_id=room.building.id,
+            level=room.level,
+            room_number=room.number,
+            mac=parameters.mac,
+            processor=task.creator,
+            birthdate=parameters.birthdate,
+            host_annex=parameters.host_annex,
+            begin_membership=parameters.begin_membership,
+        )
 
         self.new_status = TaskStatus.EXECUTED
 
 
-task_type_to_impl: Mapping[TaskType, type[UserTaskImpl]] = {
+task_type_to_impl: Mapping[TaskType, type[UserTaskImpl[t.Any]]] = {
     TaskType.USER_MOVE: UserMoveTaskImpl,
     TaskType.USER_MOVE_IN: UserMoveInTaskImpl,
-    TaskType.USER_MOVE_OUT: UserMoveOutTaskImpl
+    TaskType.USER_MOVE_OUT: UserMoveOutTaskImpl,
 }
 
 
-def get_task_implementation(task: Task) -> TaskImpl:
-    return task_type_to_impl.get(task.type)()
+def get_task_implementation[TSchema, TParams: TaskParams](
+    task: Task[TSchema, TParams],
+) -> TaskImpl[Task[TSchema, TParams], TParams]:
+    impl = t.cast(
+        type[TaskImpl[Task[TSchema, TParams], TParams]],
+        task_type_to_impl[task.type],
+    )
+    return impl()
 
 
 @with_transaction
@@ -203,11 +210,7 @@ def schedule_user_task(
     if due < session.utcnow():
         raise ValueError("the due date must be in the future")
 
-    task = UserTask(type=task_type,
-                    due=due,
-                    creator=processor,
-                    created=session.utcnow(),
-                    user=user)
+    task = UserTask(type=task_type, due=due, creator=processor, created=session.utcnow(), user=user)
 
     task.parameters = parameters
     session.session.add(task)
@@ -215,14 +218,14 @@ def schedule_user_task(
     return task
 
 
-def get_active_tasks_by_type(type: TaskType) -> t.Sequence[t.Type[Task]]:
+def get_active_tasks_by_type(type: TaskType) -> t.Sequence[Task[t.Any, t.Any]]:
     task_and_subtypes = with_polymorphic(Task[t.Any, t.Any], "*")
     return session.session.scalars(
         select(task_and_subtypes).where(task_and_subtypes.type == type)
     ).all()
 
 
-def get_scheduled_tasks(session: Session) -> t.Sequence[Task]:
+def get_scheduled_tasks(session: Session) -> t.Sequence[Task[t.Any, t.Any]]:
     task_and_subtypes = with_polymorphic(Task, "*")
     return session.scalars(
         select(task_and_subtypes).filter(
@@ -233,7 +236,7 @@ def get_scheduled_tasks(session: Session) -> t.Sequence[Task]:
 
 
 @with_transaction
-def cancel_task(task: Task, processor: User) -> None:
+def cancel_task(task: Task[t.Any, t.Any], processor: User) -> None:
     if task.status != TaskStatus.OPEN:
         raise ValueError("Cannot cancel a task that is not open")
 
@@ -242,23 +245,30 @@ def cancel_task(task: Task, processor: User) -> None:
     task.status = TaskStatus.CANCELLED
 
 
-def manually_execute_task(task: Task, processor: User) -> None:
+def manually_execute_task(task: Task[t.Any, t.Any], processor: User) -> None:
     if task.status != TaskStatus.OPEN:
         raise ValueError("Cannot execute a task that is not open")
 
     get_task_implementation(task).execute(task)
 
     task.due = session.utcnow()
-    log_task_event(deferred_gettext("Manually executed task {}").format(task.id).to_json(),
-                   author=processor, task=task)
+    log_task_event(
+        deferred_gettext("Manually executed task {}").format(task.id).to_json(),
+        author=processor,
+        task=task,
+    )
     task.status = TaskStatus.EXECUTED
 
 
-def reschedule_task(task: Task, due: datetime, processor: User) -> None:
+def reschedule_task(task: Task[t.Any, t.Any], due: datetime, processor: User) -> None:
     if task.status != TaskStatus.OPEN:
         raise ValueError("Cannot execute a task that is not open")
 
     task.due = ensure_tz(due)
-    log_task_event(deferred_gettext("Rescheduled task {task_id} to {new_due}")
-                   .format(task_id=task.id, new_due=due).to_json(),
-                   author=processor, task=task)
+    log_task_event(
+        deferred_gettext("Rescheduled task {task_id} to {new_due}")
+        .format(task_id=task.id, new_due=due)
+        .to_json(),
+        author=processor,
+        task=task,
+    )

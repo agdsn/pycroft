@@ -1,8 +1,8 @@
 #  Copyright (c) 2023. The Pycroft Authors. See the AUTHORS file.
 #  This file is part of the Pycroft project and licensed under the terms of
 #  the Apache License, Version 2.0. See the LICENSE file for details
+from sqlalchemy.dialects.postgresql import distinct_on
 
-import typing
 import typing as t
 from datetime import date, timedelta
 from decimal import Decimal
@@ -68,15 +68,13 @@ def get_last_applied_membership_fee() -> MembershipFee | None:
 
 def get_first_applied_membership_fee() -> MembershipFee | None:
     """Get the first applied membership fee."""
-    return session.session.scalar(
-        select(MembershipFee).order_by(MembershipFee.ends_on.desc())
-    )
+    return session.session.scalar(select(MembershipFee).order_by(MembershipFee.ends_on.desc()))
 
 
 membership_fee_description = deferred_gettext("Mitgliedsbeitrag {fee_name}")
 
 
-@typing.no_type_check
+@t.no_type_check
 # this „2.0-style select“ is only completely supported on a typing level when we have the v2.0
 #  typing infrastructure (post-mypy plugin).
 #  See https://docs.sqlalchemy.org/en/14/orm/extensions/mypy.html#mypy-pep-484-support-for-orm-mappings
@@ -89,7 +87,7 @@ def users_eligible_for_fee_query(membership_fee: MembershipFee) -> CTE:
     rhe_begin = RoomHistoryEntry.__table__.alias()
 
     fee_account_ids_stmt = union(
-        select(Account.id).join(Building).distinct(Account.id),
+        select(Account.id).join(Building).ext(distinct_on(Account.id)),
         select(Config.membership_fee_account_id),
     )
     fee_accounts_ids = set(session.session.scalars(fee_account_ids_stmt))
@@ -104,9 +102,7 @@ def users_eligible_for_fee_query(membership_fee: MembershipFee) -> CTE:
     begin_tstz = with_min_time(membership_fee.begins_on)
     end_tstz = with_max_time(membership_fee.ends_on)
 
-    fee_prop_beginning = evaluate_properties(
-        properties_beginning_timestamp, name="fee_prop_beg"
-    )
+    fee_prop_beginning = evaluate_properties(properties_beginning_timestamp, name="fee_prop_beg")
     fee_prop_end = evaluate_properties(properties_end_timestamp, name="fee_prop_end")
 
     return (
@@ -116,9 +112,9 @@ def users_eligible_for_fee_query(membership_fee: MembershipFee) -> CTE:
             User.account_id.label("account_id"),
             # Select fee_account_id of the building or the default
             # fee_account_id if user was not living in a room at booking time
-            func.coalesce(
-                Building.fee_account_id, literal(config.membership_fee_account_id)
-            ).label("fee_account_id"),
+            func.coalesce(Building.fee_account_id, literal(config.membership_fee_account_id)).label(
+                "fee_account_id"
+            ),
         )
         .select_from(
             User.__table__
@@ -167,9 +163,8 @@ def users_eligible_for_fee_query(membership_fee: MembershipFee) -> CTE:
             )
             # Join with Room from membership_fee.ends_on if available,
             # if not, join with the Room from membership_fee.begins_on
-            .outerjoin(
-                Room, Room.id == func.coalesce(rhe_end.c.room_id, rhe_begin.c.room_id)
-            ).outerjoin(Building, Building.id == Room.building_id)
+            .outerjoin(Room, Room.id == func.coalesce(rhe_end.c.room_id, rhe_begin.c.room_id))
+            .outerjoin(Building, Building.id == Room.building_id)
         )
         # Check if a booking already exists on the user account in the fee timespan
         .where(
@@ -202,11 +197,7 @@ def users_eligible_for_fee_query(membership_fee: MembershipFee) -> CTE:
         )
         # Only those users who had the `membership_fee` property on `booking_begin` or
         # `booking_end`
-        .where(
-            or_(
-                fee_prop_beginning.column.is_not(None), fee_prop_end.column.is_not(None)
-            )
-        )
+        .where(or_(fee_prop_beginning.c.user_id.is_not(None), fee_prop_end.c.user_id.is_not(None)))
         .distinct()
         .cte("membership_fee_users")
     )
@@ -238,9 +229,7 @@ def post_transactions_for_membership_fee(
     :return: A list of name of all affected users
     """
 
-    description = membership_fee_description.format(
-        fee_name=membership_fee.name
-    ).to_json()
+    description = membership_fee_description.format(fee_name=membership_fee.name).to_json()
 
     # Select all users who fulfill the requirements for the fee in the fee timespan
     users = users_eligible_for_fee_query(membership_fee)
@@ -342,14 +331,10 @@ def post_transactions_for_membership_fee(
             )
         )
 
-    return [
-        t.cast(AffectedUserInfo, dict(user._mapping)) for user in affected_users_raw
-    ]
+    return [t.cast(AffectedUserInfo, dict(user._mapping)) for user in affected_users_raw]
 
 
-def fee_from_valid_date(
-    session: Session, valid_on: date, account: Account
-) -> Split | None:
+def fee_from_valid_date(session: Session, valid_on: date, account: Account) -> Split | None:
     """If existent, get the membership fee split for a given date"""
     fee: Split | None = session.scalars(
         select(Split)
@@ -399,9 +384,7 @@ def estimate_balance(session: Session, user: User, end_date: date) -> Decimal:
     # If there was no fee booked yet for the last month and the user has to pay
     # a fee for the last month, increment months_to_pay
     last_month_last = tomorrow.replace(day=1) - timedelta(1)
-    last_month_fee_outstanding = (
-        fee_from_valid_date(session, last_month_last, user.account) is None
-    )
+    last_month_fee_outstanding = fee_from_valid_date(session, last_month_last, user.account) is None
 
     if last_month_fee_outstanding:
         had_to_pay_last_month = user.has_property(
@@ -418,6 +401,4 @@ def estimate_balance(session: Session, user: User, end_date: date) -> Decimal:
     if not this_month_fee_outstanding:
         months_to_pay -= 1
 
-    return t.cast(
-        Decimal, (-user.account.balance) - (months_to_pay * last_fee.regular_fee)
-    )
+    return (-user.account.balance) - (months_to_pay * last_fee.regular_fee)

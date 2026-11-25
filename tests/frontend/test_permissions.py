@@ -30,16 +30,16 @@ class TestAnonymous:
     Anonymous users should be able to access the login page and the /static/
     content, nothing else.
     """
-    @pytest.fixture(scope='class')
-    def jinja_context(self, app: PycroftFlask) -> Context:
+
+    @pytest.fixture(scope="class")
+    @classmethod
+    def jinja_context(cls, app: PycroftFlask) -> Context:
         return Context(app.jinja_env, parent=None, name="pseudo", blocks={})
 
     def test_login_page_visible(self, client: TestClient):
         client.assert_response_code("login.login", 302)
 
-    def test_static_content_can_be_fetched(
-        self, client: TestClient, jinja_context: Context
-    ):
+    def test_static_content_can_be_fetched(self, client: TestClient, jinja_context: Context):
         client.assert_url_ok(require(jinja_context, "main.css"))
 
     def test_finance_denied(self, client: TestClient):
@@ -53,10 +53,11 @@ class TestAnonymous:
 
 
 class TestPermissionsAdmin:
-    """Test permissions for admin usergroup.
-    """
+    """Test permissions for admin usergroup."""
+
     @pytest.fixture(scope="class", autouse=True)
-    def admin_logged_in(self, admin: User, client: TestClient, app: PycroftFlask):
+    @classmethod
+    def admin_logged_in(cls, admin: User, client: TestClient, app: PycroftFlask):
         with login_context(client, app, admin.login):
             yield
 
@@ -68,11 +69,12 @@ class TestPermissionsAdmin:
 
 
 class TestPermissionsFinance:
-    """Test permissions for finance usergroup (advanced).
-    """
+    """Test permissions for finance usergroup (advanced)."""
+
     @pytest.fixture(scope="class", autouse=True)
+    @classmethod
     def treasurer_logged_in(
-        self,
+        cls,
         treasurer: User,
         client: TestClient,
         app: PycroftFlask,
@@ -88,11 +90,12 @@ class TestPermissionsFinance:
 
 
 class TestPermissionsUser:
-    """Test permissions as a user without any membership
-    """
+    """Test permissions as a user without any membership"""
+
     @pytest.fixture(scope="class", autouse=True)
+    @classmethod
     def member_logged_in(
-        self, class_session: Session, config: Config, client: TestClient, app: PycroftFlask
+        cls, class_session: Session, config: Config, client: TestClient, app: PycroftFlask
     ):
         UserFactory.create(
             login="member",
@@ -100,7 +103,6 @@ class TestPermissionsUser:
             membership__group=config.member_group,
             membership__includes_today=True,
         )
-        class_session.flush()
         with login_context(client, app, "member"):
             yield
 
@@ -116,9 +118,7 @@ class TestPermissionsUser:
         for url, method in blueprint_urls("facilities"):
             client.assert_url_forbidden(url, method=method)
 
-    def test_access_infrastructure(
-        self, client: TestClient, blueprint_urls: BlueprintUrls
-    ):
+    def test_access_infrastructure(self, client: TestClient, blueprint_urls: BlueprintUrls):
         for url, method in blueprint_urls("infrastructure"):
             client.assert_url_forbidden(url, method=method)
 
@@ -128,5 +128,5 @@ class TestPermissionsUser:
 
     def test_access_login(self, client: TestClient, blueprint_urls: BlueprintUrls):
         # Login see Test_010_Anonymous
-        #TODO assert client response by text or better, not code
+        # TODO assert client response by text or better, not code
         client.assert_response_code("login.logout", 302)

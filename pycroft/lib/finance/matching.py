@@ -45,13 +45,17 @@ def match_activities() -> tuple[UserMatching, AccountMatching]:
     return matching, team_matching
 
 
-def _and_then[T, U](thing: T | None, f: Callable[[T], U | None]) -> U | None:
+# NOTE: this is slightly off the original intention (monadic bind),
+#  but will work because `ty` can then resolve `U` as `V | None` in many cases.
+#  see also https://github.com/astral-sh/ty/issues/1703
+#  and https://github.com/astral-sh/ty/issues/3557
+def _and_then[T, U](thing: T | None, f: Callable[[T], U]) -> U | None:
     return None if thing is None else f(thing)
 
 
-def _match_reference[
-    TUser
-](reference: str, fetch_normal: Callable[[int], TUser | None]) -> TUser | None:
+def _match_reference[TUser](
+    reference: str, fetch_normal: Callable[[int], TUser | None]
+) -> TUser | None:
     """Try to return a user fitting a given bank reference string.
 
     :param reference: the bank reference
@@ -75,9 +79,7 @@ def _match_pycroft_reference(reference: str) -> int | None:
     """Given a bank reference, return the user id"""
     from pycroft.lib.user import check_user_id
 
-    search = re.findall(
-        r"([\d]{4,6} ?[-/?:,+.]? ?[\d]{1,2})", reference.replace(" ", "")
-    )
+    search = re.findall(r"([\d]{4,6} ?[-/?:,+.]? ?[\d]{1,2})", reference.replace(" ", ""))
     if not search:
         return None
 

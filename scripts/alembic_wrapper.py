@@ -17,6 +17,7 @@ from .connection import get_connection_string, try_create_connection
 
 logger = logging.getLogger(__name__)
 
+
 @click.command(
     name="alembic",
     context_settings={"ignore_unknown_options": True, "allow_extra_args": True},
@@ -39,6 +40,7 @@ def diff(config: Config, *args: t.Any, **kwargs: t.Any) -> None:
     metadata = ModelBase.metadata
     diff_table = render_diffset(autogen.compare_metadata(migration_context, metadata))
     from rich import print
+
     print(diff_table)
 
 
@@ -86,5 +88,5 @@ def try_strip(string: str, prefix: str) -> str | None:
     return None
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

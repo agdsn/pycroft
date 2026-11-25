@@ -25,7 +25,7 @@ classifiers = [
     "Topic :: Internet",
 ]
 urls = {Homepage = "http://github.com/agdsn/pycroft/"}
-requires-python = ">= 3.12"
+requires-python = ">= 3.15"
 dependencies = [
     "aiohttp >= 3.9.4", # security pin; transitive from mac-vendor-lookup
     "alembic~=1.17.1",
@@ -34,37 +34,41 @@ dependencies = [
     "blinker ~= 1.4",
     "celery ~= 5.4.0",
     "Click ~= 8.0",
-    "email-validator ~= 1.1.1",
+    "email-validator~=2.3.0",
     "fints ~= 5.0.0",
-    "Flask ~= 3.0.3",
+    "flask~=3.1.3",
     "Flask-Babel ~= 4.0.0",
     "Flask-Login ~= 0.6.2",
     "Flask-RESTful ~= 0.3.7",
-    "Flask-WTF ~= 1.1.1",
+    "flask-wtf~=1.3.0",
     "GitPython ~= 3.1.43",
     "netaddr ~= 1.3.0",
     "Jinja2 ~= 3.1.4",
-    "jsonschema ~= 3.2.0",
+    "jsonschema~=4.26.0",
     "ldap3 ~= 2.5.1", # only needed for ldap caching
     "mac-vendor-lookup ~= 0.1.11",
     "MarkupSafe ~= 2.0",
-    "marshmallow ~= 3.20.1",
-    "mt-940 ~= 4.19.0",
+    "marshmallow~=4.3.1",
+    "mt-940~=5.1.1",
     "passlib ~= 1.7.1",
-    "psycopg2-binary ~= 2.9.10",
-    "pydantic ~= 2.9.2",
+    # passlib 1.7.4 imports pkg_resources, which setuptools removed in 82
+    "setuptools ~= 81.0",
+    "pydantic~=2.14",
     "python-dotenv ~= 0.21.0",
     "reportlab ~= 4.2.5", # usersheet generation
     "rich ~= 13.8.0",
-    "schwifty ~= 2024.9.0",
-    "sentry-sdk[Flask] ~= 1.29.2",
+    "schwifty~=2026.10.0",
+    "sentry-sdk[flask]~=2.73.0",
     "simplejson ~= 3.11.1", # decimal serialization
-    "SQLAlchemy >= 2.0.1, <= 2.0.37",
-    "webargs ~= 8.3.0",
+    "sqlalchemy~=2.1.6",
+    "webargs~=8.7.1",
     "wrapt ~= 1.16.0",
-    "WTForms ~= 2.3.3",
-    "wtforms-widgets",
+    "wtforms~=3.3.1",
+    "wtforms-widgets[sql]",
     "sepaxml ~= 2.7.0",
+    "typing-extensions>=4.16",
+    "psycopg[binary]>=3.3.6",
+    "legacycrypt~=0.3",
 ]
 
 [dependency-groups]
@@ -77,19 +81,18 @@ schemadisplay = [
 ]
 dev = [
     "celery-types ~= 0.9.3",
-    "coverage ~= 6.5.0",
+    "coverage>=7.17",
     "factory-boy ~= 3.3.3",
     "Flask-Testing ~= 0.8.1",
     "guzzle-sphinx-theme @ git+https://github.com/agdsn/guzzle_sphinx_theme.git@977d49fcbdf2b3df9660d813d4b33369391923e1",
-    "mypy ~= 1.11.2",
     "pydot ~= 1.4.1",
     "pyinstrument ~= 4.2.0",
-    "pytest ~= 8.4.1",
+    "pytest~=9.0",
     "pytest-cov ~= 4.0.0",
     "pytest-freezegun ~= 0.4.2",
     "pytest-timeout ~= 2.1.0",
     # required for pycharm „run with coverage“ reporting
-    "ruff ~= 0.3.2",
+    "ruff~=0.17.2",
     "sphinx ~= 7.3.7",
     "sphinx-autobuild ~= 2021.3.14",
     "sphinx-toolbox ~= 3.7.0",
@@ -102,6 +105,9 @@ dev = [
     "types-passlib ~= 1.7.7",
     "watchdog ~= 2.3.1",
     "sepaxml ~= 2.7.0",
+    "types-wtforms>=3.2.1.20250809",
+    "types-for-jinja[lsp]>=1.1.4",
+    "ty>=0.0.90",
 ]
 
 [project.scripts]
@@ -113,6 +119,7 @@ alembic = "scripts.alembic_wrapper:main"
 
 [tool.uv.sources]
 wtforms-widgets = { path = "deps/wtforms-widgets", editable = true }
+types-for-jinja = { git = "https://github.com/agdsn/types-for-jinja.git", branch = "b/import-scoping" }
 
 [tool.setuptools]
 include-package-data = true
@@ -132,8 +139,22 @@ executable = "ruff"
 options = "format REVISION_SCRIPT_FILENAME"
 
 # TOOLS
-[tool.black]
-line-length = 100
+[tool.ty.src]
+include = [
+    "pycroft/helpers",
+    "pycroft/lib",
+    "ldap_sync",
+    "web",
+    "_jinja_stubs",
+]
+
+[tool.ty.environment]
+extra-paths = ["stubs"]
+
+[tool.ty.rules]
+unsound-return-statement = "error"
+missing-type-argument = "error"
+dynamic-function-decorator-return = "error"
 
 [tool.mypy]
 exclude = "deps/.*/build"
@@ -147,10 +168,10 @@ files = [
     "pycroft/lib",
     "ldap_sync",
     "web",
+    "_jinja_stubs",
 ]
 mypy_path = "stubs"
 namespace_packages = true
-enable_incomplete_feature = ["NewGenericSyntax"]
 
 # global rules
 check_untyped_defs = true
@@ -199,6 +220,10 @@ module = [
 ]
 strict_optional = true
 
+[[tool.mypy.overrides]]
+module = ["_jinja_stubs", "_jinja_stubs.*"]
+disable_error_code = ["no-redef"]
+
 [tool.pytest.ini_options]
 addopts = "--tb=short --no-header"
 markers = [
@@ -227,7 +252,6 @@ timeout = "10"
 
 [tool.ruff]
 line-length = 100
-target-version = "py310"
 exclude = [
     "deps/",
     "doc/",
@@ -238,10 +262,12 @@ select = [
     "E",
     "F",
     "B",  # flake8-bugbear
+    "UP",  # pyupgrade
 ]
 ignore = [
     "E741",  # ambiguous variable names
     "E501",  # line length violations (for now)
+    "B010",  # setattr with constant key
 ]
 unfixable = [
     "B",  # fixing bug hazards requires knowledge about the intention
@@ -259,3 +285,21 @@ unfixable = [
 "pycroft/model/_all.py" = ["F403"]
 "helpers/interactive.py" = ["F403"]
 "**/*.pyi" = ["F811"]
+
+[tool.types_for_jinja]
+template_dirs = ["web/templates"]
+extensions = ["i18n"]
+imports = [
+    "import typing as t",
+    "import pycroft",
+    "import web",
+    "from flask.helpers import url_for",
+    "from flask.globals import request",
+    "from web.app import PycroftConfig",
+    "from pycroft.helpers.i18n import localized",
+]
+
+[tool.types_for_jinja.globals]
+config = "PycroftConfig"
+current_user = "pycroft.model.user.User"
+

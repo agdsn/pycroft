@@ -4,10 +4,10 @@ from pycroft.model.address import Address
 from tests.factories.base import BaseFactory
 
 
-class AddressFactory(BaseFactory):
+class AddressFactory(BaseFactory[Address]):
     class Meta:
         model = Address
-        exclude = ('_number',)
+        exclude = ("_number",)
 
     street = Faker("street_name")
     _number = Faker("random_digit")

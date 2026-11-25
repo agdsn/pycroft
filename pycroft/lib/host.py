@@ -5,6 +5,7 @@
 pycroft.lib.host
 ~~~~~~~~~~~~~~~~
 """
+
 import typing as t
 
 import netaddr
@@ -35,8 +36,7 @@ def change_mac(interface: Interface, mac: str, processor: User) -> Interface:
     """
     old_mac = interface.mac
     interface.mac = mac
-    message = deferred_gettext("Changed MAC address from {} to {}.").format(
-        old_mac, mac)
+    message = deferred_gettext("Changed MAC address from {} to {}.").format(old_mac, mac)
     if interface.host.owner:
         log_user_event(message.to_json(), processor, interface.host.owner)
     return interface
@@ -47,43 +47,32 @@ def generate_hostname(ip_address: netaddr.IPAddress) -> str:
 
 
 @with_transaction
-def host_create(owner: User, room: Room, name: str, processor: User) -> Host:
+def host_create(owner: User, room: Room, name: str | None, processor: User) -> Host:
     host = Host(name=name, owner_id=owner.id, room=room)
 
     session.add(host)
 
-    message = (
-        deferred_gettext("Created host '{name}' in {dorm} {level}-{room}.")
-        .format(
-            name=host.name,
-            dorm=room.building.short_name,
-            level=room.level,
-            room=room.number,
-        )
+    message = deferred_gettext("Created host '{name}' in {dorm} {level}-{room}.").format(
+        name=host.name,
+        dorm=room.building.short_name,
+        level=room.level,
+        room=room.number,
     )
-    log_user_event(author=processor,
-                   user=owner,
-                   message=message.to_json())
+    log_user_event(author=processor, user=owner, message=message.to_json())
 
     return host
 
 
 @with_transaction
-def host_edit(host: Host, owner: User, room: Room, name: str, processor: User) -> None:
+def host_edit(host: Host, owner: User, room: Room, name: str | None, processor: User) -> None:
     if host.name != name:
-        message = deferred_gettext("Changed name of host '{}' to '{}'.").format(
-            host.name, name
-        )
+        message = deferred_gettext("Changed name of host '{}' to '{}'.").format(host.name, name)
         host.name = name
 
-        log_user_event(author=processor,
-                       user=owner,
-                       message=message.to_json())
+        log_user_event(author=processor, user=owner, message=message.to_json())
 
     if host.owner_id != owner.id:
-        message = deferred_gettext("Transferred Host '{}' to {}.").format(
-            host.name, owner.id
-        )
+        message = deferred_gettext("Transferred Host '{}' to {}.").format(host.name, owner.id)
         log_user_event(author=processor, user=host.owner, message=message.to_json())
 
         message = deferred_gettext("Transferred Host '{}' from {}.").format(
@@ -130,7 +119,9 @@ def migrate_host(session: Session, host: Host, new_room: Room, processor: User) 
                 log_user_event(author=processor, user=host.owner, message=message.to_json())
 
     message = deferred_gettext("Moved host '{name}' from {room_old} to {room_new}.").format(
-        name=host.name, room_old=old_room.short_name, room_new=new_room.short_name
+        name=host.name,
+        room_old=old_room.short_name if old_room is not None else None,
+        room_new=new_room.short_name,
     )
 
     log_user_event(author=processor, user=host.owner, message=message.to_json())
@@ -147,7 +138,7 @@ def host_delete(host: Host, processor: User) -> None:
 @with_transaction
 def interface_create(
     host: Host,
-    name: str,
+    name: str | None,
     mac: str,
     ips: t.Iterable[netaddr.IPAddress] | None,
     processor: User,
@@ -165,17 +156,12 @@ def interface_create(
 
     # IP added
     for ip in ips:
-        subnet = next(
-            iter([subnet for subnet in subnets if (ip in subnet.address)]),
-            None)
+        subnet = next(iter([subnet for subnet in subnets if (ip in subnet.address)]), None)
 
         if subnet is not None:
-            session.add(IP(interface=interface, address=ip,
-                           subnet=subnet))
+            session.add(IP(interface=interface, address=ip, subnet=subnet))
 
-    message = deferred_gettext(
-        "Created interface ({}, {}) with name '{}' for host '{}'."
-    ).format(
+    message = deferred_gettext("Created interface ({}, {}) with name '{}' for host '{}'.").format(
         interface.mac,
         ", ".join(str(ip_.address) for ip_ in interface.ips),
         interface.name,
@@ -189,7 +175,7 @@ def interface_create(
 @with_transaction
 def interface_edit(
     interface: Interface,
-    name: str,
+    name: str | None,
     mac: str,
     ips: t.Iterable[netaddr.IPAddress],
     processor: User,
@@ -225,23 +211,19 @@ def interface_edit(
     # IP added
     for ip in ips:
         if ip not in current_ips:
-            subnet = next(
-                iter([subnet for subnet in subnets if (ip in subnet.address)]),
-                None)
+            subnet = next(iter([subnet for subnet in subnets if (ip in subnet.address)]), None)
 
             if subnet is not None:
-                session.add(IP(interface=interface, address=ip,
-                                       subnet=subnet))
+                session.add(IP(interface=interface, address=ip, subnet=subnet))
                 ips_changed = True
                 new_ips.add(netaddr.IPAddress(ip))
 
     if ips_changed:
-        message += " New IPs: {}.".format(', '.join(str(ip) for ip in
-                                                    new_ips))
+        message += " New IPs: {}.".format(", ".join(str(ip) for ip in new_ips))
 
-    log_user_event(author=processor,
-                   user=interface.host.owner,
-                   message=deferred_gettext(message).to_json())
+    log_user_event(
+        author=processor, user=interface.host.owner, message=deferred_gettext(message).to_json()
+    )
 
 
 @with_transaction
@@ -249,9 +231,7 @@ def interface_delete(interface: Interface, processor: User) -> None:
     message = deferred_gettext("Deleted interface {} of host {}.").format(
         interface.mac, interface.host.name
     )
-    log_user_event(
-        author=processor, user=interface.host.owner, message=message.to_json()
-    )
+    log_user_event(author=processor, user=interface.host.owner, message=message.to_json())
 
     session.delete(interface)
 

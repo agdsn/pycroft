@@ -5,11 +5,12 @@ Revises: 9a291ca0e06e
 Create Date: 2019-03-05 23:22:32.642764
 
 """
+
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = '7855ecffe722'
-down_revision = '9a291ca0e06e'
+revision = "7855ecffe722"
+down_revision = "9a291ca0e06e"
 branch_labels = None
 depends_on = None
 

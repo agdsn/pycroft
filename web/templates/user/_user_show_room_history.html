@@ -1,1 +1,6 @@
+{#def
+from web.blueprints.user.tables import RoomHistoryTable
+
+room_history_table: RoomHistoryTable
+#}
 {{ room_history_table.render('room_history_table') }}

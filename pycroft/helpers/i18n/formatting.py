@@ -5,6 +5,7 @@
 pycroft.helpers.i18n.formatting
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 """
+
 from __future__ import annotations
 
 import typing
@@ -22,31 +23,30 @@ from .utils import qualified_typename
 
 class Formattable(typing.Protocol):
     @t.override
-    def __format__(self, format_spec: str) -> str:
-        ...
+    def __format__(self, format_spec: str) -> str: ...
 
 
 if typing.TYPE_CHECKING:
     from _typeshed import SupportsAllComparisons as Ord
 
 
-class Formatter[T: Ord, **P](typing.Protocol):
+class Formatter[T, **P](typing.Protocol):
     __option_policy__: OptionPolicy
     # first parameter is `Self`
-    __call__: t.Callable[t.Concatenate[Formatter, T, P], Formattable]
+    __call__: t.Callable[t.Concatenate[Formatter[T, P], T, P], Formattable]
     __name__: str
 
 
-def type_specific_options[
-    T: Ord, **P
-](formatter: typing.Callable[typing.Concatenate[T, P], Formattable]) -> Formatter[T, P]:
+def type_specific_options[T: Ord, **P](
+    formatter: typing.Callable[typing.Concatenate[T, P], Formattable],
+) -> Formatter[T, P]:
     formatter.__option_policy__ = "type-specific"  # type: ignore
     return typing.cast(Formatter[T, P], formatter)
 
 
-def ignore_options[
-    T: Ord, **P
-](formatter: typing.Callable[typing.Concatenate[T, P], Formattable]) -> Formatter[T, P]:
+def ignore_options[T: Ord, **P](
+    formatter: typing.Callable[typing.Concatenate[T, P], Formattable],
+) -> Formatter[T, P]:
     formatter.__option_policy__ = "ignore"  # type: ignore
     return typing.cast(Formatter[T, P], formatter)
 
@@ -104,24 +104,20 @@ def format_bool(v):
 
 
 @ignore_options
-def format_none(n):
+def format_none(_n):
     return gettext("None")
 
 
 @type_specific_options
-def format_interval(interval: Interval, **options: TypeSpecificOptions):
+def format_interval(interval: Interval[t.Any], **options: TypeSpecificOptions):
     lower_bound = interval.lower_bound
     upper_bound = interval.upper_bound
     assert type(lower_bound) == type(upper_bound)  # noqa: E721
     generic_options: Options = {type(lower_bound): options}
     return "{}{}, {}{}".format(
         "[" if lower_bound.closed else "(",
-        format_param(lower_bound.value, generic_options)
-        if not lower_bound.unbounded
-        else "-∞",
-        format_param(upper_bound.value, generic_options)
-        if not upper_bound.unbounded
-        else "∞",
+        format_param(lower_bound.value, generic_options) if not lower_bound.unbounded else "-∞",
+        format_param(upper_bound.value, generic_options) if not upper_bound.unbounded else "∞",
         "]" if upper_bound.closed else ")",
     )
 
@@ -131,7 +127,7 @@ def identity(x):
     return x
 
 
-formatter_map: dict[type, Formatter] = {
+formatter_map: dict[type, Formatter[t.Any, ...]] = {
     type(None): identity,
     bool: identity,
     str: identity,
@@ -150,16 +146,13 @@ formatter_map: dict[type, Formatter] = {
 def format_param(p, options: dict[type, dict[str, typing.Any]]) -> Formattable:
     concrete_type = type(p)
     formatters = (
-        (type_, formatter_map[type_])
-        for type_ in concrete_type.__mro__
-        if type_ in formatter_map
+        (type_, formatter_map[type_]) for type_ in concrete_type.__mro__ if type_ in formatter_map
     )
     try:
         type_, formatter = next(formatters)
     except StopIteration:
         raise TypeError(
-            f"No formatter available for type {qualified_typename(concrete_type)}"
-            " or any supertype."
+            f"No formatter available for type {qualified_typename(concrete_type)} or any supertype."
         ) from None
     option_policy: OptionPolicy | None = getattr(formatter, "__option_policy__", None)
     if option_policy == "ignore":

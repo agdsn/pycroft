@@ -15,27 +15,31 @@ from tests.factories import UserFactory, UserTaskFactory, RoomFactory
 
 class TestTaskExecution:
     @pytest.fixture(scope="class")
-    def old_room(self, class_session):
+    @classmethod
+    def old_room(cls, class_session):
         return RoomFactory()
 
     @pytest.fixture(scope="class")
-    def new_room(self, class_session):
+    @classmethod
+    def new_room(cls, class_session):
         return RoomFactory()
 
     @pytest.fixture(scope="class")
-    def user(self, class_session, old_room):
+    @classmethod
+    def user(cls, class_session, old_room):
         return UserFactory(room=old_room)
 
     # not `class` scoped because it changes its `Task.status`
     @pytest.fixture
     def task(self, class_session, user, new_room, processor):
         return UserTaskFactory(
-            user=user, type=TaskType.USER_MOVE,
+            user=user,
+            type=TaskType.USER_MOVE,
             created=datetime.datetime.now() - datetime.timedelta(days=1),
             due=datetime.datetime.now() + datetime.timedelta(days=7),
-            parameters=UserMoveParams(room_number=new_room.number,
-                                      level=new_room.level,
-                                      building_id=new_room.building_id),
+            parameters=UserMoveParams(
+                room_number=new_room.number, level=new_room.level, building_id=new_room.building_id
+            ),
             creator=processor,
         )
 
@@ -60,10 +64,11 @@ class TestTaskExecution:
         assert assert_one(task.log_entries).author == processor
 
     def test_task_reschedule(self, task, processor, old_room, user):
-        new_due_date = utc.ensure_tz(datetime.datetime.utcnow() + datetime.timedelta(days=5))
+        new_due_date = utc.ensure_tz(
+            datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=5)
+        )
         reschedule_task(task, new_due_date, processor=processor)
         assert user.room == old_room
         assert task.status == TaskStatus.OPEN
         assert task.due == new_due_date
         assert task.latest_log_entry.author == processor
-

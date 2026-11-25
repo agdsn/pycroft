@@ -51,9 +51,7 @@ def end_payment_in_default_memberships(processor: User) -> t.Sequence[User]:
     return users
 
 
-def get_last_payment_in_default_membership(
-    session: Session, user: User
-) -> Membership | None:
+def get_last_payment_in_default_membership(session: Session, user: User) -> Membership | None:
     membership: Membership | None = session.scalars(
         select(Membership)
         .filter(Membership.user_id == user.id)
@@ -160,9 +158,7 @@ def take_actions_for_payment_in_default_users(
 
     for user in users_pid_membership:
         if not user.member_of(config.payment_in_default_group):
-            make_member_of(
-                user, config.payment_in_default_group, processor, closed(ts_now, None)
-            )
+            make_member_of(user, config.payment_in_default_group, processor, closed(ts_now, None))
 
     from pycroft.lib.user import move_out
 
@@ -179,22 +175,18 @@ def take_actions_for_payment_in_default_users(
             if fee is None:
                 raise ValueError("No fee found")
 
-
             end_membership_date = utcnow() - (
                 timedelta(days=in_default_days) - fee.payment_deadline_final
             )
 
             move_out(user, "Zahlungsrückstand", processor, end_membership_date, True)
 
-            log_user_event(
-                "Mitgliedschaftsende wegen Zahlungsrückstand.", processor, user
-            )
+            log_user_event("Mitgliedschaftsende wegen Zahlungsrückstand.", processor, user)
 
 
 def get_pid_csv() -> str:
     """Generate a CSV file containing all members with negative balance
     (“payment in default”)."""
-
 
     from pycroft.lib.user import encode_type2_user_id
 

@@ -13,6 +13,7 @@
     {# {{ resources.link_css("vendor.css" | require) }} #}
     {{ resources.link_css("main.css" | require) }}
     {% block page_css %}{% endblock %}
+    {{ resources.link_script_file("datastar.js" | require) }}
     <link rel="icon" href="{{ "img/pycroft.svg" | require }}"/>
     <title>Pycroft – {{ navigation.get_blueprint_title(config) }} {{ navigation.get_page_title(config, page_title) -}}</title>
 

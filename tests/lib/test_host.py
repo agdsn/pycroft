@@ -34,6 +34,8 @@ def test_change_mac(interface, processor):
 
 
 CHANGED_MAC_REGEX = re.compile(r"changed mac", re.IGNORECASE)
+
+
 def test_change_mac_with_owner(session, owner, interface, processor):
     interface = change_mac(interface, NEW_MAC, processor)
     assert interface.mac == NEW_MAC

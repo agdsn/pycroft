@@ -26,6 +26,7 @@ class MembershipTable(BootstrapTable):
     In the toolbar, a “new membership” button is inserted if the
     :py:obj:`current_user` has the ``add_membership`` property.
     """
+
     group_name = Column("Gruppe")
     begins_at = DateColumn("Beginn")
     ends_at = DateColumn("Ende")
@@ -47,11 +48,11 @@ class MembershipTable(BootstrapTable):
         href = url_for(".add_membership", user_id=self.user_id)
         return button_toolbar("Mitgliedschaft", href)
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         table_args = {
-            'data-row-attributes': 'table.membershipRowAttributes',
-            'data-row-style': 'table.membershipRowFormatter',
-            'class': 'membership-table'
+            "data-row-attributes": "table.membershipRowAttributes",
+            "data-row-style": "table.membershipRowFormatter",
+            "class": "membership-table",
         }
 
 
@@ -73,6 +74,7 @@ class MembershipRow(BaseModel):
 
 class SearchTable(BootstrapTable):
     """A table for displaying search results"""
+
     id = Column("ID")
     url = LinkColumn("Name")
     login = Column("Login")
@@ -94,8 +96,9 @@ class UserSearchRow(BaseModel):
 
 class TrafficTopTable(BootstrapTable):
     """A table for displaying the users with the highest traffic usage"""
+
     url = LinkColumn("Name")
-    traffic_for_days = Column("Traffic", formatter='table.byteFormatterBinary')
+    traffic_for_days = Column("Traffic", formatter="table.byteFormatterBinary")
 
 
 class TrafficTopRow(BaseModel):
@@ -141,9 +144,9 @@ class PreMemberTable(BootstrapTable):
     move_in_date = DateColumn("Einzug am")
     actions = MultiBtnColumn("Aktionen", hide_if=no_membership_change, width=1)
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         table_args = {
-            'data-row-style': 'table.membershipRequestRowFormatter',
+            "data-row-style": "table.membershipRequestRowFormatter",
         }
 
 
@@ -166,13 +169,13 @@ class PreMemberRow(BaseModel):
 
 
 class ArchivableMembersTable(RefreshableTableMixin, BootstrapTable):
-    class Meta:
-        table_args = {'data-escape': 'false', 'data-sort-stable': True}
+    class Meta:  # ty: ignore[invalid-attribute-override]
+        table_args = {"data-escape": "false", "data-sort-stable": True}
 
     id = Column("#")
     user = LinkColumn("Mitglied")
-    room_shortname = LinkColumn("<i class=\"fas fa-home\"></i>")
-    num_hosts = Column("<i class=\"fas fa-laptop\"></i>")
+    room_shortname = LinkColumn('<i class="fas fa-home"></i>')
+    num_hosts = Column('<i class="fas fa-laptop"></i>')
     current_properties = Column("Props", formatter="table.propertiesFormatter")
     end_of_membership = DateColumn("EOM")
 

@@ -10,5 +10,5 @@ def test_drop_constraint_if_exists(table):
 
 
 def test_drop_constraint_identifier_quotation(table):
-    stmt = DropConstraint(PrimaryKeyConstraint(table.c.id, name='PRIMARY'))
+    stmt = DropConstraint(PrimaryKeyConstraint(table.c.id, name="PRIMARY"))
     assert literal_compile(stmt) == 'ALTER TABLE test DROP CONSTRAINT "PRIMARY"'

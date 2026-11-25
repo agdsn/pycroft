@@ -2,6 +2,7 @@
 pycroft.model.hades
 ~~~~~~~~~~~~~~~~~~~
 """
+
 from sqlalchemy import (
     literal,
     Column,
@@ -37,17 +38,20 @@ hades_view_ddl = DDLManager()
 
 network_access_subq = (
     # Select `user_id, 1` for all people with network_access
-    Query([current_property.table.c.user_id.label('user_id'),
-           literal(1).label('network_access')])
-    .filter(and_(current_property.table.c.property_name == 'network_access',
-                 ~current_property.table.c.denied))
-    .subquery('users_with_network_access')
+    Query([current_property.table.c.user_id.label("user_id"), literal(1).label("network_access")])
+    .filter(
+        and_(
+            current_property.table.c.property_name == "network_access",
+            ~current_property.table.c.denied,
+        )
+    )
+    .subquery("users_with_network_access")
 )
 
 radius_property = Table(
-    'radius_property',
+    "radius_property",
     ModelBase.metadata,
-    Column('property', String, primary_key=True),
+    Column("property", String, primary_key=True),
     Column("hades_group_name", String, nullable=False),
     Column("is_blocking_group", Boolean, nullable=False),
 )
@@ -66,7 +70,7 @@ radius_property.add_is_dependent_on(Subnet.__table__)
 radius_property.add_is_dependent_on(User.__table__)
 
 radusergroup = View(
-    name='radusergroup',
+    name="radusergroup",
     query=union_all(
         # Priority 20: valid case (interface's mac w/ vlan at correct ports)
         # <mac> @ <switch>/<port> → <vlan>_[un]tagged (Prio 20)
@@ -93,9 +97,8 @@ radusergroup = View(
         .join(Subnet)
         .join(VLAN)
         .join(User.current_properties)
-        .filter(CurrentProperty.property_name == 'network_access')
+        .filter(CurrentProperty.property_name == "network_access")
         .statement,
-
         # Priority -10: Blocking reason exists
         # <mac> @ <switch>/<port> → <blocking_group> (Prio -10)
         # Note that Fall-Through:=No for blocking groups, so first match terminates
@@ -119,9 +122,7 @@ radusergroup = View(
         .join(SwitchPort)
         .join(Switch)
         .join(User.current_properties)
-        .join(
-            radius_property, radius_property.c.property == CurrentProperty.property_name
-        ),
+        .join(radius_property, radius_property.c.property == CurrentProperty.property_name),
         # Priority 0: No blocking reason exists → generic error group `no_network_access`
         Query(
             [
@@ -154,18 +155,21 @@ radusergroup = View(
 hades_view_ddl.add_view(radius_property, radusergroup)
 
 radcheck = View(
-    name='radcheck',
+    name="radcheck",
     query=(
         # This adds all existing interfaces.
-        Query([
-            func.text(Interface.mac).label('UserName'),
-            func.host(Switch.management_ip).label('NASIPAddress'),
-            SwitchPort.name.label('NASPortId'),
-            literal("User-Name").label('Attribute'),
-            literal("=*").label('Op'),
-            null().label('Value'),
-            literal(10).label('Priority'),
-        ]).select_from(Interface)
+        Query(
+            [
+                func.text(Interface.mac).label("UserName"),
+                func.host(Switch.management_ip).label("NASIPAddress"),
+                SwitchPort.name.label("NASPortId"),
+                literal("User-Name").label("Attribute"),
+                literal("=*").label("Op"),
+                null().label("Value"),
+                literal(10).label("Priority"),
+            ]
+        )
+        .select_from(Interface)
         .join(Host)
         .join(Room)
         .join(Room.connected_patch_ports)
@@ -177,75 +181,87 @@ radcheck = View(
 hades_view_ddl.add_view(radius_property, radcheck)
 
 radgroupcheck = View(
-    name='radgroupcheck',
-    query=Query([
-        literal("unknown").label('GroupName'),
-        literal("Auth-Type").label('Attribute'),
-        literal(":=").label('Op'),
-        literal("Accept").label('Value'),
-        literal(10).label('Priority'),
-    ]).statement,
+    name="radgroupcheck",
+    query=Query(
+        [
+            literal("unknown").label("GroupName"),
+            literal("Auth-Type").label("Attribute"),
+            literal(":=").label("Op"),
+            literal("Accept").label("Value"),
+            literal(10).label("Priority"),
+        ]
+    ).statement,
 )
 hades_view_ddl.add_view(radius_property, radgroupcheck)
 
 radreply = Table(
-    'radreply',
+    "radreply",
     ModelBase.metadata,
-    Column('Priority', Integer),
-    Column('UserName', String(64), nullable=False),
-    Column('NASIPAddress', String(15), nullable=False),
-    Column('NASPortId', String(50), nullable=False),
-    Column('Attribute', String(64), nullable=False),
-    Column('Op', String(2), nullable=False),
-    Column('Value', String(253), nullable=False),
-    PrimaryKeyConstraint('UserName', 'NASIPAddress', 'NASPortId', 'Priority'),
+    Column("Priority", Integer),
+    Column("UserName", String(64), nullable=False),
+    Column("NASIPAddress", String(15), nullable=False),
+    Column("NASPortId", String(50), nullable=False),
+    Column("Attribute", String(64), nullable=False),
+    Column("Op", String(2), nullable=False),
+    Column("Value", String(253), nullable=False),
+    PrimaryKeyConstraint("UserName", "NASIPAddress", "NASPortId", "Priority"),
 )
 
 radgroupreply_base = Table(
-    'radgroupreply_base',
+    "radgroupreply_base",
     ModelBase.metadata,
-    Column('GroupName', String),
-    Column('Attribute', String),
-    Column('Op', String),
-    Column('Value', String),
-    PrimaryKeyConstraint('GroupName', 'Attribute', 'Op', 'Value'),
+    Column("GroupName", String),
+    Column("Attribute", String),
+    Column("Op", String),
+    Column("Value", String),
+    PrimaryKeyConstraint("GroupName", "Attribute", "Op", "Value"),
 )
 
 radgroupreply = View(
-    name='radgroupreply',
+    name="radgroupreply",
     query=union_all(
-        Query([
-            radgroupreply_base.c.GroupName.label('GroupName'),
-            radgroupreply_base.c.Attribute.label('Attribute'),
-            radgroupreply_base.c.Op.label('Op'),
-            radgroupreply_base.c.Value.label('Value'),
-        ]),
+        Query(
+            [
+                radgroupreply_base.c.GroupName.label("GroupName"),
+                radgroupreply_base.c.Attribute.label("Attribute"),
+                radgroupreply_base.c.Op.label("Op"),
+                radgroupreply_base.c.Value.label("Value"),
+            ]
+        ),
         # Egress-VLAN-Name += <vlan>, non-blocking groups
-        Query([
-            (VLAN.name + '_untagged').label('GroupName'),
-            literal("Egress-VLAN-Name").label('Attribute'),
-            literal('+=').label('Op'),
-            (literal('2') + VLAN.name).label('Value'),
-        ]),
-        Query([
-            (VLAN.name + '_tagged').label('GroupName'),
-            literal("Egress-VLAN-Name").label('Attribute'),
-            literal('+=').label('Op'),
-            (literal('1') + VLAN.name).label('Value'),
-        ]),
+        Query(
+            [
+                (VLAN.name + "_untagged").label("GroupName"),
+                literal("Egress-VLAN-Name").label("Attribute"),
+                literal("+=").label("Op"),
+                (literal("2") + VLAN.name).label("Value"),
+            ]
+        ),
+        Query(
+            [
+                (VLAN.name + "_tagged").label("GroupName"),
+                literal("Egress-VLAN-Name").label("Attribute"),
+                literal("+=").label("Op"),
+                (literal("1") + VLAN.name).label("Value"),
+            ]
+        ),
         # Fall-Through := Yes, non-blocking groups
-        Query([
-            (VLAN.name + '_untagged').label('GroupName'),
-            literal("Fall-Through").label('Attribute'),
-            literal(':=').label('Op'),
-            literal('Yes').label('Value'),
-        ]),
-        Query([
-            (VLAN.name + '_tagged').label('GroupName'),
-            literal("Fall-Through").label('Attribute'),
-            literal(':=').label('Op'),
-            literal('Yes').label('Value'),
-        ]),
+        Query(
+            [
+                (VLAN.name + "_untagged").label("GroupName"),
+                literal("Fall-Through").label("Attribute"),
+                literal(":=").label("Op"),
+                literal("Yes").label("Value"),
+            ]
+        ),
+        Query(
+            [
+                (VLAN.name + "_tagged").label("GroupName"),
+                literal("Fall-Through").label("Attribute"),
+                literal(":=").label("Op"),
+                literal("Yes").label("Value"),
+            ]
+        ),
         # Egress-VLAN-Name := 2hades-unauth, blocking groups
         select(
             radius_property.c.hades_group_name.label("GroupName"),
@@ -262,40 +278,44 @@ radgroupreply = View(
         ).where(radius_property.c.is_blocking_group),
         # Generic error group `no_network_access`
         # Same semantics as a specific error group
-        Query([
-            literal("no_network_access").label('GroupName'),
-            literal("Egress-VLAN-Name").label('Attribute'),
-            literal(":=").label('Op'),
-            literal("2hades-unauth").label('Value'),
-        ]),
-        Query([
-            literal("no_network_access").label('GroupName'),
-            literal("Fall-Through").label('Attribute'),
-            literal(":=").label('Op'),
-            literal("No").label('Value'),
-        ]),
+        Query(
+            [
+                literal("no_network_access").label("GroupName"),
+                literal("Egress-VLAN-Name").label("Attribute"),
+                literal(":=").label("Op"),
+                literal("2hades-unauth").label("Value"),
+            ]
+        ),
+        Query(
+            [
+                literal("no_network_access").label("GroupName"),
+                literal("Fall-Through").label("Attribute"),
+                literal(":=").label("Op"),
+                literal("No").label("Value"),
+            ]
+        ),
     ),
 )
 
 hades_view_ddl.add_view(radius_property, radgroupreply)
 
 nas = Table(
-    'nas',
+    "nas",
     ModelBase.metadata,
-    Column('Id', Integer, primary_key=True),
-    Column('NASName', String(128), nullable=False, unique=True),
-    Column('ShortName', String(32), nullable=False),
-    Column('Type', String(30), nullable=False, default='other'),
-    Column('Ports', Integer),
-    Column('Secret', String(60), nullable=False),
-    Column('Server', String(64)),
-    Column('Community', String(50)),
-    Column('Description', String(200)),
+    Column("Id", Integer, primary_key=True),
+    Column("NASName", String(128), nullable=False, unique=True),
+    Column("ShortName", String(32), nullable=False),
+    Column("Type", String(30), nullable=False, default="other"),
+    Column("Ports", Integer),
+    Column("Secret", String(60), nullable=False),
+    Column("Server", String(64)),
+    Column("Community", String(50)),
+    Column("Description", String(200)),
 )
 
 
 dhcphost = View(
-    name='dhcphost',
+    name="dhcphost",
     query=(
         Query(
             [
@@ -309,7 +329,7 @@ dhcphost = View(
         .join(Host)
         .join(Interface)
         .join(IP)
-        .filter(CurrentProperty.property_name == 'network_access')
+        .filter(CurrentProperty.property_name == "network_access")
         .statement
     ),
 )
@@ -317,23 +337,33 @@ hades_view_ddl.add_view(ModelBase.metadata, dhcphost)
 
 current_prop_alias = aliased(CurrentProperty)
 alternative_dns = View(
-    name='alternative_dns',
+    name="alternative_dns",
     query=(
         # This query still works, but shouldn't have an effect,
         # since the alternative DNS is not used anymore.
         # Furthermore, pycroft is oblivious to the `cache_access` functionality,
         # as it has been removed in 2021-05.
-        Query([func.host(IP.address).label('IpAddress')])
+        Query([func.host(IP.address).label("IpAddress")])
         .select_from(User)
         .join(Host)
         .join(Interface)
         .join(IP)
-        .join(CurrentProperty, and_(CurrentProperty.user_id == User.id,
-                                    ~CurrentProperty.denied,
-                                    CurrentProperty.property_name == 'network_access'))
-        .join(current_prop_alias, and_(current_prop_alias.user_id == User.id,
-                                       ~CurrentProperty.denied,
-                                       current_prop_alias.property_name == 'cache_access'))
+        .join(
+            CurrentProperty,
+            and_(
+                CurrentProperty.user_id == User.id,
+                ~CurrentProperty.denied,
+                CurrentProperty.property_name == "network_access",
+            ),
+        )
+        .join(
+            current_prop_alias,
+            and_(
+                current_prop_alias.user_id == User.id,
+                ~CurrentProperty.denied,
+                current_prop_alias.property_name == "cache_access",
+            ),
+        )
         .statement
     ),
 )

@@ -127,13 +127,13 @@ def user_send_mail(
 
 
 def get_active_users_with_building(
-    session: Session, groups: t.List[PropertyGroup], buildings: t.List[Building]
+    session: Session, groups: list[PropertyGroup], buildings: list[Building]
 ) -> ScalarResult[User]:
 
     statement = select(User)
 
     if groups:
-        group_ids: t.List[int] = [g.id for g in groups]
+        group_ids: list[int] = [g.id for g in groups]
         statement = (
             statement.join(User.current_memberships)
             .where(Membership.group_id.in_(group_ids))
@@ -141,7 +141,7 @@ def get_active_users_with_building(
         )
     # if building is not None, we add the filter to the query
     if buildings:
-        building_ids: t.List[int] = [b.id for b in buildings]
+        building_ids: list[int] = [b.id for b in buildings]
         statement = (
             statement.join(User.room).join(Room.building).where(Building.id.in_(building_ids))
         )
@@ -150,7 +150,7 @@ def get_active_users_with_building(
 
 
 def group_send_mail(
-    groups: t.List[PropertyGroup], subject: str, body_plain: str, buildings: t.List[Building]
+    groups: list[PropertyGroup], subject: str, body_plain: str, buildings: list[Building]
 ) -> None:
     users = get_active_users_with_building(
         session=session.session, groups=groups, buildings=buildings

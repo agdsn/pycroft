@@ -7,20 +7,20 @@ from flask import Flask
 
 from pycroft.model.user import User
 
-_check_registry: dict[str, t.Callable] = {}
+_check_registry: dict[str, t.Callable[..., t.Any]] = {}
 
 
-def template_check[_T: t.Callable](name: str) -> t.Callable[[_T], _T]:
-    def decorator(fn: _T) -> _T:
+def template_check[T: t.Callable[..., t.Any]](name: str) -> t.Callable[[T], T]:
+    def decorator(fn: T) -> T:
         _check_registry[name] = fn
         return fn
+
     return decorator
 
 
 @template_check("user_with_no_network_access")
 def no_network_access_check(user: User) -> bool:
-    """Tests if user has network access
-    """
+    """Tests if user has network access"""
     return not user.has_property("network_access")
 
 
@@ -66,4 +66,4 @@ def is_dict(value: t.Any) -> bool:
 
 def register_checks(app: Flask) -> None:
     for name in _check_registry:
-        app.jinja_env.tests[name] = _check_registry[name]
+        app.jinja_env.tests[name] = _check_registry[name]  # ty: ignore[invalid-assignment]

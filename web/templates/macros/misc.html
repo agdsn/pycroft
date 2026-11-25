@@ -1,9 +1,14 @@
+{#def #}
 {#
  Copyright (c) 2017 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% macro room_link(room) %}
+{#def
+    from pycroft.model.facilities import Room
+    room: Room | None
+#}
     {% if room %}
         <a href="{{ url_for("facilities.room_show", room_id=room.id) }}">
             <span class="fa fa-home"></span>
@@ -15,6 +20,7 @@
 {% endmacro %}
 
 {% macro yes_no_formatter(bool) %}
+{#def bool: bool #}
      {% if bool %}
          <strong class="text-success">Ja</strong>
      {% else %}

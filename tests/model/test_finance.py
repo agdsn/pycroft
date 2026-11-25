@@ -23,24 +23,24 @@ def author(session):
     return UserFactory()
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def asset_account(module_session):
-    return AccountFactory(type='ASSET')
+    return AccountFactory(type="ASSET")
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def revenue_account(module_session):
-    return AccountFactory(type='REVENUE')
+    return AccountFactory(type="REVENUE")
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def liability_account(module_session):
-    return AccountFactory(type='LIABILITY')
+    return AccountFactory(type="LIABILITY")
 
 
-@pytest.fixture(name='t')
+@pytest.fixture(name="t")
 def transaction(author):
-    return Transaction(description='Transaction', author=author)
+    return Transaction(description="Transaction", author=author)
 
 
 def build_split(t, account, amount):
@@ -70,9 +70,7 @@ def test_insert_balanced(session, t, asset_account, revenue_account):
         pytest.fail("Threw illegalterror")
 
 
-def test_delete_cascade_transaction_to_splits(
-    session, t, asset_account, revenue_account
-):
+def test_delete_cascade_transaction_to_splits(session, t, asset_account, revenue_account):
     s1 = build_split(t, asset_account, 100)
     s2 = build_split(t, revenue_account, -100)
     with session.begin_nested():
@@ -91,9 +89,7 @@ def test_fail_on_self_transaction(session, t, asset_account):
             session.add_all([t, s1, s2])
 
 
-def test_fail_on_multiple_split_same_account(
-    session, t, asset_account, revenue_account
-):
+def test_fail_on_multiple_split_same_account(session, t, asset_account, revenue_account):
     s1 = build_split(t, asset_account, 100)
     s2 = build_split(t, revenue_account, -50)
     s3 = build_split(t, revenue_account, -50)
@@ -112,9 +108,7 @@ def balanced_splits(session, t, asset_account, revenue_account):
     return s1, s2
 
 
-def test_unbalance_with_insert(
-    session, t, balanced_splits, liability_account
-):
+def test_unbalance_with_insert(session, t, balanced_splits, liability_account):
     with pytest.raises(IllegalTransactionError), session.begin_nested():
         session.add(build_split(t, liability_account, 50))
 
@@ -133,17 +127,15 @@ def test_unbalance_with_delete(session, t, balanced_splits):
             t.splits.pop()
 
 
-@pytest.fixture(name='immediate_trigger')
+@pytest.fixture(name="immediate_trigger")
 def immediate_activity_matches_split_trigger(session):
-    session.execute(text(
-        "SET CONSTRAINTS bank_account_activity_matches_referenced_split_trigger"
-        " IMMEDIATE"
-    ))
+    session.execute(
+        text("SET CONSTRAINTS bank_account_activity_matches_referenced_split_trigger IMMEDIATE")
+    )
     yield None
-    session.execute(text(
-        "SET CONSTRAINTS bank_account_activity_matches_referenced_split_trigger"
-        " DEFERRED"
-    ))
+    session.execute(
+        text("SET CONSTRAINTS bank_account_activity_matches_referenced_split_trigger DEFERRED")
+    )
 
 
 @pytest.fixture
@@ -155,7 +147,8 @@ def bank_account() -> BankAccount:
 def build_activity(bank_account, utcnow):
     return partial(
         BankAccountActivityFactory.build,
-        bank_account=bank_account, imported_at=utcnow,
+        bank_account=bank_account,
+        imported_at=utcnow,
     )
 
 
@@ -168,8 +161,7 @@ def test_correct(session, build_activity, bank_account, t, asset_account):
 
 
 def test_wrong_split_amount(
-    session, immediate_trigger,
-    build_activity, bank_account, t, asset_account
+    session, immediate_trigger, build_activity, bank_account, t, asset_account
 ):
     s1 = build_split(t, asset_account, 100)
     s2 = build_split(t, bank_account.account, -100)
@@ -181,8 +173,7 @@ def test_wrong_split_amount(
 
 
 def test_wrong_split_account(
-    session, immediate_trigger,
-    build_activity, revenue_account, t, asset_account
+    session, immediate_trigger, build_activity, revenue_account, t, asset_account
 ):
     s1 = build_split(t, asset_account, 100)
     s2 = build_split(t, revenue_account, -100)

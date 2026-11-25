@@ -25,6 +25,7 @@ Alternatively, follow these guides:
 And possibly:
 
 * :ref:`pycharm integration`
+* :ref:`jinja typing`
 
 
 Using a python virtual environment (venv)

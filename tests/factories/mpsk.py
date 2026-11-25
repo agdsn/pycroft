@@ -11,7 +11,7 @@ from tests.factories.host import UnicastMacProvider
 factory.Faker.add_provider(UnicastMacProvider)
 
 
-class BareMPSKFactory(BaseFactory):
+class BareMPSKFactory(BaseFactory[MPSKClient]):
     """A host without owner or interface."""
 
     class Meta:
@@ -22,5 +22,4 @@ class BareMPSKFactory(BaseFactory):
 
 
 class MPSKFactory(BareMPSKFactory):
-
     owner = factory.SubFactory(UserFactory)

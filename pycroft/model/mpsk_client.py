@@ -18,7 +18,6 @@ from pycroft.model.user import User
 
 
 class MPSKClient(IntegerIdModel):
-
     name: Mapped[str] = mapped_column(String, nullable=False)
 
     owner_id: Mapped[int | None] = mapped_column(

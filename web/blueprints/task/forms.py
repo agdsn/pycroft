@@ -11,10 +11,14 @@ from pycroft.helpers.utc import combine_or_midnight, DateTimeTz
 
 class RescheduleTaskForm(BaseForm):
     when = DateField("Neues Datum")
-    when_time = TimeField("Genaue Zeit", [Optional()],
-                          description="Optional. In UTC angeben.",
-                          render_kw={'placeholder': 'hh:mm'})
+    when_time = TimeField(
+        "Genaue Zeit",
+        [Optional()],
+        description="Optional. In UTC angeben.",
+        render_kw={"placeholder": "hh:mm"},
+    )
 
     @property
     def full_datetime(self) -> DateTimeTz:
+        assert self.when.data is not None
         return combine_or_midnight(self.when.data, self.when_time.data)

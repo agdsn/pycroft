@@ -2,13 +2,14 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
-    web.blueprints.user
-    ~~~~~~~~~~~~~~
+web.blueprints.user
+~~~~~~~~~~~~~~
 
-    This module defines view functions for /user
+This module defines view functions for /user
 
-    :copyright: (c) 2012 by AG DSN.
+:copyright: (c) 2012 by AG DSN.
 """
+
 import re
 import typing as t
 from datetime import datetime, timedelta
@@ -36,6 +37,10 @@ from flask_wtf import FlaskForm
 from markupsafe import Markup
 from sqlalchemy.orm import Session
 
+import pycroft.lib.user
+import pycroft.lib.address
+import pycroft.lib.logging
+import pycroft.lib.membership
 import pycroft.lib.search
 import pycroft.lib.stats
 from pycroft import lib, config
@@ -53,12 +58,21 @@ from pycroft.lib.membership import (
     delete_membership,
 )
 from pycroft.lib.traffic import get_users_with_highest_traffic
-from pycroft.lib.user import encode_type1_user_id, encode_type2_user_id, \
-    traffic_history, generate_user_sheet, get_blocked_groups, \
-    finish_member_request, send_confirmation_email, \
-    delete_member_request, get_member_requests, \
-    get_possible_existing_users_for_pre_member, \
-    send_member_request_merged_email, can_target, edit_address
+from pycroft.lib.user import (
+    encode_type1_user_id,
+    encode_type2_user_id,
+    traffic_history,
+    generate_user_sheet,
+    get_blocked_groups,
+    finish_member_request,
+    send_confirmation_email,
+    delete_member_request,
+    get_member_requests,
+    get_possible_existing_users_for_pre_member,
+    send_member_request_merged_email,
+    can_target,
+    edit_address,
+)
 from pycroft.lib.user_deletion import (
     get_archivable_members,
     scrub_all_mails,
@@ -137,40 +151,37 @@ from ..helpers.log_tables import (
     LogTableRow,
 )
 from ..finance.tables import FinanceTable, FinanceTableSplitted
-from ..helpers.log import format_user_log_entry, format_room_log_entry, \
-    format_task_log_entry
+from ..helpers.log import format_user_log_entry, format_room_log_entry, format_task_log_entry
 from ...template_filters import date_filter, datetime_filter
 
-bp = Blueprint('user', __name__)
-access = BlueprintAccess(bp, required_properties=['user_show'])
-nav = BlueprintNavigation(bp, "Nutzer", icon='fa-user', blueprint_access=access)
+bp = Blueprint("user", __name__)
+access = BlueprintAccess(bp, required_properties=["user_show"])
+nav = BlueprintNavigation(bp, "Nutzer", icon="fa-user", blueprint_access=access)
 
 
-@bp.route('/')
+@bp.route("/")
 @nav.navigate("Übersicht", weight=1)
 def overview() -> ResponseReturnValue:
     stats = pycroft.lib.stats.overview_stats()
-    entries = [{"title": "Mitgliedschaftsanfragen",
-                "href": url_for('.member_requests'),
-                "number": stats.member_requests},
-               {"title": "Nutzer in Datenbank",
-                "href": None,
-                "number": stats.users_in_db},
-               {"title": "Mitglieder",
-                "href": None,
-                "number": stats.members},
-               {"title": "Nicht bezahlt",
-                "href": None,
-                "number": stats.not_paid_all},
-               {"title": "Nicht bezahlt (Mitglieder)",
-                "href": None,
-                "number": stats.not_paid_members}]
-    return render_template("user/user_overview.html", entries=entries,
-                           traffic_top_table=TrafficTopTable(
-                                data_url=url_for("user.json_users_highest_traffic"),
-                                table_args={'data-page-size': 10,
-                                            'data-search': 'false'},
-                           ))
+    entries = [
+        {
+            "title": "Mitgliedschaftsanfragen",
+            "href": url_for(".member_requests"),
+            "number": stats.member_requests,
+        },
+        {"title": "Nutzer in Datenbank", "href": None, "number": stats.users_in_db},
+        {"title": "Mitglieder", "href": None, "number": stats.members},
+        {"title": "Nicht bezahlt", "href": None, "number": stats.not_paid_all},
+        {"title": "Nicht bezahlt (Mitglieder)", "href": None, "number": stats.not_paid_members},
+    ]
+    return render_template(
+        "user/user_overview.html",
+        entries=entries,
+        traffic_top_table=TrafficTopTable(
+            data_url=url_for("user.json_users_highest_traffic"),
+            table_args={"data-page-size": 10, "data-search": "false"},
+        ),
+    )
 
 
 def make_pdf_response(pdf_data: bytes, filename: str, inline: bool = True) -> Response:
@@ -180,43 +191,44 @@ def make_pdf_response(pdf_data: bytes, filename: str, inline: bool = True) -> Re
     Content-Disposition: (inline|attachment); filename="<filename>"
     """
     response = make_response(pdf_data)
-    response.headers['Content-Type'] = 'application/pdf'
-    disposition = "{}; filename={}".format('inline' if inline else 'attachment',
-                                           filename)
-    response.headers['Content-Disposition'] = disposition
+    response.headers["Content-Type"] = "application/pdf"
+    disposition = "{}; filename={}".format("inline" if inline else "attachment", filename)
+    response.headers["Content-Disposition"] = disposition
     return response
 
 
-@bp.route('/user_sheet')
+@bp.route("/user_sheet")
 def user_sheet() -> ResponseReturnValue:
     """Deliver the datasheet stored in the session"""
     try:
-        sheet_id = flask_session['user_sheet']
+        sheet_id = flask_session["user_sheet"]
     except KeyError:
-        flash("No user sheet referenced in your session", 'warning')
+        flash("No user sheet referenced in your session", "warning")
         abort(404)
     pdf_data = lib.user.get_user_sheet(sheet_id)
     if not pdf_data:
-        flash("The referenced user sheet does not exist."
-              " Perhaps it has already expired?", 'error')
+        flash("The referenced user sheet does not exist. Perhaps it has already expired?", "error")
         abort(404)
 
-    return make_pdf_response(pdf_data, filename='user_sheet.pdf')
+    return make_pdf_response(pdf_data, filename="user_sheet.pdf")
 
 
-@bp.route('/<int:user_id>/datasheet')
+@bp.route("/<int:user_id>/datasheet")
 def static_datasheet(user_id: int) -> ResponseReturnValue:
     """Deliver an on-the-fly datasheet without the password.
 
     Useful for testing the layout itself.
     """
     user = get_user_or_404(user_id)
-    return make_pdf_response(generate_user_sheet(True, False, user, plain_user_password="********",
-                                                 generation_purpose='reprint'),
-                             filename=f'user_sheet_plain_{user_id}.pdf')
+    return make_pdf_response(
+        generate_user_sheet(
+            True, False, user, plain_user_password="********", generation_purpose="reprint"
+        ),
+        filename=f"user_sheet_plain_{user_id}.pdf",
+    )
 
 
-@bp.route('/json/traffic-usage')
+@bp.route("/json/traffic-usage")
 def json_users_highest_traffic() -> ResponseReturnValue:
     return TableResponse[TrafficTopRow](
         items=[
@@ -224,9 +236,7 @@ def json_users_highest_traffic() -> ResponseReturnValue:
                 id=user.id,
                 name=user.name,
                 traffic_for_days=user.traffic_for_days,
-                url=LinkColResponse(
-                    href=url_for(".user_show", user_id=user.id), title=user.name
-                ),
+                url=LinkColResponse(href=url_for(".user_show", user_id=user.id), title=user.name),
             )
             for user in get_users_with_highest_traffic(7, 20)
         ]
@@ -241,21 +251,21 @@ def and_then[T, U](val: T | None, map: Callable[[T], U]) -> U | None:
     return map(val) if val is not None else None
 
 
-@bp.route('/json/search')
+@bp.route("/json/search")
 def json_search() -> ResponseReturnValue:
     g = request.args.get
     try:
-        user_id = and_then(coalesce_none(g('id'), ""), int)
-        name = g('name')
-        login = g('login')
-        mac = g('mac')
-        ip_address = g('ip_address')
-        property_group_id = and_then(coalesce_none(g('property_group_id'), "", "__None"), int)
-        building_id = and_then(coalesce_none(g('building_id'), "", "__None"), int)
-        email = g('email')
-        person_id = and_then(coalesce_none(g('person_id'), ""), int)
+        user_id = and_then(coalesce_none(g("id"), ""), int)
+        name = g("name")
+        login = g("login")
+        mac = g("mac")
+        ip_address = g("ip_address")
+        property_group_id = and_then(coalesce_none(g("property_group_id"), "", "__None"), int)
+        building_id = and_then(coalesce_none(g("building_id"), "", "__None"), int)
+        email = g("email")
+        person_id = and_then(coalesce_none(g("person_id"), ""), int)
         query = g("query")
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return abort(400)
     ip_invalid = ip_address and not re.match(ip_regex, ip_address)
     mac_invalid = mac and not re.match(mac_regex, mac)
@@ -263,8 +273,16 @@ def json_search() -> ResponseReturnValue:
         return abort(400)
 
     search_query = lib.search.user_search_query(
-        user_id, name, login, mac, ip_address, property_group_id, building_id, email, person_id,
-        query
+        user_id,
+        name,
+        login,
+        mac,
+        ip_address,
+        property_group_id,
+        building_id,
+        email,
+        person_id,
+        query,
     )
 
     return TableResponse[UserSearchRow](
@@ -279,9 +297,7 @@ def json_search() -> ResponseReturnValue:
                 login=found_user.login,
                 room_id=found_user.room_id if found_user.room_id is not None else None,
             )
-            for found_user in (
-                search_query.all() if search_query.count() < User.q.count() else []
-            )
+            for found_user in (search_query.all() if search_query.count() < User.q.count() else [])
         ]
     ).model_dump()
 
@@ -295,27 +311,26 @@ class InfoflagDict(t.TypedDict):
 def infoflags(user: User) -> list[InfoflagDict]:
     user_status = lib.user.status(user)
     return [
-        {'title': "Mitglied", 'icon': "user", 'val': user_status.member},
-        {'title': "LAN-Zugang", 'icon': "network-wired", 'val': user_status.network_access},
-        {'title': "WLAN-Zugang", 'icon': "wifi", 'val': user_status.wifi_access},
-        {'title': "Bezahlt", 'icon': "euro-sign", 'val': user_status.account_balanced},
-        {'title': "Verstoßfrei", 'icon': "exclamation-triangle", 'val': not user_status.violation},
-        {'title': "LDAP", 'icon': "cloud", 'val': user_status.ldap},
+        {"title": "Mitglied", "icon": "user", "val": user_status.member},
+        {"title": "LAN-Zugang", "icon": "network-wired", "val": user_status.network_access},
+        {"title": "WLAN-Zugang", "icon": "wifi", "val": user_status.wifi_access},
+        {"title": "Bezahlt", "icon": "euro-sign", "val": user_status.account_balanced},
+        {"title": "Verstoßfrei", "icon": "exclamation-triangle", "val": not user_status.violation},
+        {"title": "LDAP", "icon": "cloud", "val": user_status.ldap},
     ]
 
 
-@bp.route('/<int:user_id>/', methods=['GET', 'POST'])
+@bp.route("/<int:user_id>/", methods=["GET", "POST"])
 def user_show(user_id: int) -> ResponseReturnValue:
     user = get_user_or_404(user_id)
     room = user.room
     form = UserLogEntry()
 
     if form.validate_on_submit():
-        lib.logging.log_user_event(form.message.data,
-                                   author=current_user,
-                                   user=user)
+        assert form.message.data is not None
+        lib.logging.log_user_event(form.message.data, author=current_user, user=user)
         session.session.commit()
-        flash('Kommentar hinzugefügt', 'success')
+        flash("Kommentar hinzugefügt", "success")
 
     balance = user.account.balance
     _log_endpoint = partial(url_for, ".user_show_logs_json", user_id=user.id)
@@ -330,15 +345,19 @@ def user_show(user_id: int) -> ResponseReturnValue:
     user_not_there = not user.member_of(config.member_group)
 
     try:
-        if flask_session['user_sheet'] and lib.user.get_user_sheet(flask_session['user_sheet']):
-            flash(Markup('Es ist ein <a href="{}" target="_blank">Nutzerdatenblatt</a> verfügbar!'.format(
-                url_for('.user_sheet'))
-            ))
+        if flask_session["user_sheet"] and lib.user.get_user_sheet(flask_session["user_sheet"]):
+            flash(
+                Markup(
+                    'Es ist ein <a href="{}" target="_blank">Nutzerdatenblatt</a> verfügbar!'.format(
+                        url_for(".user_sheet")
+                    )
+                )
+            )
     except KeyError:
         pass
 
     return render_template(
-        'user/user_show.html',
+        "user/user_show.html",
         # Q: Can ports of a room point to different access switches?
         user=user,
         user_not_there=user_not_there,
@@ -390,22 +409,19 @@ def user_show(user_id: int) -> ResponseReturnValue:
         granted_properties=sorted(p.property_name for p in user.current_properties),
         revoked_properties=sorted(
             p.property_name
-            for p in set(user.current_properties_maybe_denied) -set(user.current_properties)
+            for p in set(user.current_properties_maybe_denied) - set(user.current_properties)
         ),
         room_history_table=RoomHistoryTable(
             data_url=url_for(".room_history_json", user_id=user.id)
         ),
-        tenancy_table=TenancyTable(
-            data_url=url_for(".tenancies_json", user_id=user.id)
-        ),
+        tenancy_table=TenancyTable(data_url=url_for(".tenancies_json", user_id=user.id)),
     )
 
 
 @bp.route("/<int:user_id>/account")
 def user_account(user_id: int) -> ResponseReturnValue:
     user = get_user_or_404(user_id)
-    return redirect(url_for("finance.accounts_show",
-                            account_id=user.account_id))
+    return redirect(url_for("finance.accounts_show", account_id=user.account_id))
 
 
 def _iter_user_logs(user: User, logtype: LogType) -> t.Iterator[LogTableRow]:
@@ -429,19 +445,15 @@ def user_show_logs_json(user_id: int, logtype: str = "all") -> ResponseReturnVal
         abort(404)
     logs = _iter_user_logs(user, logtype)
 
-    def sort_key(l: LogTableRow) -> int | None:
-        return l.created_at.timestamp
+    def sort_key(l: LogTableRow) -> tuple[bool, int]:
+        return (True, ts or 0) if (ts := l.created_at.timestamp) is not None else (False, 0)
 
-    return TableResponse[LogTableRow](
-        items=sorted(logs, key=sort_key, reverse=True)
-    ).model_dump()
+    return TableResponse[LogTableRow](items=sorted(logs, key=sort_key, reverse=True)).model_dump()
 
 
 @bp.route("/<int:user_id>/groups")
 @bp.route("/<int:user_id>/groups/<group_filter>")
-def user_show_groups_json(
-    user_id: int, group_filter: str = "all"
-) -> ResponseReturnValue:
+def user_show_groups_json(user_id: int, group_filter: str = "all") -> ResponseReturnValue:
     active_groups_only = group_filter == "active"
     memberships = t.cast(
         t.Iterable[tuple[Membership, list[str], list[str]]],
@@ -500,7 +512,7 @@ def user_show_groups_json(
                 + (
                     [
                         BtnColResponse(
-                            href=url_end,
+                            href=url_end,  # ty: ignore[invalid-argument-type]
                             title="Beenden",
                             icon="fa-power-off",
                             btn_class="btn-link",
@@ -518,7 +530,7 @@ def user_show_groups_json(
                             btn_class="btn-link",
                         )
                     ]
-                    if session.utcnow() <= membership.active_during.begin
+                    if (b := membership.active_during.begin) and session.utcnow() <= b
                     else []
                 ),
             )
@@ -527,40 +539,40 @@ def user_show_groups_json(
     ).model_dump()
 
 
-@bp.route('/<int:user_id>/add_membership', methods=['GET', 'Post'])
-@access.require('groups_change_membership')
+@bp.route("/<int:user_id>/add_membership", methods=["GET", "Post"])
+@access.require("groups_change_membership")
 def add_membership(user_id: int) -> ResponseReturnValue:
     user = get_user_or_404(user_id)
     form = UserAddGroupMembership()
 
     if form.validate_on_submit():
-        if form.begins_at.date.data:
-            begins_at = utc.with_min_time(form.begins_at.date.data)
+        if d := form.begins_at.data:
+            begins_at = utc.with_min_time(d)
         else:
             begins_at = session.utcnow()
-        if not form.ends_at.unlimited.data:
-            ends_at = utc.with_min_time(form.ends_at.date.data)
+        if form.ends_at.data:
+            ends_at = utc.with_min_time(form.ends_at.data)
         else:
             ends_at = None
 
         try:
-            make_member_of(user, form.group.data, current_user,
-                       closed(begins_at, ends_at))
+            make_member_of(user, form.group.data, current_user, closed(begins_at, ends_at))
         except PermissionError:
             session.session.rollback()
-            flash("Du hast keine Berechtigung, diese Mitgliedschaft hinzuzufügen.", 'error')
+            flash("Du hast keine Berechtigung, diese Mitgliedschaft hinzuzufügen.", "error")
             return abort(403)
 
         session.session.commit()
-        flash('Nutzer wurde der Gruppe hinzugefügt.', 'success')
+        flash("Nutzer wurde der Gruppe hinzugefügt.", "success")
 
-        return redirect(url_for(".user_show",
-                                user_id=user_id,
-                                _anchor='groups'))
+        return redirect(url_for(".user_show", user_id=user_id, _anchor="groups"))
 
-    return render_template('user/add_membership.html',
+    return render_template(
+        "user/add_membership.html",
         page_title=f"Neue Gruppenmitgliedschaft für Nutzer {user_id}",
-        user_id=user_id, form=form)
+        user_id=user_id,
+        form=form,
+    )
 
 
 def get_membership_or_404(id: int) -> Membership:
@@ -578,7 +590,7 @@ def end_membership(user_id: int, membership_id: int) -> ResponseReturnValue:
     assert isinstance(membership.group, PropertyGroup)
 
     if membership.user.id != user_id:
-        flash(f"Gruppenmitgliedschaft {membership.id} gehört nicht zu Nutzer {user_id}!", 'error')
+        flash(f"Gruppenmitgliedschaft {membership.id} gehört nicht zu Nutzer {user_id}!", "error")
         return abort(404)
 
     form = FlaskForm()
@@ -594,9 +606,7 @@ def end_membership(user_id: int, membership_id: int) -> ResponseReturnValue:
         return render_template(
             "generic_form.html",
             page_title=(
-                "Mitgliedschaft {} für {} beenden?".format(
-                    membership.group.name, membership.user.name
-                )
+                f"Mitgliedschaft {membership.group.name} für {membership.user.name} beenden?"
             ),
             membership_id=membership_id,
             user=membership.user,
@@ -611,19 +621,16 @@ def end_membership(user_id: int, membership_id: int) -> ResponseReturnValue:
         remove_member_of(user, membership.group, current_user, starting_from(session.utcnow()))
     except PermissionError:
         session.session.rollback()
-        flash("Du hast keine Berechtigung, diese Mitgliedschaft zu beenden.", 'error')
+        flash("Du hast keine Berechtigung, diese Mitgliedschaft zu beenden.", "error")
         return abort(403)
 
-
     session.session.commit()
-    flash('Mitgliedschaft in Gruppe beendet', 'success')
-    return redirect(url_for(".user_show",
-                            user_id=membership.user_id,
-                            _anchor='groups'))
+    flash("Mitgliedschaft in Gruppe beendet", "success")
+    return redirect(url_for(".user_show", user_id=membership.user_id, _anchor="groups"))
 
 
-@bp.route('/<int:user_id>/traffic/json')
-@bp.route('/<int:user_id>/traffic/json/<int:days>')
+@bp.route("/<int:user_id>/traffic/json")
+@bp.route("/<int:user_id>/traffic/json/<int:days>")
 def json_trafficdata(user_id: int, days: int = 7) -> ResponseReturnValue:
     """Generate a JSON file to use with traffic and credit graphs.
 
@@ -636,33 +643,35 @@ def json_trafficdata(user_id: int, days: int = 7) -> ResponseReturnValue:
     return jsonify(
         [
             e.__dict__
-            for e in traffic_history(
-                user_id, utcnow - interval + timedelta(days=1), utcnow
-            )
+            for e in traffic_history(user_id, utcnow - interval + timedelta(days=1), utcnow)
         ]
     )
 
 
-@bp.route('/create', methods=['GET', 'POST'])
+@bp.route("/create", methods=["GET", "POST"])
 @nav.navigate("Anlegen (Extern/IBR)", weight=4, icon="fa-plus-square")
 # TODO: Namen aendern
-@access.require('user_change')
+@access.require("user_change")
 def create() -> ResponseReturnValue:
     form = UserCreateForm(property_groups=[config.member_group])
 
     def default_response() -> ResponseReturnValue:
         # TODO we should do this across the `web` package.  See #417
-        return render_template('user/user_create.html', form=form), 400 \
-            if form.is_submitted() else 200
+        return render_template(
+            "user/user_create.html", form=form
+        ), 400 if form.is_submitted() else 200
 
     if not form.validate_on_submit():
         return default_response()
-    room: Room = get_room(building_id=form.building.data.id, level=form.level.data,
-                          room_number=form.room_number.data)
+    room: Room | None = get_room(
+        building_id=form.building.data.id, level=form.level.data, room_number=form.room_number.data
+    )
     if not room:
-        flash("Raum scheint nicht zu existieren…", 'error')
+        flash("Raum scheint nicht zu existieren…", "error")
         return default_response()
 
+    assert form.name.data is not None
+    assert form.login.data is not None
     with abort_on_error(default_response), session.session.begin_nested():
         new_user, plain_password = lib.user.create_user(
             name=form.name.data,
@@ -686,9 +695,7 @@ def create() -> ResponseReturnValue:
             # (`form.property_groups`)
             begin_membership=False,
         )
-        plain_wifi_password = lib.user.maybe_setup_wifi(
-            new_user, processor=current_user
-        )
+        plain_wifi_password = lib.user.maybe_setup_wifi(new_user, processor=current_user)
         sheet = lib.user.store_user_sheet(
             True,
             wifi=(plain_wifi_password is not None),
@@ -698,25 +705,28 @@ def create() -> ResponseReturnValue:
         )
     session.session.commit()
 
-    flask_session['user_sheet'] = sheet.id
-    flash(Markup('Benutzer angelegt.'), 'success')
-    return redirect(url_for('.user_show', user_id=new_user.id))
+    flask_session["user_sheet"] = sheet.id
+    flash(Markup("Benutzer angelegt."), "success")
+    return redirect(url_for(".user_show", user_id=new_user.id))
 
 
-@bp.route('/create_non_resident', methods=['GET', 'POST'])
+@bp.route("/create_non_resident", methods=["GET", "POST"])
 @nav.navigate("Anlegen (freie Adresseingabe)", weight=5, icon="far fa-plus-square")
 # TODO: Namen aendern
-@access.require('user_change')
+@access.require("user_change")
 def create_non_resident() -> ResponseReturnValue:
     form = NonResidentUserCreateForm(property_groups=[config.member_group])
 
     def default_response() -> ResponseReturnValue:
         # TODO we should do this across the `web` package.  See #417
-        return render_template('user/user_create.html', form=form), 400 \
-            if form.is_submitted() else 200
+        return render_template(
+            "user/user_create.html", form=form
+        ), 400 if form.is_submitted() else 200
 
     if not form.validate_on_submit():
         return default_response()
+    assert form.name.data is not None
+    assert form.login.data is not None
     with abort_on_error(default_response), session.session.begin_nested():
         address = lib.address.get_or_create_address(**form.address_kwargs)
         new_user, plain_password = lib.user.create_user(
@@ -729,9 +739,7 @@ def create_non_resident() -> ResponseReturnValue:
             address=address,
             send_confirm_mail=True,
         )
-        plain_wifi_password = lib.user.maybe_setup_wifi(
-            new_user, processor=current_user
-        )
+        plain_wifi_password = lib.user.maybe_setup_wifi(new_user, processor=current_user)
         sheet = lib.user.store_user_sheet(
             True,
             wifi=(plain_wifi_password is not None),
@@ -741,13 +749,13 @@ def create_non_resident() -> ResponseReturnValue:
         )
     session.session.commit()
 
-    flask_session['user_sheet'] = sheet.id
-    flash(Markup('Benutzer angelegt.'), 'success')
-    return redirect(url_for('.user_show', user_id=new_user.id))
+    flask_session["user_sheet"] = sheet.id
+    flash(Markup("Benutzer angelegt."), "success")
+    return redirect(url_for(".user_show", user_id=new_user.id))
 
 
-@bp.route('/<int:user_id>/move', methods=['GET', 'POST'])
-@access.require('user_change')
+@bp.route("/<int:user_id>/move", methods=["GET", "POST"])
+@access.require("user_change")
 def move(user_id: int) -> ResponseReturnValue:
     user = get_user_or_404(user_id)
     form = UserMoveForm()
@@ -760,18 +768,14 @@ def move(user_id: int) -> ResponseReturnValue:
             "user/user_move.html",
             user_id=user_id,
             form=form,
-            tenancy_table=TenancyTable(
-                data_url=url_for(".tenancies_json", user_id=user.id)
-            ),
+            tenancy_table=TenancyTable(data_url=url_for(".tenancies_json", user_id=user.id)),
         )
 
     if not form.validate_on_submit():
         return default_response()
 
     selected_room = Room.q.filter_by(
-        number=form.room_number.data,
-        level=form.level.data,
-        building_id=form.building.data.id
+        number=form.room_number.data, level=form.level.data, building_id=form.building.data.id
     ).one()
     if user.room == selected_room:
         flash("Nutzer muss in anderes Zimmer umgezogen werden!", "error")
@@ -798,7 +802,7 @@ def move(user_id: int) -> ResponseReturnValue:
         return redirect(url_for(".user_show", user_id=user.id))
 
     flash("Benutzer umgezogen", "success")
-    with abort_on_error(default_response), sess.begin_nested():
+    with abort_on_error(lambda: default_response(refill_form_data=False)), sess.begin_nested():
         sheet = lib.user.store_user_sheet(
             True,
             False,
@@ -823,7 +827,7 @@ def membership_delete(user_id: int, membership_id: int) -> ResponseReturnValue:
             "error",
         )
         abort(403)
-    if session.utcnow() >= membership.active_during.begin:
+    if (begin := membership.active_during.begin) and session.utcnow() >= begin:
         flash("Nur Mitgliedschaften, die in der Zukunft liegen, können gelöscht werden.", "error")
         abort(403)
     form = FlaskForm()
@@ -839,8 +843,7 @@ def membership_delete(user_id: int, membership_id: int) -> ResponseReturnValue:
         return render_template(
             "generic_form.html",
             page_title=(
-                "Mitgliedschaft {} für "
-                "{} löschen".format(membership.group.name, membership.user.name)
+                f"Mitgliedschaft {membership.group.name} für {membership.user.name} löschen"
             ),
             membership_id=membership_id,
             user=membership.user,
@@ -863,55 +866,55 @@ def membership_delete(user_id: int, membership_id: int) -> ResponseReturnValue:
     return redirect(url_for("user.user_show", user_id=membership.user_id, _anchor="groups"))
 
 
-@bp.route('/<int:user_id>/edit_membership/<int:membership_id>', methods=['GET', 'POST'])
-@access.require('groups_change_membership')
+@bp.route("/<int:user_id>/edit_membership/<int:membership_id>", methods=["GET", "POST"])
+@access.require("groups_change_membership")
 def edit_membership(user_id: int, membership_id: int) -> ResponseReturnValue:
     membership = get_membership_or_404(membership_id)
 
     assert isinstance(membership.group, PropertyGroup)
     if membership.group.permission_level > current_user.permission_level:
-        flash("Eine Bearbeitung von Gruppenmitgliedschaften für Gruppen mit "
-              "höherem Berechtigungslevel ist nicht möglich.", 'error')
+        flash(
+            "Eine Bearbeitung von Gruppenmitgliedschaften für Gruppen mit "
+            "höherem Berechtigungslevel ist nicht möglich.",
+            "error",
+        )
         abort(403)
 
     membership_data = {}
-    if request.method == 'GET':
+    if request.method == "GET":
         membership_data = {
             "begins_at": (beg := membership.active_during.begin) and beg.date(),
-            "ends_at": {"unlimited": membership.active_during.end is None,
-                        "date": (end := membership.active_during.end) and end.date()}
+            "ends_at": membership.active_during.end,
         }
 
     form = UserEditGroupMembership(**membership_data)
 
     if form.validate_on_submit():
+        assert form.begins_at.data is not None
         change_membership_active_during(
             session=session.session,
             membership_id=membership_id,
             begins_at=utc.with_min_time(form.begins_at.data),
-            ends_at=(
-                None if form.ends_at.unlimited.data else utc.with_min_time(form.ends_at.date.data)
-            ),
+            ends_at=utc.with_min_time(e) if (e := form.ends_at.data) else None,
             processor=current_user,
         )
         session.session.commit()
-        flash('Gruppenmitgliedschaft bearbeitet', 'success')
-        return redirect(url_for('.user_show',
-                                user_id=membership.user_id,
-                                _anchor='groups'))
+        flash("Gruppenmitgliedschaft bearbeitet", "success")
+        return redirect(url_for(".user_show", user_id=membership.user_id, _anchor="groups"))
 
-    return render_template('user/user_edit_membership.html',
-                           page_title=("Mitgliedschaft {} für "
-                                       "{} bearbeiten".format(
-                                            membership.group.name,
-                                            membership.user.name)),
-                           membership_id=membership_id,
-                           user=membership.user,
-                           form=form)
+    return render_template(
+        "user/user_edit_membership.html",
+        page_title=(
+            f"Mitgliedschaft {membership.group.name} für {membership.user.name} bearbeiten"
+        ),
+        membership_id=membership_id,
+        user=membership.user,
+        form=form,
+    )
 
 
-@bp.route('/<int:user_id>/edit', methods=['GET', 'POST'])
-@access.require('user_change')
+@bp.route("/<int:user_id>/edit", methods=["GET", "POST"])
+@access.require("user_change")
 def edit_user(user_id: int) -> ResponseReturnValue:
     user = get_user_or_404(user_id)
     form = UserEditForm(obj=user, person_id=user.swdd_person_id)
@@ -919,47 +922,62 @@ def edit_user(user_id: int) -> ResponseReturnValue:
     if form.validate_on_submit():
         success = True
 
+        assert form.name.data is not None
         edited_user = lib.user.edit_name(user, form.name.data, current_user)
         try:
-            edited_user = lib.user.edit_email(edited_user, form.email.data,
-                                          form.email_forwarded.data, current_user)
+            edited_user = lib.user.edit_email(
+                edited_user, form.email.data, form.email_forwarded.data, current_user
+            )
         except PermissionError:
             flash(gettext("Keine Berechtigung die Email dieses Nutzers zu ändern."))
             session.session.rollback()
             return abort(403)
-        edited_user = lib.user.edit_birthdate(edited_user, form.birthdate.data,
-                                              current_user)
+        edited_user = lib.user.edit_birthdate(edited_user, form.birthdate.data, current_user)
 
         if edited_user.swdd_person_id != form.person_id.data:
-            if form.person_id.data is not None and \
-               User.q.filter_by(swdd_person_id=form.person_id.data).filter(User.id != user.id).first():
-                form.person_id.errors.append("Diese Debitorennummer wird bereits verwendet!")
+            if (
+                form.person_id.data is not None
+                and User.q.filter_by(swdd_person_id=form.person_id.data)
+                .filter(User.id != user.id)
+                .first()
+            ):
+                form.person_id.errors = [
+                    *form.person_id.errors,
+                    "Diese Debitorennummer wird bereits verwendet!",
+                ]
                 success = False
             else:
-                edited_user = lib.user.edit_person_id(edited_user, form.person_id.data,
-                                                      current_user)
+                edited_user = lib.user.edit_person_id(
+                    edited_user, form.person_id.data, current_user
+                )
 
         if edited_user.swdd_person_id is not None:
             if not Tenancy.q.filter_by(person_id=edited_user.swdd_person_id).first():
-                flash("Zu der angegebenen Debitorennummer konnten keine Mietverträge gefunden "
-                      "werden!", "warning")
+                flash(
+                    "Zu der angegebenen Debitorennummer konnten keine Mietverträge gefunden "
+                    "werden!",
+                    "warning",
+                )
 
         if success:
             session.session.commit()
 
-            flash('Änderungen gespeichert', 'success')
-            return redirect(url_for('.user_show', user_id=edited_user.id))
+            flash("Änderungen gespeichert", "success")
+            return redirect(url_for(".user_show", user_id=edited_user.id))
 
-    return render_template('user/user_edit.html', user_id=user_id,
-        form=form)
+    return render_template("user/user_edit.html", user_id=user_id, form=form)
 
-@bp.route('/<int:user_id>/edit_address', methods=['GET', 'POST'])
-@access.require('user_change')
+
+@bp.route("/<int:user_id>/edit_address", methods=["GET", "POST"])
+@access.require("user_change")
 def edit_user_address(user_id: int) -> ResponseReturnValue:
     user = get_user_or_404(user_id)
     form = UserEditAddressForm()
-    user_show_url = url_for('.user_show', user_id=user.id)
+    user_show_url = url_for(".user_show", user_id=user.id)
     if form.validate_on_submit():
+        assert form.address_street.data is not None
+        assert form.address_number.data is not None
+        assert form.address_zip_code.data is not None
         edit_address(
             user=user,
             processor=current_user,
@@ -978,39 +996,41 @@ def edit_user_address(user_id: int) -> ResponseReturnValue:
         form.set_defaults_from_adress(user.address)
 
     if user.room and not user.has_custom_address:
-        flash(gettext("Nutzer wohnt bereits im Raum {}."
-                      " Über dieses Formular wird die offizielle Adresse des Nutzers geändert,"
-                      " ohne ihn um- oder auszuziehen.")
-              .format(user.room.short_name),
-              'warning')
+        flash(
+            gettext(
+                "Nutzer wohnt bereits im Raum {}."
+                " Über dieses Formular wird die offizielle Adresse des Nutzers geändert,"
+                " ohne ihn um- oder auszuziehen."
+            ).format(user.room.short_name),
+            "warning",
+        )
 
     form_args = {
-        'form': form,
-        'cancel_to': user_show_url,
+        "form": form,
+        "cancel_to": user_show_url,
         # 'submit_text': 'Zusammenführen',
-        'form_render_mode': 'basic',
-        'field_render_mode': 'basic',
+        "form_render_mode": "basic",
+        "field_render_mode": "basic",
     }
     return render_template(
-        'generic_form.html',
-        page_title="Adresse bearbeiten", form_args=form_args
+        "generic_form.html", page_title="Adresse bearbeiten", form_args=form_args
     )
 
 
-@bp.route('/search', methods=['GET', 'POST'])
+@bp.route("/search", methods=["GET", "POST"])
 @nav.navigate("Suchen", weight=3, icon="fa-search")
 def search() -> ResponseReturnValue:
     form = UserSearchForm()
 
     return render_template(
-        'user/user_search.html',
+        "user/user_search.html",
         form=form,
-        search_table=SearchTable(data_url=url_for(".json_search"))
+        search_table=SearchTable(data_url=url_for(".json_search")),
     )
 
 
-@bp.route('/<int:user_id>/reset_password', methods=['GET', 'POST'])
-@access.require('user_change')
+@bp.route("/<int:user_id>/reset_password", methods=["GET", "POST"])
+@access.require("user_change")
 def reset_password(user_id: int) -> ResponseReturnValue:
     form = UserResetPasswordForm()
     my_user = get_user_or_404(user_id)
@@ -1027,20 +1047,23 @@ def reset_password(user_id: int) -> ResponseReturnValue:
             session.session.rollback()
             return abort(403)
 
-        sheet = lib.user.store_user_sheet(True, False, user=my_user,
-                                          plain_user_password=plain_password,
-                                          generation_purpose='password reset')
+        sheet = lib.user.store_user_sheet(
+            True,
+            False,
+            user=my_user,
+            plain_user_password=plain_password,
+            generation_purpose="password reset",
+        )
         session.session.commit()
 
-        flask_session['user_sheet'] = sheet.id
-        flash(Markup('Passwort erfolgreich zurückgesetzt.'),
-              'success')
-        return redirect(url_for('.user_show', user_id=user_id))
-    return render_template('user/user_reset_password.html', form=form, user_id=user_id)
+        flask_session["user_sheet"] = sheet.id
+        flash(Markup("Passwort erfolgreich zurückgesetzt."), "success")
+        return redirect(url_for(".user_show", user_id=user_id))
+    return render_template("user/user_reset_password.html", form=form, user_id=user_id)
 
 
-@bp.route('/<int:user_id>/reset_wifi_password', methods=['GET', 'POST'])
-@access.require('user_change')
+@bp.route("/<int:user_id>/reset_wifi_password", methods=["GET", "POST"])
+@access.require("user_change")
 def reset_wifi_password(user_id: int) -> ResponseReturnValue:
     user = get_user_or_404(user_id)
     form = UserResetPasswordForm()
@@ -1056,24 +1079,21 @@ def reset_wifi_password(user_id: int) -> ResponseReturnValue:
 
         session.session.commit()
 
-        flask_session['user_sheet'] = sheet.id
-        flash(Markup('WiFi-Passwort erfolgreich zurückgesetzt.'),
-              'success')
-        return redirect(url_for('.user_show', user_id=user_id))
-    return render_template('user/user_reset_wifi_password.html', form=form, user_id=user_id)
+        flask_session["user_sheet"] = sheet.id
+        flash(Markup("WiFi-Passwort erfolgreich zurückgesetzt."), "success")
+        return redirect(url_for(".user_show", user_id=user_id))
+    return render_template("user/user_reset_wifi_password.html", form=form, user_id=user_id)
 
 
-@bp.route('/<int:user_id>/block', methods=['GET', 'POST'])
-@access.require('user_change')
+@bp.route("/<int:user_id>/block", methods=["GET", "POST"])
+@access.require("user_change")
 def block(user_id: int) -> ResponseReturnValue:
     form = UserSuspendForm()
     myUser = get_user_or_404(user_id)
     if form.validate_on_submit():
-        if form.ends_at.unlimited.data:
-            ends_at = None
-        else:
-            ends_at = utc.with_min_time(form.ends_at.date.data, )
+        ends_at = utc.with_min_time(e) if (e := form.ends_at.data) else None
 
+        assert form.reason.data is not None
         try:
             during = closedopen(session.utcnow(), ends_at)
             lib.user.block(
@@ -1081,35 +1101,34 @@ def block(user_id: int) -> ResponseReturnValue:
                 reason=form.reason.data,
                 processor=current_user,
                 during=during,
-                violation=form.violation.data)
+                violation=form.violation.data,
+            )
             session.session.commit()
         except ValueError as e:
-            flash(str(e), 'error')
+            flash(str(e), "error")
         else:
-            flash('Nutzer gesperrt.', 'success')
-            return redirect(url_for('.user_show', user_id=user_id))
-    return render_template('user/user_block.html', form=form, user_id=user_id)
+            flash("Nutzer gesperrt.", "success")
+            return redirect(url_for(".user_show", user_id=user_id))
+    return render_template("user/user_block.html", form=form, user_id=user_id)
 
 
-@bp.route('/<int:user_id>/unblock', methods=['GET', 'POST'])
-@access.require('user_change')
+@bp.route("/<int:user_id>/unblock", methods=["GET", "POST"])
+@access.require("user_change")
 def unblock(user_id: int) -> ResponseReturnValue:
     user = get_user_or_404(user_id)
 
     try:
-        lib.user.unblock(
-            user=user,
-            processor=current_user)
+        lib.user.unblock(user=user, processor=current_user)
         session.session.commit()
     except ValueError as e:
-        flash(str(e), 'error')
+        flash(str(e), "error")
     else:
-        flash('Nutzer entsperrt.', 'success')
+        flash("Nutzer entsperrt.", "success")
     return redirect(url_for(".user_show", user_id=user_id))
 
 
-@bp.route('/<int:user_id>/move_out', methods=['GET', 'POST'])
-@access.require('user_change')
+@bp.route("/<int:user_id>/move_out", methods=["GET", "POST"])
+@access.require("user_change")
 def move_out(user_id: int) -> ResponseReturnValue:
     form = UserMoveOutForm()
     user = get_user_or_404(user_id)
@@ -1121,7 +1140,7 @@ def move_out(user_id: int) -> ResponseReturnValue:
         )
 
     if not user.room:
-        flash(f"Nutzer {user_id} ist aktuell nirgends eingezogen!", 'error')
+        flash(f"Nutzer {user_id} ist aktuell nirgends eingezogen!", "error")
         abort(404)
     if not form.is_submitted():
         form.end_membership.data = True
@@ -1129,15 +1148,14 @@ def move_out(user_id: int) -> ResponseReturnValue:
     if not form.validate():
         return default_response()
 
-    when = session.utcnow() if form.now.data else utc.with_min_time(form.when.data)
+    when = utc.with_min_time(w) if (w := form.when.data) else session.utcnow()
+
     with abort_on_error(default_response), session.session.begin_nested():
         lib.user.move_out(
             user=user,
             comment=form.comment.data,
             processor=current_user,
-            when=session.utcnow()
-            if form.now.data
-            else utc.with_min_time(form.when.data),
+            when=when,
             end_membership=form.end_membership.data,
         )
     session.session.commit()
@@ -1145,12 +1163,12 @@ def move_out(user_id: int) -> ResponseReturnValue:
     if when > session.utcnow():
         flash("Der Auszug wurde vorgemerkt.", "success")
     else:
-        flash('Benutzer ausgezogen.', 'success')
-    return redirect(url_for('.user_show', user_id=user.id))
+        flash("Benutzer ausgezogen.", "success")
+    return redirect(url_for(".user_show", user_id=user.id))
 
 
-@bp.route('/<int:user_id>/move_in', methods=['GET', 'POST'])
-@access.require('user_change')
+@bp.route("/<int:user_id>/move_in", methods=["GET", "POST"])
+@access.require("user_change")
 def move_in(user_id: int) -> ResponseReturnValue:
     form = UserMoveInForm()
     user = get_user_or_404(user_id)
@@ -1162,7 +1180,7 @@ def move_in(user_id: int) -> ResponseReturnValue:
         )
 
     if user.room is not None:
-        flash(f"Nutzer {user_id} ist nicht ausgezogen!", 'error')
+        flash(f"Nutzer {user_id} ist nicht ausgezogen!", "error")
         abort(404)
 
     if not form.is_submitted():
@@ -1173,7 +1191,12 @@ def move_in(user_id: int) -> ResponseReturnValue:
     if not form.validate():
         return default_response()
 
-    when = session.utcnow() if form.now.data else utc.with_min_time(form.when.data)
+    if form.now.data:
+        when = session.utcnow()
+    else:
+        assert (date := form.when.data) is not None
+        when = utc.with_min_time(date)
+
     with abort_on_error(default_response), session.session.begin_nested():
         lib.user.move_in(
             user=user,
@@ -1189,35 +1212,31 @@ def move_in(user_id: int) -> ResponseReturnValue:
     session.session.commit()
 
     if when > session.utcnow():
-        flash("Der Einzug wurde vorgemerkt.", 'success')
+        flash("Der Einzug wurde vorgemerkt.", "success")
     else:
-        flash("Benutzer eingezogen.", 'success')
-    return redirect(url_for('.user_show', user_id=user_id))
+        flash("Benutzer eingezogen.", "success")
+    return redirect(url_for(".user_show", user_id=user_id))
 
 
-@bp.route('<int:user_id>/json/room-history')
+@bp.route("<int:user_id>/json/room-history")
 def room_history_json(user_id: int) -> ResponseReturnValue:
     user = get_user_or_404(user_id)
     return TableResponse[RoomHistoryRow](
         items=[
             RoomHistoryRow(
-                begins_at=date_format(
-                    history_entry.active_during.begin, formatter=date_filter
-                ),
-                ends_at=date_format(
-                    history_entry.active_during.end, formatter=date_filter
-                ),
+                begins_at=date_format(history_entry.active_during.begin, formatter=date_filter),
+                ends_at=date_format(history_entry.active_during.end, formatter=date_filter),
                 room=LinkColResponse(
                     href=url_for("facilities.room_show", room_id=history_entry.room_id),
                     title=history_entry.room.short_name,
                 ),
             )
-            for history_entry in cast(list[RoomHistoryEntry], user.room_history_entries)
+            for history_entry in user.room_history_entries
         ]
     ).model_dump()
 
 
-@bp.route('<int:user_id>/json/tenancies')
+@bp.route("<int:user_id>/json/tenancies")
 def tenancies_json(user_id: int) -> ResponseReturnValue:
     user = get_user_or_404(user_id)
     return TableResponse[TenancyRow](
@@ -1229,9 +1248,7 @@ def tenancies_json(user_id: int) -> ResponseReturnValue:
                     href=url_for("facilities.room_show", room_id=tenancy.room.id)
                     if tenancy.room
                     else "#",
-                    title=tenancy.room.short_name
-                    if tenancy.room
-                    else tenancy.vo_suchname,
+                    title=tenancy.room.short_name if tenancy.room else tenancy.vo_suchname,
                 ),
                 status=tenancy.status.name,
             )
@@ -1240,17 +1257,17 @@ def tenancies_json(user_id: int) -> ResponseReturnValue:
     ).model_dump()
 
 
-@bp.route('member-requests')
+@bp.route("member-requests")
 @nav.navigate("Mitgliedschaftsanfragen", weight=2, icon="fa-user-clock")
 def member_requests() -> ResponseReturnValue:
-    return render_template("user/member_requests.html",
-                           page_title="Mitgliedschaftsanfragen",
-                           pre_member_table=PreMemberTable(
-                               data_url=url_for('.member_requests_json')
-                           ))
+    return render_template(
+        "user/member_requests.html",
+        page_title="Mitgliedschaftsanfragen",
+        pre_member_table=PreMemberTable(data_url=url_for(".member_requests_json")),
+    )
 
 
-@bp.route("member-request/<int:pre_member_id>/edit", methods=['GET', 'POST'])
+@bp.route("member-request/<int:pre_member_id>/edit", methods=["GET", "POST"])
 def member_request_edit(pre_member_id: int) -> ResponseReturnValue:
     prm = get_pre_member_or_404(pre_member_id)
 
@@ -1269,6 +1286,9 @@ def member_request_edit(pre_member_id: int) -> ResponseReturnValue:
     if form.validate_on_submit():
         old_email = prm.email
 
+        assert form.name.data is not None
+        assert form.login.data is not None
+        assert form.birthdate.data is not None
         prm.name = form.name.data
         prm.login = form.login.data
         prm.email = form.email.data
@@ -1284,10 +1304,14 @@ def member_request_edit(pre_member_id: int) -> ResponseReturnValue:
                 if tenancy is not None:
                     prm.swdd_person_id = form.person_id.data
                 else:
-                    form.person_id.errors.append("Zu der angegebenen Debitorennummer konnten keine Verträge gefunden werden!",)
+                    form.person_id.errors = [
+                        *form.person_id.errors,
+                        "Zu der angegebenen Debitorennummer konnten keine Verträge gefunden werden!",
+                    ]
 
-        room = Room.q.filter_by(building=form.building.data, level=form.level.data,
-                                number=form.room_number.data).first()
+        room = Room.q.filter_by(
+            building=form.building.data, level=form.level.data, number=form.room_number.data
+        ).first()
 
         prm.room = room
 
@@ -1302,23 +1326,26 @@ def member_request_edit(pre_member_id: int) -> ResponseReturnValue:
 
         flash("Änderungen wurden gespeichert.", "success")
 
-    return render_template("user/member_request_edit.html",
-                           page_title="Mitgliedschaftsanfrage Bearbeiten",
-                           form=form,
-                           prm=prm,
-                           is_adult=prm.is_adult)
+    return render_template(
+        "user/member_request_edit.html",
+        page_title="Mitgliedschaftsanfrage Bearbeiten",
+        form=form,
+        prm=prm,
+        is_adult=prm.is_adult,
+    )
 
 
-@bp.route("member-request/<int:pre_member_id>/delete", methods=['GET', 'POST'])
-@access.require('user_change')
+@bp.route("member-request/<int:pre_member_id>/delete", methods=["GET", "POST"])
+@access.require("user_change")
 def member_request_delete(pre_member_id: int) -> ResponseReturnValue:
     prm = get_pre_member_or_404(pre_member_id)
 
     form = PreMemberDenyForm()
 
     if form.validate_on_submit():
-        delete_member_request(prm, form.reason.data, current_user,
-                              inform_user=form.inform_user.data)
+        delete_member_request(
+            prm, form.reason.data, current_user, inform_user=form.inform_user.data
+        )
 
         session.session.commit()
 
@@ -1326,37 +1353,33 @@ def member_request_delete(pre_member_id: int) -> ResponseReturnValue:
 
         return redirect(url_for(".member_requests"))
 
-    form_args = {
-        'form': form,
-        'cancel_to': url_for('.member_requests'),
-        'submit_text': 'Ablehnen'
-    }
+    form_args = {"form": form, "cancel_to": url_for(".member_requests"), "submit_text": "Ablehnen"}
 
-    return render_template('generic_form.html',
-                           page_title="Mitgliedschaftsanfrage löschen/ablehnen",
-                           form_args=form_args,
-                           form=form)
+    return render_template(
+        "generic_form.html",
+        page_title="Mitgliedschaftsanfrage löschen/ablehnen",
+        form_args=form_args,
+        form=form,
+    )
 
 
 @bp.route("member-request/<int:pre_member_id>/finish")
-@access.require('user_change')
+@access.require("user_change")
 def member_request_finish(pre_member_id: int) -> ResponseReturnValue:
     prm = get_pre_member_or_404(pre_member_id)
 
     default_response = redirect(url_for(".member_request_edit", pre_member_id=prm.id))
 
     with abort_on_error(default_response), session.session.begin_nested():
-        user = finish_member_request(
-            prm, processor=current_user, ignore_similar_name=True
-        )
+        user = finish_member_request(prm, processor=current_user, ignore_similar_name=True)
     session.session.commit()
 
-    flash("Nutzer erfolgreich erstellt.", 'success')
+    flash("Nutzer erfolgreich erstellt.", "success")
     return redirect(url_for(".user_show", user_id=user.id))
 
 
-@bp.route("member-request/<int:pre_member_id>/merge", methods=['GET', 'POST'])
-@access.require('user_change')
+@bp.route("member-request/<int:pre_member_id>/merge", methods=["GET", "POST"])
+@access.require("user_change")
 def member_request_merge(pre_member_id: int) -> ResponseReturnValue:
     prm = get_pre_member_or_404(pre_member_id)
 
@@ -1365,24 +1388,26 @@ def member_request_merge(pre_member_id: int) -> ResponseReturnValue:
     possible_users = get_possible_existing_users_for_pre_member(prm)
 
     if form.validate_on_submit():
-        return redirect(url_for(".member_request_merge_confirm",
-                                pre_member_id=pre_member_id,
-                                user_id=form.user_id.data))
+        return redirect(
+            url_for(
+                ".member_request_merge_confirm",
+                pre_member_id=pre_member_id,
+                user_id=form.user_id.data,
+            )
+        )
 
-    return render_template("user/member_request_merge.html",
-                           page_title="Mitgliedschaftsanfrage zusammenführen",
-                           form=form,
-                           prm=prm,
-                           possible_users=possible_users)
+    return render_template(
+        "user/member_request_merge.html",
+        page_title="Mitgliedschaftsanfrage zusammenführen",
+        form=form,
+        prm=prm,
+        possible_users=possible_users,
+    )
 
 
-@bp.route(
-    "member-request/<int:pre_member_id>/merge/<int:user_id>", methods=["GET", "POST"]
-)
+@bp.route("member-request/<int:pre_member_id>/merge/<int:user_id>", methods=["GET", "POST"])
 @access.require("user_change")
-def member_request_merge_confirm(
-    pre_member_id: int, user_id: int
-) -> ResponseReturnValue:
+def member_request_merge_confirm(pre_member_id: int, user_id: int) -> ResponseReturnValue:
     prm = get_pre_member_or_404(pre_member_id)
     user = get_user_or_404(user_id)
 
@@ -1390,22 +1415,32 @@ def member_request_merge_confirm(
 
     form.merge_name.label.text = f"Name: {user.name} ➡ {prm.name}"
     form.merge_email.label.text = f"E-Mail: {user.email} ➡ {prm.email}"
-    form.merge_person_id.label.text = f"Debitorennummer: {user.swdd_person_id} ➡ {prm.swdd_person_id}"
+    form.merge_person_id.label.text = (
+        f"Debitorennummer: {user.swdd_person_id} ➡ {prm.swdd_person_id}"
+    )
     form.merge_birthdate.label.text = f"Geburtsdatum: {user.birthdate} ➡ {prm.birthdate}"
 
     if prm.room is None or prm.room == user.room:
-        form.merge_room.render_kw = {'disabled': True}
+        form.merge_room.render_kw = {"disabled": True}
     else:
         form.merge_room.label.text = "Zimmer: {} ➡ {} am {}".format(
             user.room.short_name if user.room else None,
             prm.room.short_name if prm.room else None,
-            prm.move_in_date.isoformat() if prm.move_in_date is not None else "Sofort")
+            prm.move_in_date.isoformat() if prm.move_in_date is not None else "Sofort",
+        )
 
     if form.validate_on_submit():
-        lib.user.merge_member_request(user, prm, form.merge_name.data, form.merge_email.data,
-                                      form.merge_person_id.data, form.merge_room.data,
-                                      form.merge_password.data, form.merge_birthdate.data,
-                                      processor=current_user)
+        lib.user.merge_member_request(
+            user,
+            prm,
+            form.merge_name.data,
+            form.merge_email.data,
+            form.merge_person_id.data,
+            form.merge_room.data,
+            form.merge_password.data,
+            form.merge_birthdate.data,
+            processor=current_user,
+        )
 
         session.session.commit()
 
@@ -1414,19 +1449,19 @@ def member_request_merge_confirm(
         return redirect(url_for(".user_show", user_id=user.id))
 
     form_args = {
-        'form': form,
-        'cancel_to': url_for('.member_request_edit', pre_member_id=prm.id),
-        'submit_text': 'Zusammenführen',
-        'form_render_mode': 'basic',
-        'field_render_mode': 'basic',
+        "form": form,
+        "cancel_to": url_for(".member_request_edit", pre_member_id=prm.id),
+        "submit_text": "Zusammenführen",
+        "form_render_mode": "basic",
+        "field_render_mode": "basic",
     }
 
-    return render_template("generic_form.html",
-                           page_title="Mitgliedschaftsanfrage zusammenführen",
-                           form_args=form_args)
+    return render_template(
+        "generic_form.html", page_title="Mitgliedschaftsanfrage zusammenführen", form_args=form_args
+    )
 
 
-@bp.route('json/member-requests')
+@bp.route("json/member-requests")
 def member_requests_json() -> ResponseReturnValue:
     prms = get_member_requests()
 
@@ -1441,13 +1476,9 @@ def member_requests_json() -> ResponseReturnValue:
                     icon_false="far fa-address-card",
                 ),
                 login=prm.login,
-                email=TextWithBooleanColResponse(
-                    text=prm.email, bool=prm.email_confirmed
-                ),
+                email=TextWithBooleanColResponse(text=prm.email or "", bool=prm.email_confirmed),
                 move_in_date=date_format(prm.move_in_date, formatter=date_filter),
-                action_required=prm.room is not None
-                and prm.email_confirmed
-                and prm.is_adult,
+                action_required=prm.room is not None and prm.email_confirmed and prm.is_adult,
                 actions=[
                     BtnColResponse(
                         href=url_for(".member_request_edit", pre_member_id=prm.id),
@@ -1469,10 +1500,10 @@ def member_requests_json() -> ResponseReturnValue:
     ).model_dump()
 
 
-@bp.route('/resend-confirmation-mail')
+@bp.route("/resend-confirmation-mail")
 def resend_confirmation_mail() -> ResponseReturnValue:
-    user_id = request.args.get('user_id', type=int)
-    is_prm = request.args.get('is_prm', type=bool, default=False)
+    user_id = request.args.get("user_id", type=int)
+    is_prm = request.args.get("is_prm", type=bool, default=False)
 
     user: BaseUser
 
@@ -1496,12 +1527,12 @@ def resend_confirmation_mail() -> ResponseReturnValue:
         return redirect(return_url)
 
 
-@nav.navigate('Archivierbar', weight=6, icon='fa-archive')
-@bp.route('/archivable_users')
+@nav.navigate("Archivierbar", weight=6, icon="fa-archive")
+@bp.route("/archivable_users")
 def archivable_users() -> ResponseReturnValue:
     table = ArchivableMembersTable(data_url=url_for(".archivable_users_json"))
 
-    sess = t.cast(Session, session.session)
+    sess = session.session
 
     return render_template(
         "user/archivable_users.html",
@@ -1514,7 +1545,7 @@ def archivable_users() -> ResponseReturnValue:
 @bp.route("/scrub/mails", methods=["GET", "POST"])
 def scrub_mails() -> ResponseReturnValue:
     """Scrub The mail addresses in batches of 100"""
-    sess = t.cast(Session, session.session)
+    sess = session.session
 
     with sess.begin_nested():
         ids = scrub_all_mails(sess, author=current_user)
@@ -1525,7 +1556,7 @@ def scrub_mails() -> ResponseReturnValue:
     return redirect(url_for("user.archivable_users"))
 
 
-@bp.route('/archivable_users_table')
+@bp.route("/archivable_users_table")
 def archivable_users_json() -> ResponseReturnValue:
     return TableResponse[ArchivableMemberRow](
         items=[
@@ -1553,21 +1584,23 @@ def archivable_users_json() -> ResponseReturnValue:
     ).model_dump()
 
 
-@nav.navigate('Rundmail', weight=10, icon='fa-envelope')
-@bp.route('/groupmail', methods=['GET', 'POST'])
-@access.require('mail_group')
+@nav.navigate("Rundmail", weight=10, icon="fa-envelope")
+@bp.route("/groupmail", methods=["GET", "POST"])
+@access.require("mail_group")
 def mail_group() -> ResponseReturnValue:
     form = GroupMailForm()
 
     form_args = {
-        'form': form,
-        'cancel_to': url_for('.overview'),
-        'submit_text': 'Absenden',
-        'form_render_mode': 'basic',
-        'field_render_mode': 'basic',
+        "form": form,
+        "cancel_to": url_for(".overview"),
+        "submit_text": "Absenden",
+        "form_render_mode": "basic",
+        "field_render_mode": "basic",
     }
 
     if form.validate_on_submit():
+        assert form.subject.data is not None
+        assert form.body_plain.data is not None
         lib.user.group_send_mail(
             groups=form.groups.data,
             subject=form.subject.data,
@@ -1578,6 +1611,6 @@ def mail_group() -> ResponseReturnValue:
         flash("Rundmail versendet!", "success")
         return redirect(url_for(".mail_group"))
 
-    return render_template("generic_form.html",
-                           page_title="Rundmail an Gruppe",
-                           form_args=form_args)
+    return render_template(
+        "generic_form.html", page_title="Rundmail an Gruppe", form_args=form_args
+    )

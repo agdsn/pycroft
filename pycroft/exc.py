@@ -5,5 +5,7 @@
 pycroft.exc
 ~~~~~~~~~~~
 """
+
+
 class PycroftException(Exception):
     pass

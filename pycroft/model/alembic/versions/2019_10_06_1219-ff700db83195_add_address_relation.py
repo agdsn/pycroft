@@ -14,8 +14,8 @@ from sqlalchemy import orm
 from sqlalchemy.orm import declarative_base
 
 # revision identifiers, used by Alembic.
-revision = 'ff700db83195'
-down_revision = 'f85ef1ef556c'
+revision = "ff700db83195"
+down_revision = "f85ef1ef556c"
 branch_labels = None
 depends_on = None
 
@@ -27,7 +27,8 @@ DEFAULT_COUNTRY = "Germany"
 
 class _Address(Base):
     """A baked version of the Address table for easier data migration"""
-    __tablename__ = 'address'
+
+    __tablename__ = "address"
     id = sa.Column(sa.Integer, primary_key=True)
     street = sa.Column(sa.String(), nullable=False)
     number = sa.Column(sa.String(), nullable=False)
@@ -40,20 +41,16 @@ class _Address(Base):
     # temporary columns for easier data migration
     tmp_building_id = sa.Column(sa.Integer, nullable=True)
     building = orm.relationship(
-        '_Building',
-        primaryjoin='foreign(_Address.tmp_building_id) == _Building.id'
+        "_Building", primaryjoin="foreign(_Address.tmp_building_id) == _Building.id"
     )
 
     tmp_room_id = sa.Column(sa.Integer, nullable=True)
-    room = orm.relationship(
-        '_Room',
-        primaryjoin='foreign(_Address.tmp_room_id) == _Room.id'
-    )
+    room = orm.relationship("_Room", primaryjoin="foreign(_Address.tmp_room_id) == _Room.id")
 
 
 # These are subsets of tables as they are on the base revision
 class _Building(Base):
-    __tablename__ = 'building'
+    __tablename__ = "building"
     id = sa.Column(sa.Integer, primary_key=True)
     number = sa.Column(sa.String())
     short_name = sa.Column(sa.String())
@@ -61,7 +58,7 @@ class _Building(Base):
 
 
 class _Room(Base):
-    __tablename__ = 'room'
+    __tablename__ = "room"
     id = sa.Column(sa.Integer, primary_key=True)
     number = sa.Column(sa.String())
     level = sa.Column(sa.Integer)
@@ -75,7 +72,7 @@ class _RoomAfter(_Room):
 
 
 class _User(Base):
-    __tablename__ = 'user'
+    __tablename__ = "user"
     id = sa.Column(sa.Integer, primary_key=True)
     login = sa.Column(sa.String(40), nullable=False, unique=True)
     room_id = sa.Column(sa.Integer, sa.ForeignKey(_Room.id))
@@ -90,30 +87,27 @@ def upgrade():
     cleanups: list[Callable] = []
     # SCHEMA MIGRATION
     # renaming constraint 'address' → 'building_address'
-    op.create_unique_constraint('building_address', 'building', ['street', 'number'])
-    op.drop_constraint('address', 'building', type_='unique')
+    op.create_unique_constraint("building_address", "building", ["street", "number"])
+    op.drop_constraint("address", "building", type_="unique")
 
     op.create_table(
-        'address',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('street', sa.String(), nullable=False),
-        sa.Column('number', sa.String(), nullable=False),
-        sa.Column('addition', sa.String(), nullable=True),
-        sa.Column('zip_code', sa.String(), nullable=False),
-        sa.Column('city', sa.String(), nullable=False, server_default=DEFAULT_CITY),
-        sa.Column('state', sa.String(), nullable=True),
-        sa.Column('country', sa.String(), nullable=False, server_default=DEFAULT_COUNTRY),
-
+        "address",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("street", sa.String(), nullable=False),
+        sa.Column("number", sa.String(), nullable=False),
+        sa.Column("addition", sa.String(), nullable=True),
+        sa.Column("zip_code", sa.String(), nullable=False),
+        sa.Column("city", sa.String(), nullable=False, server_default=DEFAULT_CITY),
+        sa.Column("state", sa.String(), nullable=True),
+        sa.Column("country", sa.String(), nullable=False, server_default=DEFAULT_COUNTRY),
         # Temporary columns
-        sa.Column('tmp_building_id', sa.Integer, nullable=True),
-        sa.Column('tmp_room_id', sa.Integer, nullable=True),
-
-        sa.PrimaryKeyConstraint('id'),
-        sa.UniqueConstraint('street', 'number', 'addition', 'zip_code', 'city',
-                            'state', 'country')
+        sa.Column("tmp_building_id", sa.Integer, nullable=True),
+        sa.Column("tmp_room_id", sa.Integer, nullable=True),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("street", "number", "addition", "zip_code", "city", "state", "country"),
     )
-    cleanups.append(lambda: op.drop_column('address', 'tmp_building_id'))
-    cleanups.append(lambda: op.drop_column('address', 'tmp_room_id'))
+    cleanups.append(lambda: op.drop_column("address", "tmp_building_id"))
+    cleanups.append(lambda: op.drop_column("address", "tmp_room_id"))
 
     bind = op.get_bind()
     session = orm.Session(bind=bind)
@@ -129,11 +123,13 @@ def upgrade():
     add_room_addresses(session)
 
     # FURTHER SCHEMA MIGRATION…
-    op.add_column('room', sa.Column('address_id', sa.Integer(), nullable=False,
-                                    server_default=dummy_default_cause))
-    cleanups.append(lambda: op.alter_column('room', 'address_id', server_default=None))
-    op.create_index(op.f('ix_room_address_id'), 'room', ['address_id'], unique=False)
-    op.create_foreign_key(None, 'room', 'address', ['address_id'], ['id'])
+    op.add_column(
+        "room",
+        sa.Column("address_id", sa.Integer(), nullable=False, server_default=dummy_default_cause),
+    )
+    cleanups.append(lambda: op.alter_column("room", "address_id", server_default=None))
+    op.create_index(op.f("ix_room_address_id"), "room", ["address_id"], unique=False)
+    op.create_foreign_key(None, "room", "address", ["address_id"], ["id"])
 
     # DATA MIGRATION IV: set `address_id` to building's address for uninhabitable rooms
     set_uninhabitable_room_addresses(session)
@@ -142,11 +138,13 @@ def upgrade():
     set_inhabitable_room_addresses(session)
 
     # FURTHER SCHEMA MIGRATION…
-    op.add_column('user', sa.Column('address_id', sa.Integer(), nullable=False,
-                                    server_default=dummy_default_cause))
-    cleanups.append(lambda: op.alter_column('user', 'address_id', server_default=None))
-    op.create_index(op.f('ix_user_address_id'), 'user', ['address_id'], unique=False)
-    op.create_foreign_key(None, 'user', 'address', ['address_id'], ['id'])
+    op.add_column(
+        "user",
+        sa.Column("address_id", sa.Integer(), nullable=False, server_default=dummy_default_cause),
+    )
+    cleanups.append(lambda: op.alter_column("user", "address_id", server_default=None))
+    op.create_index(op.f("ix_user_address_id"), "user", ["address_id"], unique=False)
+    op.create_foreign_key(None, "user", "address", ["address_id"], ["id"])
 
     # DATA MIGRATION VI: set `user.address` for users with room
     set_user_addresses(session)
@@ -184,21 +182,21 @@ def set_uninhabitable_room_addresses(session):
 
 def add_room_addresses(session):
     room_select = (
-        sa.select(_Room.id, (sa.cast(_Room.level, sa.String)
-                             + "-"
-                             + _Room.number).label("addition"))
+        sa.select(
+            _Room.id, (sa.cast(_Room.level, sa.String) + "-" + _Room.number).label("addition")
+        )
         .select_from(_Room)
         .select_from(_Building)
         .where(_Building.id == _Room.building_id)
         .where(_Room.inhabitable)
         .column(_Building.street)
         .column(_Building.number)
-        .alias('inhabitable_room_info')
+        .alias("inhabitable_room_info")
     )
     session.execute(
-        sa.insert(_Address)
-        .from_select([_Address.tmp_room_id, _Address.addition, _Address.street, _Address.number],
-                     room_select)
+        sa.insert(_Address).from_select(
+            [_Address.tmp_room_id, _Address.addition, _Address.street, _Address.number], room_select
+        )
     )
 
 
@@ -206,16 +204,20 @@ def add_building_addresses(session):
     building_select = sa.select(_Building.street, _Building.number, _Building.id)
     session.execute(
         sa.insert(_Address)
-        .from_select([_Address.street, _Address.number, _Address.tmp_building_id],
-                     building_select)
+        .from_select([_Address.street, _Address.number, _Address.tmp_building_id], building_select)
         .returning(_Address.id)
     )
 
 
 def add_dummy_address(session):
     # noinspection SpellCheckingInspection
-    dummy_addr = _Address(street="Niemandsstraße", number="42", zip_code="33602",
-                          city="Bielefeld", state="Niedersachsen")
+    dummy_addr = _Address(
+        street="Niemandsstraße",
+        number="42",
+        zip_code="33602",
+        city="Bielefeld",
+        state="Niedersachsen",
+    )
     session.add(dummy_addr)
     session.commit()
     session.refresh(dummy_addr)
@@ -224,12 +226,12 @@ def add_dummy_address(session):
 
 
 def downgrade():
-    op.drop_constraint('user_address_id_fkey', 'user', type_='foreignkey')
-    op.drop_index(op.f('ix_user_address_id'), table_name='user')
-    op.drop_column('user', 'address_id')
-    op.drop_constraint('room_address_id_fkey', 'room', type_='foreignkey')
-    op.drop_index(op.f('ix_room_address_id'), table_name='room')
-    op.drop_column('room', 'address_id')
-    op.drop_table('address')
-    op.create_unique_constraint('address', 'building', ['street', 'number'])
-    op.drop_constraint('building_address', 'building', type_='unique')
+    op.drop_constraint("user_address_id_fkey", "user", type_="foreignkey")
+    op.drop_index(op.f("ix_user_address_id"), table_name="user")
+    op.drop_column("user", "address_id")
+    op.drop_constraint("room_address_id_fkey", "room", type_="foreignkey")
+    op.drop_index(op.f("ix_room_address_id"), table_name="room")
+    op.drop_column("room", "address_id")
+    op.drop_table("address")
+    op.create_unique_constraint("address", "building", ["street", "number"])
+    op.drop_constraint("building_address", "building", type_="unique")

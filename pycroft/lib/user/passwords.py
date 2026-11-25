@@ -27,7 +27,7 @@ def change_password(user: User, password: str) -> None:
 def reset_password(user: User, processor: User) -> str:
     if not can_target(user, processor):
         raise PermissionError(
-            "cannot reset password of a user with a" " greater or equal permission level."
+            "cannot reset password of a user with a greater or equal permission level."
         )
 
     plain_password = user_helper.generate_password(12)

@@ -1,1 +1,6 @@
+{#def
+from web.blueprints.user.tables import TenancyTable
+
+tenancy_table: TenancyTable
+#}
 {{ tenancy_table.render('tenancy_table') }}

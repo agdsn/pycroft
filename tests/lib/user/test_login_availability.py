@@ -43,7 +43,7 @@ def test_unused_login_passes_check(session):
 
 
 def check(login: str):
-    check_new_user_data_unused(login=login, email="unused@unused.com", swdd_person_id="9999999")
+    check_new_user_data_unused(login=login, email="unused@unused.com", swdd_person_id=9999999)
 
 
 @pytest.fixture(scope="module", autouse=True)

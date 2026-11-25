@@ -6,20 +6,20 @@ from .facilities import RoomFactory
 from .user import UserFactory
 
 
-class UserLogEntryFactory(BaseFactory):
+class UserLogEntryFactory(BaseFactory[UserLogEntry]):
     class Meta:
         model = UserLogEntry
 
-    message = factory.Faker('paragraph')
+    message = factory.Faker("paragraph")
     author = factory.SubFactory(UserFactory)
     user = factory.SubFactory(UserFactory)
     created_at = None
 
 
-class RoomLogEntryFactory(BaseFactory):
+class RoomLogEntryFactory(BaseFactory[RoomLogEntry]):
     class Meta:
         model = RoomLogEntry
 
-    message = factory.Faker('paragraph')
+    message = factory.Faker("paragraph")
     author = factory.SubFactory(UserFactory)
     room = factory.SubFactory(RoomFactory)

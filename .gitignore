@@ -230,3 +230,6 @@ celerybeat-schedule
 # timestamp-based dependency tracking.
 # used by some docker entrypoint hooks
 .*.stamp
+
+# generated types-for-jinja stubs
+_jinja_stubs

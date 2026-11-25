@@ -5,20 +5,20 @@ from pycroft.model.net import VLAN, Subnet
 from tests.factories.base import BaseFactory
 
 
-class VLANFactory(BaseFactory):
+class VLANFactory(BaseFactory[VLAN]):
     class Meta:
         model = VLAN
 
-    name = factory.Sequence(lambda n: f"vlan{n+1}")
-    vid = factory.Sequence(lambda n: n+1)
+    name = factory.Sequence(lambda n: f"vlan{n + 1}")
+    vid = factory.Sequence(lambda n: n + 1)
 
     class Params:
         create_subnet = factory.Trait(
-            subnets=factory.RelatedFactoryList('tests.factories.net.SubnetFactory', 'vlan', size=1)
+            subnets=factory.RelatedFactoryList("tests.factories.net.SubnetFactory", "vlan", size=1)
         )
 
 
-class SubnetFactory(BaseFactory):
+class SubnetFactory(BaseFactory[Subnet]):
     class Meta:
         model = Subnet
 

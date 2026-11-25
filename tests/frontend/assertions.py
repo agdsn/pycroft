@@ -16,8 +16,7 @@ class TestClient(flask.testing.FlaskClient):
 
     if t.TYPE_CHECKING:
 
-        def get(self, *a, **kw) -> flask.Response:
-            ...
+        def get(self, *a, **kw) -> flask.Response: ...
 
     def __init__(self, *a, **kw):
         super().__init__(*a, **kw)
@@ -69,8 +68,9 @@ class TestClient(flask.testing.FlaskClient):
     ) -> Response:
         __tracebackhide__ = True
         resp = self.open(url, method=method, **kw)
-        assert 300 <= resp.status_code < 400, \
+        assert 300 <= resp.status_code < 400, (
             f"Expected {url!r} to redirect, got status {resp.status}"
+        )
         if expected_location is not None:
             assert resp.location == expected_location
         return resp
@@ -84,8 +84,9 @@ class TestClient(flask.testing.FlaskClient):
     ) -> Response:
         __tracebackhide__ = True
         resp = self.open(url_for(endpoint), method=method, **kw)
-        assert 300 <= resp.status_code < 400, \
+        assert 300 <= resp.status_code < 400, (
             f"Expected endpoint {endpoint} to redirect, got status {resp.status}"
+        )
         if expected_location is not None:
             assert resp.location == expected_location
         return resp
@@ -123,11 +124,13 @@ class TestClient(flask.testing.FlaskClient):
 
         template_names = [template.name for template, ctx in recorded]
         if allow_others:
-            assert template in template_names, \
+            assert template in template_names, (
                 f"Expected template {template} to be rendered, got {template_names!r}"
+            )
         else:
-            assert template_names == [template], \
+            assert template_names == [template], (
                 f"Expected template {template} to be rendered (exclusively), got {template_names!r}"
+            )
 
     @contextlib.contextmanager
     def flashes_message(self, match: str, category: str):
@@ -149,10 +152,7 @@ class TestClient(flask.testing.FlaskClient):
             pytest.fail("No messages flashed")
 
         if not any(
-            (
-                cat == category and re.search(match, message) is not None
-                for message, cat in recorded
-            )
+            (cat == category and re.search(match, message) is not None for message, cat in recorded)
         ):
             pytest.fail(
                 f"No message matching pattern {match!r} was flashed in category {category}."

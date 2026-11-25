@@ -55,7 +55,7 @@ def edit_email(
 
     if not can_target(user, processor):
         raise PermissionError(
-            "cannot change email of a user with a" " greater or equal permission level."
+            "cannot change email of a user with a greater or equal permission level."
         )
 
     if not email:
@@ -123,7 +123,7 @@ def edit_birthdate(user: User, birthdate: date | None, processor: User) -> User:
 
 
 @with_transaction
-def edit_person_id(user: User, person_id: int, processor: User) -> User:
+def edit_person_id(user: User, person_id: int | None, processor: User) -> User:
     """
     Changes the swdd_person_id of the user and creates a log entry.
 

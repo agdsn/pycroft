@@ -5,6 +5,7 @@
 pycroft.model.net
 ~~~~~~~~~~~~~~~~~
 """
+
 from __future__ import annotations
 import typing as t
 
@@ -20,6 +21,7 @@ if t.TYPE_CHECKING:
     # backrefs
     from .host import IP
 
+
 class VLAN(IntegerIdModel):
     name: Mapped[str127]
     vid: Mapped[int] = mapped_column()
@@ -34,7 +36,7 @@ class VLAN(IntegerIdModel):
     # /associations
 
     # backrefs
-    subnets = relationship('Subnet', back_populates='vlan', viewonly=True)
+    subnets = relationship("Subnet", back_populates="vlan", viewonly=True)
     # /backrefs
 
 
@@ -91,9 +93,7 @@ class Subnet(IntegerIdModel):
 
 
 # Ensure that the gateway is contained in the subnet
-constraint = CheckConstraint(Subnet.gateway.op('<<')(Subnet.address))
+constraint = CheckConstraint(Subnet.gateway.op("<<")(Subnet.address))
 event.listen(
-    Subnet.__table__,
-    "after_create",
-    AddConstraint(constraint).execute_if(dialect='postgresql')
+    Subnet.__table__, "after_create", AddConstraint(constraint).execute_if(dialect="postgresql")
 )

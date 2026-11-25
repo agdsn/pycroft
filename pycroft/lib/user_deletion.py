@@ -4,7 +4,9 @@ pycroft.lib.user_deletion
 
 This module contains methods concerning user archival and deletion.
 """
+
 from __future__ import annotations
+from sqlalchemy.sql.elements import KeyedColumnElement
 import typing as t
 from collections.abc import Sequence
 from datetime import datetime
@@ -35,10 +37,11 @@ class ArchivableMemberInfo(Protocol):
 
 # mrh, not available in py3.10…
 
+
 def select_archivable_members(
     current_year: int,
     years_following_eom: int,
-) -> tuple[Select[tuple[User, int, datetime]], CTE]:
+) -> tuple[Select[User, int, datetime], CTE]:
     """Get all members whose year(end of last membership) + 1 + years_following_eom <= current year.
 
     legal grounds:
@@ -56,24 +59,34 @@ def select_archivable_members(
     # last_mem: (user_id, mem_id, mem_end)
     last_mem = select_user_and_last_mem().cte("last_mem").prefix_with("materialized")
     return (
-        select()
-        .select_from(last_mem)
-        # Join the granted `do-not-archive` property, if existent
-        .join(CurrentProperty,
-              and_(last_mem.c.user_id == CurrentProperty.user_id,
-                   CurrentProperty.property_name == 'do-not-archive',
-                   not_(CurrentProperty.denied)),
-              isouter=True)
-        # …and use that to filter out the `do-not-archive` occurrences.
-        .filter(CurrentProperty.property_name.is_(None))
-        .join(User, User.id == last_mem.c.user_id)
-        .filter(func.extract("year", last_mem.c.mem_end) + 1 + years_following_eom <= current_year)
-        .with_only_columns(
-            User,
-            last_mem.c.mem_id,
-            last_mem.c.mem_end,
-        )
-    ), last_mem
+        t.cast(
+            Select[User, int, datetime],
+            select()
+            .select_from(last_mem)
+            # Join the granted `do-not-archive` property, if existent
+            .join(
+                CurrentProperty,
+                and_(
+                    last_mem.c.user_id == CurrentProperty.user_id,
+                    CurrentProperty.property_name == "do-not-archive",
+                    not_(CurrentProperty.denied),
+                ),
+                isouter=True,
+            )
+            # …and use that to filter out the `do-not-archive` occurrences.
+            .filter(CurrentProperty.property_name.is_(None))
+            .join(User, User.id == last_mem.c.user_id)
+            .filter(
+                func.extract("year", last_mem.c.mem_end) + 1 + years_following_eom <= current_year
+            )
+            .with_only_columns(
+                User,
+                last_mem.c.mem_id,
+                last_mem.c.mem_end,
+            ),
+        ),
+        last_mem,
+    )
 
 
 def get_archivable_members(
@@ -117,7 +130,7 @@ def get_archivable_members(
     )
 
 
-def scrubbable_mails_stmt(year: int) -> Select[tuple[User]]:
+def scrubbable_mails_stmt(year: int) -> Select[User]:
     """Users whose mails can be scrubbed
 
     Definition:
@@ -162,7 +175,7 @@ def scrub_mail(session: Session, user: User, author: User) -> None:
 def scrub_all_mails(
     session: Session,
     author: User,
-    user_filter: t.Callable[[Select[tuple[User]]], Select[tuple[User]]] | None = None,
+    user_filter: t.Callable[[Select[User]], Select[User]] | None = None,
 ) -> ScalarResult[int]:
     return session.scalars(scrub_all_mails_stmt(utcnow().year, author.id, user_filter))
 
@@ -170,8 +183,8 @@ def scrub_all_mails(
 def scrub_all_mails_stmt(
     year: int,
     author_id: int,
-    user_filter: t.Callable[[Select[tuple[User]]], Select[tuple[User]]] | None = None,
-) -> Select[tuple[int]]:
+    user_filter: t.Callable[[Select[User]], Select[User]] | None = None,
+) -> Select[int]:
     users_with_mail = (user_filter or identity)(scrubbable_mails_stmt(year))
     ids_subq = users_with_mail.with_only_columns(User.id).scalar_subquery()
     removed_mail_user_ids = (
@@ -216,12 +229,15 @@ def scrub_all_mails_stmt(
         .cte("log_entries")
     )
     log_numbered = (
-        select(insert_log.c.id, func.row_number().over(order_by=insert_log.c.id).label("row_number"))
+        select(
+            insert_log.c.id, func.row_number().over(order_by=insert_log.c.id).label("row_number")
+        )
         .select_from(insert_log)
         .cte()
     )
     user_ids_numbered = (
-        select(removed_mail_user_ids.c.id,
+        select(
+            removed_mail_user_ids.c.id,
             func.row_number().over(order_by=removed_mail_user_ids.c.id).label("row_number"),
         )
         .select_from(removed_mail_user_ids)
@@ -250,9 +266,12 @@ def scrub_all_mails_stmt(
         )
         .cte("user_log_entries")
     )
-    return select(removed_mail_user_ids.c.id).add_cte(insert_scrub_log, insert_user_log)
+    return select(t.cast(KeyedColumnElement[int], removed_mail_user_ids.c.id)).add_cte(
+        insert_scrub_log, insert_user_log
+    )
 
-def scrubbable_hosts_stmt(year: int) -> Select[tuple[Host]]:
+
+def scrubbable_hosts_stmt(year: int) -> Select[Host]:
     """All the hosts we can delete.
 
     Deleting them will delete interfaces and assigned IPs by cascade.
@@ -269,7 +288,7 @@ def scrubbable_hosts_stmt(year: int) -> Select[tuple[Host]]:
     return stmt.join(Host).with_only_columns(Host).distinct()
 
 
-def scrubbable_dates_of_birth_stmt(year: int) -> Select[tuple[User]]:
+def scrubbable_dates_of_birth_stmt(year: int) -> Select[User]:
     """All the users whose date of birth we can delete.
 
     Definition:
@@ -285,7 +304,7 @@ def scrubbable_dates_of_birth_stmt(year: int) -> Select[tuple[User]]:
     return stmt.filter(User.birthdate.is_not(None)).with_only_columns(User).distinct()
 
 
-def scrubbable_swdd_person_ids(year: int) -> Select[tuple[User]]:
+def scrubbable_swdd_person_ids(year: int) -> Select[User]:
     """All the users whose ``swdd_person_id`` (“Debitorennummer”) we can delete
 
     .. epigraph::
@@ -301,7 +320,7 @@ def scrubbable_swdd_person_ids(year: int) -> Select[tuple[User]]:
     return stmt.filter(User.swdd_person_id.is_not(None)).with_only_columns(User).distinct()
 
 
-def scrubbable_room_history_entries(year: int) -> Select[tuple[RoomHistoryEntry]]:
+def scrubbable_room_history_entries(year: int) -> Select[RoomHistoryEntry]:
     """All the room history entries we can delete
 
     .. epigraph::
@@ -314,7 +333,7 @@ def scrubbable_room_history_entries(year: int) -> Select[tuple[RoomHistoryEntry]
     return stmt.join(User.room_history_entries).with_only_columns(RoomHistoryEntry).distinct()
 
 
-def scrubbable_name(year: int) -> Select[tuple[User]]:
+def scrubbable_name(year: int) -> Select[User]:
     """All the users whose ``name`` can be deleted
 
     .. epigraph::
@@ -327,7 +346,7 @@ def scrubbable_name(year: int) -> Select[tuple[User]]:
     return stmt.filter(User.name.is_not(None)).with_only_columns(User).distinct()
 
 
-def scrubbable_address(year: int) -> Select[tuple[User]]:
+def scrubbable_address(year: int) -> Select[User]:
     """All the users whose ``address_id`` can be deleted
 
     .. epigraph::

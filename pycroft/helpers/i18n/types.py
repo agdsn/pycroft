@@ -5,6 +5,7 @@
 pycroft.helpers.i18n.types
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 """
+
 from __future__ import annotations
 
 import collections

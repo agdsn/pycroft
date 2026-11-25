@@ -5,6 +5,7 @@
 pycroft.helpers.interval
 ~~~~~~~~~~~~~~~~~~~~~~~~
 """
+
 from __future__ import annotations
 
 import collections.abc
@@ -12,48 +13,25 @@ import operator
 import typing as t
 from functools import reduce
 from itertools import tee, chain, filterfalse
+from typing_extensions import sentinel
 
 # from typing_extensions import Self
 
 if t.TYPE_CHECKING:
     from _typeshed import SupportsAllComparisons as Ord
 
-
-def _infinity(name):
-    """
-    Create a single instance of an class with a given name.
-    """
-    return type(name + "Type", (object, ), {
-        '__repr__': lambda self: f"{self.__module__}.{name}",
-        '__str__': lambda self: name,
-        '__unicode__': lambda self: name,
-    })()
-
-
 #: +∞
-PositiveInfinity = _infinity("PositiveInfinity")
-
-
-class PositiveInfinityType:
-    """dummy placeholder type to work around mypy limitations"""
-
-    pass
+PositiveInfinity = sentinel("PositiveInfinity")
 
 
 #: -∞
-NegativeInfinity = _infinity("NegativeInfinity")
+NegativeInfinity = sentinel("NegativeInfinity")
 
 
-class NegativeInfinityType:
-    """dummy placeholder type to work around mypy limitations"""
-
-    pass
+type TWithInfinity[T] = T | PositiveInfinity | NegativeInfinity
 
 
-type TWithInfinity[T] = T | PositiveInfinityType | NegativeInfinityType
-
-
-class Bound[T: Ord](tuple):
+class Bound[T: Ord](tuple[TWithInfinity[T], bool]):
     """Represents a bound of an interval, i.e. value + closedness.
 
     The value is either:
@@ -64,12 +42,12 @@ class Bound[T: Ord](tuple):
     """
 
     @property
-    def value(self) -> TWithInfinity:
+    def value(self) -> TWithInfinity[T]:
         return self[0]
 
     @property
     def closed(self) -> bool:
-        return t.cast(bool, self[1])
+        return self[1]
 
     @property
     def pg_identifier(self) -> str:
@@ -81,11 +59,13 @@ class Bound[T: Ord](tuple):
             # pycroft=# select tsrange '(,today)' - '[-infinity, today)';
             # ?column?
             # (,-infinity)
-            return ''
+            return ""
         return str(self.value)
 
     @t.override
-    def __new__(cls, value: TWithInfinity, is_closed: bool) -> Bound[T]:
+    def __new__(  # ty: ignore[invalid-method-override]
+        cls, value: TWithInfinity[T], is_closed: bool
+    ) -> Bound[T]:
         if value is NegativeInfinity or value is PositiveInfinity:
             is_closed = False
         return tuple.__new__(cls, (value, is_closed))
@@ -94,49 +74,56 @@ class Bound[T: Ord](tuple):
     def __hash__(self) -> int:
         return hash((self[0], self[1]))
 
-    def __le__(self, other: Bound[T]) -> bool:  # type: ignore
+    @t.override
+    def __le__(self, other: Bound[T]) -> bool:  # ty: ignore[invalid-method-override]
+        othervalue = other[0]  # for type narrowing
         if self.value is PositiveInfinity:
-            return other.value is PositiveInfinity
+            return othervalue is PositiveInfinity
         if self.value is NegativeInfinity:
             return True
-        if other.value is PositiveInfinity:
+        if othervalue is PositiveInfinity:
             return True
-        if other.value is NegativeInfinity:
+        if othervalue is NegativeInfinity:
             return False
-        if self.value == other.value:
+        if self.value == othervalue:
             return self.closed and other.closed
-        return t.cast(T, self.value) <= t.cast(T, other.value)
+        return bool(self.value <= othervalue)
 
-    def __lt__(self, other: Bound[T]) -> bool:  # type: ignore
+    @t.override
+    def __lt__(self, other: Bound[T]) -> bool:  # ty: ignore[invalid-method-override]
+        othervalue = other[0]  # for narrowing
         if self.value is PositiveInfinity:
-            return other.value is PositiveInfinity
+            return othervalue is PositiveInfinity
         if self.value is NegativeInfinity:
             return True
-        if other.value is PositiveInfinity:
+        if othervalue is PositiveInfinity:
             return True
-        if other.value is NegativeInfinity:
+        if othervalue is NegativeInfinity:
             return False
-        return t.cast(T, self.value) < t.cast(T, other.value)
+        return bool(self.value < othervalue)
 
-    def __gt__(self, other: Bound[T]) -> bool:  # type: ignore
-        return other < self
+    # TODO we should just stop overriding from tuple and use a frozen dataclass with slots.
+    #   This inheritance is premature optimization and causes virtually all typing issues.
+    @t.override
+    def __gt__(self, other: Bound[T]) -> bool:  # ty: ignore[invalid-method-override]
+        return operator.lt(other, self)  # ty: ignore[unsound-return-statement]
 
-    def __ge__(self, other: Bound[T]) -> bool:  # type: ignore
-        return other <= self
+    @t.override
+    def __ge__(self, other: Bound[T]) -> bool:  # ty: ignore[invalid-method-override]
+        return operator.le(other, self)  # ty: ignore[unsound-return-statement]
 
     @t.override
     def __eq__(self, other: object) -> bool:
-        return (isinstance(other, Bound) and
-                self.value == other.value and
-                self.closed == other.closed)
+        return (
+            isinstance(other, Bound) and self.value == other.value and self.closed == other.closed
+        )
 
     def __sub__(self, other):
         return self.value - other.value
 
     @t.override
     def __repr__(self):
-        return "{}.{}({!r}, {!r})".format(
-            self.__module__, self.__class__.__name__, self.value, self.closed)
+        return f"{self.__module__}.{self.__class__.__name__}({self.value!r}, {self.closed!r})"
 
     @t.override
     def __str__(self):
@@ -153,7 +140,7 @@ class Bound[T: Ord](tuple):
         return self.value is NegativeInfinity or self.value is PositiveInfinity
 
 
-class Interval[T: Ord](tuple):
+class Interval[T: Ord](tuple[Bound[T], Bound[T]]):
     """
     Represents an bounded or unbounded interval.
 
@@ -176,6 +163,7 @@ class Interval[T: Ord](tuple):
         `Python 3.11 <https://docs.python.org/3.11/whatsnew/3.11.html#typing>`_
         for nicer typing behavior
     """
+
     __slots__ = ()
 
     def __new__(cls, lower_bound: Bound[T], upper_bound: Bound[T]) -> Interval[T]:
@@ -189,10 +177,8 @@ class Interval[T: Ord](tuple):
         :param Bound upper_bound: right interval bound
         :raises ValueError: if lower_bound greater than upper_bound
         """
-        if lower_bound > upper_bound:
-            raise ValueError(
-                f"lower_bound > upper_bound ({lower_bound} > {upper_bound})"
-            )
+        if lower_bound.__gt__(upper_bound):
+            raise ValueError(f"lower_bound > upper_bound ({lower_bound} > {upper_bound})")
         # Unfortunately using namedtuple is not possible, because we have
         # field names starting with underscores
         return tuple.__new__(cls, (lower_bound, upper_bound))
@@ -200,11 +186,14 @@ class Interval[T: Ord](tuple):
     @classmethod
     def from_explicit_data(
         cls,
-        lower: T | None, lower_closed: bool,
-        upper: T | None, upper_closed: bool,
+        lower: T | None,
+        lower_closed: bool,
+        upper: T | None,
+        upper_closed: bool,
     ) -> t.Self:
-        return cls(Bound(_convert_begin(lower), lower_closed),
-                   Bound(_convert_end(upper), upper_closed))
+        return cls(
+            Bound(_convert_begin(lower), lower_closed), Bound(_convert_end(upper), upper_closed)
+        )
 
     @t.override
     def __hash__(self):
@@ -215,14 +204,14 @@ class Interval[T: Ord](tuple):
         """
         :returns: The lower bound object
         """
-        return t.cast(Bound[T], self[0])
+        return self[0]
 
     @property
     def upper_bound(self) -> Bound[T]:
         """
         :returns: The upper bound object
         """
-        return t.cast(Bound[T], self[1])
+        return self[1]
 
     @property
     def begin(self) -> T | None:
@@ -243,8 +232,9 @@ class Interval[T: Ord](tuple):
     @property
     def empty(self) -> bool:
         """Tests whether the interval is empty"""
-        return (self.lower_bound.value == self.upper_bound.value and
-                not (self.lower_bound.closed and self.upper_bound.closed))
+        return self.lower_bound.value == self.upper_bound.value and not (
+            self.lower_bound.closed and self.upper_bound.closed
+        )
 
     @property
     def length(self) -> t.Any:  # actually return type of `T.__sub__`
@@ -256,30 +246,35 @@ class Interval[T: Ord](tuple):
 
     @t.override
     def __eq__(self, other: object) -> bool:
-        return (isinstance(other, Interval) and
-                self.lower_bound == other.lower_bound and
-                self.upper_bound == other.upper_bound)
+        return (
+            isinstance(other, Interval)
+            and self.lower_bound == other.lower_bound
+            and self.upper_bound == other.upper_bound
+        )
 
     def __le__(self, other: Interval[T]) -> bool:  # type: ignore
-        return (self.lower_bound < other.lower_bound or
-                (self.lower_bound == other.lower_bound and
-                 self.upper_bound <= other.upper_bound))
+        return operator.lt(self.lower_bound, other.lower_bound) or (
+            self.lower_bound == other.lower_bound
+            and operator.le(self.upper_bound, other.upper_bound)
+        )  # ty: ignore[unsound-return-statement]
 
     def __lt__(self, other: Interval[T]) -> bool:  # type: ignore
-        return (self.lower_bound < other.lower_bound or
-                (self.lower_bound == other.lower_bound and
-                 self.upper_bound < other.upper_bound))
+        return operator.lt(self.lower_bound, other.lower_bound) or (
+            self.lower_bound == other.lower_bound
+            and operator.lt(self.upper_bound, other.upper_bound)
+        )  # ty: ignore[unsound-return-statement]
 
     def __contains__(self, point: T) -> bool:  # type: ignore
         bound = Bound[T](point, True)
-        return self.lower_bound <= bound <= self.upper_bound
+        return operator.le(self.lower_bound, bound) and operator.le(bound, self.upper_bound)  # ty: ignore[unsound-return-statement]
 
     @t.override
     def __str__(self):
         return "{}{},{}{}".format(
-            '[' if self.lower_bound.closed else '(',
-            self.lower_bound.pg_identifier, self.upper_bound.pg_identifier,
-            ']' if self.upper_bound.closed else ')',
+            "[" if self.lower_bound.closed else "(",
+            self.lower_bound.pg_identifier,
+            self.upper_bound.pg_identifier,
+            "]" if self.upper_bound.closed else ")",
         )
 
     @t.override
@@ -294,13 +289,7 @@ class Interval[T: Ord](tuple):
                 creator = "openclosed"
             else:
                 creator = "open"
-        return "{}.{}.{}({!r}, {!r})".format(
-            self.__module__,
-            self.__class__.__name__,
-            creator,
-            self.lower_bound.value,
-            self.upper_bound.value
-        )
+        return f"{self.__module__}.{self.__class__.__name__}.{creator}({self.lower_bound.value!r}, {self.upper_bound.value!r})"
 
     def strictly_before(self, other: Interval[T]) -> bool:
         """
@@ -311,7 +300,7 @@ class Interval[T: Ord](tuple):
 
         .. note:: This is not the same as ``self < other``.
         """
-        return self.upper_bound < other.lower_bound
+        return operator.lt(self.upper_bound, other.lower_bound)  # ty: ignore[unsound-return-statement]
 
     def before(self, other: Interval[T]) -> bool:
         """
@@ -322,7 +311,7 @@ class Interval[T: Ord](tuple):
 
         .. note:: This is not the same as ``self <= other``.
         """
-        return self.upper_bound <= other.lower_bound
+        return operator.le(self.upper_bound, other.lower_bound)  # ty: ignore[unsound-return-statement]
 
     def strictly_after(self, other: Interval[T]) -> bool:
         """
@@ -354,8 +343,9 @@ class Interval[T: Ord](tuple):
         begin of the second interval and at least one of the bounds is closed.
         This means that the intervals do not necessarily have to overlap.
         """
-        return (self.upper_bound.value == other.lower_bound.value and
-                (self.upper_bound.closed or self.lower_bound.closed))
+        return self.upper_bound.value == other.lower_bound.value and (
+            self.upper_bound.closed or self.lower_bound.closed
+        )
 
     def strictly_overlaps(self, other: Interval[T]) -> bool:
         """
@@ -364,8 +354,9 @@ class Interval[T: Ord](tuple):
         Two intervals overlap if each begin is strictly before the other's end.
         This means that the intervals may not be equal.
         """
-        return (self.lower_bound < other.upper_bound and
-                other.lower_bound < self.upper_bound)
+        return operator.lt(self.lower_bound, other.upper_bound) and operator.lt(
+            other.lower_bound, self.upper_bound
+        )  # ty: ignore[unsound-return-statement]
 
     def overlaps(self, other: Interval[T]) -> bool:
         """
@@ -373,8 +364,9 @@ class Interval[T: Ord](tuple):
 
         Two intervals overlap if each begin is before the other's end.
         """
-        return (self.lower_bound <= other.upper_bound and
-                other.lower_bound <= self.upper_bound)
+        return operator.le(self.lower_bound, other.upper_bound) and operator.le(
+            other.lower_bound, self.upper_bound
+        )  # ty: ignore[unsound-return-statement]
 
     def strictly_during(self, other: Interval[T]) -> bool:
         """
@@ -384,8 +376,9 @@ class Interval[T: Ord](tuple):
         An interval is strictly during another if its begin is greater than
         the other's and its end is less than the other's.
         """
-        return (other.lower_bound < self.lower_bound and
-                self.upper_bound < other.upper_bound)
+        return operator.lt(other.lower_bound, self.lower_bound) and operator.lt(
+            self.upper_bound, other.upper_bound
+        )  # ty: ignore[unsound-return-statement]
 
     def during(self, other: Interval[T]) -> bool:
         """
@@ -394,8 +387,9 @@ class Interval[T: Ord](tuple):
         An interval is during another if its begin is greather than or equal to
         the other's and its end is less than or equal to the other's.
         """
-        return (other.lower_bound <= self.lower_bound and
-                self.upper_bound <= other.upper_bound)
+        return operator.le(other.lower_bound, self.lower_bound) and operator.le(
+            self.upper_bound, other.upper_bound
+        )  # ty: ignore[unsound-return-statement]
 
     def strictly_contains(self, other: Interval[T]) -> bool:
         """
@@ -448,15 +442,16 @@ class Interval[T: Ord](tuple):
         if not self.overlaps(other) and not self.meets(other):
             return None
         return Interval(
-            min(self.lower_bound, other.lower_bound),
-            max(self.upper_bound, other.upper_bound)
+            min(self.lower_bound, other.lower_bound), max(self.upper_bound, other.upper_bound)
         )
 
     @property
     def closure(self) -> Interval[T]:
         """Return a closed variant of this interval"""
-        return Interval(Bound(self.lower_bound.value, is_closed=True),
-                        Bound(self.upper_bound.value, is_closed=True))
+        return Interval(
+            Bound(self.lower_bound.value, is_closed=True),
+            Bound(self.upper_bound.value, is_closed=True),
+        )
 
     __or__ = join
     __add__ = join  # type: ignore
@@ -498,9 +493,11 @@ class Interval[T: Ord](tuple):
         :return: A new interval with f applied to its bounds
         """
         return Interval[U](
-            t.cast(Bound[U], l) if (l := self.lower_bound).unbounded
+            t.cast(Bound[U], l)
+            if (l := self.lower_bound).unbounded
             else Bound[U](f(t.cast(T, l.value)), l.closed),
-            t.cast(Bound[U], u) if (u := self.lower_bound).unbounded
+            t.cast(Bound[U], u)
+            if (u := self.lower_bound).unbounded
             else Bound[U](f(t.cast(T, u.value)), u.closed),
         )
 
@@ -622,7 +619,7 @@ class IntervalSet[T: Ord](collections.abc.Sequence[Interval[T]]):
         """
         return reduce(
             lambda a, b: None if a is None or b is None else a + b,
-            (i.length for i in self._intervals)
+            (i.length for i in self._intervals),
         )
 
     @t.override
@@ -635,22 +632,18 @@ class IntervalSet[T: Ord](collections.abc.Sequence[Interval[T]]):
 
     @t.override
     def __eq__(self, other):
-        return (isinstance(other, IntervalSet) and
-                self._intervals == other._intervals)
+        return isinstance(other, IntervalSet) and self._intervals == other._intervals
 
     @t.override
     def __repr__(self):
-        return "{}.{}({!r})".format(
-            self.__module__,
-            self.__class__.__name__,
-            self._intervals)
+        return f"{self.__module__}.{self.__class__.__name__}({self._intervals!r})"
 
     @t.override
     def __str__(self):
-        return "{{{0}}}".format(", ".join(str(i) for i in self._intervals))
+        return "{{{}}}".format(", ".join(str(i) for i in self._intervals))
 
     def __unicode__(self):
-        return "{{{0}}}".format(", ".join(str(i) for i in self._intervals))
+        return "{{{}}}".format(", ".join(str(i) for i in self._intervals))
 
     def complement(self):
         return _create(_complement(self._intervals))
@@ -692,9 +685,11 @@ def _mangle_argument[T: Ord](arg: IntervalSetSource) -> tuple[Interval[T], ...]:
         return (arg,)
     if isinstance(arg, collections.abc.Iterable):
         return tuple(_join(sorted(arg)))
-    raise TypeError("Argument may be None, an IntervalSet, an Interval or an "
-                    "iterable of Intervals. "
-                    "Was {}.".format(type(arg).__name__))
+    raise TypeError(
+        "Argument may be None, an IntervalSet, an Interval or an "
+        "iterable of Intervals. "
+        f"Was {type(arg).__name__}."
+    )
 
 
 def _create[T: Ord](intervals: t.Iterable[Interval[T]]) -> IntervalSet[T]:
@@ -704,15 +699,15 @@ def _create[T: Ord](intervals: t.Iterable[Interval[T]]) -> IntervalSet[T]:
     return interval_set
 
 
-def _chain_ordered[
-    T: Ord
-](left: t.Iterable[Interval[T]], right: t.Iterable[Interval[T]]) -> t.Iterator[Interval[T]]:
+def _chain_ordered[T: Ord](
+    left: t.Iterable[Interval[T]], right: t.Iterable[Interval[T]]
+) -> t.Iterator[Interval[T]]:
     left = iter(left)
     right = iter(right)
     a = next(left, None)
     b = next(right, None)
     while a is not None and b is not None:
-        if a < b:
+        if a < b:  # ty: ignore[unsupported-operator]
             yield a
             a = next(left, None)
         else:
@@ -772,9 +767,9 @@ def _join[T: Ord](intervals: t.Iterable[Interval[T]]) -> t.Iterator[Interval[T]]
     yield top
 
 
-def _intersect[
-    T: Ord
-](left: t.Iterable[Interval[T]], right: t.Iterable[Interval[T]]) -> t.Iterator[Interval[T]]:
+def _intersect[T: Ord](
+    left: t.Iterable[Interval[T]], right: t.Iterable[Interval[T]]
+) -> t.Iterator[Interval[T]]:
     left = iter(left)
     right = iter(right)
     try:
@@ -784,7 +779,7 @@ def _intersect[
             intersect = a.intersect(b)
             if intersect is not None and not intersect.empty:
                 yield intersect
-            if a.upper_bound < b.upper_bound:
+            if operator.lt(a.upper_bound, b.upper_bound):
                 a = next(left)
             else:
                 b = next(right)

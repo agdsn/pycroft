@@ -40,15 +40,17 @@ from tests.ldap_sync import _cleanup_conn
 
 
 class TestEmptyLdap:
-    @pytest.fixture(scope='class')
-    def desired_user(self):
+    @pytest.fixture(scope="class")
+    @classmethod
+    def desired_user(cls):
         return UserRecord(dn=types.DN("user"), attrs={})
 
 
 @pytest.mark.usefixtures("muted_ldap_logger")
 class TestEmptyDatabase:
     @pytest.fixture(scope="class", autouse=True)
-    def users(self, class_session):
+    @classmethod
+    def users(cls, class_session):
         return UserFactory.create_batch(5)
 
     def test_no_users_fetched(self, session):
@@ -56,19 +58,21 @@ class TestEmptyDatabase:
 
 
 class TestOneUserFetch:
-    PROPNAME = 'mail'
+    PROPNAME = "mail"
 
     @pytest.fixture(scope="class")
-    def propgroup(self, class_session) -> PropertyGroup:
+    @classmethod
+    def propgroup(cls, class_session) -> PropertyGroup:
         return PropertyGroupFactory.create(
-            name="my propgroup",
-            granted={self.PROPNAME, 'ldap_login_enabled'}
+            name="my propgroup", granted={cls.PROPNAME, "ldap_login_enabled"}
         )
 
     @pytest.fixture(scope="class", autouse=True)
-    def user(self, class_session, propgroup) -> User:
+    @classmethod
+    def user(cls, class_session, propgroup) -> User:
         return UserFactory.create(
-            name="Hans Wurst", login="hans",
+            name="Hans Wurst",
+            login="hans",
             with_membership=True,
             membership__group=propgroup,
             membership__includes_today=True,
@@ -93,14 +97,16 @@ class TestOneUserFetch:
 
 class TestMultipleUsersFilter:
     @pytest.fixture(scope="class")
-    def propgroup(self, class_session) -> PropertyGroup:
+    @classmethod
+    def propgroup(cls, class_session) -> PropertyGroup:
         return PropertyGroupFactory.create(
             name="my property group",
-            granted={'mail', 'ldap_login_enabled'},
+            granted={"mail", "ldap_login_enabled"},
         )
 
     @pytest.fixture(scope="class")
-    def users(self, class_session, propgroup) -> tuple[User, User]:
+    @classmethod
+    def users(cls, class_session, propgroup) -> tuple[User, User]:
         return UserFactory.create_batch(
             2,
             with_membership=True,
@@ -124,22 +130,24 @@ def test_ldap_base_exists(conn, clean_ldap_base, sync_config):
 def test_adding_an_entry_works(conn, clean_ldap_base, sync_config):
     base_dn = sync_config.base_dn
     conn.add(f"uid=bar,{base_dn}", ["inetOrgPerson"], {"sn": "test", "cn": "test"})
-    assert conn.search(
-        base_dn, "(objectclass=inetOrgPerson)"
-    ), f"Base DN subtree search failed: {conn.result}"
+    assert conn.search(base_dn, "(objectclass=inetOrgPerson)"), (
+        f"Base DN subtree search failed: {conn.result}"
+    )
     assert_one([r for r in conn.response if r["dn"] != base_dn])
 
 
 @pytest.mark.usefixtures("clean_ldap_base")
 class LdapSyncerTestBase:
     @pytest.fixture(scope="class", autouse=True)
-    def users(self, class_session):
+    @classmethod
+    def users(cls, class_session):
         u1, u2 = UserFactory.create_batch(2, with_unix_account=True)
         inconsistent = UserFactory.create(with_unix_account=True, email=None)
 
-        p_dummy = PropertyGroupFactory.create(name='group_without_grants')
-        pg_member = PropertyGroupFactory.create(name='member',
-                                                granted={'mail', 'ldap_login_enabled'})
+        p_dummy = PropertyGroupFactory.create(name="group_without_grants")
+        pg_member = PropertyGroupFactory.create(
+            name="member", granted={"mail", "ldap_login_enabled"}
+        )
 
         UserFactory.create(with_membership=True, membership__group=p_dummy, with_unix_account=True)
         for user in [u1, u2, inconsistent]:
@@ -148,35 +156,33 @@ class LdapSyncerTestBase:
         MembershipFactory.create(
             user=inconsistent,
             group=PropertyGroupFactory.create(
-                name='some_weird_group',
-                granted={'mail'},  # weird, because grants mail, but not ldap_login_enabled
+                name="some_weird_group",
+                granted={"mail"},  # weird, because grants mail, but not ldap_login_enabled
             ),
         )
 
     @pytest.fixture(scope="class")
-    def class_conn(self, get_connection) -> ldap3.Connection:
+    @classmethod
+    def class_conn(cls, get_connection) -> ldap3.Connection:
         with get_connection() as conn:
             yield conn
         _cleanup_conn(conn)
 
     @pytest.fixture(scope="class")
-    def user_records_to_sync(
-        self, class_session, sync_config, users
-    ) -> list[UserRecord]:
+    @classmethod
+    def user_records_to_sync(cls, class_session, sync_config, users) -> list[UserRecord]:
         return list(
-            fetch_db_users(
-                class_session, sync_config.user_base_dn, sync_config.required_property
-            )
+            fetch_db_users(class_session, sync_config.user_base_dn, sync_config.required_property)
         )
 
     @pytest.fixture(scope="class")
-    def initial_ldap_user_records(self, class_conn, sync_config) -> list[UserRecord]:
+    @classmethod
+    def initial_ldap_user_records(cls, class_conn, sync_config) -> list[UserRecord]:
         return list(fetch_ldap_users(class_conn, base_dn=sync_config.user_base_dn))
 
     @pytest.fixture(scope="class")
-    def group_records_to_sync(
-        self, class_session, sync_config, users
-    ) -> list[GroupRecord]:
+    @classmethod
+    def group_records_to_sync(cls, class_session, sync_config, users) -> list[GroupRecord]:
         return list(
             fetch_db_groups(
                 class_session,
@@ -186,13 +192,13 @@ class LdapSyncerTestBase:
         )
 
     @pytest.fixture(scope="class")
-    def initial_ldap_group_records(self, class_conn, sync_config) -> list[GroupRecord]:
+    @classmethod
+    def initial_ldap_group_records(cls, class_conn, sync_config) -> list[GroupRecord]:
         return list(fetch_ldap_groups(class_conn, base_dn=sync_config.group_base_dn))
 
     @pytest.fixture(scope="class")
-    def property_records_to_sync(
-        self, class_session, sync_config, users
-    ) -> list[GroupRecord]:
+    @classmethod
+    def property_records_to_sync(cls, class_session, sync_config, users) -> list[GroupRecord]:
         return list(
             fetch_db_properties(
                 session=class_session,
@@ -202,16 +208,14 @@ class LdapSyncerTestBase:
         )
 
     @pytest.fixture(scope="class")
-    def initial_ldap_property_records(
-        self, class_conn, sync_config
-    ) -> list[GroupRecord]:
-        return list(
-            fetch_ldap_properties(class_conn, base_dn=sync_config.property_base_dn)
-        )
+    @classmethod
+    def initial_ldap_property_records(cls, class_conn, sync_config) -> list[GroupRecord]:
+        return list(fetch_ldap_properties(class_conn, base_dn=sync_config.property_base_dn))
 
     @pytest.fixture(scope="class")
+    @classmethod
     def actions(
-        self,
+        cls,
         initial_ldap_user_records,
         initial_ldap_group_records,
         initial_ldap_property_records,
@@ -220,19 +224,14 @@ class LdapSyncerTestBase:
         property_records_to_sync,
     ) -> list[Action]:
         return [
-            *bulk_diff_records(
-                initial_ldap_user_records, user_records_to_sync
-            ).values(),
-            *bulk_diff_records(
-                initial_ldap_group_records, group_records_to_sync
-            ).values(),
-            *bulk_diff_records(
-                initial_ldap_property_records, property_records_to_sync
-            ).values(),
+            *bulk_diff_records(initial_ldap_user_records, user_records_to_sync).values(),
+            *bulk_diff_records(initial_ldap_group_records, group_records_to_sync).values(),
+            *bulk_diff_records(initial_ldap_property_records, property_records_to_sync).values(),
         ]
 
     @pytest.fixture(scope="class")
-    def sync_all(self, actions):
+    @classmethod
+    def sync_all(cls, actions):
         def sync_all(conn: ldap3.Connection):
             # TODO this is broken.
             #  In this sort of integration test, we want `sync_all` to fetch and sync,
@@ -276,13 +275,9 @@ class TestInitialSync(LdapSyncerTestBase):
         def assert_entries_synced():
             new_users = list(fetch_ldap_users(conn, base_dn=sync_config.user_base_dn))
             assert len(new_users) == len(user_records_to_sync)
-            new_groups = list(
-                fetch_ldap_groups(conn, base_dn=sync_config.group_base_dn)
-            )
+            new_groups = list(fetch_ldap_groups(conn, base_dn=sync_config.group_base_dn))
             assert len(new_groups) == len(group_records_to_sync)
-            new_properties = list(
-                fetch_ldap_properties(conn, base_dn=sync_config.property_base_dn)
-            )
+            new_properties = list(fetch_ldap_properties(conn, base_dn=sync_config.property_base_dn))
             assert len(new_properties) == len(property_records_to_sync)
 
         return assert_entries_synced
@@ -344,9 +339,7 @@ class TestLdapSyncerOnceSynced(LdapSyncerTestBase):
         actions = [
             *bulk_diff_records(new_ldap_user_records, user_records_to_sync).values(),
             *bulk_diff_records(new_ldap_group_records, group_records_to_sync).values(),
-            *bulk_diff_records(
-                new_ldap_property_records, property_records_to_sync
-            ).values(),
+            *bulk_diff_records(new_ldap_property_records, property_records_to_sync).values(),
         ]
         assert len(actions) == sum(
             [
@@ -357,27 +350,23 @@ class TestLdapSyncerOnceSynced(LdapSyncerTestBase):
         )
         assert all([isinstance(a, IdleAction) for a in actions])
 
-    def test_user_attributes_synced_correctly(
-        self, user_records_to_sync, new_ldap_user_records
-    ):
+    def test_user_attributes_synced_correctly(self, user_records_to_sync, new_ldap_user_records):
         records = {r.dn: r for r in user_records_to_sync}
         for ldap_record in new_ldap_user_records:
             assert_attributes_equal(records[ldap_record.dn], ldap_record)
 
     @pytest.fixture(scope="class")
-    def filter_members(self, user_records_to_sync):
+    @classmethod
+    def filter_members(cls, user_records_to_sync):
         def filter_members(members):
             """Remove users that are not exported."""
-            return [
-                m
-                for m in members
-                if any(u.attrs["uid"] == m for u in user_records_to_sync)
-            ]
+            return [m for m in members if any(u.attrs["uid"] == m for u in user_records_to_sync)]
 
         return filter_members
 
     @pytest.fixture(scope="class")
-    def with_members_filtered(self, filter_members):
+    @classmethod
+    def with_members_filtered(cls, filter_members):
         def with_members_filtered(record):
             record.attrs["member"] = filter_members(record.attrs["member"])
             return record
@@ -442,15 +431,13 @@ class TestLdapSyncerOnceSynced(LdapSyncerTestBase):
     def test_mail_creation(self, conn, session, sync_config, new_ldap_user_records):
         config = sync_config
         users_without_mail = [
-            u
-            for u in _fetch_db_users(session, config.required_property)
-            if u.User.email is None
+            u for u in _fetch_db_users(session, config.required_property) if u.User.email is None
         ]
         if not users_without_mail:
             raise RuntimeError("Fixtures do not provide a syncable user without a mail address")
         mod_user = users_without_mail[0].User
         mod_dn = db_user_to_record(mod_user, sync_config.user_base_dn).dn
-        mod_user.email = 'bar@agdsn.de'
+        mod_user.email = "bar@agdsn.de"
         session.add(mod_user)
         session.flush()
 
@@ -458,9 +445,7 @@ class TestLdapSyncerOnceSynced(LdapSyncerTestBase):
             fetch_db_users(session, sync_config.user_base_dn, config.required_property)
         )
         actions = list(
-            bulk_diff_records(
-                current=new_ldap_user_records, desired=user_records_to_sync
-            ).values()
+            bulk_diff_records(current=new_ldap_user_records, desired=user_records_to_sync).values()
         )
         # we get 3 actions
         relevant_action = assert_one([a for a in actions if not isinstance(a, IdleAction)])
@@ -478,50 +463,33 @@ class TestLdapSyncerOnceSynced(LdapSyncerTestBase):
         " is never persisted into the database."
     )
     def test_change_property_membership(self):
-        mail_property = next(
-            p for p in _fetch_db_properties(self.session) if p.name == "mail"
-        )
-        mail_property_dn = dn_from_cn(
-            name=mail_property.name, base=self.property_base_dn
-        )
+        mail_property = next(p for p in _fetch_db_properties(self.session) if p.name == "mail")
+        mail_property_dn = dn_from_cn(name=mail_property.name, base=self.property_base_dn)
 
         member = mail_property.members[0]
         member_dn = dn_from_username(member, self.user_base_dn)
 
         assert (
             member_dn
-            in self.get_by_dn(self.new_ldap_property_records, mail_property_dn).attrs[
-                "member"
-            ]
+            in self.get_by_dn(self.new_ldap_property_records, mail_property_dn).attrs["member"]
         )
 
         mail_property.members.remove(member)
         self.initial_ldap_property_records = self.new_ldap_property_records
         self.sync_all()
-        newest_ldap_properties = list(
-            fetch_ldap_properties(self.conn, self.property_base_dn)
-        )
+        newest_ldap_properties = list(fetch_ldap_properties(self.conn, self.property_base_dn))
         assert (
             member_dn
-            not in self.get_by_dn(newest_ldap_properties, mail_property_dn).attrs[
-                "member"
-            ]
+            not in self.get_by_dn(newest_ldap_properties, mail_property_dn).attrs["member"]
         )
 
         mail_property.members.append(member)
         self.initial_ldap_property_records = newest_ldap_properties
         self.sync_all()
-        newest_ldap_properties = list(
-            fetch_ldap_properties(self.conn, self.property_base_dn)
-        )
-        assert (
-            member_dn
-            in self.get_by_dn(newest_ldap_properties, mail_property_dn).atrs["member"]
-        )
+        newest_ldap_properties = list(fetch_ldap_properties(self.conn, self.property_base_dn))
+        assert member_dn in self.get_by_dn(newest_ldap_properties, mail_property_dn).atrs["member"]
 
-    def test_no_desired_records_removes_everything(
-        self, conn, new_ldap_user_records, sync_config
-    ):
+    def test_no_desired_records_removes_everything(self, conn, new_ldap_user_records, sync_config):
         actions_dict = bulk_diff_records(current=new_ldap_user_records, desired=[])
 
         assert len(actions_dict) == len(new_ldap_user_records)
@@ -537,9 +505,7 @@ class TestLdapSyncerOnceSynced(LdapSyncerTestBase):
 def assert_attributes_equal(expected, actual):
     # Due to the canonicalization, empty attributes will appear in
     # `expected`.  We want to ignore those for the comparison.
-    effective_attributes_in_db = {
-        key: val for key, val in expected.attrs.items() if val != []
-    }
+    effective_attributes_in_db = {key: val for key, val in expected.attrs.items() if val != []}
     assert effective_attributes_in_db == {
         k: v for k, v in actual.attrs.items() if k in effective_attributes_in_db
     }

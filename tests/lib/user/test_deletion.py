@@ -13,9 +13,13 @@ from pycroft.lib.user_deletion import (
     ArchivableMemberInfo,
 )
 from pycroft.model.user import User
-from tests.factories import UserFactory, ConfigFactory, MembershipFactory, \
-    PropertyGroupFactory, \
-    HostFactory
+from tests.factories import (
+    UserFactory,
+    ConfigFactory,
+    MembershipFactory,
+    PropertyGroupFactory,
+    HostFactory,
+)
 
 
 def get_archivable_members(session, current_year=2022):
@@ -24,7 +28,7 @@ def get_archivable_members(session, current_year=2022):
     return session.execute(stmt).all()
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def config(module_session):
     return ConfigFactory()
 
@@ -66,15 +70,18 @@ class TestArchivableUserSelection:
         scope="class",
         params=[date(2020, 3, 1), date(2020, 1, 1), date(2020, 12, 15)],
     )
-    def end_date(self, request):
+    @classmethod
+    def end_date(cls, request):
         return request.param
 
-    @pytest.fixture(scope='class')
-    def do_not_archive_group(self, class_session):
-        return PropertyGroupFactory(granted={'do-not-archive'})
+    @pytest.fixture(scope="class")
+    @classmethod
+    def do_not_archive_group(cls, class_session):
+        return PropertyGroupFactory(granted={"do-not-archive"})
 
     @pytest.fixture(scope="class")
-    def old_user(self, class_session, config, do_not_archive_group, end_date) -> User:
+    @classmethod
+    def old_user(cls, class_session, config, do_not_archive_group, end_date) -> User:
         user = UserFactory.create(
             registered_at=datetime(2000, 1, 1),
             with_membership=True,
@@ -84,19 +91,22 @@ class TestArchivableUserSelection:
             membership__group=config.member_group,
         )
         MembershipFactory.create(
-            user=user, group=do_not_archive_group,
-            active_during=closed(datetime(2000, 1, 1), datetime(2010, 1, 1))
+            user=user,
+            group=do_not_archive_group,
+            active_during=closed(datetime(2000, 1, 1), datetime(2010, 1, 1)),
         )
         return user
 
-    @pytest.fixture(scope='class', autouse=True)
-    def other_users(self, class_session):
+    @pytest.fixture(scope="class", autouse=True)
+    @classmethod
+    def other_users(cls, class_session):
         return UserFactory.create_batch(5)
 
     @pytest.fixture
     def do_not_archive_membership(self, session, old_user, do_not_archive_group):
         return MembershipFactory(
-            user=old_user, group=do_not_archive_group,
+            user=old_user,
+            group=do_not_archive_group,
             active_during=closedopen(datetime(2020, 1, 1), None),
         )
 
@@ -107,19 +117,15 @@ class TestArchivableUserSelection:
 
     @pytest.mark.parametrize("year", [2019, 2020, 2021])
     def test_old_user_not_in_list_before(self, session, old_user, year):
-        assert_member_absent(
-            get_archivable_members(session, current_year=year), old_user
-        )
+        assert_member_absent(get_archivable_members(session, current_year=year), old_user)
 
     @pytest.mark.parametrize("year", list(range(2019, 2023)))
     def test_user_with_do_not_archive_not_in_list(
         self, session, old_user, do_not_archive_membership, year
     ):
-        assert_member_absent(
-            get_archivable_members(session, current_year=year), old_user
-        )
+        assert_member_absent(get_archivable_members(session, current_year=year), old_user)
 
-    @pytest.mark.parametrize('num_hosts', [0, 2])
+    @pytest.mark.parametrize("num_hosts", [0, 2])
     def test_user_with_host_in_list(self, session, old_user, num_hosts, end_date):
         if num_hosts:
             HostFactory.create_batch(num_hosts, owner=old_user)

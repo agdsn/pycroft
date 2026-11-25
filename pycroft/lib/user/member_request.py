@@ -138,6 +138,7 @@ def finish_member_request(
     user = user_from_pre_member(prm, processor=processor)
     processor = processor or user
     assert processor is not None
+    assert prm.move_in_date is not None
 
     move_in_datetime = utc.with_min_time(prm.move_in_date)
     move_in(
@@ -184,13 +185,12 @@ def user_from_pre_member(pre_member: PreMember, processor: User | None) -> User:
 
 
 def get_member_requests() -> list[PreMember]:
-    prms = (
-        PreMember.q.order_by(PreMember.email_confirmed.desc())
+    return (
+        session.session.query(PreMember)
+        .order_by(PreMember.email_confirmed.desc())
         .order_by(PreMember.registered_at.asc())
         .all()
     )
-
-    return prms
 
 
 @with_transaction
@@ -409,7 +409,7 @@ def get_user_by_id_or_login(ident: str, email: str) -> User | None:
     return session.session.scalar(stmt)
 
 
-def find_similar_users(name: str, room: Room, ratio: float) -> t.Iterable[User]:
+def find_similar_users(name: str, room: Room, ratio: float) -> list[User]:
     """Given a potential user's name and a room, find users of similar name living in that room.
 
     :param name: The potential user's name

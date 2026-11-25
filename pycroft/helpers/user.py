@@ -5,10 +5,13 @@
 pycroft.helpers.user
 ~~~~~~~~~~~~~~~~~~~~
 """
+
 import random
 import string
-import typing as t
 from hashlib import sha512
+
+# ast-grep-ignore: dont-use-models-in-helpers
+import pycroft.crypt_compat  # noqa: F401  — before passlib (PEP 594)
 
 from passlib.apps import ldap_context
 from passlib.context import CryptContext
@@ -16,10 +19,18 @@ from passlib.pwd import genword
 
 crypt_context: CryptContext = ldap_context.copy(
     default="ldap_sha512_crypt",
-    deprecated=["ldap_plaintext", "ldap_md5", "ldap_sha1", "ldap_salted_md5",
-                "ldap_des_crypt", "ldap_bsdi_crypt", "ldap_md5_crypt"])
+    deprecated=[
+        "ldap_plaintext",
+        "ldap_md5",
+        "ldap_sha1",
+        "ldap_salted_md5",
+        "ldap_des_crypt",
+        "ldap_bsdi_crypt",
+        "ldap_md5_crypt",
+    ],
+)
 
-clear_password_prefix = '{clear}'
+clear_password_prefix = "{clear}"
 
 
 def generate_password(length: int) -> str:
@@ -32,9 +43,8 @@ def generate_password(length: int) -> str:
     :param: length
     """
     # without hard to distinguish characters l/1 0/O
-    charset = "abcdefghijkmnopqrstuvwxyz!$%&()=.," \
-              ":;-_#+23456789ABCDEFGHIJKLMNPQRSTUVWXYZ"
-    return t.cast(str, genword(length=length, chars=charset))
+    charset = "abcdefghijkmnopqrstuvwxyz!$%&()=.,:;-_#+23456789ABCDEFGHIJKLMNPQRSTUVWXYZ"
+    return genword(length=length, chars=charset)
 
 
 def hash_password(plaintext_passwd: str) -> str:
@@ -43,7 +53,7 @@ def hash_password(plaintext_passwd: str) -> str:
     The passlib CryptContext is configured to generate the very secure
     ldap_sha512_crypt hashes (a crypt extension available since glibc 2.7).
     """
-    return t.cast(str, crypt_context.hash(plaintext_passwd))
+    return crypt_context.hash(plaintext_passwd)
 
 
 def cleartext_password(plaintext_passwd: str) -> str:
@@ -61,9 +71,9 @@ def verify_password(plaintext_password: str, hash: str) -> bool:
     It uses a crypt_context to verify :rfc:`2307` hashes.
     """
     try:
-        return t.cast(bool, crypt_context.verify(plaintext_password, hash))
+        return crypt_context.verify(plaintext_password, hash)
     # TypeError is required for user entries not having a hash
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return False
 
 
@@ -77,7 +87,7 @@ def generate_random_str(length: int) -> str:
     Generates an aplhanumeric random string
 
     """
-    return ''.join(
+    return "".join(
         random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits)
         for _ in range(length)
     )

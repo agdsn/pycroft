@@ -9,8 +9,7 @@ from sqlalchemy.orm import Session
 from pycroft.helpers.interval import single
 from pycroft.lib.search import user_search_query
 from pycroft.model.user import User, PropertyGroup
-from tests.factories import UserFactory, PropertyGroupFactory, \
-    MembershipFactory
+from tests.factories import UserFactory, PropertyGroupFactory, MembershipFactory
 
 
 def s(**kw):
@@ -19,24 +18,24 @@ def s(**kw):
 
 @pytest.fixture(scope="module")
 def other_user(module_session: Session) -> User:
-    return UserFactory.create(
-        name="Franz", login="franz", email="fr@a.nz", with_host=True
-    )
+    return UserFactory.create(name="Franz", login="franz", email="fr@a.nz", with_host=True)
 
 
 @pytest.mark.usefixtures("session")
 class TestSearchUserBaseData:
     @pytest.fixture(scope="class", autouse=True)
-    def property_group(self, class_session) -> PropertyGroup:
+    @classmethod
+    def property_group(cls, class_session) -> PropertyGroup:
         return PropertyGroupFactory.create()
 
     @pytest.fixture(scope="class")
-    def user(self, class_session) -> User:
+    @classmethod
+    def user(cls, class_session) -> User:
         return UserFactory.create(
             with_host=True,
-            name='Hans Müller',
-            login='hans.mueller',
-            email='hans@mueller.com',
+            name="Hans Müller",
+            login="hans.mueller",
+            email="hans@mueller.com",
         )
 
     def test_name_search(self, user):
@@ -60,15 +59,18 @@ class TestSearchUserBaseData:
 
 class TestUser:
     @pytest.fixture(scope="class", autouse=True)
-    def group(self, class_session):
+    @classmethod
+    def group(cls, class_session):
         return PropertyGroupFactory.create()
 
     @pytest.fixture(scope="class", autouse=True)
-    def old_group(self, class_session):
+    @classmethod
+    def old_group(cls, class_session):
         return PropertyGroupFactory.create()
 
     @pytest.fixture(scope="class", autouse=True)
-    def user(self, class_session, group, old_group):
+    @classmethod
+    def user(cls, class_session, group, old_group):
         user = UserFactory.create(
             with_host=True,
             host__interface__mac="00:de:ad:be:ef:00",

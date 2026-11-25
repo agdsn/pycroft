@@ -4,12 +4,12 @@ from hades_logs import RadiusLogEntry
 from hades_logs.parsing import reduce_to_first_occurrence
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def func():
     return reduce_to_first_occurrence
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def elements():
     return [0, 2, 1, 1, 1, 3, 4, 1, 1, 3, 3, 5, 5, 5, 0, 0]
 
@@ -27,29 +27,40 @@ def test_nontrivial_equivalence_gives_first_representative(elements, func):
 
 
 class TestRadiusLogsWorkAsWell:
-    @pytest.fixture(scope='class')
-    def entries(self):
+    @pytest.fixture(scope="class")
+    @classmethod
+    def entries(cls):
         timestamp = 1501623826.391414
-        return [RadiusLogEntry(*e) for e in [
-            ('00:de:ad:be:ef:00',
-             'Access-Accept',
-             ['traffic'],
-             [['Egress-VLAN-Name', '"2hades-unauth"']],
-             timestamp),
-            ('00:de:ad:be:ef:00',
-             'Access-Accept',
-             ['traffic'],
-             [['Egress-VLAN-Name', '"2hades-unauth"']],
-             timestamp - 50),
-            ('00:de:ad:be:ef:00',
-             'Access-Accept',
-             ['violation'],
-             [['Egress-VLAN-Name', '"2hades-unauth"']],
-             timestamp - 100),
-        ]]
+        return [
+            RadiusLogEntry(*e)
+            for e in [
+                (
+                    "00:de:ad:be:ef:00",
+                    "Access-Accept",
+                    ["traffic"],
+                    [["Egress-VLAN-Name", '"2hades-unauth"']],
+                    timestamp,
+                ),
+                (
+                    "00:de:ad:be:ef:00",
+                    "Access-Accept",
+                    ["traffic"],
+                    [["Egress-VLAN-Name", '"2hades-unauth"']],
+                    timestamp - 50,
+                ),
+                (
+                    "00:de:ad:be:ef:00",
+                    "Access-Accept",
+                    ["violation"],
+                    [["Egress-VLAN-Name", '"2hades-unauth"']],
+                    timestamp - 100,
+                ),
+            ]
+        ]
 
-    @pytest.fixture(scope='class')
-    def reduced(self, entries, func):
+    @pytest.fixture(scope="class")
+    @classmethod
+    def reduced(cls, entries, func):
         return list(func(entries, comparator=RadiusLogEntry.effectively_equal))
 
     def test_length(self, reduced):

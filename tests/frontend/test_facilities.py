@@ -24,9 +24,7 @@ def client(module_test_client: TestClient) -> TestClient:
 
 
 def test_root_redirect(client):
-    client.assert_redirects(
-        "facilities.root", expected_location=url_for("facilities.overview")
-    )
+    client.assert_redirects("facilities.root", expected_location=url_for("facilities.overview"))
 
 
 class TestSitesOverview:
@@ -42,7 +40,8 @@ class TestSitesOverview:
 
 class TestSite:
     @pytest.fixture(scope="class")
-    def site(self, class_session: Session) -> Site:
+    @classmethod
+    def site(cls, class_session: Session) -> Site:
         return f.SiteFactory()
 
     def test_get_site(self, client, site):
@@ -50,21 +49,20 @@ class TestSite:
             client.assert_url_ok(url_for("facilities.site_show", site_id=site.id))
 
     def test_get_nonexistent_site(self, client):
-        client.assert_url_response_code(
-            url_for("facilities.site_show", site_id=999), code=404
-        )
+        client.assert_url_response_code(url_for("facilities.site_show", site_id=999), code=404)
 
 
 class TestBuilding:
     @pytest.fixture(scope="class")
-    def room(self, class_session, admin) -> Room:
+    @classmethod
+    def room(cls, class_session, admin) -> Room:
         room = RoomFactory()
         f.RoomLogEntryFactory(room=room, author=admin)
-        class_session.flush()
         return room
 
     @pytest.fixture(scope="class")
-    def building(self, class_session: Session, room: Room) -> Building:
+    @classmethod
+    def building(cls, class_session: Session, room: Room) -> Building:
         return room.building
 
     def test_list_buildings(self, client: TestClient):
@@ -85,14 +83,13 @@ class TestBuilding:
             client.assert_url_ok(f"/facilities/room/{room.id}")
 
     def test_show_nonexistent_room(self, client):
-        client.assert_url_response_code(
-            url_for("facilities.room_show", room_id=999), code=404
-        )
+        client.assert_url_response_code(url_for("facilities.room_show", room_id=999), code=404)
 
     def test_post_room_logs(self, client, room):
-        with client.renders_template(
-            "facilities/room_show.html"
-        ), client.flashes_message("Kommentar hinzugefügt", category="success"):
+        with (
+            client.renders_template("facilities/room_show.html"),
+            client.flashes_message("Kommentar hinzugefügt", category="success"),
+        ):
             client.assert_url_ok(
                 url_for("facilities.room_show", room_id=room.id),
                 method="POST",
@@ -100,9 +97,7 @@ class TestBuilding:
             )
 
     def test_room_logs_json(self, client, room):
-        resp = client.assert_url_ok(
-            url_for("facilities.room_logs_json", room_id=room.id)
-        )
+        resp = client.assert_url_ok(url_for("facilities.room_logs_json", room_id=room.id))
         assert "items" in (j := resp.json)
         assert j["items"]
 
@@ -116,35 +111,29 @@ class TestBuilding:
         )
 
     def test_building_levels_json(self, client, building):
-        resp = client.assert_url_ok(
-            url_for("facilities.json_levels", building=building.id)
-        )
+        resp = client.assert_url_ok(url_for("facilities.json_levels", building=building.id))
         assert resp.json.get("items")
 
     def test_building_rooms_json(self, client, room):
         resp = client.assert_url_ok(
-            url_for(
-                "facilities.json_rooms", building=room.building.id, level=room.level
-            )
+            url_for("facilities.json_rooms", building=room.building.id, level=room.level)
         )
         assert resp.json.get("items")
 
-    def test_building_level_rooms(
-        self, client: TestClient, building: Building, room: Room
-    ):
+    def test_building_level_rooms(self, client: TestClient, building: Building, room: Room):
         with client.renders_template("facilities/rooms.html"):
-            client.assert_url_ok(
-                f"/facilities/building/{building.id}/level/{room.level}/rooms/"
-            )
+            client.assert_url_ok(f"/facilities/building/{building.id}/level/{room.level}/rooms/")
 
 
 class TestRoomTenancies:
     @pytest.fixture(scope="class")
-    def user(self, class_session):
+    @classmethod
+    def user(cls, class_session):
         return f.UserFactory(swdd_person_id="1")
 
     @pytest.fixture(scope="class")
-    def room(self, class_session):
+    @classmethod
+    def room(cls, class_session):
         return f.RoomFactory(swdd_vo_suchname="1")
 
     def test_room_tenancies_json(self, room, user, session, client):
@@ -161,7 +150,8 @@ class TestRoomTenancies:
 
 class TestOvercrowdedRooms:
     @pytest.fixture(scope="class", autouse=True)
-    def building(self, class_session) -> Building:
+    @classmethod
+    def building(cls, class_session) -> Building:
         building = f.BuildingFactory()
         room = f.RoomFactory(building=building, patched_with_subnet=True)
         pg = f.MemberPropertyGroupFactory()
@@ -187,9 +177,7 @@ class TestOvercrowdedRooms:
             client.assert_url_ok(f"/facilities/overcrowded/{building.id}")
 
     def test_per_building_overcrowded_json(self, client, building):
-        resp = client.assert_url_ok(
-            url_for("facilities.overcrowded_json", building=building.id)
-        )
+        resp = client.assert_url_ok(url_for("facilities.overcrowded_json", building=building.id))
         assert_one(resp.json.get("items"))
 
 
@@ -199,11 +187,13 @@ class TestRoomCreate:
         return "facilities.room_create"
 
     @pytest.fixture(scope="class")
-    def room(self, class_session: Session) -> Room:
+    @classmethod
+    def room(cls, class_session: Session) -> Room:
         return f.RoomFactory()
 
     @pytest.fixture(scope="class")
-    def building(self, class_session: Session, room) -> Building:
+    @classmethod
+    def building(cls, class_session: Session, room) -> Building:
         return room.building
 
     def test_get_no_building(self, ep, client):
@@ -259,19 +249,23 @@ class TestRoomEdit:
         return "facilities.room_edit"
 
     @pytest.fixture(scope="class")
-    def room(self, class_session) -> Room:
+    @classmethod
+    def room(cls, class_session) -> Room:
         return f.RoomFactory()
 
     @pytest.fixture(scope="class")
-    def other_room(self, class_session, room) -> Room:
+    @classmethod
+    def other_room(cls, class_session, room) -> Room:
         return f.RoomFactory(building=room.building, level=room.level)
 
     @pytest.fixture(scope="class")
-    def url(self, room):
+    @classmethod
+    def url(cls, room):
         return url_for("facilities.room_edit", room_id=room.id)
 
     @pytest.fixture(scope="class", autouse=True)
-    def used_address(self, class_session, room):
+    @classmethod
+    def used_address(cls, class_session, room):
         f.UserFactory(address=room.address, room=room)
 
     def test_get_no_room(self, ep, client):
@@ -279,8 +273,9 @@ class TestRoomEdit:
             client.assert_url_response_code(url_for(ep, room_id=999), code=404)
 
     def test_get(self, url, client):
-        with client.renders_template("generic_form.html"), client.flashes_message(
-            "Adresse des Raums teilen", category="info"
+        with (
+            client.renders_template("generic_form.html"),
+            client.flashes_message("Adresse des Raums teilen", category="info"),
         ):
             client.assert_url_ok(url)
 
@@ -324,15 +319,18 @@ class TestRoomEdit:
 
 class TestBuildingLevelRooms:
     @pytest.fixture(scope="class")
-    def ep(self) -> str:
+    @classmethod
+    def ep(cls) -> str:
         return "facilities.building_level_rooms_json"
 
     @pytest.fixture(scope="class", autouse=True)
-    def building(self, class_session) -> Building:
+    @classmethod
+    def building(cls, class_session) -> Building:
         return f.BuildingFactory()
 
     @pytest.fixture(scope="class", autouse=True)
-    def inhabited_room(self, class_session, building) -> Room:
+    @classmethod
+    def inhabited_room(cls, class_session, building) -> Room:
         room = f.RoomFactory(level=1, building=building)
         group = f.MemberPropertyGroupFactory()
         f.UserFactory(room=room, with_membership=True, membership__group=group)
@@ -340,7 +338,8 @@ class TestBuildingLevelRooms:
         return room
 
     @pytest.fixture(scope="class", autouse=True)
-    def uninhabited_room(self, building):
+    @classmethod
+    def uninhabited_room(cls, building):
         return f.RoomFactory(level=1, building=building)
 
     def test_all_users(self, client, ep, building):
@@ -360,24 +359,29 @@ class TestBuildingLevelRooms:
 
 class TestPatchPortCreate:
     @pytest.fixture(scope="class")
-    def ep(self) -> str:
+    @classmethod
+    def ep(cls) -> str:
         return "facilities.patch_port_create"
 
     @pytest.fixture(scope="class")
-    def room(self, class_session) -> Room:
+    @classmethod
+    def room(cls, class_session) -> Room:
         return f.RoomFactory()
 
     @pytest.fixture(scope="class")
-    def switch_room(self, class_session) -> Room:
+    @classmethod
+    def switch_room(cls, class_session) -> Room:
         switch = f.SwitchFactory()
         return switch.host.room
 
     @pytest.fixture(scope="class")
-    def patch_port(self, switch_room) -> PatchPort:
+    @classmethod
+    def patch_port(cls, switch_room) -> PatchPort:
         return f.PatchPortFactory(switch_room=switch_room)
 
     @pytest.fixture(scope="class")
-    def url(self, ep, switch_room) -> str:
+    @classmethod
+    def url(cls, ep, switch_room) -> str:
         """Endpoint URL for the patched room, where a POST makes sense"""
         return url_for(ep, switch_room_id=switch_room.id)
 
@@ -427,45 +431,45 @@ class TestPatchPortCreate:
 
 class TestPatchPortEdit:
     @pytest.fixture(scope="class")
-    def room(self, class_session) -> Room:
+    @classmethod
+    def room(cls, class_session) -> Room:
         room = f.RoomFactory()
         f.SwitchFactory(host__room=room)
         return room
 
     @pytest.fixture(scope="class")
-    def patch_port(self, class_session, room) -> PatchPort:
-        patch_port = f.PatchPortFactory(name="A01", switch_room=room)
-        class_session.flush()
-        return patch_port
+    @classmethod
+    def patch_port(cls, class_session, room) -> PatchPort:
+        return f.PatchPortFactory(name="A01", switch_room=room)
 
     @pytest.fixture(scope="class")
-    def patch_port2(self, class_session, room) -> PatchPort:
+    @classmethod
+    def patch_port2(cls, class_session, room) -> PatchPort:
         return f.PatchPortFactory(name="A02", switch_room=room)
 
     @pytest.fixture(scope="class")
-    def patch_port_other_room(self) -> PatchPort:
+    @classmethod
+    def patch_port_other_room(cls) -> PatchPort:
         return f.PatchPortFactory()
 
     @pytest.fixture(scope="class")
-    def ep(self) -> str:
+    @classmethod
+    def ep(cls) -> str:
         return "facilities.patch_port_edit"
 
     @pytest.fixture(scope="class")
-    def url(self, ep, patch_port, room) -> str:
+    @classmethod
+    def url(cls, ep, patch_port, room) -> str:
         return url_for(ep, switch_room_id=room.id, patch_port_id=patch_port.id)
 
     def test_get_nonexistent_patch_port(self, client, ep, room):
         with client.flashes_message("nicht gefunden", category="error"):
-            client.assert_url_redirects(
-                url_for(ep, switch_room_id=room.id, patch_port_id=999)
-            )
+            client.assert_url_redirects(url_for(ep, switch_room_id=room.id, patch_port_id=999))
 
     def test_get_patch_port_wrong_room(self, client, ep, room, patch_port_other_room):
         with client.flashes_message("ist nicht im .*raum", category="error"):
             client.assert_url_redirects(
-                url_for(
-                    ep, switch_room_id=room.id, patch_port_id=patch_port_other_room.id
-                )
+                url_for(ep, switch_room_id=room.id, patch_port_id=patch_port_other_room.id)
             )
 
     def test_get_correct_patch_port(self, client, url):
@@ -490,21 +494,21 @@ class TestPatchPortEdit:
 
 class TestPatchPortDelete:
     @pytest.fixture(scope="class")
-    def ep(self) -> str:
+    @classmethod
+    def ep(cls) -> str:
         return "facilities.patch_port_delete"
 
     @pytest.fixture(scope="class")
-    def patch_port(self, class_session) -> PatchPort:
+    @classmethod
+    def patch_port(cls, class_session) -> PatchPort:
         switch = f.SwitchFactory()
         patch_port = f.PatchPortFactory(switch_room=switch.host.room)
-        class_session.flush()
         return patch_port
 
     @pytest.fixture(scope="class")
-    def url(self, ep, patch_port) -> str:
-        return url_for(
-            ep, switch_room_id=patch_port.switch_room_id, patch_port_id=patch_port.id
-        )
+    @classmethod
+    def url(cls, ep, patch_port) -> str:
+        return url_for(ep, switch_room_id=patch_port.switch_room_id, patch_port_id=patch_port.id)
 
     def test_get(self, client, url):
         with client.renders_template("generic_form.html"):
@@ -517,19 +521,21 @@ class TestPatchPortDelete:
 
 class TestPatchPanelJson:
     @pytest.fixture(scope="class")
-    def switch_room(self, class_session) -> Room:
+    @classmethod
+    def switch_room(cls, class_session) -> Room:
         switch = f.SwitchFactory()
         sp = f.SwitchPortFactory(switch=switch)
         f.PatchPortFactory(switch_room=switch.host.room, switch_port=sp)
-        class_session.flush()
         return switch.host.room
 
     @pytest.fixture(scope="class")
-    def other_room(self) -> Room:
+    @classmethod
+    def other_room(cls) -> Room:
         return f.RoomFactory()
 
     @pytest.fixture(scope="class")
-    def ep(self) -> str:
+    @classmethod
+    def ep(cls) -> str:
         return "facilities.room_patchpanel_json"
 
     def test_get_nonexistent_room(self, client, ep):
@@ -545,11 +551,13 @@ class TestPatchPanelJson:
 
 class TestAddresses:
     @pytest.fixture(scope="class", autouse=True)
-    def addresses(self, class_session):
+    @classmethod
+    def addresses(cls, class_session):
         f.AddressFactory.create_batch(10)
 
     @pytest.fixture(scope="class")
-    def ep(self) -> str:
+    @classmethod
+    def ep(cls) -> str:
         return "facilities.addresses"
 
     @pytest.mark.parametrize("type", ADDRESS_ENTITIES.keys())

@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 
 from flask import request, url_for, Blueprint, Flask
 from web.blueprints.access import BlueprintAccess
-from web.blueprints import bake_endpoint
+from web.blueprints import bake_endpoint, NamedCallable
 
 
 class BlueprintNavigation:
@@ -82,9 +82,7 @@ class BlueprintNavigation:
         """
         return self._access.is_accessible
 
-    def navigate[
-        TFun: t.Callable
-    ](
+    def navigate[TFun: NamedCallable](
         self,
         text: str,
         weight: int = 0,
@@ -105,16 +103,19 @@ class BlueprintNavigation:
         """
 
         def decorator(f: TFun) -> TFun:
-            self._elements.append(NavigationItem(
-                endpoint=bake_endpoint(self.blueprint, f),
-                text=text,
-                description=description,
-                icon=icon,
-                weight=weight
-            ))
+            self._elements.append(
+                NavigationItem(
+                    endpoint=bake_endpoint(self.blueprint, f),
+                    text=text,
+                    description=description,
+                    icon=icon,
+                    weight=weight,
+                )
+            )
             self._elements.sort(key=lambda entry: entry.weight)
             # TODO: Sort this list
             return f
+
         return decorator
 
     def __iter__(self) -> t.Iterator[NavigationItem]:
@@ -153,7 +154,7 @@ class BlueprintNavigation:
         :return: True if active, False else.
         """
         # TODO remove these casts once on `Flask v2`
-        return t.cast(str, self.blueprint.name) == t.cast(str, request.blueprint)
+        return self.blueprint.name == t.cast(str, request.blueprint)
 
     @property
     def get_page_title(self) -> str | None:
@@ -180,7 +181,7 @@ class BlueprintNavigation:
 
         :return: A list of strings.
         """
-        classes = ['nav-item']
+        classes = ["nav-item"]
         if self.dropdown:
             classes.append("dropdown")
         if self.is_active:
@@ -201,15 +202,15 @@ class BlueprintNavigation:
         """
 
         if self.blueprint.name not in app.blueprints:
-            raise Exception("Blueprint {} is not registred in Flask app".format(
-                            self.blueprint.name))
+            raise Exception(f"Blueprint {self.blueprint.name} is not registred in Flask app")
         else:
-            assert app.blueprints[self.blueprint.name] is self.blueprint, \
-            "Blueprint resistred as {} in Flask app is not the one you " \
-            "register navigation for!"
+            assert app.blueprints[self.blueprint.name] is self.blueprint, (
+                "Blueprint resistred as {} in Flask app is not the one you register navigation for!"
+            )
 
-            app.config.setdefault('blueprint_navigation', SegmentedList())\
-                .append(self, right=self.push_right)
+            app.config.setdefault("blueprint_navigation", SegmentedList()).append(
+                self, right=self.push_right
+            )
         return
 
 
@@ -231,6 +232,6 @@ class SegmentedList[TElem]:
 class NavigationItem:
     endpoint: str
     text: str
-    description: str
-    icon: str
+    description: str | None
+    icon: str | None
     weight: int

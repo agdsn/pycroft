@@ -14,6 +14,7 @@ This automatically imports all ORM classes plus the `config` object,
 and initializes the session.
 
 """
+
 import logging
 
 from flask import _request_ctx_stack
@@ -26,16 +27,16 @@ from pycroft.model._all import *
 
 connection_string = get_connection_string()
 
-conn, engine = try_create_connection(connection_string,
-                                     5,
-                                     logger=logging.getLogger("interactive"),
-                                     echo=True)
+conn, engine = try_create_connection(
+    connection_string, 5, logger=logging.getLogger("interactive"), echo=True
+)
 
 
 def setup():
     # TODO: don't set a scoped session, just a regular one
-    set_scoped_session(scoped_session(sessionmaker(bind=engine),
-                                      scopefunc=lambda: _request_ctx_stack.top))
+    set_scoped_session(
+        scoped_session(sessionmaker(bind=engine), scopefunc=lambda: _request_ctx_stack.top)
+    )
 
 
 setup()

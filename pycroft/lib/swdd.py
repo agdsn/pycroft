@@ -2,6 +2,8 @@
 pycroft.lib.swdd
 ~~~~~~~~~~~~~~~~
 """
+
+from pycroft.model.session import session
 import hmac
 import os
 import unicodedata
@@ -11,7 +13,7 @@ from sqlalchemy import func
 
 from pycroft.model.swdd import Tenancy, TenancyStatus
 
-swdd_hmac_key = os.environ.get('SWDD_HASH_KEY')
+swdd_hmac_key = os.environ.get("SWDD_HASH_KEY")
 
 
 def get_swdd_person_id(first_name: str, last_name: str, birthdate: date) -> int | None:
@@ -28,8 +30,9 @@ def get_swdd_person_id(first_name: str, last_name: str, birthdate: date) -> int 
         raise ValueError("No hmac key set")
 
     digest_maker = hmac.new(swdd_hmac_key.encode(), digestmod="sha512")
-    norm_str = unicodedata.normalize("NFC", f"{first_name}_{last_name}_{birthdate}"
-                                                      .lower()).encode('utf-8')
+    norm_str = unicodedata.normalize("NFC", f"{first_name}_{last_name}_{birthdate}".lower()).encode(
+        "utf-8"
+    )
     digest_maker.update(norm_str)
     person_hash = digest_maker.hexdigest().upper()
     tenancy: Tenancy | None = Tenancy.q.filter_by(
@@ -39,8 +42,13 @@ def get_swdd_person_id(first_name: str, last_name: str, birthdate: date) -> int 
 
 
 def get_relevant_tenancies(person_id: int) -> list[Tenancy]:
-    return Tenancy.q.filter_by(person_id=person_id, status_id=TenancyStatus.ESTABLISHED.value)\
-        .filter(Tenancy.mietende > func.now()).order_by(Tenancy.mietbeginn.desc()).all()
+    return (
+        session.query(Tenancy)
+        .filter_by(person_id=person_id, status_id=TenancyStatus.ESTABLISHED.value)
+        .filter(Tenancy.mietende > func.now())
+        .order_by(Tenancy.mietbeginn.desc())
+        .all()
+    )
 
 
 def get_first_tenancy_with_room(tenancies: list[Tenancy]) -> Tenancy | None:

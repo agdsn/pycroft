@@ -37,7 +37,8 @@ def mac() -> str:
 
 class TestUserMoveIn:
     @pytest.fixture(scope="class")
-    def user_data(self):
+    @classmethod
+    def user_data(cls):
         return ExampleUserData
 
     def test_move_in(self, session, user, room, processor, config, mac, mail_capture):
@@ -67,7 +68,7 @@ class TestUserMoveIn:
 
     def test_move_in_scheduling(self, session, utcnow, user, room, processor, config, mail_capture):
         processing_user = processor
-        test_mac = '00:de:ad:be:ef:00'
+        test_mac = "00:de:ad:be:ef:00"
         lib_user.move_in(
             user,
             building_id=room.building.id,

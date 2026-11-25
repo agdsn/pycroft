@@ -10,7 +10,6 @@ from .finance import (
     BankAccountFactory,
     BankAccountActivityFactory,
     TransactionFactory,
-    SplitFactory,
 )
 from .host import (
     HostFactory,

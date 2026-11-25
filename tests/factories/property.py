@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 from functools import partial
 from itertools import chain
 
@@ -11,15 +11,14 @@ from .base import BaseFactory
 from .user import UserFactory
 
 
-class MembershipFactory(BaseFactory):
+class MembershipFactory(BaseFactory[Membership]):
     class Meta:
         model = Membership
-        exclude = ('begins_at', 'ends_at')
-    begins_at = datetime.now(timezone.utc)
+        exclude = ("begins_at", "ends_at")
+
+    begins_at = datetime.now(UTC)
     ends_at = None
-    active_during = factory.LazyAttribute(
-        lambda m: interval.closedopen(m.begins_at, m.ends_at)
-    )
+    active_during = factory.LazyAttribute(lambda m: interval.closedopen(m.begins_at, m.ends_at))
 
     user = factory.SubFactory(UserFactory)
     # note: group is non-nullable!
@@ -28,8 +27,8 @@ class MembershipFactory(BaseFactory):
     class Params:
         includes_today = factory.Trait(
             active_during=interval.closedopen(
-                datetime.now(timezone.utc) - timedelta(1),
-                datetime.now(timezone.utc) + timedelta(1),
+                datetime.now(UTC) - timedelta(1),
+                datetime.now(UTC) + timedelta(1),
             ),
         )
 
@@ -41,20 +40,20 @@ def _maybe_append_seq(n, prefix):
     return f"{prefix} {n}"
 
 
-class PropertyGroupFactory(BaseFactory):
+class PropertyGroupFactory(BaseFactory[PropertyGroup]):
     class Meta:
         model = PropertyGroup
-        exclude = ('granted', 'denied')
+        exclude = ("granted", "denied")
+
     granted = frozenset()
     denied = frozenset()
 
-    name = factory.Sequence(lambda n: "Property group %s" % n)
+    name = factory.Sequence(lambda n: f"Property group {n}")
     permission_level = factory.LazyAttribute(lambda _: 0)
 
     @factory.lazy_attribute
     def property_grants(self):
-        return dict(chain(((k, True) for k in self.granted),
-                          ((k, False) for k in self.denied)))
+        return dict(chain(((k, True) for k in self.granted), ((k, False) for k in self.denied)))
 
 
 class AdminPropertyGroupFactory(PropertyGroupFactory):
@@ -79,16 +78,24 @@ class AdminPropertyGroupFactory(PropertyGroupFactory):
 
 class FinancePropertyGroupFactory(PropertyGroupFactory):
     name = factory.Sequence(partial(_maybe_append_seq, prefix="Finanzer-Gruppe"))
-    granted = frozenset(('finance_show', 'finance_change'))
+    granted = frozenset(("finance_show", "finance_change"))
     permission_level = 80
 
 
 class MemberPropertyGroupFactory(PropertyGroupFactory):
     name = factory.Sequence(partial(_maybe_append_seq, prefix="Mitglied-Gruppe"))
-    granted = frozenset((
-        'ldap', 'ldap_login_enabled', 'mail', 'member', 'membership_fee',
-        'network_access', 'userdb', 'userwww'
-    ))
+    granted = frozenset(
+        (
+            "ldap",
+            "ldap_login_enabled",
+            "mail",
+            "member",
+            "membership_fee",
+            "network_access",
+            "userdb",
+            "userwww",
+        )
+    )
 
 
 class ActiveMemberPropertyGroupFactory(PropertyGroupFactory):

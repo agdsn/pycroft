@@ -16,7 +16,7 @@ from email.header import Header
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import make_msgid, formatdate
-from functools import lru_cache
+from functools import cache
 
 import jinja2
 from werkzeug.local import LocalProxy
@@ -26,9 +26,8 @@ from pycroft.lib.exc import PycroftLibException
 
 # TODO proxy and DI; set at app init
 _config_var: ContextVar[MailConfig] = ContextVar("config")
-config: MailConfig = LocalProxy(_config_var)  # type: ignore[assignment]
-
-logger = logging.getLogger('mail')
+config: MailConfig = LocalProxy(_config_var)  # ty:ignore[invalid-assignment]
+logger = logging.getLogger("mail")
 logger.setLevel(logging.INFO)
 
 
@@ -55,7 +54,7 @@ class Mail:
 class MailTemplate:
     template: str
     subject: str
-    args: dict
+    args: dict[str, t.Any]
 
     def __init__(self, **kwargs: t.Any) -> None:
         self.args = kwargs
@@ -71,7 +70,7 @@ class MailTemplate:
         return _get_template(self.template)
 
 
-@lru_cache(maxsize=None)
+@cache
 def _get_template(template_location: str) -> jinja2.Template:
     if config is None:
         raise RuntimeError("`mail.config` not set up!")
@@ -122,8 +121,8 @@ def send_mails(mails: list[Mail]) -> tuple[bool, int]:
     smtp_password = config.smtp_password
     smtp_ssl = config.smtp_ssl
 
-    use_ssl = smtp_ssl == 'ssl'
-    use_starttls = smtp_ssl == 'starttls'
+    use_ssl = smtp_ssl == "ssl"
+    use_starttls = smtp_ssl == "starttls"
     ssl_context = None
 
     if use_ssl or use_starttls:
@@ -133,18 +132,17 @@ def send_mails(mails: list[Mail]) -> tuple[bool, int]:
             ssl_context.check_hostname = True
         except ssl.SSLError as e:
             # smtp.connect failed to connect
-            logger.critical('Unable to create ssl context', extra={
-                'trace': True,
-                'data': {'exception_arguments': e.args}
-            })
+            logger.critical(
+                "Unable to create ssl context",
+                extra={"trace": True, "data": {"exception_arguments": e.args}},
+            )
             raise RetryableException from e
 
     try:
         smtp: smtplib.SMTP
         if use_ssl:
             assert ssl_context is not None
-            smtp = smtplib.SMTP_SSL(host=smtp_host, port=smtp_port,
-                                    context=ssl_context)
+            smtp = smtplib.SMTP_SSL(host=smtp_host, port=smtp_port, context=ssl_context)
         else:
             smtp = smtplib.SMTP(host=smtp_host, port=smtp_port)
 
@@ -176,26 +174,38 @@ def send_mails(mails: list[Mail]) -> tuple[bool, int]:
             try:
                 mime_mail = compose_mail(mail, from_=mail_from, default_reply_to=mail_reply_to)
                 assert mail_envelope_from is not None
-                smtp.sendmail(from_addr=mail_envelope_from, to_addrs=mail.to_address,
-                              msg=mime_mail.as_string())
+                smtp.sendmail(
+                    from_addr=mail_envelope_from,
+                    to_addrs=mail.to_address,
+                    msg=mime_mail.as_string(),
+                )
             except smtplib.SMTPException as e:
                 traceback.print_exc()
                 logger.critical(
-                    'Unable to send mail: "%s" to "%s": %s', mail.subject, mail.to_address, e,
+                    'Unable to send mail: "%s" to "%s": %s',
+                    mail.subject,
+                    mail.to_address,
+                    e,
                     extra={
-                        'trace': True,
-                        'tags': {'mailserver': f"{smtp_host}:{smtp_host}"},
-                        'data': {'exception_arguments': e.args, 'to': mail.to_address,
-                                 'subject': mail.subject}
-                    }
+                        "trace": True,
+                        "tags": {"mailserver": f"{smtp_host}:{smtp_host}"},
+                        "data": {
+                            "exception_arguments": e.args,
+                            "to": mail.to_address,
+                            "subject": mail.subject,
+                        },
+                    },
                 )
                 failures += 1
 
         smtp.close()
 
-        logger.info('Tried to send mails (%i/%i succeeded)', len(mails) - failures, len(mails), extra={
-            'tags': {'mailserver': f"{smtp_host}:{smtp_host}"}
-        })
+        logger.info(
+            "Tried to send mails (%i/%i succeeded)",
+            len(mails) - failures,
+            len(mails),
+            extra={"tags": {"mailserver": f"{smtp_host}:{smtp_host}"}},
+        )
 
         return failures == 0, failures
 
@@ -242,7 +252,7 @@ class TaskFailedTemplate(MailTemplate):
 
 class MemberNegativeBalance(MailTemplate):
     template = "member_negative_balance.html"
-    subject =  "Deine ausstehenden Zahlungen // Your due payments"
+    subject = "Deine ausstehenden Zahlungen // Your due payments"
 
 
 def send_template_mails(
@@ -253,11 +263,13 @@ def send_template_mails(
     for addr in email_addresses:
         body_plain, body_html = template.render(**kwargs)
 
-        mail = Mail(to_name='',
-                    to_address=addr,
-                    subject=template.subject,
-                    body_plain=body_plain,
-                    body_html=body_html)
+        mail = Mail(
+            to_name="",
+            to_address=addr,
+            subject=template.subject,
+            body_plain=body_plain,
+            body_html=body_html,
+        )
         mails.append(mail)
 
     from pycroft.task import send_mails_async

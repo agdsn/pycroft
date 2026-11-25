@@ -1,3 +1,9 @@
+{#def
+    from web.blueprints.finance.forms import TransactionCreateForm
+
+    page_title: str
+    form: TransactionCreateForm
+#}
 {#
  Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
@@ -8,7 +14,6 @@
 {% set page_title = "Buchung erstellen" %}
 
 {% import "macros/forms.html" as forms %}
-{% import "macros/resources.html" as resources %}
 
 {% block content %}
     <form method="POST" action="{{ url_for('.transactions_create') }}" role="form">

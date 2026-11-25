@@ -1,3 +1,8 @@
+{#def
+    from web.blueprint.user.forms import UserMoveInForm
+    form: UserMoveInForm
+    user_id: int
+#}
 {#
  Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
@@ -8,7 +13,6 @@
 {% set page_title = "Einzug" %}
 
 {% import "macros/forms.html" as forms %}
-{% import "macros/resources.html" as resources %}
 
 {% block single_row_content %}
     {{ forms.simple_form(form, '', url_for('.user_show', user_id=user_id)  ) }}

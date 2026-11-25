@@ -60,3 +60,9 @@ PyCharm, and add a new data source. PyCharm may complain about missing
 database drivers. Install any missing driver files directly through
 PyCharm or your distribution’s package manager (whatever you prefer).
 The password is ``password``.
+
+Jinja template typing
+---------------------
+
+For checking Jinja templates with ``types-for-jinja`` / ``mypy`` from
+PyCharm, see :ref:`jinja typing`.

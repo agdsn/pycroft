@@ -19,6 +19,4 @@ def test_user_change_membership(session, membership, processor, utcnow):
 
 @pytest.fixture
 def membership(module_session):
-    m = f.MembershipFactory(group=f.PropertyGroupFactory())
-    module_session.flush()
-    return m
+    return f.MembershipFactory(group=f.PropertyGroupFactory())

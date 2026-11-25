@@ -9,10 +9,11 @@ from .finance import AccountFactory, BankAccountFactory
 from .property import PropertyGroupFactory, MemberPropertyGroupFactory
 
 
-class ConfigFactory(BaseFactory):
+class ConfigFactory(BaseFactory[Config]):
     """This is a dummy Config factory, Referencing PropertyGroups with
     no a-priori property relationships and arbitrary Accounts.
     """
+
     class Meta:
         model = Config
 
@@ -24,10 +25,12 @@ class ConfigFactory(BaseFactory):
     violation_group = SubFactory(PropertyGroupFactory)
     traffic_limit_exceeded_group = SubFactory(PropertyGroupFactory)
     external_group = SubFactory(PropertyGroupFactory)
-    payment_in_default_group = SubFactory(PropertyGroupFactory,
-                                          name='Payment in default',
-                                          granted=frozenset(("payment_in_default",)),
-                                          denied=frozenset(("network_access", "userwww", "userdb")))
+    payment_in_default_group = SubFactory(
+        PropertyGroupFactory,
+        name="Payment in default",
+        granted=frozenset(("payment_in_default",)),
+        denied=frozenset(("network_access", "userwww", "userdb")),
+    )
     blocked_group = SubFactory(PropertyGroupFactory)
     caretaker_group = SubFactory(PropertyGroupFactory)
     treasurer_group = SubFactory(PropertyGroupFactory)

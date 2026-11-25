@@ -1,3 +1,18 @@
+{#def
+    from pycroft.model.finance import Account
+    from pycroft.model.user import User
+    from web.blueprints.finance.tables import FinanceTable, FinanceTableSplitted
+
+    page_title: str
+    account: Account
+    user: User | None
+    balance: int
+    balance_json_url: str
+    finance_table_regular: FinanceTable
+    finance_table_splitted: FinanceTableSplitted
+    account_name: str
+    typed_splits: object | None
+#}
 {#
  Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
@@ -6,8 +21,6 @@
 {% extends "layout.html" %}
 
 {% set page_title = account_name %}
-
-{% import "macros/resources.html" as resources %}
 
 {% block page_css %}
 <style>

@@ -8,7 +8,7 @@ def get_format_error_message(message, args, kwargs):
     try:
         message.format(*args, **kwargs)
     except (TypeError, ValueError, IndexError, KeyError) as e:
-        return ''.join(traceback.format_exception_only(type(e), e))
+        return "".join(traceback.format_exception_only(type(e), e))
     else:
         raise AssertionError()
 

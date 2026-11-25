@@ -74,15 +74,18 @@ class TestUserCreation:
         assert_mail_reasonable(assert_one(mail_capture), subject_re="Willkommen")
 
     @pytest.fixture(scope="class")
-    def member_group(self, class_session):
+    @classmethod
+    def member_group(cls, class_session):
         return factories.property.MemberPropertyGroupFactory.create()
 
     @pytest.fixture(scope="class")
-    def room(self, class_session):
+    @classmethod
+    def room(cls, class_session):
         return factories.RoomFactory.create(patched_with_subnet=True)
 
     @pytest.fixture(scope="class")
-    def user_data(self) -> UserData:
+    @classmethod
+    def user_data(cls) -> UserData:
         return UserData(
             name="Hans",
             login="hans66",
@@ -92,7 +95,8 @@ class TestUserCreation:
         )
 
     @pytest.fixture(scope="class", autouse=True)
-    def new_user(self, class_session, user_data, room, processor, member_group):
+    @classmethod
+    def new_user(cls, class_session, user_data, room, processor, member_group):
         from unittest.mock import patch
 
         with patch("pycroft.lib.user.user_send_mails"):

@@ -4,33 +4,41 @@
 from datetime import timedelta
 from decimal import Decimal
 
-from factory import SubFactory, LazyAttribute, Iterator, \
-    RelatedFactoryList, Sequence
+from factory import SubFactory, LazyAttribute, Iterator, RelatedFactoryList, Sequence
 from factory.faker import Faker
 
 from pycroft.helpers.date import last_day_of_month
 from pycroft.model import session
-from pycroft.model.finance import Account, BankAccount, MembershipFee, Split, \
-    Transaction, BankAccountActivity
+from pycroft.model.finance import (
+    Account,
+    BankAccount,
+    MembershipFee,
+    Split,
+    Transaction,
+    BankAccountActivity,
+)
 from .base import BaseFactory
 
 
-class AccountFactory(BaseFactory):
+class AccountFactory(BaseFactory[Account]):
     class Meta:
         model = Account
 
-    name = Faker('word')
-    type = Faker('random_element', elements=(
-        "ASSET",  # Aktivkonto
-        "USER_ASSET",  # Aktivkonto for users
-        "BANK_ASSET",  # Aktivkonto for bank accounts
-        "LIABILITY",  # Passivkonto
-        "EXPENSE",  # Aufwandskonto
-        "REVENUE",  # Ertragskonto
-    ))
+    name = Faker("word")
+    type = Faker(
+        "random_element",
+        elements=(
+            "ASSET",  # Aktivkonto
+            "USER_ASSET",  # Aktivkonto for users
+            "BANK_ASSET",  # Aktivkonto for bank accounts
+            "LIABILITY",  # Passivkonto
+            "EXPENSE",  # Aufwandskonto
+            "REVENUE",  # Ertragskonto
+        ),
+    )
 
 
-class BankAccountFactory(BaseFactory):
+class BankAccountFactory(BaseFactory[BankAccount]):
     class Meta:
         model = BankAccount
 
@@ -41,31 +49,31 @@ class BankAccountFactory(BaseFactory):
     routing_number = Faker("random_number", digits=8)
     iban = Faker("iban")
     bic = "ZNYMGB2A"
-    fints_endpoint = Faker('url')
-    account = SubFactory(AccountFactory, type='BANK_ASSET')
+    fints_endpoint = Faker("url")
+    account = SubFactory(AccountFactory, type="BANK_ASSET")
 
 
-class BankAccountActivityFactory(BaseFactory):
+class BankAccountActivityFactory(BaseFactory[BankAccountActivity]):
     class Meta:
         model = BankAccountActivity
 
     bank_account = SubFactory(BankAccountFactory)
-    amount = Faker('random_number', digits=5)
+    amount = Faker("random_number", digits=5)
     reference = Sequence(lambda n: f"Reference {n}")
     other_account_number = Faker("iban")
     other_routing_number = "ZNYMGB3A"
-    other_name = Faker('word')
+    other_name = Faker("word")
     imported_at = LazyAttribute(lambda o: session.utcnow().date() - timedelta(days=4))
     posted_on = LazyAttribute(lambda o: o.imported_at + timedelta(days=1))
     valid_on = LazyAttribute(lambda o: o.posted_on + timedelta(minutes=30))
     # transaction, account both None
 
 
-class MembershipFeeFactory(BaseFactory):
+class MembershipFeeFactory(BaseFactory[MembershipFee]):
     class Meta:
         model = MembershipFee
 
-    name = Faker('word')
+    name = Faker("word")
     regular_fee = Decimal("5.00")
     booking_begin = timedelta(3)
     booking_end = timedelta(14)
@@ -75,32 +83,49 @@ class MembershipFeeFactory(BaseFactory):
     ends_on = LazyAttribute(lambda o: last_day_of_month(session.utcnow()))
 
 
-class SplitFactory(BaseFactory):
+# do not use directly, as transactions and splits must be persisted together.
+class _SplitFactory(BaseFactory[Split]):
     class Meta:
         model = Split
+
+    @classmethod
+    def _create(cls, model_class, *a, **kw):
+        """Disable persistence by default, move responsibility to TransactionFactory"""
+        return model_class(*a, **kw)
 
     # Required
     amount = 0
 
-    account = SubFactory(AccountFactory, type='EXPENSE')
+    account = SubFactory(AccountFactory, type="EXPENSE")
 
     # Required
     transaction = None
 
 
-class TransactionFactory(BaseFactory):
+class TransactionFactory(BaseFactory[Transaction]):
     class Meta:
         model = Transaction
 
-    description = Faker('word')
-    author = SubFactory('tests.factories.user.UserFactory')
+    @classmethod
+    def _create(cls, model_class, *a, **kw):
+        """Defer persistence to `_after_postgeneration`"""
+        return model_class(*a, **kw)
+
+    @classmethod
+    def _after_postgeneration(cls, obj, create, results):
+        if create:
+            session = cls._meta.sqlalchemy_session
+            session.add(obj)
+            session.flush()
+
+    description = Faker("word")
+    author = SubFactory("tests.factories.user.UserFactory")
 
     posted_at = Faker("date_time_this_decade")
     valid_on = LazyAttribute(lambda o: o.posted_at.date())
 
     confirmed = True
 
-    splits = RelatedFactoryList(SplitFactory,
-                                factory_related_name='transaction',
-                                size=2,
-                                amount=Iterator([5, -5]))
+    splits = RelatedFactoryList(
+        _SplitFactory, factory_related_name="transaction", size=2, amount=Iterator([5, -5])
+    )

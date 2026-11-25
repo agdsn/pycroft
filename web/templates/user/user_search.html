@@ -1,3 +1,11 @@
+{#def
+    from web.blueprints.user.forms import UserSearchForm
+    from web.blueprints.user.tables import SearchTable
+
+    form: UserSearchForm
+    search_table: SearchTable
+    page_title: str
+#}
 {#
  Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
@@ -6,7 +14,6 @@
 {% extends "layout.html" %}
 
 {% import "macros/forms.html" as forms %}
-{% import "macros/resources.html" as resources %}
 
 {% block content %}
     <div class="row">

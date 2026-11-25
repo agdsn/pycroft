@@ -1,2 +1,6 @@
+{#def
+from web.blueprints.mpskclient.tables import MPSKTable
 
+wifi_client_table: MPSKTable
+#}
 {{ wifi_client_table.render("user_mpsks") }}

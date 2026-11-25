@@ -15,9 +15,11 @@ from tests import factories
 def config(module_session: Session) -> Config:
     return factories.ConfigFactory.create()
 
+
 class TestUserBlockingAndUnblocking:
     @pytest.fixture(scope="class")
-    def user_to_block(self, class_session, config) -> User:
+    @classmethod
+    def user_to_block(cls, class_session, config) -> User:
         return factories.UserFactory.create(
             with_membership=True,
             membership__includes_today=True,
@@ -25,7 +27,8 @@ class TestUserBlockingAndUnblocking:
         )
 
     @pytest.fixture(scope="class", autouse=True)
-    def _sanity(self, user_to_block, config):
+    @classmethod
+    def _sanity(cls, user_to_block, config):
         assert config.violation_group not in user_to_block.active_property_groups()
 
     @pytest.fixture
@@ -43,9 +46,7 @@ class TestUserBlockingAndUnblocking:
         assert not is_violator(when=closedopen(blockage, unblockage))
 
         # deferred blocking
-        blocked_user = block(
-            u, reason="test", processor=u, during=starting_from(blockage)
-        )
+        blocked_user = block(u, reason="test", processor=u, during=starting_from(blockage))
 
         blocked_during = closedopen(blockage, unblockage)
         assert u.latest_log_entry.author == blocked_user

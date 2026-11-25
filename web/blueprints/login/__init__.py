@@ -2,12 +2,12 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
-    web.blueprints.login
-    ~~~~~~~~~~~~~~
+web.blueprints.login
+~~~~~~~~~~~~~~
 
-    This module defines view functions to log in and out
+This module defines view functions to log in and out
 
-    :copyright: (c) 2012 by AG DSN.
+:copyright: (c) 2012 by AG DSN.
 """
 
 import typing as t
@@ -19,13 +19,21 @@ from flask import Blueprint, render_template, flash, redirect, url_for, request,
 from flask import session as flask_session
 from flask.typing import ResponseValue
 from flask_login import (
-    AnonymousUserMixin, LoginManager, current_user, login_required, login_user,
-    logout_user)
+    AnonymousUserMixin,
+    LoginManager,
+    current_user,
+    login_required,
+    login_user,
+    logout_user,
+)
 
 from pycroft.model.session import session
 from pycroft.model.user import User
 
-bp = Blueprint('login', __name__, )
+bp = Blueprint(
+    "login",
+    __name__,
+)
 
 
 class AnonymousUser(AnonymousUserMixin):
@@ -50,7 +58,7 @@ def load_user(userid: int) -> User | None:
 def login() -> ResponseValue:
     if current_user is not None and current_user.is_authenticated:
         flash(f'Sie sind bereits als "{current_user.name}" angemeldet!', "warning")
-        return redirect(url_for('user.overview'))
+        return redirect(url_for("user.overview"))
     if request.args.get("next"):
         flask_session["next"] = request.args.get("next")
     if not current_app.config["OIDC_ENABLED"]:

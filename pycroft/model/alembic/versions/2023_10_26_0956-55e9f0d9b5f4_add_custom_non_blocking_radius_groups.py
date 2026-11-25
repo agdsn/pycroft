@@ -5,6 +5,7 @@ Revises: 249743eb7b94
 Create Date: 2023-10-26 08:34:11.939772
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 
@@ -18,9 +19,7 @@ depends_on = None
 
 def upgrade():
     # unfortunately, `op.add_column` does not support `if not exists`
-    op.execute(
-        "ALTER TABLE radius_property ADD COLUMN IF NOT EXISTS hades_group_name varchar"
-    )
+    op.execute("ALTER TABLE radius_property ADD COLUMN IF NOT EXISTS hades_group_name varchar")
     op.add_column("radius_property", sa.Column("is_blocking_group", sa.Boolean()))
 
     ## DATA MIGRATION
@@ -31,9 +30,7 @@ def upgrade():
         ("Wu3_acltestproperty", "Wu3_untagged_acltest"),
     )
     for p, hgn in NAME_MAPPING:
-        op.execute(
-            f"update radius_property set hades_group_name='{hgn}' where property='{p}'"
-        )
+        op.execute(f"update radius_property set hades_group_name='{hgn}' where property='{p}'")
     op.execute(
         "update radius_property set hades_group_name=property where hades_group_name is null"
     )

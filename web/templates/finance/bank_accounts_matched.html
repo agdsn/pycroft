@@ -1,3 +1,11 @@
+{#def
+    from pycroft.model.finance import Account, BankAccountActivity
+    from pycroft.model.user import User
+
+    page_title: str
+    matched_user: list[tuple[BankAccountActivity, User | Account]]
+    matched_team: list[tuple[BankAccountActivity, User | Account]]
+#}
 {#
  Copyright (c) 2018 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of

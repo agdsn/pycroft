@@ -1,3 +1,4 @@
+from web.blueprints.navigation import BlueprintNavigation
 import os
 import typing as t
 
@@ -14,6 +15,7 @@ from flask import (
     g,
     make_response,
     Response,
+    Config,
 )
 from flask.typing import ResponseValue, ResponseReturnValue
 from flask_babel import Babel
@@ -40,6 +42,7 @@ from .blueprints import (
     host,
     health,
     mpskclient,
+    navigation,
 )
 
 from .blueprints.login import oauth, login_manager
@@ -51,6 +54,7 @@ class PycroftFlask(Flask):
     """
     Extend the Flask class to set Jinja options.
     """
+
     jinja_options = ImmutableDict(
         Flask.jinja_options,
         extensions=[
@@ -191,18 +195,20 @@ def make_app(hades_logs: bool = True) -> PycroftFlask:
             message = gettext("Page not found.")
         else:
             raise AssertionError()
-        return render_template('error.html', error=message), code
+        return render_template("error.html", error=message), code
 
-    @app.route('/')
+    @app.route("/")
     def redirect_to_index() -> ResponseValue:
-        return redirect(url_for('user.overview'))
+        return redirect(url_for("user.overview"))
 
-    @app.route('/debug-sentry')
+    @app.route("/debug-sentry")
     def debug_sentry() -> t.NoReturn:
         app.logger.warning("Someone used the debug-sentry endpoint! Also, this is a test warning.")
         app.logger.info("An info log for inbetween")
-        app.logger.error("Someone used the debug-sentry endpoint! Also, this is a test error.",
-                         extra={'pi': 3.141})
+        app.logger.error(
+            "Someone used the debug-sentry endpoint! Also, this is a test error.",
+            extra={"pi": 3.141},
+        )
         div_by_zero = 1 / 0  # noqa
         assert False  # noqa: B011
 
@@ -228,7 +234,7 @@ def make_app(hades_logs: bool = True) -> PycroftFlask:
             "health",
             None,
         ):
-            lm = t.cast(LoginManager, current_app.login_manager)  # type: ignore[attr-defined]
+            lm = t.cast(PycroftFlask, current_app).login_manager
             return lm.unauthorized()
         return None
 
@@ -264,10 +270,11 @@ def register_pyinstrument(app: Flask) -> None:
 IGNORED_EXCEPTION_TYPES = (HTTPException,)
 
 
-if dsn := os.getenv('PYCROFT_SENTRY_DSN'):
-    def before_send[_TE](event: _TE, hint: dict[str, t.Any]) -> _TE | None:
-        if 'exc_info' in hint:
-            exc_type, exc_value, _tb = hint['exc_info']
+if dsn := os.getenv("PYCROFT_SENTRY_DSN"):
+
+    def before_send[TE](event: TE, hint: dict[str, t.Any]) -> TE | None:
+        if "exc_info" in hint:
+            _exc_type, exc_value, _tb = hint["exc_info"]
             if isinstance(exc_value, IGNORED_EXCEPTION_TYPES):
                 return None
         return event
@@ -281,5 +288,9 @@ if dsn := os.getenv('PYCROFT_SENTRY_DSN'):
         dsn=dsn,
         integrations=[FlaskIntegration(), logging_integration],
         traces_sample_rate=1.0,
-        before_send=before_send
+        before_send=before_send,
     )
+
+
+class PycroftConfig(Config):
+    blueprint_navigation: navigation.SegmentedList[BlueprintNavigation]

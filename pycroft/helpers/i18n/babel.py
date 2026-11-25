@@ -17,12 +17,16 @@ _unspecified_locale = Locale("en", "US")
 _null_translations = Translations()
 
 
-def _locale_lookup() -> Locale:
+def _default_locale_lookup() -> Locale:
     return _unspecified_locale
 
 
-def _translations_lookup() -> Translations:
+def _default_translations_lookup() -> Translations:
     return _null_translations
+
+
+_locale_lookup: typing.Callable[[], Locale] = _default_locale_lookup
+_translations_lookup: typing.Callable[[], Translations] = _default_translations_lookup
 
 
 def get_locale() -> Locale:

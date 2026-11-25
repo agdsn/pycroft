@@ -6,6 +6,7 @@ ldap_sync.concepts.action
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 Actions (Add/Delete/Modify/Nothing)
 """
+
 import dataclasses
 import logging
 import typing as t
@@ -41,7 +42,7 @@ class AddAction(Action):
     nonempty_attrs: types.NormalizedAttributes
 
     @t.override
-    def __init__(self, record: Record) -> None:
+    def __init__(self, record: Record) -> None:  # ty: ignore[invalid-method-override]
         # We don't want to add e.g. an empty `mail` field
         super().__init__(record_dn=record.dn)
         self.nonempty_attrs = {key: val for key, val in record.attrs.items() if val}

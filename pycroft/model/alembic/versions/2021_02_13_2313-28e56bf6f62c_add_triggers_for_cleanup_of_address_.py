@@ -5,11 +5,12 @@ Revises: 5905825242ff
 Create Date: 2021-02-12 02:07:00.403096
 
 """
+
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = '28e56bf6f62c'
-down_revision = '5905825242ff'
+revision = "28e56bf6f62c"
+down_revision = "5905825242ff"
 branch_labels = None
 depends_on = None
 
@@ -36,5 +37,5 @@ def upgrade():
 
 def downgrade():
     op.execute("DROP TRIGGER IF EXISTS room_address_cleanup_trigger ON room")
-    op.execute("DROP TRIGGER IF EXISTS user_address_cleanup_trigger ON \"user\"")
+    op.execute('DROP TRIGGER IF EXISTS user_address_cleanup_trigger ON "user"')
     op.execute("DROP FUNCTION IF EXISTS address_remove_orphans()")

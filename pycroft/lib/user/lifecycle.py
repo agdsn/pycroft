@@ -9,6 +9,7 @@ This module contains.
 
 :copyright: (c) 2012 by AG DSN.
 """
+
 import typing as t
 from datetime import date
 from sqlalchemy import select, exists
@@ -53,8 +54,8 @@ from .mail import user_send_mail, send_confirmation_email
 def create_user(
     name: str,
     login: str,
-    email: str,
-    birthdate: date,
+    email: str | None,
+    birthdate: date | None,
     groups: t.Iterable[PropertyGroup],
     processor: User | None,
     address: Address,
@@ -229,7 +230,7 @@ def move_in(
                     host_existing.owner_id = user.id
 
                     session.session.add(host_existing)
-                    migrate_host(session.session, host_existing, user.room, processor)
+                    migrate_host(session.session, host_existing, room, processor)
                 else:
                     raise MacExistsException
             else:
@@ -301,7 +302,7 @@ def move(
 
     args = {"old_room": str(old_room), "new_room": str(new_room)}
     if comment:
-        message = deferred_gettext("Moved from {old_room} to {new_room}.\n" "Comment: {comment}")
+        message = deferred_gettext("Moved from {old_room} to {new_room}.\nComment: {comment}")
         args.update(comment=comment)
     else:
         message = deferred_gettext("Moved from {old_room} to {new_room}.")
@@ -320,7 +321,7 @@ def move(
 @with_transaction
 def move_out(
     user: User,
-    comment: str,
+    comment: str | None,
     processor: User,
     when: DateTimeTz,
     end_membership: bool = True,

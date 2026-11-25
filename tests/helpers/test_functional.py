@@ -32,9 +32,7 @@ def test_identity_no_error_collection(input, error_type):
     ],
 )
 def test_error_collection_inversion(input, expected_result):
-    result, errors = map_collecting_errors(
-        lambda x: 1 / (1 / x), ZeroDivisionError, input
-    )
+    result, errors = map_collecting_errors(lambda x: 1 / (1 / x), ZeroDivisionError, input)
     assert result == expected_result
     assert len(errors) == len(input) - len(expected_result)
     assert all(isinstance(err, ZeroDivisionError) for err in errors)

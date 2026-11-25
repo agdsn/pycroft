@@ -1,11 +1,12 @@
+import typing as t
 from collections import defaultdict, namedtuple
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from functools import partial
 
 _radius_log_entry = namedtuple(
-    'RadiusLogEntry',
-    ['mac', 'reply', 'groups', 'raw_attributes', 'timestamp']
+    "RadiusLogEntry", ["mac", "reply", "groups", "raw_attributes", "timestamp"]
 )
+
 
 class ParsingError(ValueError):
     pass
@@ -17,11 +18,9 @@ def parse_vlan(vlan):
     if not name:
         raise ParsingError(f"VLAN identifier has no Name: {name}")
     try:
-        taggedness = {'1': "tagged", '2': "untagged"}[prefix]
+        taggedness = {"1": "tagged", "2": "untagged"}[prefix]
     except KeyError as e:
-        raise ParsingError(
-            f"VLAN identifier must start with '1' or '2': {stripped}"
-        ) from e
+        raise ParsingError(f"VLAN identifier must start with '1' or '2': {stripped}") from e
     return f"{name} ({taggedness})"
 
 
@@ -42,6 +41,7 @@ class RadiusLogEntry(_radius_log_entry):
     It provides convenient access to whether the request was accepted
     (:py:meth:`__bool__`), the :py:attr:`vlans`, time, and equality.
     """
+
     @property
     def accepted(self):
         """Return whether the reply says ``"Access-Accept"``"""
@@ -56,22 +56,21 @@ class RadiusLogEntry(_radius_log_entry):
     def vlans(self):
         """Return the string representation of each VLAN"""
         # lookup defaults to [] as self.attributes is a defaultdict
-        raw_vlans = self.attributes['Egress-VLAN-Name']
+        raw_vlans = self.attributes["Egress-VLAN-Name"]
         return [parse_vlan(v) for v in raw_vlans]
 
     @property
     def time(self):
-        return datetime.fromtimestamp(self.timestamp, tz=timezone.utc)
+        return datetime.fromtimestamp(self.timestamp, tz=UTC)
 
     def __bool__(self):
         """Evaluates to :py:prop:`self.accepted`"""
         return self.accepted
 
-    def effectively_equal(self, other):
-        relevant_attributes = set(_radius_log_entry._fields) - {'timestamp'}
+    def effectively_equal(self, other) -> bool:
+        relevant_attributes = set(_radius_log_entry._fields) - {"timestamp"}
         try:
-            return all(getattr(self, a) == getattr(other, a)
-                       for a in relevant_attributes)
+            return all(getattr(self, a) == getattr(other, a) for a in relevant_attributes)
         except AttributeError:
             return False
 
@@ -80,7 +79,9 @@ def _eq(a, b):
     return a == b
 
 
-def reduce_to_first_occurrence(iterable, comparator=_eq):
+def reduce_to_first_occurrence[T](
+    iterable: t.Iterable[T], comparator: t.Callable[[T, T], bool] = _eq
+) -> t.Generator[T]:
     """Reduces equivalent blocks of an iterable to the first occurence
 
     :param iterable: Any iterable of homogeneous type with respect to
@@ -104,5 +105,6 @@ def reduce_to_first_occurrence(iterable, comparator=_eq):
             previous = element
 
 
-reduce_radius_logs = partial(reduce_to_first_occurrence,
-                             comparator=RadiusLogEntry.effectively_equal)
+reduce_radius_logs = partial(
+    reduce_to_first_occurrence, comparator=RadiusLogEntry.effectively_equal
+)

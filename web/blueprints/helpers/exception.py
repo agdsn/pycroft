@@ -1,3 +1,4 @@
+from wtforms import Field
 import logging
 import traceback
 import typing as t
@@ -13,7 +14,7 @@ from pycroft.model.host import MulticastFlagException
 from pycroft.model.types import InvalidMACAddressException
 
 
-logger = logging.getLogger('web.exc')
+logger = logging.getLogger("web.exc")
 
 
 class UnexpectedException(PycroftException):
@@ -27,10 +28,18 @@ def flash_handler(e: PycroftException) -> None:
 ErrorHandler = t.Callable[[PycroftException], None]
 
 
+def add_error_handler(field: Field, error: str) -> ErrorHandler:
+    def _h(_err: PycroftException) -> None:
+        field.errors = [*field.errors, error]
+        return
+
+    return _h
+
+
 @contextmanager
 def flash_and_wrap_errors(
     handler_map: dict[type[PycroftException], ErrorHandler] | None = None,
-) -> t.Iterator[None]:
+) -> t.Generator[None]:
     """Flash a message, roll back the session, and wrap unknown errors in a ``PycroftException``
 
     :param handler_map: specifies what to do with exception types.
@@ -43,9 +52,7 @@ def flash_and_wrap_errors(
         yield
     except PycroftException as e:
         handlers = handler_map or {}
-        handler = next(
-            (h for type_, h in handlers.items() if isinstance(e, type_)), flash_handler
-        )
+        handler = next((h for type_, h in handlers.items() if isinstance(e, type_)), flash_handler)
         handler(e)
         raise
     except Exception as e:
@@ -61,11 +68,9 @@ ErrorHandlerMap = dict[type[PycroftException], ErrorHandler]
 @contextmanager
 # TODO rename to „wrap_errors“; `handle` suggests „I'll deal with everything“, which is incorrect
 def abort_on_error(
-    error_response: t.Callable[[], ResponseReturnValue]
-    | ResponseReturnValue
-    | None = None,
+    error_response: t.Callable[[], ResponseReturnValue] | ResponseReturnValue | None = None,
     handler_map: ErrorHandlerMap | None = None,
-) -> t.Iterator[None]:
+) -> t.Generator[None]:
     """Wraps errors as `PycroftErrors` and turns them into a flash message.
 
     Example:
@@ -94,10 +99,8 @@ def abort_on_error(
     except PycroftException:
         # these shenanigans are necessary because a `ResponseReturnValue` can also be a callable,
         # see https://flask.palletsprojects.com/en/2.3.x/api/#flask.Flask.make_response
-        _is_nullary_lambda = (
-            callable(error_response) and not signature(error_response).parameters
-        )
-        resp: ResponseReturnValue
+        _is_nullary_lambda = callable(error_response) and not signature(error_response).parameters
+        resp: ResponseReturnValue | None
         if _is_nullary_lambda:
             resp = t.cast(t.Callable[[], ResponseReturnValue], error_response)()
         else:

@@ -13,10 +13,18 @@ def validate_attribute_type(key, value):
 
 
 def get_all_objects(connection, base):
-    connection.search(search_base=base, search_filter='(objectclass=*)', attributes='*')
+    connection.search(search_base=base, search_filter="(objectclass=*)", attributes="*")
     return connection.response
 
 
-SINGLE_VALUED_ATTRIBUTES = ['uidNumber', 'gidNumber', 'homeDirectory',
-                            'gecos', 'shadowMin', 'shadowMax',
-                            'shadowFlag', 'shadowExpire', 'loginShell']
+SINGLE_VALUED_ATTRIBUTES = [
+    "uidNumber",
+    "gidNumber",
+    "homeDirectory",
+    "gecos",
+    "shadowMin",
+    "shadowMax",
+    "shadowFlag",
+    "shadowExpire",
+    "loginShell",
+]

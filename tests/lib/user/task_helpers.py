@@ -7,7 +7,10 @@ from tests.factories.task import UserTaskFactory
 
 def create_task_and_execute(task_type: TaskType, user: User, params) -> Task:
     task = UserTaskFactory(
-        type=task_type, user=user, parameters_json=params, due_yesterday=True,
+        type=task_type,
+        user=user,
+        parameters_json=params,
+        due_yesterday=True,
     )
     with session.begin_nested():
         session.add(task)

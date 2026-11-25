@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing as t
 from functools import wraps
 from types import FunctionType
@@ -5,7 +7,7 @@ from typing import overload
 from collections.abc import Generator, Callable
 
 
-def filled_iter[_T](iter: t.Iterable[_T], filler: _T) -> t.Iterator[_T]:
+def filled_iter[T](iter: t.Iterable[T], filler: T) -> t.Iterator[T]:
     """Inbetween every iteration, yield a constant filler."""
     first = True
     for elem in iter:
@@ -18,8 +20,7 @@ def filled_iter[_T](iter: t.Iterable[_T], filler: _T) -> t.Iterator[_T]:
 
 class HasDunderStr(t.Protocol):
     @t.override
-    def __str__(self) -> str:
-        ...
+    def __str__(self) -> str: ...
 
 
 class LazilyJoined:
@@ -58,35 +59,32 @@ class LazilyJoined:
 
     def _mark_exhausted(self) -> None:
         if self.exhausted:
-            raise RuntimeError("LazyJoined object already exhausted!"
-                               " You may call __str__ or __iter__ only once."
-                               " For re-use, turn it into a list.")
+            raise RuntimeError(
+                "LazyJoined object already exhausted!"
+                " You may call __str__ or __iter__ only once."
+                " For re-use, turn it into a list."
+            )
         self.exhausted = True
 
 
-_P = t.ParamSpec("_P")
-DecoratedInType = Callable[
-    _P,
-    Generator[HasDunderStr | None, None, None]
-    | t.Iterator[HasDunderStr | None]
-    | t.Iterator[HasDunderStr],
+type DecoratedInType[**P] = Callable[
+    P,
+    Generator[HasDunderStr | None] | t.Iterable[HasDunderStr | None] | t.Iterable[HasDunderStr],
 ]
-DecoratedOutType = Callable[_P, LazilyJoined]
+type DecoratedOutType[**P] = Callable[P, LazilyJoined]
 
 
 @overload
-def lazy_join(func_or_glue: DecoratedInType) -> DecoratedOutType:
-    ...
+def lazy_join(func_or_glue: DecoratedInType) -> DecoratedOutType: ...
 
 
 @overload
-def lazy_join(func_or_glue: str) -> Callable[[DecoratedInType], DecoratedOutType]:
-    ...
+def lazy_join(func_or_glue: str) -> Callable[[DecoratedInType], DecoratedOutType]: ...
 
 
-def lazy_join(
-    func_or_glue: str | DecoratedInType,
-) -> DecoratedOutType | Callable[[DecoratedInType], DecoratedOutType]:
+def lazy_join[**P, Q](
+    func_or_glue: str | DecoratedInType[P],
+) -> DecoratedOutType[P] | LazyJoinDecorator:
     if isinstance(func_or_glue, FunctionType):
         # Return the wrapped function
         return LazyJoinDecorator()(func=t.cast(DecoratedInType, func_or_glue))
@@ -98,9 +96,9 @@ class LazyJoinDecorator:
     def __init__(self, glue: str = "") -> None:
         self.glue = glue
 
-    def __call__(self, func: DecoratedInType) -> DecoratedOutType:
+    def __call__[**P](self, func: DecoratedInType[P]) -> DecoratedOutType[P]:
         @wraps(func)
-        def wrapped(*a: _P.args, **kw: _P.kwargs) -> LazilyJoined:
+        def wrapped(*a: P.args, **kw: P.kwargs) -> LazilyJoined:
             return LazilyJoined(func(*a, **kw), glue=self.glue)
 
         return wrapped

@@ -5,28 +5,30 @@ Revises: 3ec1d29bfd10
 Create Date: 2020-02-26 23:05:46.376751
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = 'c11d3d8b16ae'
-down_revision = '3ec1d29bfd10'
+revision = "c11d3d8b16ae"
+down_revision = "3ec1d29bfd10"
 branch_labels = None
 depends_on = None
 
 
 def upgrade():
-    op.add_column('building', sa.Column('fee_account_id', sa.Integer(), nullable=True))
-    op.create_foreign_key('building_fee_account_id_fkey', 'building', 'account',
-                          ['fee_account_id'], ['id'])
+    op.add_column("building", sa.Column("fee_account_id", sa.Integer(), nullable=True))
+    op.create_foreign_key(
+        "building_fee_account_id_fkey", "building", "account", ["fee_account_id"], ["id"]
+    )
 
     op.execute("update building set fee_account_id=19 where true")
 
-    op.alter_column('building', 'fee_account_id', nullable=False)
+    op.alter_column("building", "fee_account_id", nullable=False)
 
     # Make beginning of a membership not nullable as it makes no sense
-    op.alter_column('membership', 'begins_at', nullable=False)
+    op.alter_column("membership", "begins_at", nullable=False)
 
     # Add missing check constraint for memberships
     op.create_check_constraint(
@@ -35,21 +37,33 @@ def upgrade():
         "ends_at IS NULL OR begins_at <= ends_at",
     )
 
-    op.create_table('room_history_entry',
-                    sa.Column('id', sa.Integer(), nullable=False),
-                    sa.Column('user_id', sa.Integer(), nullable=False),
-                    sa.Column('room_id', sa.Integer(), nullable=False),
-                    sa.Column('begins_at', postgresql.TIMESTAMP(timezone=True), nullable=False,
-                              server_default=sa.func.current_timestamp()),
-                    sa.Column('ends_at', postgresql.TIMESTAMP(timezone=True), nullable=True),
-                    sa.ForeignKeyConstraint(('user_id',), ['user.id'], ),
-                    sa.ForeignKeyConstraint(('room_id',), ['room.id'], ),
-                    sa.PrimaryKeyConstraint('id'),
-                    sa.CheckConstraint("ends_at IS NULL OR begins_at <= ends_at"), )
+    op.create_table(
+        "room_history_entry",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("user_id", sa.Integer(), nullable=False),
+        sa.Column("room_id", sa.Integer(), nullable=False),
+        sa.Column(
+            "begins_at",
+            postgresql.TIMESTAMP(timezone=True),
+            nullable=False,
+            server_default=sa.func.current_timestamp(),
+        ),
+        sa.Column("ends_at", postgresql.TIMESTAMP(timezone=True), nullable=True),
+        sa.ForeignKeyConstraint(
+            ("user_id",),
+            ["user.id"],
+        ),
+        sa.ForeignKeyConstraint(
+            ("room_id",),
+            ["room.id"],
+        ),
+        sa.PrimaryKeyConstraint("id"),
+        sa.CheckConstraint("ends_at IS NULL OR begins_at <= ends_at"),
+    )
 
     # Trigger to keep room history up-to-date
 
-    op.execute('''
+    op.execute("""
             create or replace function user_room_change_update_history() returns trigger
                 strict
                 language plpgsql
@@ -73,19 +87,19 @@ def upgrade():
                 RETURN NULL;
             END;
             $$;
-        ''')
+        """)
 
-    op.execute('''
+    op.execute("""
         create trigger user_room_change_update_history_trigger
         after insert or update
         on "user"
         for each row
         execute procedure user_room_change_update_history();
-    ''')
+    """)
 
     # Constraint trigger to make sure that no overlapping room history entries exist
 
-    op.execute('''
+    op.execute("""
         create function room_history_entry_uniqueness() returns trigger
             stable
             strict
@@ -117,15 +131,15 @@ def upgrade():
             RETURN NULL;
         END;
         $$;
-    ''')
+    """)
 
-    op.execute('''
+    op.execute("""
         create trigger room_history_entry_uniqueness_trigger
         after insert or update
         on room_history_entry
         for each row
         execute procedure room_history_entry_uniqueness();
-    ''')
+    """)
 
     # Insert room history entries for all users living in a dorm beginning with their registration
 
@@ -145,18 +159,19 @@ def upgrade():
         "begins_on <= ends_on",
     )
 
+
 def downgrade():
-    op.drop_constraint('building_fee_account_id_fkey', 'building', type_='foreignkey')
-    op.drop_column('building', 'fee_account_id')
+    op.drop_constraint("building_fee_account_id_fkey", "building", type_="foreignkey")
+    op.drop_column("building", "fee_account_id")
 
     op.execute('drop trigger if exists "user_room_change_update_history_trigger" on "user"')
-    op.execute('drop function if exists user_room_change_update_history();')
+    op.execute("drop function if exists user_room_change_update_history();")
 
-    op.alter_column('membership', 'begins_at', nullable=True)
-    op.drop_constraint('membership_check', 'membership', type_='check')
+    op.alter_column("membership", "begins_at", nullable=True)
+    op.drop_constraint("membership_check", "membership", type_="check")
 
     op.drop_table("room_history_entry")
-    op.execute('drop function if exists room_history_entry_uniqueness();')
+    op.execute("drop function if exists room_history_entry_uniqueness();")
 
     op.execute("alter table membership_fee drop constraint membership_fee_check")
     op.create_check_constraint(

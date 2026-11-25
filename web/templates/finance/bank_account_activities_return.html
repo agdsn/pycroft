@@ -1,3 +1,11 @@
+{#def
+    from web.blueprints.finance import ActivityEntry
+    from web.blueprints.finance.forms import ActivityMatchForm
+
+    page_title: str
+    form: ActivityMatchForm
+    activities: dict[str, ActivityEntry]
+#}
 {% extends "layout.html" %}
 
 {% set page_title = "Unzuordenbare Überweisungen zurücküberweisen" %}
@@ -17,7 +25,8 @@
                 <th>Betrag</th>
               </thead>
               <tbody>
-                {% for field in form %}{% if field.type != 'CSRFTokenField' %}
+                {% for field in form %}
+                  {% if field.type != 'CSRFTokenField' %}
                   <tr>
                     <td>{{ field }}</td>
                     <td>{{ activities[field.id]["bank_account"] }}</td>
@@ -26,7 +35,8 @@
                     <td>{{ activities[field.id]["reference"] }}</td>
                     <td>{{ activities[field.id]["amount"] }} &euro;</td>
                   </tr>
-                {% endif %}{% endfor %}
+                  {% endif %}
+                {% endfor %}
               </tbody>
             </table>
         </div>

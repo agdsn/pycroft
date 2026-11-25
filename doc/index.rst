@@ -24,6 +24,7 @@ Guides
     guides/docker
     guides/database
     guides/pycharm
+    guides/jinja-typing
     guides/tests
     guides/troubleshooting
     guides/alembic

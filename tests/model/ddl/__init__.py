@@ -1,6 +1,5 @@
 import sqlalchemy.dialects.postgresql.base as postgresql_base
-from sqlalchemy import Table, Column, Integer, MetaData, \
-    util
+from sqlalchemy import Table, Column, Integer, MetaData, util
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.sql import sqltypes
 
@@ -12,8 +11,7 @@ class LiteralInterval(postgresql_base.INTERVAL):
 
     def literal_processor(self, dialect):
         def process(value):
-            return f"interval '{value}'" \
-                .replace(',', '').replace(' 0:00:00', '')
+            return f"interval '{value}'".replace(",", "").replace(" 0:00:00", "")
 
         return process
 
@@ -32,13 +30,14 @@ class Literal_PGDialect_pygresql(postgresql.dialect):
         {
             sqltypes.Interval: LiteralInterval,
             sqltypes.Date: LiteralDate,
-        }
+        },
     )
 
 
 def literal_compile(stmt):
-    return str(stmt.compile(compile_kwargs={"literal_binds": True},
-                            dialect=Literal_PGDialect_pygresql()))
+    return str(
+        stmt.compile(compile_kwargs={"literal_binds": True}, dialect=Literal_PGDialect_pygresql())
+    )
 
 
 def create_table(name):

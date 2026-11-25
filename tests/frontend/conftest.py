@@ -18,6 +18,7 @@ from ..factories.property import FinancePropertyGroupFactory, MembershipFactory
 def app() -> PycroftFlask:
     """A fully configured flask app for frontend tests"""
     from web import make_app
+
     return prepare_app_for_testing(make_app())
 
 
@@ -65,15 +66,14 @@ def class_test_client(app: PycroftFlask) -> t.Iterator[TestClient]:
 
 @pytest.fixture(scope="module")
 def config(module_session: Session) -> Config:
-    config = ConfigFactory.create()
-    module_session.flush()
-    return config
+    return ConfigFactory()
 
 
 @pytest.fixture(scope="session")
 def blueprint_urls(app: PycroftFlask) -> BlueprintUrls:
     def _blueprint_urls(
-        blueprint_name: str, methods: set[str] = {"GET", "POST"}  # noqa: B006
+        blueprint_name: str,
+        methods: set[str] = {"GET", "POST"},  # noqa: B006
     ) -> list[str]:
         return [
             (_build_rule(request_ctx.url_adapter, rule), method)
@@ -81,6 +81,7 @@ def blueprint_urls(app: PycroftFlask) -> BlueprintUrls:
             for method in rule.methods & methods
             if rule.endpoint.startswith(f"{blueprint_name}.")
         ]
+
     return _blueprint_urls
 
 
@@ -91,14 +92,12 @@ def admin_group(module_session) -> PropertyGroup:
 
 @pytest.fixture(scope="module")
 def admin(module_session: Session, admin_group, config: Config) -> User:
-    admin = UserFactory.create(
+    return UserFactory(
         login="testadmin2",
         with_membership=True,
         membership__group=AdminPropertyGroupFactory.create(),
         membership__includes_today=True,
     )
-    module_session.flush()
-    return admin
 
 
 @pytest.fixture(scope="module")
@@ -110,7 +109,6 @@ def treasurer(module_session: Session, admin_group: PropertyGroup) -> User:
         membership__includes_today=True,
     )
     MembershipFactory.create(user=treasurer, group=admin_group, includes_today=True)
-    module_session.flush()
     return treasurer
 
 

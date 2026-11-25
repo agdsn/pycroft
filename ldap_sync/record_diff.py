@@ -5,6 +5,7 @@
 ldap_sync.record_diff
 ~~~~~~~~~~~~~~~~~~~~~
 """
+
 import typing
 
 from .concepts import record, action, types
@@ -79,9 +80,7 @@ def diff_records[T: record.Record](current: T | None, desired: T | None) -> acti
     raise AssertionError  # pragma: no cover
 
 
-def iter_zip_dicts[
-    TKey, TVal1, TVal2
-](
+def iter_zip_dicts[TKey, TVal1, TVal2](
     d1: dict[TKey, TVal1],
     d2: dict[TKey, TVal2],
 ) -> typing.Iterator[tuple[TKey, tuple[TVal1 | None, TVal2 | None]]]:

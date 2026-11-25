@@ -28,6 +28,7 @@ const entryPoints = [
     ['user-suite', './js/user-suite.ts'],
     ['rooms-table', './js/rooms-table.ts'],
     ['memberships-chart', './js/memberships-chart.ts'],
+    ['datastar', './js/datastar.js'],
 ].map((x) => (
   {out: x[0], in: path.join(src, x[1])}
 ))

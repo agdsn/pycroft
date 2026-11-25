@@ -9,7 +9,13 @@ from werkzeug import Response
 from werkzeug.utils import redirect
 
 
-def bake_endpoint(blueprint: Blueprint, fn: t.Callable) -> str:
+class NamedCallable(t.Protocol):
+    __name__: str
+
+    def __call__(self, *args: t.Any, **kwargs: t.Any) -> t.Any: ...
+
+
+def bake_endpoint(blueprint: Blueprint, fn: NamedCallable) -> str:
     return f"{blueprint.name}.{fn.__name__}"
 
 

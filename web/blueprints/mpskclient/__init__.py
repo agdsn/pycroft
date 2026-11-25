@@ -58,7 +58,9 @@ def host_create() -> ResponseReturnValue:
 
     # existence verified by validator
     # TODO can't we provide an attribute for that on the form?
-    owner = session.session.get(User, form.owner_id.data)
+    owner = session.session.get_one(User, form.owner_id.data)
+    assert form.name.data is not None
+    assert form.mac.data is not None
     with abort_on_error(default_response), session.session.begin_nested():
         host = lib_mpsk.mpsk_client_create(
             session.session,
@@ -120,6 +122,8 @@ def mpsk_edit(mpsk_id: int) -> ResponseReturnValue:
     if not form.is_submitted() or not form.validate():
         return default_response()
 
+    assert form.name.data is not None
+    assert form.mac.data is not None
     with abort_on_error(default_response), session.session.begin_nested():
         lib_mpsk.mpsk_edit(
             session.session,

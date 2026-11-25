@@ -4,9 +4,7 @@
 import typing as t
 
 
-def map_collecting_errors[
-    TIn, TOut, TErr: Exception
-](
+def map_collecting_errors[TIn, TOut, TErr: Exception](
     func: t.Callable[[TIn], TOut],
     error_type: type[TErr],
     iterable: t.Iterable[TIn],

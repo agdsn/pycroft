@@ -8,6 +8,7 @@ pycroft.lib.traffic
 This module contains functions concerning network traffic
 
 """
+
 import typing as t
 from datetime import timedelta
 
@@ -36,10 +37,7 @@ def get_users_with_highest_traffic(days: int, limit: int) -> list[UserTrafficInf
             )
             .select_from(join(User, TrafficVolume, TrafficVolume.user_id == User.id))
             .where(User.id != 0)
-            .where(
-                TrafficVolume.timestamp
-                >= (session.utcnow() - timedelta(days - 1)).date()
-            )
+            .where(TrafficVolume.timestamp >= (session.utcnow() - timedelta(days - 1)).date())
             .group_by(User.id, User.name)
             .order_by(literal_column("traffic_for_days").desc())
             .limit(limit)
@@ -50,5 +48,9 @@ def get_users_with_highest_traffic(days: int, limit: int) -> list[UserTrafficInf
 def delete_old_traffic_data(session: Session) -> int:
     week_ago = func.current_timestamp() - timedelta(weeks=1)
     stmt = delete(TrafficVolume).where(TrafficVolume.timestamp < week_ago)
-    result = t.cast(CursorResult, session.execute(stmt))
+    result = session.execute(stmt)
+    # TODO move to a DELETE … RETURNING in the future instead of relying on engine implementations.
+    # see https://docs.sqlalchemy.org/en/21/core/dml.html#sqlalchemy.sql.expression.Delete.returning
+    if not isinstance(result, CursorResult):
+        raise TypeError(f"Expected session.execute to return a CursorResult, got {type(result)}")
     return result.rowcount
